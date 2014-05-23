@@ -1,0 +1,266 @@
+
+# Guanine (model file for GW calculations)
+# Input file for parallell benchmarking
+
+# The variable jdtset tells the code to run
+# specific dataset(s) The code and the input file
+# needs to be run four times, so uncomment these
+# depending on which steps you want to run
+# (only one can be specified at a given run)
+
+ndtset 2
+jdtset 6 7
+
+# This file contains these datasets:
+# DS1: Calculation of density file
+# DS2: Calculation of wavefunctions on a shifted
+#      k-point mesh.
+# DS3: Calculation of wavefunctions on an unshifted
+#      k-point mesh.
+# DS4: Calculation of the _KSS file for the shifted mesh
+# DS5: Calculation of the _KSS file for the unshifted mesh
+# DS6: Screening calculation
+# DS7: Self-energy correction (Sigma) calculation
+
+# The following are "global" variables for the whole calculation
+ecut     30. Ha  # Global cutoff for the whole set of
+                 # calculations - CONVERGENCE PARAMETER
+ecutsm   0.5     # Introduce a smooth cutoff within 0.5 Ha
+enunit    2      # Print results both in Ha and eV
+prtvol   10      # Print a lot of information to the log file
+fftalg   312     # Use the faster fftw3 numerical library if
+                 # possible, by changing this to 312
+optforces 0      # No calculation of forces is necessary
+
+icutcoul 0
+rcut 8.0 angstrom
+
+# Parameters for parallel calculation of wavefunctions
+
+#-------------------------------------------------------
+# DATASET 1: CALCULATION OF THE DENSITY FILE
+#-------------------------------------------------------
+prtden1   1   # Output the density
+nband1   35   # Specify slightly more than the occupied bands
+              # to help convergence
+nbdbuf1   5   # Don't worry about the precise convergence of
+              # the last three bands
+
+# Definition of the k-point grid
+# In the calculation of the density, this is shifted
+kptopt1   1   # Option for the automatic generation of k
+              # points, taking into account the symmetry
+ngkpt1    2  2  2  # k-point grid (high to make the density accurate)
+nshiftk1  1        # Number of shifts of k-point grid
+shiftk1   0.5 0.5 0.5  # Shift of k-point grid
+
+#Definition of the SCF procedure
+nstep1    50       # Maximal number of SCF cycles
+tolvrs1 1.0d-18    # Stopping criterion on residual of potential
+diemac1 12.0       # Preconditioning of SCF cycle
+#------------------------------------------------------
+
+#--------------------------------------------------
+# DATASET 2: CALCULATION OF WAVEFUNCTIONS (shifted)
+#--------------------------------------------------
+nband2    350  # Number of bands to be computed
+nbdbuf2   50   # Buffer of extra states for convergence
+iscf2    -2    # Read in the density and keep it fixed
+getden2   1    # Use the previously calculated _DEN file
+
+# Definition of the k-point grid
+kptopt2   1 # Option for the automatic generation of k
+            # points, taking into account the symmetry
+ngkpt2    1 1 1       # k-point grid
+nshiftk2  1           # Number of shifts of k-point grid
+shiftk2   0.5 0.5 0.5 # Set shift
+
+#Definition of the SCF procedure
+nstep2    50       # Maximal number of SCF or non-SCF cycles
+tolwfr2   1.0d-22  # Converge until wavefunction residual is this
+#--------------------------------------------------
+
+#--------------------------------------------------
+# DATASET 3: CALCULATION OF WAVEFUNCTIONS (unshifted)
+#--------------------------------------------------
+nband3    350  # Number of bands to be computed
+nbdbuf3   50   # Buffer of extra states for convergence
+iscf3    -2    # Read in the density and keep it fixed
+getden3   1    # Use the previously calculated _DEN file
+
+# Definition of the k-point grid
+kptopt3   1 # Option for the automatic generation of k
+            # points, taking into account the symmetry
+ngkpt3    1 1 1       # k-point grid
+nshiftk3  1           # Number of shifts of k-point grid
+shiftk3   0.0 0.0 0.0 # Set shift
+
+#Definition of the SCF procedure
+nstep3    50       # Maximal number of SCF or non-SCF cycles
+tolwfr3   1.0d-22  # Converge until wavefunction residual is this
+#--------------------------------------------------
+
+#--------------------------------------------------
+# DATASET 4: COMPOSITION OF THE KSS FILE (SHIFTED)
+#--------------------------------------------------
+nband4    300 # Number of bands to be computed
+               # 350 - 50 buffer states
+iscf4    -2    # Read in the density and keep it fixed
+getden4   1    # Use the previously calculated _DEN file
+getwfk4   2    # Use the wavefunctions (_WFK) from dataset 2
+istwfk4  *1    # Do not use symmetry in wavefunctions
+
+# Definition of the k-point grid
+kptopt4   1 # Option for the automatic generation of k
+            # points, taking into account the symmetry
+ngkpt4    1 1 1       # k-point grid
+nshiftk4  1           # Number of shifts of k-point grid
+shiftk4   0.5 0.5 0.5 # Set shift
+
+#Definition of the SCF procedure
+nstep4    0       # *NO* SCF step, just read the wavefunctions
+tolwfr4   1.0d-22 # Converge until wavefunction residual is this
+kssform4  3       # Specify format of KSS file
+nbandkss4 300    # Generate KSS file with 300 bands (same
+                  # as nband
+#--------------------------------------------------
+
+
+#--------------------------------------------------
+# DATASET 5: COMPOSITION OF THE KSS FILE (SHIFTED)
+#--------------------------------------------------
+nband5    300 # Number of bands to be computed
+               # 350 - 50 buffer states
+iscf5    -2    # Read in the density and keep it fixed
+getden5   1    # Use the previously calculated _DEN file
+getwfk5   3    # Use the wavefunctions (_WFK) from dataset 3
+istwfk5  *1    # Do not use symmetry in wavefunctions
+
+# Definition of the k-point grid
+kptopt5   1 # Option for the automatic generation of k
+            # points, taking into account the symmetry
+ngkpt5    1 1 1       # k-point grid
+nshiftk5  1           # Number of shifts of k-point grid
+shiftk5   0.0 0.0 0.0 # Set shift
+
+#Definition of the SCF procedure
+nstep5    0       # *NO* SCF step, just read the wavefunctions
+tolwfr5   1.0d-22 # Converge until wavefunction residual is this
+kssform5  3       # Specify format of KSS file
+nbandkss5 300    # Generate KSS file with 300 bands (same
+                  # as nband
+#--------------------------------------------------
+
+#--------------------------------------------------
+# DATASET 6: CALCULATION OF THE SCREENING
+#--------------------------------------------------
+optdriver6  3    # Do a screening calculation
+gwcalctyp6  0    # Standard plasmon-pole calculation
+gwpara6     2    # Use parallellism over bands
+nband6      300
+
+istwfk6     *1   # Wavefunction storage type one, for each
+                 # irreducible k-point
+getkss6     4    # Get KSS file from dataset 4 (SHIFTED KSS)
+ecuteps6    4.
+
+ecutwfn6    30.  # Ecut for wavefunctions (use same as ecut)
+inclvkb6    2    # Numerical method to use for Hamiltonian matrix
+                 # elements (always set to 2)
+
+awtr6       1    # Use time-reversal symmetry
+symchi6     1    # Use crystal symmetries in calc. of Chi
+
+ppmodel6    1    # Use Godby-Needs plasmon-pole model
+
+ngkpt6      1 1 1  # k-point grid
+nshiftk6    1      # Number of shifts of k-point grid
+shiftk6     0.5 0.5 0.5 # Set shift
+
+gwmem6     00  # Set to 00 for memory-saving in screening calc.
+
+gwcomp6    1   # Acceleration of convergence in nband
+gwencomp6  0.5
+
+#--------------------------------------------------
+
+#--------------------------------------------------
+# DATASET 7: CALCULATION OF THE SELF-ENERGY (SIGMA)
+#--------------------------------------------------
+optdriver7  4    # Do a screening calculation
+gwcalctyp7  0    # Standard plasmon-pole calculation
+gwpara7     2    # Use parallellism over bands
+nband7      300
+
+istwfk7    *1    # Wavefunction storage type one, for each
+                 # irreducible k-point
+getkss7     5    # Get KSS file from dataset 5 (UNSHIFTED KSS)
+getscr7     6    # Get SCR file from dataset 6
+ecuteps7    4.
+
+ecutwfn7    30.  # Ecut for wavefunctions (use same as ecut)
+ecutsigx7   30.  # Ecut for Fock operator (use same as ecut)
+
+ppmodel7    1    # Use Godby-Needs plasmon-pole model
+
+symsigma7   1    # Use crystal symmetries to speed up calculation
+
+ngkpt7     1 1 1 # k-point grid
+nshiftk7   1     # Number of shifts of k-point grid
+shiftk7    0.0 0.0 0.0 # Set zero shift
+
+
+# Definition of k-points to calc. for GW
+nkptgw7    1  # Number of k-points
+kptgw7        # List of k-points for GW correction
+
+           0.0 0.0 0.0  # Gamma point
+
+bdgw7      26  31       # start and stop at these bands
+
+gwmem7     00  # Set to 00 for memory-saving in sigma calc.
+
+gwcomp7    1    # Acceleration of convergence in nband
+gwencomp7  0.5
+
+#--------------------------------------------------
+
+#===========================================
+# THE INPUT VARIABLES BELOW DEFINE THE
+# STRUCTURE
+#===========================================
+
+# Definition of the unit cell
+ acell  16.0 16.0 16.0 angstrom
+
+#Definition of the number of atoms and coordinates
+natom  16            # There are 16 atoms
+
+           xangst
+                  3.74736       -1.34046        0.00333
+                  2.19781       -2.04340        0.00337
+                  2.26129        5.44624        0.00000
+                  4.05258        3.61891        0.00000
+                  0.31558       -0.67973        0.00000
+                  0.21374        1.34629        0.00000
+                  1.11065        2.48096        0.00000
+                  2.05624        4.38383        0.00000
+                  2.46078        2.22309        0.00000
+                  2.27644        0.01379        0.00000
+                  0.85996        3.83019        0.00000
+                  3.05821        3.44670        0.00000
+                  3.09742        1.03113        0.00000
+                  0.89943        0.13781        0.00000
+                  2.76039       -1.23106        0.20000
+                 -1.01237        1.39624        0.00000
+
+#Definition of the atom types
+ntypat 4          # There is 4 types of atoms
+znucl 1 6 7 8           # The keyword "znucl" refers to the atomic number of the
+                        # possible type(s) of atom. The pseudopotential(s)
+                        # mentioned in the "files" file must correspond
+                        # to the type(s) of atom
+
+
+#Definition of the atoms
+typat 1 1 1 1 1 2 2 2 2 2 3 3 3 3 3 4
