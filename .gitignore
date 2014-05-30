@@ -48,3 +48,4 @@ docs/_build/
 
 #Emacs backups
 *~
+.#*.py

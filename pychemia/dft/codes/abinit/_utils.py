@@ -206,7 +206,8 @@ def merge(abi_into, abi_from, filename=None):
 
 def plot_simple(variables, varname):
     from matplotlib.pylab import subplots
-    from numpy import arange, mean, sqrt, apply_along_axis, linalg
+    from numpy import arange, mean, apply_along_axis, linalg
+    from math import sqrt
 
     fig, ax = subplots(nrows=1, ncols=1)
     fig.set_size_inches(15, 4)

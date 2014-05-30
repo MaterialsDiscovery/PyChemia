@@ -99,6 +99,8 @@ def __parse_word(word):
           'list' such as [4.5 , 4.5, 4.5]
 
     """
+    result = None
+    kind = None
     if word[0].isalpha() and word[:4] != 'sqrt' and word[:5] != '-sqrt':
         result = word
         kind = 'word'

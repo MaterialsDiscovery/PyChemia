@@ -4,6 +4,15 @@ This class defines methods to create and manipulate
 atomic structures such as molecules, clusters and crystals
 """
 
+import numpy as _np
+import json as _json
+from math import sin, cos, exp, sqrt
+from pychemia.geometry.lattice import Lattice
+from pychemia.geometry.delaunay import get_reduced_bases
+from pychemia.geometry.composition import Composition
+from pychemia.utils.computing import unicode2string
+from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence
+
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2014"
 __version__ = "0.1"
@@ -11,13 +20,6 @@ __maintainer__ = "Guillermo Avendano-Franco"
 __email__ = "gtux.gaf@gmail.com"
 __status__ = "Development"
 __date__ = "March 31, 2014"
-
-from math import sin, cos, exp, sqrt
-import numpy as _np
-import json as _json
-from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence
-from pychemia.geometry.cell import Lattice
-from pychemia.geometry.delaunay import get_reduced_bases
 
 
 class MetaStructure():
@@ -74,24 +76,23 @@ class Structure():
 
         Examples:
 
->>> import pychemia
->>> a = pychemia.geometry.Structure()
->>> print a
-Empty structure
->>> a = pychemia.geometry.Structure(symbols=['Xe'])
->>> print a.natom
-1
->>> d = 1.104
->>> a = pychemia.geometry.Structure(symbols=['N', 'N'], positions=[[0, 0, 0], [0, 0, d]], periodicity=False)
->>> print a.natom
-2
->>> a = 4.05
->>> b = a/2
->>> fcc = pychemia.geometry.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
->>> print fcc.natom
-1
+        >>> import pychemia
+        >>> a = pychemia.geometry.Structure()
+        >>> print a
+        Empty structure
+        >>> a = pychemia.geometry.Structure(symbols=['Xe'])
+        >>> print a.natom
+        1
+        >>> d = 1.104
+        >>> a = pychemia.geometry.Structure(symbols=['N', 'N'], positions=[[0, 0, 0], [0, 0, d]], periodicity=False)
+        >>> print a.natom
+        2
+        >>> a = 4.05
+        >>> b = a/2
+        >>> fcc = pychemia.geometry.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
+        >>> print fcc.natom
+        1
         """
-        
         self.vector_info = {}
         self.name = None
         self.comment = None
@@ -331,7 +332,15 @@ Empty structure
         for i in range(self.natom):
             self.positions[i] = _np.dot(rotation, self.positions[i])
 
-    def composition(self, gcd=True):
+    @property
+    def composition(self):
+        return self.get_composition().composition
+
+    @property
+    def formula(self):
+        return self.get_composition().formula
+
+    def get_composition(self, gcd=True):
         """
         Computes the composition of the Structure
         as the count of each species in the cell
@@ -349,14 +358,7 @@ Empty structure
             else:
                 species[atom] = 1
 
-        listspecies = [species[x] for x in species]
-        if gcd:
-            import fractions
-            gcdvalue = reduce(fractions.gcd, listspecies)
-            for i in species:
-                species[i] = species[i]/gcdvalue
-
-        return species
+        return Composition(species)
 
     @property
     def density(self):
@@ -769,7 +771,7 @@ Empty structure
     def load_json(self, filename):
 
         filep = open(filename, 'r')
-        structdict = _json.load(filep)
+        structdict = unicode2string(_json.load(filep))
         self.fromdict(structdict)
 
 

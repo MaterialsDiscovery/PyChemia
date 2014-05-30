@@ -19,6 +19,7 @@ def test_abinit2xyz():
     assert (mol2.natom == 16)
     os.remove(path + '/abinit_03/abinit_DS1.xyz')
     os.remove(path + '/abinit_03/abinit_DS2.xyz')
+    os.remove(path + '/abinit_03/abinit.files')
 
 
 def test_xyz2abinit():
@@ -54,3 +55,4 @@ def test_plot_hist():
     arg1 = path + '/abinit_01/abinit.files'
     arg2 = '11'
     subprocess.call(['python', script, arg1, arg2])
+    os.remove(path + '/abinit_01/abinit-o_DS11.pdf')

@@ -3,11 +3,9 @@ Useful routines to get physical data from octopus TD runs
 """
 
 import os
-import math
+from math import acos, abs
 import scipy.io.netcdf
-
-import numpy as np
-
+from numpy import linalg, zeros, loadtxt, apply_along_axis, newaxis, polyfit, poly1d, dot, array
 import pychemia
 
 
@@ -54,10 +52,10 @@ def hirshfeld(dirname, iteration=None, spin=None):
 
     filename = dirname + '/td.' + str(iteration).zfill(7) + '/density' + sp + '-hirschfeld.dat'
     if os.path.isfile(filename):
-        hirshfeld_value = np.loadtxt(filename)
+        hirshfeld_value = loadtxt(filename)
     else:
         filename = dirname + '/td.' + str(iteration).zfill(7) + '/density' + sp + '-hirshfeld.dat'
-        hirshfeld_value = np.loadtxt(filename)
+        hirshfeld_value = loadtxt(filename)
 
     return iteration, hirshfeld_value
 
@@ -84,8 +82,8 @@ def deflection(dirname, iteration=None):
         iteration = get_last_iteration(dirname)
 
     natom, iterations, times, positions, velocities, forces = pychemia.dft.codes.octopus.coordinates(dirname)
-    angle = np.zeros(natom)
-    univel = np.zeros((natom, 3))
+    angle = zeros(natom)
+    univel = zeros((natom, 3))
 
     if iteration == 0:
         print('Error: To get the deflection some evolution is necessary (iteration!=0)')
@@ -95,19 +93,19 @@ def deflection(dirname, iteration=None):
         # Vector of displacement from (0 -> t)
         dis = positions[iteration] - positions[0]
         # Magnitude of the displacement
-        mag = np.apply_along_axis(np.linalg.norm, 1, dis)
+        mag = apply_along_axis(linalg.norm, 1, dis)
         # Unitary vectors of displacement
-        unidis = dis / mag[:, np.newaxis]
+        unidis = dis / mag[:, newaxis]
 
         # Unitary vector of velocity
-        vel = np.array(velocities[0])
+        vel = array(velocities[0])
         for i in range(natom):
             # Magnitude of the velocities
-            mag[i] = np.linalg.norm(vel[i])
+            mag[i] = linalg.norm(vel[i])
             # Unitary vectors of velocity
             if mag[i] != 0:
                 univel[i] = (1.0 / mag[i]) * vel[i]
-                angle[i] = math.acos(np.dot(univel[i], unidis[i]))
+                angle[i] = acos(dot(univel[i], unidis[i]))
             else:
                 angle[i] = 0.0
 
@@ -124,7 +122,7 @@ def magnitude_velocity(dirname, iteration=None):
 
     natom, iterations, times, positions, velocities, forces = pychemia.dft.codes.octopus.coordinates(dirname)
 
-    magvel = np.apply_along_axis(np.linalg.norm, 1, velocities[iteration])
+    magvel = apply_along_axis(linalg.norm, 1, velocities[iteration])
 
     return magvel
 
@@ -163,7 +161,7 @@ def value_in_sphere(dirname, keys, iteration=None, radius=4.5, spin=None):
     else:
         sp = ''
 
-    cis = np.zeros(natom)
+    cis = zeros(natom)
     for i in range(natom):
 
         filename = dirname + '/td.' + str(iteration).zfill(7)
@@ -176,7 +174,7 @@ def value_in_sphere(dirname, keys, iteration=None, radius=4.5, spin=None):
             x = data.variables[keys[0]][:]
             if len(x) == 0:
                 print('ERROR File empty:', filename)
-            index = (np.abs(x - radius)).argmin()
+            index = (abs(x - radius)).argmin()
             #print 'dirname',dirname
             #print 'index=',index
             #print 'radius (min,max)',X[0],X[-1]
@@ -189,8 +187,8 @@ def value_in_sphere(dirname, keys, iteration=None, radius=4.5, spin=None):
             x = data.variables[keys[0]][index - extra:final]
             y = data.variables[keys[1]][index - extra:final]
             try:
-                z = np.polyfit(x, y, 3)
-                p = np.poly1d(z)
+                z = polyfit(x, y, 3)
+                p = poly1d(z)
             except ValueError:
                 print('Error fitting value for:', filename)
 

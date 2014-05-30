@@ -60,9 +60,12 @@ def test_example2():
             os.remove(path + '/abinit.log')
 
     wf.close()
+    if os.path.isfile(path + '/abinit.files'):
+        os.remove(path + '/abinit.files')
 
 
 def get_path():
+    path = None
     if os.path.isdir('pychemia/test/data/abinit_04'):
         path = 'pychemia/test/data/abinit_04'
     elif os.path.isdir('data/abinit_04'):

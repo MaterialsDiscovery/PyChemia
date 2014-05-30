@@ -1,7 +1,9 @@
-__author__ = 'Guillermo'
-
 import numpy as _np
 from math import pi
+from pychemia.utils.mathematics import length_vectors, angle_vectors
+
+__author__ = 'Guillermo Avendano-Franco'
+
 
 class Lattice():
     """
@@ -11,37 +13,86 @@ class Lattice():
     The lattice contains 1, 2 or 3 vectors
     """
 
-    def __init__(self, cell, periodicity):
+    def __init__(self, cell, periodicity=True):
         """
         Defines an object lattice that could live
-        in 1, 2 or 3 dimensions
+        in arbitrary dimensions
         """
-        self.cell = _np.array(cell)
         if isinstance(periodicity, bool):
-            self.periodicity = 3*[periodicity]
+            self._periodicity = 3*[periodicity]
+        elif isinstance(periodicity, list):
+            self._periodicity = list(periodicity)
         else:
-            self.periodicity = list(periodicity)
+            raise ValueError("periodicity must be a boolean or list")
+
+        self._dims = sum(self._periodicity)
+        assert(_np.prod(_np.array(cell).shape) == self.periodic_dimensions**2)
+        self._cell = _np.array(cell).reshape((self.periodic_dimensions, self.periodic_dimensions))
+        self._lengths = length_vectors(self._cell)
+        self._angles = angle_vectors(self._cell)
+        self._metric = None
+        self._inverse = None
+
+    @staticmethod
+    def parameters2cell(a, b, c, alpha, beta, gamma):
+        pass
+
+    @property
+    def cell(self):
+        """
+        Return the cell as a numpy array
+
+        :return:
+        """
+        return self._cell
 
     @property
     def periodic_dimensions(self):
-        ret = 0
-        for i in self.periodicity:
-            if i:
-                ret += 1
-        return ret
+        """
+        Return the number of periodic dimensions
+
+        :return: int
+        """
+        return self._dims
 
     @property
     def volume(self):
         """
-        Computes the volume of the cell
+        Computes the volume of the cell (3D),
+        area (2D) or generalized volume for
+        N dimensions
 
         :rtype : float
         """
         return abs(_np.linalg.det(self.cell))
 
-    def reciprocal(self):
+    @property
+    def metric(self):
+        if self._metric is None:
+            self._metric = _np.dot(self.cell, self.cell.T)
+        return self._metric
 
-        return 2*pi* self.cell.T.I
+    @property
+    def inverse(self):
+        if self._inverse is None:
+            self._inverse = self.cell.I
+        return self._inverse
+
+    @property
+    def reciprocal(self):
+        """
+        Return the reciprocal cell
+
+        :rtype : Lattice
+        :return:
+        """
+        return self.__class__(2*pi*self.cell.T.I)
+
+    def copy(self):
+        """
+        Return a copy of the object
+        """
+        return self.__class__(self._cell, self._periodicity)
 
     def get_path(self):
 
@@ -59,3 +110,36 @@ class Lattice():
         line3 = _np.array([y, y+z])
 
         return frame, line1, line2, line3
+
+    @property
+    def alpha(self):
+        return self._angles[(1, 2)]
+
+    @property
+    def beta(self):
+        return self._angles[(0, 2)]
+
+    @property
+    def gamma(self):
+        return self._angles[(0, 1)]
+
+    @property
+    def angles(self):
+        return self.alpha, self.beta, self.gamma
+
+    @property
+    def a(self):
+        return self._lengths[0]
+
+    @property
+    def b(self):
+        return self._lengths[1]
+
+    @property
+    def c(self):
+        return self._lengths[2]
+
+    @property
+    def lengths(self):
+        return self._lengths
+

@@ -4,7 +4,8 @@ atomic structure objects
 """
 
 from structure import *
-from cell import *
+from lattice import *
+from composition import *
 
 #__all__ = filter(lambda s: not s.startswith('_'), dir())
 

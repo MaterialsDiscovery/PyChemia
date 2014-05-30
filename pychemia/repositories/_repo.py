@@ -16,6 +16,7 @@ import os as _os
 import uuid as _uuid
 import shutil as _shutil
 from pychemia.geometry import load_structure_json
+from pychemia.utils.computing import unicode2string
 
 
 class StructureEntry():
@@ -41,7 +42,7 @@ class StructureEntry():
             self.structure = structure
             self.identifier = str(_uuid.uuid4())
             if original_file is not None:
-                assert(_os.path.isfile(original_file))
+                assert (_os.path.isfile(original_file))
             self.original_file = original_file
             self.parents = None
             self.children = None
@@ -55,19 +56,19 @@ class StructureEntry():
                 raise ValueError('The variable tags must be a string or list of strings')
 
         else:
-            assert(original_file is None)
-            assert(structure is None)
-            assert(tags is None)
-            assert(repository is not None)
+            assert (original_file is None)
+            assert (structure is None)
+            assert (tags is None)
+            assert (repository is not None)
             self.identifier = identifier
             self.repository = repository
             path = repository.path + '/' + self.identifier
             if not _os.path.isdir(path):
-                raise ValueError("Directory not found: "+path)
-            if not _os.path.isfile(path+'/metadata.json'):
-                raise ValueError("No metadata found in "+path)
-            if not _os.path.isfile(path+'/structure.json'):
-                raise ValueError("No structure found in "+path)
+                raise ValueError("Directory not found: " + path)
+            if not _os.path.isfile(path + '/metadata.json'):
+                raise ValueError("No metadata found in " + path)
+            if not _os.path.isfile(path + '/structure.json'):
+                raise ValueError("No structure found in " + path)
             self.load()
 
     def metadatatodict(self):
@@ -79,33 +80,33 @@ class StructureEntry():
     def load(self):
         assert isinstance(self.identifier, str)
         path = self.repository.path + '/' + self.identifier
-        rf = open(path+'/metadata.json', 'r')
-        self.metadatafromdict(_json.load(rf))
+        rf = open(path + '/metadata.json', 'r')
+        self.metadatafromdict(unicode2string(_json.load(rf)))
         rf.close()
         self.structure = load_structure_json(path + '/structure.json')
-        if _os.path.isfile(path+'/properties.json'):
-            rf = open(path+'/properties.json', 'r')
-            self.properties = _json.load(rf)
+        if _os.path.isfile(path + '/properties.json'):
+            rf = open(path + '/properties.json', 'r')
+            self.properties = unicode2string(_json.load(rf))
             rf.close()
         else:
             pass
-        if _os.path.isdir(path+'/original') and len(_os.listdir(path+'/original'))>0:
-                self.original_file = path+'/original/'+_os.listdir(path+'/original')[0]
+        if _os.path.isdir(path + '/original') and len(_os.listdir(path + '/original')) > 0:
+            self.original_file = path + '/original/' + _os.listdir(path + '/original')[0]
 
     def save(self):
         path = self.repository.path + '/' + self.identifier
-        wf = open(path+'/metadata.json', 'w')
+        wf = open(path + '/metadata.json', 'w')
         _json.dump(self.metadatatodict(), wf, sort_keys=True, indent=4, separators=(',', ': '))
         wf.close()
-        self.structure.save_json(path+'/structure.json')
+        self.structure.save_json(path + '/structure.json')
         if self.properties is not None:
-            wf = open(path+'/properties.json', 'w')
+            wf = open(path + '/properties.json', 'w')
             _json.dump(self.properties, wf, sort_keys=True, indent=4, separators=(',', ': '))
             wf.close()
         if self.original_file is not None:
-            if not _os.path.isdir(path+'/original'):
-                _os.mkdir(path+'/original')
-            _shutil.copy2(self.original_file, path+'/original')
+            if not _os.path.isdir(path + '/original'):
+                _os.mkdir(path + '/original')
+            _shutil.copy2(self.original_file, path + '/original')
 
     def metadatafromdict(self, entrydict):
         self.tags = entrydict['tags']
@@ -122,12 +123,23 @@ class StructureEntry():
         _add2list(children, self.children)
 
     def __str__(self):
-        ret = 'Structure: \n'+str(self.structure)
-        ret += '\nTags: '+str(self.tags)
-        ret += '\nParents: '+str(self.parents)
-        ret += '\nChildren: '+str(self.children)
-        ret += '\nIdentifier: '+str(self.identifier)
+        ret = 'Structure: \n' + str(self.structure)
+        ret += '\nTags: ' + str(self.tags)
+        ret += '\nParents: ' + str(self.parents)
+        ret += '\nChildren: ' + str(self.children)
+        ret += '\nIdentifier: ' + str(self.identifier)
         return ret
+
+    def __eq__(self, other):
+        ret = True
+        if self.structure != other.structure:
+            ret = False
+        elif set(self.children) != set(other.children):
+            ret = False
+        elif set(self.parents) != set(other.parents):
+            ret = False
+        elif set(self.tags) != set(other.tags):
+            ret = False
 
 
 class ExecutionEntry():
@@ -158,7 +170,7 @@ class StructureRepository():
         """
         self.path = _os.path.abspath(path)
 
-        if _os.path.isfile(self.path+'/repo.json'):
+        if _os.path.isfile(self.path + '/repo.json'):
             self.load()
         else:
             self.nentries = 0
@@ -189,7 +201,7 @@ class StructureRepository():
         """
         Save an existing repository information
         """
-        wf = open(self.path+'/repo.json', 'w')
+        wf = open(self.path + '/repo.json', 'w')
         _json.dump(self.todict(), wf, sort_keys=True, indent=4, separators=(',', ': '))
         wf.close()
 
@@ -197,23 +209,42 @@ class StructureRepository():
         """
         Loads an existing repositories from its configuration file
         """
-        rf = open(self.path+'/repo.json', 'r')
-        self.fromdict(_json.load(rf))
+        rf = open(self.path + '/repo.json', 'r')
+        self.fromdict(unicode2string(_json.load(rf)))
         rf.close()
+
+    @property
+    def get_all_entries(self):
+        return [x for x in _os.listdir(self.path) if _os.path.isfile(self.path + '/' + x + '/metadata.json')]
 
     def merge(self, other):
         """
         Add all the contents from other repositories into the
         calling object
+
+        :param other: StructureRepository
         """
-        pass
+        conflict_entries = []
+        for i in other.get_all_enties:
+            if i in self.get_all_entries:
+                other_structure = StructureEntry(repository=other, identifier=i)
+                this_structure = StructureEntry(repository=self, identifier=i)
+                if this_structure != other_structure:
+                    conflict_entries.append(i)
+        if len(conflict_entries) == 0:
+            for i in other.get_all_enties:
+                if i not in self.get_all_entries:
+                    _shutil.copytree(other.path+'/'+i, self.path+'/'+i)
+        else:
+            print('Conflict entries found, No merge done')
+            return conflict_entries
 
     def add_entry(self, entry):
         """
         Add a new StructureEntry into the repository
         """
         entry.repository = self
-        path = self.path+'/'+entry.identifier
+        path = self.path + '/' + entry.identifier
         if not _os.path.isdir(path):
             _os.mkdir(path)
         entry.save()
@@ -228,15 +259,16 @@ class StructureRepository():
         self.save()
 
     def __str__(self):
-        ret = 'Location: '+self.path
-        ret += '\nNumber of entries: '+str(self.nentries)
+        ret = 'Location: ' + self.path
+        ret += '\nNumber of entries: ' + str(self.nentries)
         if len(self.tags) > 0:
             for itag in self.tags:
-                ret += '\n\t'+itag+':'
-                ret += '\n'+str(self.tags[itag])
+                ret += '\n\t' + itag + ':'
+                ret += '\n' + str(self.tags[itag])
         else:
-            ret += '\nTags: '+str(self.tags)
+            ret += '\nTags: ' + str(self.tags)
         return ret
+
 
 class ExecutionRepository():
     """
