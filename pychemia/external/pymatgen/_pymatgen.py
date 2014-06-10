@@ -7,7 +7,7 @@ import pymatgen.io.cifio
 import pychemia
 
 
-def cif2structure(filename, primitive=False):
+def cif2structure(filename, primitive=False, verbose=False):
     """
     Read a given file  as a cif file, convert it into a
     pymatgen structure and finally into a pychemia
@@ -16,7 +16,8 @@ def cif2structure(filename, primitive=False):
     cifp = pymatgen.io.cifio.CifParser(filename)
     pmg_structs = cifp.get_structures(primitive)
     if len(pmg_structs) != 1:
-        print filename, ' has ', len(pmg_structs), ' structures'
+        if verbose:
+            print filename, ' has ', len(pmg_structs), ' structures'
         return None
     ret = pymatgen2pychemia(pmg_structs[0])
     return ret

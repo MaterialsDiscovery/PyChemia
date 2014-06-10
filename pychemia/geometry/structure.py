@@ -1,17 +1,21 @@
 """
-Definition of the class structure
+Definition of the class Structure
 This class defines methods to create and manipulate
 atomic structures such as molecules, clusters and crystals
 """
+import itertools
 
 import numpy as _np
 import json as _json
 from math import sin, cos, exp, sqrt
+import math
+import sys
 from pychemia.geometry.lattice import Lattice
 from pychemia.geometry.delaunay import get_reduced_bases
 from pychemia.geometry.composition import Composition
 from pychemia.utils.computing import unicode2string
-from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence
+from pychemia.utils.mathematics import distances
+from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence, atomic_symbol, atomic_symbols
 
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2014"
@@ -19,26 +23,14 @@ __version__ = "0.1"
 __maintainer__ = "Guillermo Avendano-Franco"
 __email__ = "gtux.gaf@gmail.com"
 __status__ = "Development"
-__date__ = "March 31, 2014"
-
-
-class MetaStructure():
-    """
-    This class offer the possibility for atoms of being in a certain
-    position with a probability lower than 1
-    For example alloys and structural vacancies
-    """
-    def __init__(self):
-        pass
+__date__ = "June 10, 2014"
 
 
 class Structure():
     """
-    Define an object that contains information
-    about atomic positions, cell parameters, magnetic
-    moments, periodicity and symmetry information and
-    provides methods to manipulate those
-    elements
+    Define an object that contains information about atomic positions,
+    cell parameters and periodicity and provides methods to manipulate
+    those elements
     """
 
     def __init__(self, **kwargs):
@@ -55,7 +47,7 @@ class Structure():
         Magnetic moments can be associated in the array vector_info['magnetic_moments'].
 
         This object contains no dynamical information. That information
-        is supported by the child class dyna_struct
+        is supported by the child class DynamicStructure
 
         Args:
 
@@ -103,6 +95,9 @@ class Structure():
         self.cell = None
         self.periodicity = None
         self.vector_info['mag_moments'] = None
+
+        self._lattice = None
+        self._composition = None
 
         # Fill the values from args
         if 'name' in kwargs:
@@ -226,7 +221,7 @@ class Structure():
                 self.natom = 0
 
         if self.symbols is None and self.natom == 0:
-            self.symbols = _np.array([])
+            self.symbols = []
 
         if self.periodicity is None:
             self.set_periodicity(True)
@@ -256,7 +251,7 @@ class Structure():
         if not self.is_periodic:
             return False
         else:
-            return Lattice(self.cell, self.periodicity).periodic_dimensions == 3
+            return self.get_cell().periodic_dimensions == 3
 
     def _check(self):
         """
@@ -280,18 +275,45 @@ class Structure():
 
         return check
 
-    def add_atom(self, name, position):
+    def add_atom(self, name, coordinates, option='cartesian'):
         """
-        Add an atom with a given 'name' and
-        cartesian 'position' at the end of the list
-        of atoms in the crystal
+        Add an atom with a given 'name' and cartesian or reduced 'position'
+        The atom will be added at the end of the list of atoms in the Structure
+
+        :param name: (str)
+        :param coordinates: (list, numpy.array)
+        :param option: (str)
         """
-        self.symbols = _np.append(self.symbols, name)
-        if self.natom == 0:
-            self.positions = _np.array(position).reshape([-1, 3])
-        else:
-            self.positions = _np.append(self.positions, position).reshape([-1, 3])
+        assert(name in atomic_symbols)
+        assert(option in ['cartesian', 'reduced'])
+        self.symbols = self.symbols.append(name)
         self.natom += 1
+
+        if option == 'cartesian':
+            if self.natom == 0:
+                self.positions = _np.array(coordinates).reshape([-1, 3])
+            else:
+                self.positions = _np.append(self.positions, coordinates).reshape([-1, 3])
+            self.positions2reduced()
+        elif option == 'reduced':
+            if self.natom == 0:
+                self.reduced = _np.array(coordinates).reshape([-1, 3])
+            else:
+                self.reduced = _np.append(self.reduced, coordinates).reshape([-1, 3])
+            self.reduced2positions()
+
+    def del_atom(self, index):
+        """
+        Removes the atom with the given index
+
+        :param index:
+        :return:
+        """
+        assert(abs(index) < self.natom)
+        self.symbols.pop[index]
+        _np.delete(self.positions, index, 0)
+        _np.delete(self.reduced, index, 0)
+        self.natom -= 1
 
     def center_mass(self, list_of_atoms=None):
         """
@@ -340,6 +362,11 @@ class Structure():
     def formula(self):
         return self.get_composition().formula
 
+    def get_cell(self):
+        if self._lattice is None:
+            self._lattice = Lattice(self.cell)
+        return self._lattice
+
     def get_composition(self, gcd=True):
         """
         Computes the composition of the Structure
@@ -351,14 +378,15 @@ class Structure():
 
         :rtype : dict
         """
-        species = {}
-        for atom in self.symbols:
-            if atom in species:
-                species[atom] += 1
-            else:
-                species[atom] = 1
-
-        return Composition(species)
+        if self._composition is None:
+            species = {}
+            for atom in self.symbols:
+                if atom in species:
+                    species[atom] += 1
+                else:
+                    species[atom] = 1
+            self._composition = Composition(species)
+        return self._composition
 
     @property
     def density(self):
@@ -427,14 +455,14 @@ class Structure():
                 pos -= pos.round()
 
             # Look for the shortest one in surrounded 3x3x3 cells
-            distances = []
+            distances_list = []
             for i in (-1, 0, 1):
                 for j in (-1, 0, 1):
                     for k in (-1, 0, 1):
-                        distances.append(_np.linalg.norm(
+                        distances_list.append(_np.linalg.norm(
                             _np.dot(scaled_pos[iatom] - scaled_pos[jatom] +
                                     _np.array([i, j, k]), reduced_bases)))
-            ret = min(distances)
+            ret = min(distances_list)
 
         else:
             posi = self.positions[iatom]
@@ -558,9 +586,142 @@ class Structure():
                                 symbols=self.symbols)
         return copy_struct
 
+    def get_all_distances(self):
+        bonds_dict = {}
+        index = 0
+        all_distances = []
+        for i, j in itertools.combinations(range(self.natom), 2):
+            ret = self.get_cell().distance2(self.reduced[i], self.reduced[j])
+            for k in ret:
+                if str(i) not in bonds_dict:
+                    bonds_dict[str(i)] = [index]
+                else:
+                    bonds_dict[str(i)].append(index)
+                if str(j) not in bonds_dict:
+                    bonds_dict[str(j)] = [index]
+                else:
+                    bonds_dict[str(j)].append(index)
+                ret[k]['pair'] = (i, j)
+                all_distances.append(ret[k])
+                index += 1
+        for i in range(self.natom):
+            ret = self.get_cell().distance2(self.reduced[i], self.reduced[i])
+            for k in ret:
+                if str(i) not in bonds_dict:
+                    bonds_dict[str(i)] = [index]
+                else:
+                    bonds_dict[str(i)].append(index)
+                ret[k]['pair'] = (i, i)
+                all_distances.append(ret[k])
+                index += 1
+        return bonds_dict, all_distances
+
+    def get_bonds_coordination(self, tolerance=1, ensure_conectivity=False):
+
+        bonds_dict, all_distances = self.get_all_distances()
+        bonds = []
+        tolerances=[]
+        for i in range(self.natom):
+            tole = tolerance
+            while True:
+                tmp_bonds = []
+                min_proportion = sys.float_info.max
+                for j in bonds_dict[str(i)]:
+                    atom1 = self.symbols[all_distances[j]['pair'][0]]
+                    atom2 = self.symbols[all_distances[j]['pair'][1]]
+                    sum_covalent_radius = sum(covalent_radius([atom1, atom2]))
+                    distance = all_distances[j]['distance']
+                    if distance == 0.0:
+                        continue
+                    proportion = distance/sum_covalent_radius
+                    min_proportion = min(min_proportion, proportion)
+                    if proportion <= tole:
+                        #print all_distances[j]
+                        tmp_bonds.append(j)
+                if len(tmp_bonds) == 0 and ensure_conectivity:
+                    #print 'Changing tolerance'
+                    tole = min_proportion
+                else:
+                    bonds.append(tmp_bonds)
+                    tolerances.append(min_proportion)
+                    break
+
+        coordination = [len(x) for x in bonds]
+        return bonds, coordination, all_distances, tolerances
+
+    def hardness(self, noupdate=False, verbose=False, tolerance=1):
+        """
+        Calculates the hardness of a structure based in the model of XX
+        We use the covalent radii from pychemia.utils.periodic.
+        If noupdate=False
+        the Laplacian matrix method is not used and rcut is 2*max(cov_radii)
+
+        :param noupdate: (bool) If True, the Laplacian method is used
+        :param verbose: (bool) To print some debug info
+        :param tolerance: (float)
+
+        :rtype : (float)
+        """
+
+        bonds, coordination, all_distances, tolerances = self.get_bonds_coordination(tolerance=tolerance, ensure_conectivity=True)
+
+        if verbose:
+            print 'BONDS'
+            print bonds
+            print 'COORDINATION'
+            print coordination
+
+        sigma = 3.0
+        c_hard = 1300.0
+        x = 1.
+        tot = 0.0
+        f_d = 0.0
+        f_n = 1.0
+        atomicnumbers = atomic_number(self.get_composition().species)
+
+        if verbose:
+            print atomicnumbers
+
+        for i in atomicnumbers:
+            f_d += valence(i) / covalent_radius(i)
+            f_n *= valence(i) / covalent_radius(i)
+        f = 1.0 - (len(atomicnumbers) * f_n ** (1.0 / len(atomicnumbers)) / f_d) ** 2
+
+        # Selection of different bonds
+        diff_bonds = _np.unique(_np.array(reduce(lambda x, y: x+y, bonds)))
+        for i in diff_bonds:
+            i1 = all_distances[i]['pair'][0]
+            i2 = all_distances[i]['pair'][1]
+
+            ei = valence(self.symbols[i1]) / covalent_radius(self.symbols[i1])
+            ej = valence(self.symbols[i2]) / covalent_radius(self.symbols[i2])
+            #print 'bond ->', sqrt(ei * ej), (coordination[i1] * coordination[i2]), all_distances[i]['distance']
+
+            sij = sqrt(ei * ej) / (coordination[i1] * coordination[i2]) / all_distances[i]['distance']
+            num_i_j_bonds = len([j for j in diff_bonds if i1 in all_distances[j]['pair'] and i2 in all_distances[j]['pair']])
+            #print 'sij', sij
+            #print 'num_i_j_bonds', num_i_j_bonds
+            tot += num_i_j_bonds
+            x *= sij
+            #print 'x', x
+
+        if verbose:
+            print("V:", self.volume)
+            print("f:", f)
+            print("x:", x)
+
+        #print 'len_bonds', len(diff_bonds)
+        #print 'hardness_value =', c_hard, self.volume, (len(diff_bonds)), ( x ** (1. / (len(diff_bonds)))), exp(-sigma * f)
+        hardness_value = c_hard / self.volume * (len(diff_bonds) * x ** (1. / (len(diff_bonds)))) * exp(-sigma * f)
+
+        if verbose:
+            print hardness_value
+
+        return round(hardness_value, 3)
+
     def get_bonds(self, radius, noupdate=False, verbose=False, tolerance=0.05):
         """
-        Calculates bond lenghts between all atoms within "radius".
+        Calculates bond lengths between all atoms within "radius".
 
         Args:
             radius: (float) The radius of the sphere were the bonds
@@ -574,6 +735,12 @@ class Structure():
         Return:
             The values of the bonds are stored in self.info['bonds']
 
+        :param radius: (float)
+        :param noupdate: (bool)
+        :param verbose: (bool)
+        :param tolerance: (float)
+
+        :rtype : dict
         """
         # The number of atoms in the cell
         n = self.natom
@@ -622,7 +789,7 @@ class Structure():
 
             nzeros = 0
             for i in eigen:
-                if round(i, 5) == 0.0:
+                if round(i.real, 5) == 0.0:
                     nzeros += 1
             if nzeros == 1 or (noupdate and len(dis_dic) > 0):
                 break
@@ -641,12 +808,18 @@ class Structure():
 
         return radius, coordination, dis_dic
 
-    def hardness(self, noupdate=False, verbose=False, tolerance=0.05):
+    def hardness_OLD(self, noupdate=False, verbose=False, tolerance=0.05):
         """
-        Calculates the hadrness of a structure based in the model of
-        XX, but using the covalente radii from ase.data. If noupdate=False
+        Calculates the hardness of a structure based in the model of XX
+        We use the covalent radii from pychemia.utils.periodic.
+        If noupdate=False
         the Laplacian matrix method is not used and rcut is 2*max(cov_radii)
 
+        :param noupdate: (bool) If True, the Laplacian method is used
+        :param verbose: (bool) To print some debug info
+        :param tolerance: (float)
+
+        :rtype : (float)
         """
 
         #from ase.data import covalent_radii
@@ -688,28 +861,46 @@ class Structure():
             f_n *= valence(i) / covalent_radius(i)
         f = 1.0 - (len(dic_atms) * f_n ** (1.0 / len(dic_atms)) / f_d) ** 2
 
+        if verbose:
+            print 'BONDS'
+            print dis_dic
+            print 'COORDINATION'
+            print coord
+
         for i in dis_dic.keys():
             i1 = dis_dic[i][2][0]
             i2 = dis_dic[i][2][1]
+
             #ei = Z[atms[i1].symbol] / covalent_radii[atms[i1].number]
             #ej = Z[atms[i2].symbol] / covalent_radii[atms[i2].number]
             ei = valence(spc.symbols[i1]) / covalent_radius(spc.symbols[i1])
             ej = valence(spc.symbols[i2]) / covalent_radius(spc.symbols[i2])
 
+
+            #print 'bond ->', sqrt(ei * ej), (coord[i1] * coord[i2]), dis_dic[i][0]
+
             #        print atms[i1].symbol, ei, atms[i2].symbol, ej
             sij = sqrt(ei * ej) / (coord[i1] * coord[i2]) / dis_dic[i][0]
-            tot += dis_dic[i][1]
+            #print 'sij', sij
+            #print 'num_i_j_bonds', dis_dic[i][1]
 
+            tot += dis_dic[i][1]
             x *= sij * dis_dic[i][1]
+            #print 'x', x
 
         if verbose:
             print("V:", volume)
             print("f:", f)
             print("x:", x)
 
+        #print 'len_bonds', len(dis_dic)
+        #print 'hardness_value =', c_hard, volume, (len(dis_dic)), (  x ** (1. / (len(dis_dic)))), exp(-sigma * f)
         hardness_value = c_hard / volume * (len(dis_dic) * x ** (1. / (len(dis_dic)))) * exp(-sigma * f)
 
-        return round(hardness_value, 1)
+        if verbose:
+            print hardness_value
+
+        return round(hardness_value, 3)
 
     def plot(self):
         from mayavi import mlab
@@ -723,15 +914,12 @@ class Structure():
         mlab.points3d(x, y, z, cr, scale_factor=1)
 
         if self.is_crystal:
-            frame, line1, line2, line3 = Lattice(self.cell, self.periodicity).get_path()
-            ze = _np.zeros(2)
+            frame, line1, line2, line3 = self.get_cell().get_path()
 
-            bb1 = mlab.plot3d(frame[:, 0], frame[:, 1], frame[:, 2], tube_radius=.05, color=(1, 1, 1))
-            bb2 = mlab.plot3d(line1[:, 0], line1[:, 1], line1[:, 2], tube_radius=.05, color=(1, 1, 1))
-            bb3 = mlab.plot3d(line2[:, 0], line2[:, 1], line2[:, 2], tube_radius=.05, color=(1, 1, 1))
-            bb4 = mlab.plot3d(line3[:, 0], line3[:, 1], line3[:, 2], tube_radius=.05, color=(1, 1, 1))
-
-            bs = [bb1, bb2, bb3, bb4]
+            mlab.plot3d(frame[:, 0], frame[:, 1], frame[:, 2], tube_radius=.05, color=(1, 1, 1))
+            mlab.plot3d(line1[:, 0], line1[:, 1], line1[:, 2], tube_radius=.05, color=(1, 1, 1))
+            mlab.plot3d(line2[:, 0], line2[:, 1], line2[:, 2], tube_radius=.05, color=(1, 1, 1))
+            mlab.plot3d(line3[:, 0], line3[:, 1], line3[:, 2], tube_radius=.05, color=(1, 1, 1))
 
         mlab.view()
         return mlab.gcf()
@@ -774,6 +962,31 @@ class Structure():
         structdict = unicode2string(_json.load(filep))
         self.fromdict(structdict)
 
+    def distance2(self, atom1, atom2):
+        assert (isinstance(atom1, int))
+        assert (isinstance(atom2, int))
+        assert (atom1 < self.natom)
+        assert (atom2 < self.natom)
+        return self.get_cell().distance2(self.reduced[atom1], self.reduced[atom2])
+
+    def __eq__(self, other):
+        if self.natom != other.natom:
+            ret = False
+        elif not _np.array_equal(self.cell, other.cell):
+            ret = False
+        elif not _np.array_equal(self.positions, other.positions):
+            ret = False
+        elif not _np.array_equal(self.reduced, other.reduced):
+            ret = False
+        elif not _np.array_equal(self.periodicity, other.periodicity):
+            ret = False
+        else:
+            ret = True
+        return ret
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 def load_structure_json(filename):
     ret = Structure()
@@ -790,3 +1003,11 @@ class DynamicStructure(Structure):
     def __init__(self, **kwargs):
         Structure.__init__(self, **kwargs)
 
+class MetaStructure():
+    """
+    This class offer the possibility for atoms of being in a certain
+    position with a probability lower than 1
+    For example alloys and structural vacancies
+    """
+    def __init__(self):
+        pass

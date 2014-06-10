@@ -205,3 +205,41 @@ def distances(m):
     for i in _it.combinations(range(len(m)), 2):
         ret[i] = distance(m[i[0]], m[i[1]])
     return ret
+
+
+def wrap2_pmhalf(x):
+    """
+    Wraps a number or array in the interval ]-1/2, 1/2]
+    values = -1/2 will be wrapped  to 1/2
+
+    :param x:
+
+    Example:
+
+    >>> wrap2_pmhalf(-0.5)
+    0.5
+    >>> wrap2_pmhalf(0.0)
+    0.0
+    >>> wrap2_pmhalf([-0.75,-0.5,-0.25,0.0,0.25,0.5,0.75])
+    array([ 0.25,  0.5 , -0.25,  0.  ,  0.25,  0.5 , -0.25])
+    >>> wrap2_pmhalf([[-0.75,-0.5,-0.25],[0.25,0.5,0.75]])
+    array([[ 0.25,  0.5 , -0.25],
+           [ 0.25,  0.5 , -0.25]])
+    """
+
+    def wrap(num):
+        tol12 = 1e-12
+        if num > 0:
+            ret = (num+0.5-tol12) % 1.0 - 0.5 + tol12
+        else:
+            ret = -(-(num - 0.5 - tol12) % 1.0) + 0.5 + tol12
+        for y in [-0.25, 0.0, 0.25, 0.5]:
+            ret = (lambda num2: y if abs(y-num2) < tol12 else num2)(ret)
+        return ret
+
+    if _np.iterable(x):
+        vec = _np.vectorize(wrap)
+        return vec(x)
+    else:
+        return wrap(x)
+

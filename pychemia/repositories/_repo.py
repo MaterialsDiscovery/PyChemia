@@ -10,11 +10,13 @@ the StructureEntry object
 Also each calculation has it own metadata accessible by ExecutionEntry
 object
 """
+import hashlib
 
 import json as _json
 import os as _os
 import uuid as _uuid
 import shutil as _shutil
+import math
 from pychemia.geometry import load_structure_json
 from pychemia.utils.computing import unicode2string
 
@@ -41,11 +43,12 @@ class StructureEntry():
         if identifier is None:
             self.structure = structure
             self.identifier = str(_uuid.uuid4())
+            self.path = None
             if original_file is not None:
                 assert (_os.path.isfile(original_file))
             self.original_file = original_file
-            self.parents = None
-            self.children = None
+            self.parents = []
+            self.children = []
             if isinstance(tags, str):
                 self.tags = [tags]
             elif isinstance(tags, list):
@@ -62,13 +65,13 @@ class StructureEntry():
             assert (repository is not None)
             self.identifier = identifier
             self.repository = repository
-            path = repository.path + '/' + self.identifier
-            if not _os.path.isdir(path):
-                raise ValueError("Directory not found: " + path)
-            if not _os.path.isfile(path + '/metadata.json'):
-                raise ValueError("No metadata found in " + path)
-            if not _os.path.isfile(path + '/structure.json'):
-                raise ValueError("No structure found in " + path)
+            self.path = self.repository.path + '/' + self.identifier
+            if not _os.path.isdir(self.path):
+                raise ValueError("Directory not found: " + self.path)
+            if not _os.path.isfile(self.path + '/metadata.json'):
+                raise ValueError("No metadata found in " + self.path)
+            if not _os.path.isfile(self.path + '/structure.json'):
+                raise ValueError("No structure found in " + self.path)
             self.load()
 
     def metadatatodict(self):
@@ -79,34 +82,42 @@ class StructureEntry():
 
     def load(self):
         assert isinstance(self.identifier, str)
-        path = self.repository.path + '/' + self.identifier
-        rf = open(path + '/metadata.json', 'r')
+        rf = open(self.path + '/metadata.json', 'r')
         self.metadatafromdict(unicode2string(_json.load(rf)))
         rf.close()
-        self.structure = load_structure_json(path + '/structure.json')
-        if _os.path.isfile(path + '/properties.json'):
-            rf = open(path + '/properties.json', 'r')
+        if self.tags is None:
+            self.tags = []
+        if self.children is None:
+            self.children = []
+        if self.parents is None:
+            self.parents = []
+        self.structure = load_structure_json(self.path + '/structure.json')
+        if _os.path.isfile(self.path + '/properties.json'):
+            rf = open(self.path + '/properties.json', 'r')
             self.properties = unicode2string(_json.load(rf))
             rf.close()
+        self.load_originals()
+
+    def load_originals(self):
+        orig_dir = self.path + '/original'
+        if _os.path.isdir(orig_dir):
+            self.original_file = [_os.path.abspath(orig_dir + '/'+x) for x in _os.listdir(orig_dir)]
         else:
-            pass
-        if _os.path.isdir(path + '/original') and len(_os.listdir(path + '/original')) > 0:
-            self.original_file = path + '/original/' + _os.listdir(path + '/original')[0]
+            self.original_file = []
 
     def save(self):
-        path = self.repository.path + '/' + self.identifier
-        wf = open(path + '/metadata.json', 'w')
+        if self.path is None:
+            self.path = self.repository.path + '/' + self.identifier
+        wf = open(self.path + '/metadata.json', 'w')
         _json.dump(self.metadatatodict(), wf, sort_keys=True, indent=4, separators=(',', ': '))
         wf.close()
-        self.structure.save_json(path + '/structure.json')
+        self.structure.save_json(self.path + '/structure.json')
         if self.properties is not None:
-            wf = open(path + '/properties.json', 'w')
+            wf = open(self.path + '/properties.json', 'w')
             _json.dump(self.properties, wf, sort_keys=True, indent=4, separators=(',', ': '))
             wf.close()
         if self.original_file is not None:
-            if not _os.path.isdir(path + '/original'):
-                _os.mkdir(path + '/original')
-            _shutil.copy2(self.original_file, path + '/original')
+            self.add_original_file(self.original_file)
 
     def metadatafromdict(self, entrydict):
         self.tags = entrydict['tags']
@@ -122,24 +133,82 @@ class StructureEntry():
     def add_children(self, children):
         _add2list(children, self.children)
 
+    def add_original_file(self, filep):
+        orig_dir = self.path + '/original'
+        if isinstance(filep, str):
+            filep = [filep]
+        self.load_originals()
+        hashs = {}
+        for iorig in self.original_file:
+            rf = open(iorig, 'r')
+            hashs[iorig] = hashlib.sha224(rf.read()).hexdigest()
+            rf.close()
+
+        for ifile in filep:
+            assert(_os.path.isfile(ifile))
+            rf = open(ifile, 'r')
+            hash_ifile = hashlib.sha224(rf.read()).hexdigest()
+
+            if hash_ifile in hashs.values():
+                continue
+
+            if ifile not in self.original_file:
+                if not _os.path.isdir(orig_dir):
+                    _os.mkdir(orig_dir)
+
+                if not _os.path.isfile(orig_dir + '/' + _os.path.basename(ifile)):
+                    _shutil.copy2(ifile, orig_dir)
+                else:
+                    i = 0
+                    while True:
+                        newfile = ifile + '_' + str(i)
+                        if not _os.path.isfile(orig_dir + '/' + _os.path.basename(newfile)):
+                            _shutil.copy(ifile, orig_dir + '/'+_os.path.basename(newfile))
+                            break
+                        else:
+                            i += 1
+        self.load_originals()
+
     def __str__(self):
         ret = 'Structure: \n' + str(self.structure)
         ret += '\nTags: ' + str(self.tags)
         ret += '\nParents: ' + str(self.parents)
         ret += '\nChildren: ' + str(self.children)
         ret += '\nIdentifier: ' + str(self.identifier)
+        ret += '\nOriginal Files:'+str(self.original_file)
+        ret += '\n'
         return ret
 
     def __eq__(self, other):
         ret = True
         if self.structure != other.structure:
+            print 'Not equal structure'
             ret = False
-        elif set(self.children) != set(other.children):
+        elif self.children is None and other.children is not None:
+            ret =False
+        elif self.children is not None and other.children is None:
+            ret =False
+        elif self.children is not None and set(self.children) != set(other.children):
+            print 'Not equal children'
             ret = False
-        elif set(self.parents) != set(other.parents):
+        elif self.parents is None and other.parents is not None:
+            ret =False
+        elif self.parents is not None and other.parents is None:
+            ret =False
+        elif self.parents is not None and set(self.parents) != set(other.parents):
+            print 'Not equal parents'
             ret = False
-        elif set(self.tags) != set(other.tags):
+        elif self.tags is None and other.tags is not None:
+            ret =False
+        elif self.tags is not None and other.tags is None:
+            ret =False
+        elif self.tags is not None and set(self.tags) != set(other.tags):
+            print 'Not equal tags'
             ret = False
+        return ret
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class ExecutionEntry():
@@ -173,7 +242,6 @@ class StructureRepository():
         if _os.path.isfile(self.path + '/repo.json'):
             self.load()
         else:
-            self.nentries = 0
             self.tags = {}
 
             if _os.path.lexists(self.path):
@@ -187,14 +255,11 @@ class StructureRepository():
         """
         Serialize the values of the repositories into a dictionary
         """
-        repos_dict = {'tags': self.tags,
-                      'nentries': self.nentries}
+        repos_dict = {'tags': self.tags}
 
         return repos_dict
 
     def fromdict(self, repos_dict):
-
-        self.nentries = repos_dict['nentries']
         self.tags = repos_dict['tags']
 
     def save(self):
@@ -216,6 +281,50 @@ class StructureRepository():
     @property
     def get_all_entries(self):
         return [x for x in _os.listdir(self.path) if _os.path.isfile(self.path + '/' + x + '/metadata.json')]
+
+    def __len__(self):
+        return len(self.get_all_entries)
+
+    def get_formulas(self):
+        formulas = {}
+        for i in self.get_all_entries:
+            ientry = StructureEntry(repository=self, identifier=i)
+            formula = ientry.structure.formula
+            if formula in formulas:
+                formulas[formula].append(i)
+            else:
+                formulas[formula] = [i]
+        return formulas
+
+    def merge2entries(self, orig, dest):
+        assert(orig.structure == dest.structure)
+        dest.add_parents(orig.parents)
+        dest.add_children(orig.children)
+        dest.add_tags(orig.tags)
+        if orig.original_file is not None and len(orig.original_file) > 0:
+            dest.add_original_file(orig.original_file)
+        dest.save()
+        self.del_entry(orig)
+
+    def clean(self):
+        for i in self.tags:
+            for j in self.tags[i]:
+                if not _os.path.isdir(self.path+'/'+j) or not _os.path.isfile(self.path+'/'+j+'/metadata.json'):
+                    print 'Removing', j
+                    self.tags[i].remove(j)
+        self.save()
+
+    def refine(self):
+        formulas = self.get_formulas()
+        for j in formulas:
+            print j
+            if len(formulas[j]) > 1:
+                for i in range(len(formulas[j])-1):
+                    stru1 = StructureEntry(repository=self, identifier=formulas[j][i])
+                    stru2 = StructureEntry(repository=self, identifier=formulas[j][i+1])
+                    if stru1 == stru2:
+                        self.merge2entries(stru1, stru2)
+        self.save()
 
     def merge(self, other):
         """
@@ -244,11 +353,10 @@ class StructureRepository():
         Add a new StructureEntry into the repository
         """
         entry.repository = self
-        path = self.path + '/' + entry.identifier
-        if not _os.path.isdir(path):
-            _os.mkdir(path)
+        entry.path = self.path + '/' + entry.identifier
+        if not _os.path.isdir(entry.path):
+            _os.mkdir(entry.path)
         entry.save()
-        self.nentries += 1
         if entry.tags is not None:
             for itag in entry.tags:
                 if itag in self.tags:
@@ -258,9 +366,46 @@ class StructureRepository():
                     self.tags[itag] = [entry.identifier]
         self.save()
 
+    def add_many_entries(self, list_of_entries, tag, number_threads=1):
+
+        from threading import Thread
+        from pychemia.external.pymatgen import cif2structure
+
+        def worker(cifs, tag, results):
+            results['succeed'] = []
+            results['failed'] = []
+            for i in cifs:
+                try:
+                    struct=cif2structure(i, primitive=True)
+                except:
+                    struct=None
+                    results['failed'].append(i)
+                if struct is not None:
+                    structentry = StructureEntry(structure=struct, original_file=i, tags=[tag])
+                    self.add_entry(structentry)
+                    results['succeed'].append(i)
+
+        results={}
+        th = []
+        results = []
+        num = int(math.ceil(float(len(list_of_entries))/number_threads))
+        for i in range(number_threads):
+            results.append({})
+            th.append(Thread(target=worker, args=(list_of_entries[i*num:min((i+1)*num, len(list_of_entries))], tag, results[i])))
+        for i in th:
+            i.start()
+        return th, results
+
+
+    def del_entry(self, entry):
+        print 'Deleting ', entry.identifier
+        for i in entry.tags:
+            self.tags[i].remove(entry.identifier)
+        _shutil.rmtree(entry.path)
+
     def __str__(self):
         ret = 'Location: ' + self.path
-        ret += '\nNumber of entries: ' + str(self.nentries)
+        ret += '\nNumber of entries: ' + str(len(self))
         if len(self.tags) > 0:
             for itag in self.tags:
                 ret += '\n\t' + itag + ':'

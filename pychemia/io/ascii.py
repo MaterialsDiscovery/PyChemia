@@ -95,7 +95,7 @@ def load(filep):
     return struct
 
 
-def save(filep, struct, cartesian=True, long_format=True, angdeg=False):
+def save(struct, filep, cartesian=True, long_format=True, angdeg=False):
     """
     Saves a pychemia Structure object in  V_sim .ascii fileformat
     in the simplest way, i.e. using all
@@ -112,7 +112,7 @@ def save(filep, struct, cartesian=True, long_format=True, angdeg=False):
     f.write("%s\n" % struct.name)
 
     # write cell
-    cell = atoms.get_cell()
+    cell = struct.cell
     print cell
     if angdeg:
         ddd = cell_to_cellpar(cell)

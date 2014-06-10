@@ -78,7 +78,7 @@ class InputVariables():
     Manipulate an octopus input file
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename=None):
         """
         Converts a given octopus input file
         into a dictionary where the keys are

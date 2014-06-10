@@ -58,7 +58,7 @@ class Composition():
         for i in value:
             assert(i in atomic_symbols)
             assert(isinstance(value[i], int))
-        self._composition = value.copy
+        self._composition = value.copy()
 
     @property
     def composition(self):

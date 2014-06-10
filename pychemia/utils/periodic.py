@@ -313,12 +313,12 @@ def atomic_symbol(value=None):
 
     Examples:
 
->>> from pychemia.utils.periodic import atomic_symbol
->>> atomic_symbol(1)
-'H'
->>> atomic_symbol([1,2])
-['H', 'He']
-"""
+    >>> from pychemia.utils.periodic import atomic_symbol
+    >>> atomic_symbol(1)
+    'H'
+    >>> atomic_symbol([1,2])
+    ['H', 'He']
+    """
     ret = None
     if value is None:
         ret = {}
