@@ -8,7 +8,6 @@ import numpy as _np
 
 import pychemia
 
-
 def load_POSCAR(path):
     """
     Load a POSCAR file and return a pychemia crystal object
@@ -28,16 +27,30 @@ def load_POSCAR(path):
     rf = open(filename, 'r')
     crystal.comment = rf.readline().strip()
     latconst = float(rf.readline())
-    crystal.cell[0, :] = _np.array([float(x) for x in rf.readline().split()])
-    crystal.cell[1, :] = _np.array([float(x) for x in rf.readline().split()])
-    crystal.cell[2, :] = _np.array([float(x) for x in rf.readline().split()])
+    newcell = _np.zeros((3, 3))
+
+
+    newcell[0, :] = _np.array([float(x) for x in rf.readline().split()])
+    newcell[1, :] = _np.array([float(x) for x in rf.readline().split()])
+    newcell[2, :] = _np.array([float(x) for x in rf.readline().split()])
+
+    crystal.set_cell(newcell)
 
     # The call to add_atom naturally will increase the
     # internal variable crystal.natom
-    natom_per_species = _np.array([int(x) for x in rf.readline().split()])
+    line = rf.readline()
+    species = None
+    try:
+        natom_per_species = _np.array([int(x) for x in line.split()])
+    except ValueError:
+        species = [x for x in line.split()]
+        line = rf.readline()
+        natom_per_species = _np.array([int(x) for x in line.split()])
+
     natom = _np.sum(natom_per_species)
 
-    species = get_species(path + '/POTCAR')
+    if species is None:
+        species = get_species(path + '/POTCAR')
 
     symbols = []
     for i in range(len(natom_per_species)):
@@ -53,7 +66,10 @@ def load_POSCAR(path):
 
     for i in range(natom):
         pos = [float(x) for x in rf.readline().split()]
-        crystal.add_atom(symbols[i], pos)
+        if kmode == 'Cartesian':
+            crystal.add_atom(symbols[i], pos, option='cartesian')
+        elif kmode == 'Direct':
+            crystal.add_atom(symbols[i], pos, option='reduced')
 
     return crystal
 

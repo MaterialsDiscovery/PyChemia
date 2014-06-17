@@ -286,8 +286,9 @@ class Structure():
         """
         assert(name in atomic_symbols)
         assert(option in ['cartesian', 'reduced'])
-        self.symbols = self.symbols.append(name)
+        self.symbols.append(name)
         self.natom += 1
+        self._composition = None
 
         if option == 'cartesian':
             if self.natom == 0:
@@ -314,6 +315,7 @@ class Structure():
         _np.delete(self.positions, index, 0)
         _np.delete(self.reduced, index, 0)
         self.natom -= 1
+        self._composition = None
 
     def center_mass(self, list_of_atoms=None):
         """
@@ -486,6 +488,7 @@ class Structure():
             self.cell = _np.diag(npcell)
         else:
             self.cell = _np.array(cell).reshape([3, 3])
+        self._lattice = None
 
     def set_mag_moments(self, mag_moments):
         """
