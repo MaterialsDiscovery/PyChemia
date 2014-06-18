@@ -3,7 +3,9 @@ PyChemia
 
 Python Materials Discovery Framework
 
-![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/PyChemia.png)
+<center>
+![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/PyChemia_Small.png)
+</center>
 
 PyChemia is a open-source Python Library for materials structural search. The purpose of the initiative is to create
 a method agnostic framework for materials discovery and design using a variety of methods from Minima Hoping to
@@ -19,12 +21,11 @@ This allows the library to compute electronic-structure properties using state-o
 and extract properties from those calculations.
 
 PyChemia requirements
-=====================
+---------------------
 
 Before installing PyChemia, you may need to first install a few critical dependencies
 
-Mandatory
----------
+### Mandatory
 
 1. Python >= 2.7.x or Python >= 3.1.x
    The library is tested for the current version of Python
@@ -36,8 +37,7 @@ Mandatory
 3. [SciPy](http://scipy.org/ "SciPy") >= 0.9
    SciPy is used for many linear algebra and FFT calls
 
-Optional
---------
+### Optional
 
 1. [Pandas](http://pandas.pydata.org/ "Pandas")
    Library for Data Analysis used by the datamining modules
@@ -69,7 +69,7 @@ Optional
    90% of them with the electronic ground-state computed.
 
 How to install PyChemia
-=======================
+-----------------------
 
 The best way to install PyChemia is from its GitHub repository
 
@@ -81,3 +81,9 @@ Once the repository is downloaded, you can install it using
     python setup.py built
     sudo python setup.py install
 
+Structure of the Library
+------------------------
+
+![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/PyChemia_code.png)
+
+![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/PyChemia_workflow.png)
