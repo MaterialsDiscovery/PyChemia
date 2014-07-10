@@ -1,44 +1,22 @@
+"""
+Class Composition
+"""
+
 from numpy import array, argsort
-from pychemia.utils.periodic import atomic_symbols, electronegativity
 from fractions import gcd as _gcd
-from pychemia.utils.computing import unicode2string
+from pychemia.utils.periodic import atomic_symbols, electronegativity, atomic_number
 
 __author__ = 'Guillermo Avendano-Franco'
 
-
-def formula_parser(value):
-    ret = {}
-    jump = False
-    for i in range(len(value)):
-        if jump > 0:
-            jump -= 1
-        elif value[i].isupper():
-            if i+1 < len(value) and value[i+1].islower():
-                if i+2 < len(value) and value[i+2].islower():
-                    specie = value[i:i+3]
-                    jump = 2
-                else:
-                    specie = value[i:i+2]
-                    jump = 1
-            else:
-                specie = value[i]
-                jump = 0
-            j = 1
-            number = ''
-            while True:
-                if i+jump+j < len(value) and value[i+jump+j].isdigit():
-                    number += value[i+jump+j]
-                    j += 1
-                else:
-                    break
-            if number == '':
-                ret[specie] = 1
-            else:
-                ret[specie] = int(number)
-    return ret
-
-
 class Composition():
+    """
+    The class Composition is basically a dictionary with species as keys and
+    number of atoms of that specie as values. The methods provided for Composition objects should
+    not contain geometrical information or graph connectivity.
+
+    The main purpose of this class is to be able to parse formulas into compositions and return
+    string formulas sorted in various ways.
+    """
 
     def __init__(self, value):
         """
@@ -46,15 +24,27 @@ class Composition():
         where each specie is the key and the value is an integer
         with the number of atoms of that specie
 
-        :param value: (str, dict)
+        :param value: (str, dict) The value could be a string with a chemical formula or the actual dictionary
+        of species and values
+
+        :rtype: Composition
         """
 
         if isinstance(value, str):
             self._composition = formula_parser(value)
         elif isinstance(value, dict):
-            self.set_composition(value)
+            self._set_composition(value)
 
-    def set_composition(self, value):
+    def __len__(self):
+        return len(self._composition)
+
+    def _set_composition(self, value):
+        """
+        Checks the values of a dictionary before seting the actual composition
+
+        :param value: (dict)
+        :rtype: None
+        """
         for i in value:
             assert(i in atomic_symbols)
             assert(isinstance(value[i], int))
@@ -63,68 +53,109 @@ class Composition():
     @property
     def composition(self):
         """
-        Return the composition dictionary
+        :return: The composition dictionary
 
-        :return: dict
+        :rtype: dict
         """
         return self._composition
 
     @property
+    def formula(self):
+        """
+        :return: The chemical formula with atoms sorted alphabetically
+
+        :rtype: str
+        """
+        return self.sorted_formula(sortby='alpha', reduced=True)
+
+    def formula_parser(value):
+        """
+        :return: Convert an string representing a chemical formula into a dictionary with the species as keys
+                 and values as the number of atoms of that specie
+
+        :param value: (str) String representing a chemical formula
+
+        :rtype: dict
+        """
+        ret = {}
+        jump = False
+        for i in range(len(value)):
+            if jump > 0:
+                jump -= 1
+            elif value[i].isupper():
+                if i+1 < len(value) and value[i+1].islower():
+                    if i+2 < len(value) and value[i+2].islower():
+                        specie = value[i:i+3]
+                        jump = 2
+                    else:
+                        specie = value[i:i+2]
+                        jump = 1
+                else:
+                    specie = value[i]
+                    jump = 0
+                j = 1
+                number = ''
+                while True:
+                    if i+jump+j < len(value) and value[i+jump+j].isdigit():
+                        number += value[i+jump+j]
+                        j += 1
+                    else:
+                        break
+                if number == '':
+                    ret[specie] = 1
+                else:
+                    ret[specie] = int(number)
+        return ret
+
+    @property
+    def gcd(self):
+        """
+        :return: The greatest common denominator for the composition
+
+        :rtype: int
+        """
+        return reduce(_gcd, self.values)
+
+    @property
     def species(self):
         """
-        Return the list of species
+        :return: The list of species
 
-        :return: list
+        :rtype: list
         """
         return self._composition.keys()
 
     @property
     def values(self):
         """
-        Return the number of atoms of each specie
+        :return: The number of atoms of each specie
 
-        :return: list
+        :rtype: list
         """
         return [self._composition[x] for x in self._composition]
 
     @property
-    def gcd(self):
-        """
-        Return the Greatest common denominator for the composition
-
-        :return: int
-        """
-        return reduce(_gcd, self.values)
-
-    @property
     def natom(self):
         """
-        Return the number of atoms in the composition
+        :return: The number of atoms in the composition
 
-        :return: int
+        :rtype: int
         """
         return sum(self.values)
 
-    @property
-    def formula(self):
-        """
-        Return the formula with atoms sorted alphabetically
-
-        :return: str
-        """
-        return self.sorted_formula(sortby='alpha', reduced=True)
 
     def sorted_formula(self, sortby='alpha', reduced=True):
         """
-        Return the chemical formula. It could be sorted
-        alphabetically sortby='alpha' by electronegativity
-        sortby='electroneg' or by Hill System sortby='Hill'
+        :return: The chemical formula. It could be sorted  alphabetically using sortby='alpha', by electronegativity
+                 using sortby='electroneg' or using Hill System with sortby='Hill'
 
         :param sortby: (str) 'alpha' : Alphabetically
                              'electroneg' : Electronegativity
                              'hill' : Hill System
 
-        :param reduced:
+        :param reduced: (bool) If the formula should be normalized
+
+        :rtype: str
         """
         if reduced and self.gcd > 1:
             comp = Composition(self.composition)
@@ -135,6 +166,9 @@ class Composition():
         ret = ''
         if sortby == 'electroneg':
             electroneg = electronegativity(comp.species)
+            for i in range(len(electroneg)):
+                if electroneg[i] is None:
+                    electroneg[i] = -1
             sortedspecies = array(comp.species)[argsort(electroneg)]
         elif sortby == "hill":  # FIXME: Hill system exceptions not implemented
             sortedspecies = []
@@ -153,3 +187,17 @@ class Composition():
             if comp.composition[specie] > 1:
                 ret += str(comp.composition[specie])
         return ret
+
+    def species_bin(self):
+        spec_bin = 0L
+        for i in atomic_number(self.species):
+            spec_bin += 2**i
+        return spec_bin
+
+    def species_hex(self):
+        spec_hex = 0L
+        i = 0
+        for atom_number in sorted(atomic_number(self.species)):
+            spec_hex += atom_number*(256**i)
+            i += 1
+        return spec_hex

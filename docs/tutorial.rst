@@ -1,5 +1,11 @@
-How to use PyChemia
-===================
+Basic Tutorial on PyChemia
+==========================
+
+The core of PyChemia as a library is the Structure class.
+The Structure class defines atomic structures that could be periodic or not
+and with periodicity defined in 1, 2 or 3 directions.
+This tutorial will show the basic functionality of the PyChemia Structure 
+class.
 
 This document offers and introduction to the use of the library.
 This information is useful for both users and developers to have get
@@ -49,24 +55,21 @@ pychemia.geometry and pychemia.repositories
 
 
 Basic Workflow for PyChemia
-===========================
+---------------------------
 
 1. We receive a set of CIF files to add in the database, with a set of
    different compositions
 
 2. The code read the CIF files, create Structure objects and feed the repositories
    with them
-   
+
 3. The selected structural predictor takes those structures or create new ones based
    on the method of choice.
-   The method returns new Structures those are stored in a separate repository, they 
+   The method returns new Structures those are stored in a separate repository, they
    are screened by similarity with those already present.
-   
+
 4. The structures enter in a set of 'tasks' for thermal stability and dynamic stability.
 
 5. Survival structures are stored in the final repository and final characterizations
    can follow on those Structures
-   
 
-   
-   

@@ -48,4 +48,4 @@ def pychemia2pymatgen(structure):
     lattice = structure.cell
     coords = structure.reduced
     species = structure.symbols
-    return pymatgen.Structure(lattice, species, coords)
+    return pymatgen.core.Structure(lattice, species, coords)

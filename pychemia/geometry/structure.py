@@ -31,24 +31,34 @@ class Structure():
     Define an object that contains information about atomic positions,
     cell parameters and periodicity and provides methods to manipulate
     those elements
+
+    Represents a molecule, cluster, wire, slab or crystal structure
+    The positions of the atoms and their atomic symbols are declared
+    in 'positions' and 'symbols' respectively.
+
+    For periodic structures, the 'periodicity' can be declared.
+    and cell parameters in 'cell'
+
+    Magnetic moments can be associated in the array vector_info['magnetic_moments'].
+
+    This object contains no dynamical information. That information
+    is supported by the child class DynamicStructure
+
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self,  **kwargs):
         """
-        Structure
+        :rtype : object
 
-        Represents a molecule, cluster, wire, slab or crystal structure
-        The positions of the atoms and their atomic symbols are declared
-        in 'positions' and 'symbols' respectively.
-
-        For periodic structures, the 'periodicity' can be declared.
-        and cell parameters in 'cell'
-
-        Magnetic moments can be associated in the array vector_info['magnetic_moments'].
-
-        This object contains no dynamical information. That information
-        is supported by the child class DynamicStructure
-
+        :param comment:
+        :param natom:
+        :param symbols:
+        :param periodicity:
+        :param cell:
+        :param positions:
+        :param reduced:
+        :param mag_moments:
+        :param kwargs:
         Args:
 
         natom      : Integer with number of atoms
@@ -130,15 +140,9 @@ class Structure():
             print('Arguments non consistent')
 
     def __len__(self):
-        """
-        Return the number of atoms in the cell
-        """
         return self.natom
 
     def __str__(self):
-        """
-        String representation of the object
-        """
         if self.natom == 0:
             xyz = 'Empty structure'
         else:
@@ -200,16 +204,7 @@ class Structure():
         ret += ')'
         return ret
 
-    @property
-    def is_periodic(self):
-        return any(self.periodicity)
-
     def _autocomplete(self):
-        """
-        Autocomplete items in the structure
-        that could be obtain from other information
-        present in the object
-        """
         if self.natom is None:
             if not self.positions is None:
                 self.natom = len(self.positions)
@@ -246,18 +241,7 @@ class Structure():
             else:
                 self.reduced = _np.array([])
 
-    @property
-    def is_crystal(self):
-        if not self.is_periodic:
-            return False
-        else:
-            return self.get_cell().periodic_dimensions == 3
-
     def _check(self):
-        """
-        Internal check of the selfconsistency of the
-        atomic structure
-        """
         check = True
 
         if len(self.symbols) != self.natom:
@@ -274,6 +258,78 @@ class Structure():
             check = False
 
         return check
+
+    @property
+    def is_periodic(self):
+        """
+        Return True if the Structure is periodic in any direction
+        False for non-periodic structures
+
+        :rtype : bool
+
+        :return: bool
+        """
+        return any(self.periodicity)
+
+    @property
+    def is_crystal(self):
+        """
+        True if structure is periodic in all directions
+        False otherwise
+
+        :rtype : bool
+
+        :return: bool
+        """
+        if not self.is_periodic:
+            return False
+        else:
+            return self.get_cell().periodic_dimensions == 3
+
+    @property
+    def composition(self):
+        """
+        Dictionary with the composition, the keys are the species and the values
+        represent the number of atoms of that specie
+
+        :rtype : dict
+
+        :return: dict
+        """
+        return self.get_composition().composition
+
+    @property
+    def formula(self):
+        """
+        String with the chemical formula
+
+        :rtype: str
+
+        :return: str
+        """
+        return self.get_composition().formula
+
+    @property
+    def density(self):
+        """
+        Computes the density of the cell
+
+        :rtype: float
+
+        :return: float
+        """
+        return sum(_np.array(mass(self.symbols))) / self.volume
+
+    @property
+    def volume(self):
+        """
+        Computes the volume of the cell
+
+        :rtype: float
+
+        :return: float
+        """
+        return abs(_np.linalg.det(self.cell))
 
     def add_atom(self, name, coordinates, option='cartesian'):
         """
@@ -308,6 +364,7 @@ class Structure():
         Removes the atom with the given index
 
         :param index:
+
         :return:
         """
         assert(abs(index) < self.natom)
@@ -356,14 +413,6 @@ class Structure():
         for i in range(self.natom):
             self.positions[i] = _np.dot(rotation, self.positions[i])
 
-    @property
-    def composition(self):
-        return self.get_composition().composition
-
-    @property
-    def formula(self):
-        return self.get_composition().formula
-
     def get_cell(self):
         if self._lattice is None:
             self._lattice = Lattice(self.cell)
@@ -389,24 +438,6 @@ class Structure():
                     species[atom] = 1
             self._composition = Composition(species)
         return self._composition
-
-    @property
-    def density(self):
-        """
-        Computes the density of the cell
-
-        :rtype : float
-        """
-        return sum(_np.array(mass(self.symbols))) / self.volume
-
-    @property
-    def volume(self):
-        """
-        Computes the volume of the cell
-
-        :rtype : float
-        """
-        return abs(_np.linalg.det(self.cell))
 
     def positions2reduced(self):
         """
@@ -440,13 +471,12 @@ class Structure():
         Calculates the distance between 2 atom, identified by index
         iatom and jatom
 
-        Args:
-            iatom: (int) index of first atom
-            jatom: (int) index of second atom
-            with_periodicity: (bool) if the periodic
-                              images should be considered to compute
-                              the shortest distance
-            tolerance: (float) Tolerance for the bases reduction
+        :param iatom: (int) index of first atom
+        :param jatom: (int) index of second atom
+        :param with_periodicity: (bool) if the periodic images should be considered to compute the shortest distance
+        :param tolerance: (float) Tolerance for the bases reduction
+
+        :rtype : (float) distance between iatom and jatom
         """
 
         if with_periodicity:
@@ -652,7 +682,7 @@ class Structure():
         coordination = [len(x) for x in bonds]
         return bonds, coordination, all_distances, tolerances
 
-    def hardness(self, noupdate=False, verbose=False, tolerance=1):
+    def hardness(self, noupdate=False, verbose=False, tolerance=1.2):
         """
         Calculates the hardness of a structure based in the model of XX
         We use the covalent radii from pychemia.utils.periodic.
@@ -688,6 +718,12 @@ class Structure():
         for i in atomicnumbers:
             f_d += valence(i) / covalent_radius(i)
             f_n *= valence(i) / covalent_radius(i)
+        if verbose:
+            print 'fd', f_d
+            print 'fn', f_n
+            print atomicnumbers
+        if f_d == 0:
+            return 0.0
         f = 1.0 - (len(atomicnumbers) * f_n ** (1.0 / len(atomicnumbers)) / f_d) ** 2
 
         # Selection of different bonds
@@ -726,24 +762,13 @@ class Structure():
         """
         Calculates bond lengths between all atoms within "radius".
 
-        Args:
-            radius: (float) The radius of the sphere were the bonds
-                    will be computed
-            noupdate: (bool) If the original radius should be increased
-                      until a connected structure is obtained
-            verbose: (bool) Print some info about the number of bonds
-                     computed
-            tolerance: (float) Tolerance for creation of a bond
+        :param radius: (float) The radius of the sphere were the bonds will be computed
+        :param noupdate: (bool) If the original radius should be increased until a connected structure is obtained
+        :param verbose: (bool) Print some info about the number of bonds computed
+        :param tolerance: (float) Tolerance for creation of a bond
 
-        Return:
-            The values of the bonds are stored in self.info['bonds']
-
-        :param radius: (float)
-        :param noupdate: (bool)
-        :param verbose: (bool)
-        :param tolerance: (float)
-
-        :rtype : dict
+        :rtype : dict The values of the bonds are stored in self.info['bonds']
+        
         """
         # The number of atoms in the cell
         n = self.natom
@@ -971,6 +996,12 @@ class Structure():
         assert (atom1 < self.natom)
         assert (atom2 < self.natom)
         return self.get_cell().distance2(self.reduced[atom1], self.reduced[atom2])
+
+    def valence_electrons(self):
+        ret = 0
+        for key,value in self.composition.items():
+            ret += value*valence(key)
+        return ret
 
     def __eq__(self, other):
         if self.natom != other.natom:

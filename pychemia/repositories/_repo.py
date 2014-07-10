@@ -58,6 +58,16 @@ class StructureEntry():
             else:
                 raise ValueError('The variable tags must be a string or list of strings')
 
+            if len(self.structure.composition) == 1:
+                self.add_tags('pure')
+            elif len(self.structure.composition) == 2:
+                self.add_tags('binary')
+            elif len(self.structure.composition) == 3:
+                self.add_tags('ternary')
+            elif len(self.structure.composition) == 4:
+                self.add_tags('quaternary')
+
+
         else:
             assert (original_file is None)
             assert (structure is None)
@@ -94,7 +104,11 @@ class StructureEntry():
         self.structure = load_structure_json(self.path + '/structure.json')
         if _os.path.isfile(self.path + '/properties.json'):
             rf = open(self.path + '/properties.json', 'r')
-            self.properties = unicode2string(_json.load(rf))
+            try:
+                self.properties = unicode2string(_json.load(rf))
+            except:
+                _os.rename(self.path + '/properties.json',self.path + '/properties.json.FAILED')
+                self.properties = None
             rf.close()
         self.load_originals()
 
@@ -210,18 +224,49 @@ class StructureEntry():
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def signature(self):
+        comp = self.structure.get_composition()
+        gcd = self.structure.get_composition().gcd
+        ret = '%02X_%020X_%02X_' % (self.structure.valence_electrons()/gcd, comp.species_hex(), gcd)
 
-class ExecutionEntry():
+        formula = "%s" % comp.sorted_formula(sortby='electroneg')
+        formula += (20-len(formula))*'_'
+        ret += formula
+
+        if self.structure.is_crystal:
+            ret += "_%5.3f" % self.structure.density
+        return ret
+
+class PropertiesEntry():
     """
     Defines one execution in the Execution Repository
     """
 
-    def __init__(self, path):
+    def __init__(self, structure_entry):
         """
         Creates a new execution repository
         """
-        self.path = path
+        self.entry = structure_entry
+        self.properties = {}
 
+    def add_property(self, name, values):
+        self.properties[name] = values
+
+    def save(self):
+        """
+        Save an existing repository information
+        """
+        wf = open(self.entry.path + '/properties.json', 'w')
+        _json.dump(self.properties, wf, sort_keys=True, indent=4, separators=(',', ': '))
+        wf.close()
+
+    def load(self):
+        """
+        Loads an existing repositories from its configuration file
+        """
+        rf = open(self.path + '/properties.json', 'r')
+        self.properties(unicode2string(_json.load(rf)))
+        rf.close()
 
 class StructureRepository():
     """
@@ -275,8 +320,25 @@ class StructureRepository():
         Loads an existing repositories from its configuration file
         """
         rf = open(self.path + '/repo.json', 'r')
-        self.fromdict(unicode2string(_json.load(rf)))
+        try:
+            jsonload=unicode2string(_json.load(rf))
+        except ValueError:
+            print "Error deserializing the object"
+            jsonload = {'tags': {}}
+        self.fromdict(jsonload)
         rf.close()
+
+    def rebuild(self):
+        ids = self.get_all_entries
+        self.tags = {}
+        for id in ids:
+            struct_entry = StructureEntry(identifier=id, repository=self)
+            for i in struct_entry.tags:
+                if i in self.tags:
+                    self.tags[i].append(id)
+                else:
+                    self.tags[i] = [id]
+        self.save()
 
     @property
     def get_all_entries(self):
@@ -396,7 +458,6 @@ class StructureRepository():
             i.start()
         return th, results
 
-
     def del_entry(self, entry):
         print 'Deleting ', entry.identifier
         for i in entry.tags:
@@ -413,6 +474,9 @@ class StructureRepository():
         else:
             ret += '\nTags: ' + str(self.tags)
         return ret
+
+    def structure_entry(self, id):
+        return StructureEntry(repository=self, identifier=id)
 
 
 class ExecutionRepository():
