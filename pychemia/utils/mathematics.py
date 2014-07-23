@@ -46,10 +46,10 @@ def unit_vector(v):
     :param v: list, numpy.array
     :rtype : numpy.ndarray
     Example:
-    >>> a = unit_vector([1, 2, 3])
-    >>> a
+>>> a = unit_vector([1, 2, 3])
+>>> a
     array([ 0.26726124,  0.53452248,  0.80178373])
-    >>> length_vector(a)
+>>> length_vector(a)
     1.0
     """
     return _np.array(v) / length_vector(_np.array(v, dtype=float))
@@ -64,8 +64,8 @@ def unit_vectors(m):
     :rtype : numpy.ndarray
 
     Example:
-    >>> b = unit_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
-    >>> b
+>>> b = unit_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
+>>> b
     array([[ 0.26726124,  0.53452248,  0.80178373],
            [ 0.45584231,  0.56980288,  0.68376346],
            [ 0.50257071,  0.57436653,  0.64616234],
@@ -127,9 +127,10 @@ def angle_vectors(m, units='rad'):
 
     :rtype : numpy.ndarray
     Example:
-    >>> a=angle_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
-    >>> import pprint
-    >>> pprint.pprint(a)
+
+>>> a = angle_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
+>>> import pprint
+>>> pprint.pprint(a)
     {(0, 1): 0.22572612855273419,
      (0, 2): 0.2858867976945072,
      (0, 3): 1.3002465638163236,
@@ -140,8 +141,8 @@ def angle_vectors(m, units='rad'):
      (2, 3): 1.0442265974045177,
      (2, 4): 0.86825103780276369,
      (3, 4): 1.5707963267948966}
-    >>> a = angle_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]], units='deg')
-    >>> pprint.pprint(a)
+>>> a = angle_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]], units='deg')
+>>> pprint.pprint(a)
     {(0, 1): 12.933154491899135,
      (0, 2): 16.380106926405656,
      (0, 3): 74.498640433063002,
@@ -188,8 +189,9 @@ def distances(m):
     :rtype : dict
 
     Example:
-    >>> import pprint
-    >>> pprint.pprint(distances([[1,2,3], [4,5,6], [7,8,9], [1,0,0], [0,0,2]]))
+
+>>> import pprint
+>>> pprint.pprint(distances([[1,2,3], [4,5,6], [7,8,9], [1,0,0], [0,0,2]]))
     {(0, 1): (array([3, 3, 3]), 5.196152422706632),
      (0, 2): (array([6, 6, 6]), 10.392304845413264),
      (0, 3): (array([ 0, -2, -3]), 3.6055512754639891),

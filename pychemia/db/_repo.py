@@ -17,7 +17,7 @@ import os as _os
 import uuid as _uuid
 import shutil as _shutil
 import math
-from pychemia.geometry import load_structure_json
+from pychemia.core import load_structure_json
 from pychemia.utils.computing import unicode2string
 
 
@@ -66,7 +66,6 @@ class StructureEntry():
                 self.add_tags('ternary')
             elif len(self.structure.composition) == 4:
                 self.add_tags('quaternary')
-
 
         else:
             assert (original_file is None)
@@ -239,12 +238,12 @@ class StructureEntry():
 
 class PropertiesEntry():
     """
-    Defines one execution in the Execution Repository
+    Defines one calc in the Execution Repository
     """
 
     def __init__(self, structure_entry):
         """
-        Creates a new execution repository
+        Creates a new calc repository
         """
         self.entry = structure_entry
         self.properties = {}
@@ -262,7 +261,7 @@ class PropertiesEntry():
 
     def load(self):
         """
-        Loads an existing repositories from its configuration file
+        Loads an existing db from its configuration file
         """
         rf = open(self.path + '/properties.json', 'r')
         self.properties(unicode2string(_json.load(rf)))
@@ -272,19 +271,19 @@ class StructureRepository():
     """
     Defines the location of the executions repository
     and structure repository and methods to add, remove
-    and check those repositories
+    and check those db
     """
 
     def __init__(self, path):
         """
-        Creates new repositories for calculations and structures
+        Creates new db for calculations and structures
 
         Args:
         path: (string) Directory path for the structure repository
         """
         self.path = _os.path.abspath(path)
 
-        if _os.path.isfile(self.path + '/repo.json'):
+        if _os.path.isfile(self.path + '/db.json'):
             self.load()
         else:
             self.tags = {}
@@ -298,7 +297,7 @@ class StructureRepository():
 
     def todict(self):
         """
-        Serialize the values of the repositories into a dictionary
+        Serialize the values of the db into a dictionary
         """
         repos_dict = {'tags': self.tags}
 
@@ -311,15 +310,15 @@ class StructureRepository():
         """
         Save an existing repository information
         """
-        wf = open(self.path + '/repo.json', 'w')
+        wf = open(self.path + '/db.json', 'w')
         _json.dump(self.todict(), wf, sort_keys=True, indent=4, separators=(',', ': '))
         wf.close()
 
     def load(self):
         """
-        Loads an existing repositories from its configuration file
+        Loads an existing db from its configuration file
         """
-        rf = open(self.path + '/repo.json', 'r')
+        rf = open(self.path + '/db.json', 'r')
         try:
             jsonload=unicode2string(_json.load(rf))
         except ValueError:
@@ -331,13 +330,13 @@ class StructureRepository():
     def rebuild(self):
         ids = self.get_all_entries
         self.tags = {}
-        for id in ids:
-            struct_entry = StructureEntry(identifier=id, repository=self)
+        for ident in ids:
+            struct_entry = StructureEntry(identifier=ident, repository=self)
             for i in struct_entry.tags:
                 if i in self.tags:
-                    self.tags[i].append(id)
+                    self.tags[i].append(ident)
                 else:
-                    self.tags[i] = [id]
+                    self.tags[i] = [ident]
         self.save()
 
     @property
@@ -390,7 +389,7 @@ class StructureRepository():
 
     def merge(self, other):
         """
-        Add all the contents from other repositories into the
+        Add all the contents from other db into the
         calling object
 
         :param other: StructureRepository
@@ -426,7 +425,7 @@ class StructureRepository():
                         self.tags[itag].append(entry.identifier)
                 else:
                     self.tags[itag] = [entry.identifier]
-        #self.save()
+        self.save()
 
     def add_many_entries(self, list_of_entries, tag, number_threads=1):
 
@@ -475,8 +474,8 @@ class StructureRepository():
             ret += '\nTags: ' + str(self.tags)
         return ret
 
-    def structure_entry(self, id):
-        return StructureEntry(repository=self, identifier=id)
+    def structure_entry(self, ident):
+        return StructureEntry(repository=self, identifier=ident)
 
 
 class ExecutionRepository():

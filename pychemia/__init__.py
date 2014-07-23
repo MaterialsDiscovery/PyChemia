@@ -1,16 +1,18 @@
-import geometry
+from core import *
+import analysis
+import calc
+import db
 import dft
-import data_mining
+import dm
 import gui
-import minima_hopping
+import io
+import mhm
 import report
-import soft_computing
-import symmetry
+import sc
+import symm
 import tasks
 import utils
 import web
-import repositories
-import io
 
 from pychemia.info import __author__, __copyright__, __version__, __email__, __status__, __date__
 

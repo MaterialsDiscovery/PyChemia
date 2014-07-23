@@ -15,8 +15,8 @@ Contents:
    tutorial
    geometry
    repositories
-   structural_search
-
+   structural_search_general
+   structural_search_pychemia
 
 
 Indices and tables

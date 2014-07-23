@@ -48,7 +48,7 @@ def ase2pychemia(aseatoms):
     an = aseatoms.get_atomic_numbers()
     symbols = pychemia.utils.periodic.atomic_symbol(an)
     positions = aseatoms.get_positions()
-    return pychemia.geometry.Structure(cell=cell, positions=positions, symbols=symbols)
+    return pychemia.core.Structure(cell=cell, positions=positions, symbols=symbols)
 
 
 def pychemia2ase(structure):

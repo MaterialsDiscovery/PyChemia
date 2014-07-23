@@ -8,6 +8,7 @@ import numpy as _np
 
 import pychemia
 
+
 def load_POSCAR(path):
     """
     Load a POSCAR file and return a pychemia crystal object
@@ -21,14 +22,13 @@ def load_POSCAR(path):
         print("POSCAR path not found")
         return
 
-    crystal = pychemia.geometry.Structure()
+    crystal = pychemia.core.Structure()
 
     # Reading the POSCAR file
     rf = open(filename, 'r')
     crystal.comment = rf.readline().strip()
     latconst = float(rf.readline())
     newcell = _np.zeros((3, 3))
-
 
     newcell[0, :] = _np.array([float(x) for x in rf.readline().split()])
     newcell[1, :] = _np.array([float(x) for x in rf.readline().split()])

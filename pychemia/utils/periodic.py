@@ -221,9 +221,9 @@ def _get_property(table, value=None, scale_factor=1):
         for i in range(1, len(table)):
             ret[atomic_symbols[i]] = scale_factor * table[i]
     elif isinstance(value, int):
-        ret = scale_factor * table[value]
+        ret = (scale_factor * table[value]) if value is not None else None
     elif isinstance(value, float):
-        ret = scale_factor * table[int(value)]
+        ret = (scale_factor * table[int(value)]) if value is not None else None
     elif isinstance(value, str) and value in atomic_symbols:
         ret = scale_factor * table[atomic_number(value)]
     elif _np.iterable(value):
@@ -265,9 +265,31 @@ def valence(value=None):
     return _get_property(valences, value)
 
 
-def electronegativity(value=None):
+def period(value=None):
 
-    return _get_property(electronegativities, value)
+    return _get_property(periods, value)
+
+
+def group(value=None):
+    table = []
+    for i in groups:
+        if i is None:
+            table.append(0)
+        else:
+            table.append(i)
+
+    return _get_property(table, value)
+
+
+def electronegativity(value=None):
+    table = []
+    for i in electronegativities:
+        if i is None:
+            table.append(0)
+        else:
+            table.append(i)
+
+    return _get_property(table, value)
 
 
 def covalent_radius(value=None, units='ang'):

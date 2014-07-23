@@ -1,27 +1,27 @@
-Geometry (pychemia.geometry)
+Geometry (pychemia.core)
 ============================
 
-.. automodule:: pychemia.geometry
+.. automodule:: pychemia.core
    :members:
 
 
 Structure
 ---------
 
-.. autoclass:: pychemia.geometry.Structure
+.. autoclass:: pychemia.core.Structure
    :members: 
 
 
 Composition
 -----------
 
-.. autoclass:: pychemia.geometry.Composition
+.. autoclass:: pychemia.core.Composition
    :members: 
 
 
 Lattice
 -------
 
-.. autoclass:: pychemia.geometry.Lattice
+.. autoclass:: pychemia.core.Lattice
    :members: 
 

@@ -38,7 +38,7 @@ def pymatgen2pychemia(pmg_struct):
     an = pmg_struct.atomic_numbers
     symbols = pychemia.utils.periodic.atomic_symbol(an)
     positions = pmg_struct.cart_coords
-    return pychemia.geometry.Structure(cell=cell, positions=positions, symbols=symbols)
+    return pychemia.core.Structure(cell=cell, positions=positions, symbols=symbols)
 
 
 def pychemia2pymatgen(structure):

@@ -9,7 +9,7 @@ This code was originally created for ASE
 
 import re as _re
 from pychemia.utils.constants import bohr_angstrom
-from pychemia.geometry import Structure
+from pychemia.core import Structure
 from numpy import sqrt, dot, cross
 from numpy.linalg import norm
 

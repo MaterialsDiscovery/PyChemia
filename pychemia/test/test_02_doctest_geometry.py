@@ -6,6 +6,6 @@ def test():
     Tests from doctests for structure   :
     """
     import doctest
-    import pychemia.geometry.structure
+    import pychemia.core.structure
 
-    doctest.testmod(pychemia.geometry.structure, verbose=True)
+    doctest.testmod(pychemia.core.structure, verbose=True)

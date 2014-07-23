@@ -18,7 +18,7 @@ import pychemia.dft.codes.abinit
 
 def test_example2():
     """
-    Example of a multiple execution     :
+    Example of a multiple calc     :
     """
     path = 'pychemia/test/data'
     assert(os.path.isdir(path))
@@ -47,7 +47,7 @@ def test_example2():
             subprocess.call(['abinit'], stdin=abifile, stdout=logfile)
         else:
             print('The executable "abinit" is not in the PATH')
-            print('Using the results of a previous execution')
+            print('Using the results of a previous calc')
         if os.path.isfile('abinit-o_WFK'):
             shutil.copyfile('abinit-o_WFK', 'abinit-i_WFK')
         os.chdir(cwd)

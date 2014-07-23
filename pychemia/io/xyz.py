@@ -1,5 +1,5 @@
 import numpy as _np
-import pychemia.geometry.structure
+import pychemia.core.structure
 
 
 def load(filename):
@@ -9,7 +9,7 @@ def load(filename):
     natom = len(symbols)
     periodicity = 3*[False]
 
-    struct = pychemia.geometry.Structure(symbols=symbols, positions=positions, periodicity=periodicity, natom=natom)
+    struct = pychemia.core.Structure(symbols=symbols, positions=positions, periodicity=periodicity, natom=natom)
     return struct
 
 

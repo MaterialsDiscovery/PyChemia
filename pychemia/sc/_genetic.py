@@ -5,20 +5,9 @@ No references to Structural Search should be appear
 This module should be general enough even for stock market prediction!
 """
 
+from pychemia.sc import MetaHeuristics
 
-class Gen():
-
-    def __init__(self):
-        pass
-
-
-class Individual():
-
-    def __init__(self):
-        pass
-
-
-class Population():
+class GeneticAlgorithm(MetaHeuristics):
 
     def __init__(self):
         pass

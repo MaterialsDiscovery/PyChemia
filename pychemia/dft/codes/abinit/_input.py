@@ -21,7 +21,7 @@ import numpy as _np
 from pychemia.utils.periodic import atomic_symbol, covalent_radius, atomic_number
 from pychemia.utils.constants import bohr_angstrom, angstrom_bohr
 import pychemia.dft.codes.abinit
-from pychemia.geometry import Structure
+from pychemia.core import Structure
 
 
 class InputVariables:

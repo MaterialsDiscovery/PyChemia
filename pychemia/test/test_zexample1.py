@@ -20,7 +20,7 @@ path = 'pychemia/test/data'
 
 def test_example1():
     """
-    Example of a simple execution       :
+    Example of a simple calc       :
     """
     assert(os.path.isdir(path))
     workdir = get_path()
@@ -95,7 +95,7 @@ def execution(filep):
         subprocess.call(['abinit'], stdin=abifile, stdout=logfile)
     else:
         print('The executable "abinit" is not in the PATH')
-        print('Using the results of a previous execution')
+        print('Using the results of a previous calc')
     files = [x for x in os.listdir('.') if x not in ['t44.in', 'abinit-o_OUT.nc']]
     for i in files:
         os.remove(i)

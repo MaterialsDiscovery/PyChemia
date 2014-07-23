@@ -8,6 +8,7 @@ from pychemia.utils.periodic import atomic_symbols, electronegativity, atomic_nu
 
 __author__ = 'Guillermo Avendano-Franco'
 
+
 class Composition():
     """
     The class Composition is basically a dictionary with species as keys and
@@ -68,6 +69,7 @@ class Composition():
         """
         return self.sorted_formula(sortby='alpha', reduced=True)
 
+    @staticmethod
     def formula_parser(value):
         """
         :return: Convert an string representing a chemical formula into a dictionary with the species as keys
@@ -142,7 +144,6 @@ class Composition():
         :rtype: int
         """
         return sum(self.values)
-
 
     def sorted_formula(self, sortby='alpha', reduced=True):
         """
