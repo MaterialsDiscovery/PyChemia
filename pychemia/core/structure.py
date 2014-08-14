@@ -3,19 +3,17 @@ Definition of the class Structure
 This class defines methods to create and manipulate
 atomic structures such as molecules, clusters and crystals
 """
-import itertools
 
 import numpy as _np
-import json as _json
-from math import sin, cos, exp, sqrt
-import math
-import sys
+import json
+from math import sin, cos
+
 from pychemia.core.lattice import Lattice
 from pychemia.core.delaunay import get_reduced_bases
 from pychemia.core.composition import Composition
 from pychemia.utils.computing import unicode2string
-from pychemia.utils.mathematics import distances
-from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence, atomic_symbol, atomic_symbols
+from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence, atomic_symbols
+
 
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2014"
@@ -46,7 +44,7 @@ class Structure():
 
     """
 
-    def __init__(self,  **kwargs):
+    def __init__(self, **kwargs):
         """
         :rtype : object
 
@@ -110,7 +108,7 @@ class Structure():
         self._composition = None
 
         # Fill the values from args
-        if 'name' in kwargs:
+        if 'name' in kwargs and kwargs['name'] is not None:
             self.name = kwargs['name'].split('\n')[0][:50]
         if 'comment' in kwargs:
             self.comment = kwargs['comment']
@@ -156,18 +154,18 @@ class Structure():
                 if self.is_crystal:
                     xyz += (" %4s  ( %10.4f %10.4f %10.4f ) [ %10.4f %10.4f %10.4f ]\n"
                             % (self.symbols[i],
-                            self.positions[i, 0],
-                            self.positions[i, 1],
-                            self.positions[i, 2],
-                            self.reduced[i, 0],
-                            self.reduced[i, 1],
-                            self.reduced[i, 2]))
+                               self.positions[i, 0],
+                               self.positions[i, 1],
+                               self.positions[i, 2],
+                               self.reduced[i, 0],
+                               self.reduced[i, 1],
+                               self.reduced[i, 2]))
                 else:
                     xyz += (" %4s  ( %10.4f %10.4f %10.4f )\n"
                             % (self.symbols[i],
-                            self.positions[i, 0],
-                            self.positions[i, 1],
-                            self.positions[i, 2]))
+                               self.positions[i, 0],
+                               self.positions[i, 1],
+                               self.positions[i, 2]))
 
             if self.periodicity[0] or self.periodicity[1] or self.periodicity[2]:
                 xyz += '\nPeriodicity: '
@@ -187,20 +185,20 @@ class Structure():
         return xyz
 
     def __repr__(self):
-        ret = 'Structure(symbols='+str(self.symbols)
+        ret = 'Structure(symbols=' + str(self.symbols)
         if self.is_periodic:
             if _np.all(_np.diag(self.cell.diagonal()) == self.cell):
                 if _np.max(self.cell.diagonal()) == _np.min(self.cell.diagonal()):
-                    ret += ', cell='+str(self.cell[0, 0])
+                    ret += ', cell=' + str(self.cell[0, 0])
                 else:
-                    ret += ', cell='+str(self.cell.diagonal().tolist())
+                    ret += ', cell=' + str(self.cell.diagonal().tolist())
             else:
-                ret += ', cell='+str(self.cell.tolist())
-        ret += ', positions='+str(self.positions.tolist())
+                ret += ', cell=' + str(self.cell.tolist())
+        ret += ', positions=' + str(self.positions.tolist())
         if all([self.periodicity[0] == item for item in self.periodicity]):
-            ret += ', periodicity='+str(self.periodicity[0])
+            ret += ', periodicity=' + str(self.periodicity[0])
         else:
-            ret += ', periodicity='+str(self.periodicity)
+            ret += ', periodicity=' + str(self.periodicity)
         ret += ')'
         return ret
 
@@ -259,78 +257,6 @@ class Structure():
 
         return check
 
-    @property
-    def is_periodic(self):
-        """
-        Return True if the Structure is periodic in any direction
-        False for non-periodic structures
-
-        :rtype : bool
-
-        :return: bool
-        """
-        return any(self.periodicity)
-
-    @property
-    def is_crystal(self):
-        """
-        True if structure is periodic in all directions
-        False otherwise
-
-        :rtype : bool
-
-        :return: bool
-        """
-        if not self.is_periodic:
-            return False
-        else:
-            return self.get_cell().periodic_dimensions == 3
-
-    @property
-    def composition(self):
-        """
-        Dictionary with the composition, the keys are the species and the values
-        represent the number of atoms of that specie
-
-        :rtype : dict
-
-        :return: dict
-        """
-        return self.get_composition().composition
-
-    @property
-    def formula(self):
-        """
-        String with the chemical formula
-
-        :rtype: str
-
-        :return: str
-        """
-        return self.get_composition().formula
-
-    @property
-    def density(self):
-        """
-        Computes the density of the cell
-
-        :rtype: float
-
-        :return: float
-        """
-        return sum(_np.array(mass(self.symbols))) / self.volume
-
-    @property
-    def volume(self):
-        """
-        Computes the volume of the cell
-
-        :rtype: float
-
-        :return: float
-        """
-        return abs(_np.linalg.det(self.cell))
-
     def add_atom(self, name, coordinates, option='cartesian'):
         """
         Add an atom with a given 'name' and cartesian or reduced 'position'
@@ -340,8 +266,8 @@ class Structure():
         :param coordinates: (list, numpy.array)
         :param option: (str)
         """
-        assert(name in atomic_symbols)
-        assert(option in ['cartesian', 'reduced'])
+        assert (name in atomic_symbols)
+        assert (option in ['cartesian', 'reduced'])
         self.symbols.append(name)
         self.natom += 1
         self._composition = None
@@ -367,7 +293,7 @@ class Structure():
 
         :return:
         """
-        assert(abs(index) < self.natom)
+        assert (abs(index) < self.natom)
         self.symbols.pop(index)
         _np.delete(self.positions, index, 0)
         _np.delete(self.reduced, index, 0)
@@ -503,6 +429,99 @@ class Structure():
 
         return ret
 
+    def random_cell(composition, units=1):
+        """generate a random cell"""
+
+        #import array
+        #import math
+        import random
+
+        #from ase import Atoms, Atom
+        #from ase.data import atomic_numbers, covalent_radii
+        #from ase.lattice.spacegroup.cell import cellpar_to_cell
+
+        #composition = explode_composition(formula, units=units)
+
+        # find volume of unit cell by adding spheres
+        volume = 0.0
+        #cell = Atoms()
+        #cell.set_pbc([True, True, True])
+        for specie in composition:
+            natoms_specie=composition[specie]
+            volume += 8.0*natoms_specie*covalent_radius(specie)**3
+
+        random.seed()
+
+        best_volume = 1e40
+        for ntrial in range(1000):
+            # make 3 random lengths
+            length = volume**(1.0/3.0)
+            a = (1.0 + 0.5*random.random())
+            b = (1.0 + 0.5*random.random())
+            c = (1.0 + 0.5*random.random())
+
+            # now we make 3 random angles
+            alpha = 60.0 + 60.0*random.random()
+            beta  = 60.0 + 60.0*random.random()
+            gamma = 60.0 + 60.0*random.random()
+
+            cell=Lattice().from_parameters_to_cell(a, b, c, alpha, beta, gamma).cell
+
+            pos = cell.get_scaled_positions()
+            for i in range(len(pos)):
+                pos[i][0] = random.random()
+                pos[i][1] = random.random()
+                pos[i][2] = random.random()
+
+            cell.set_scaled_positions(pos)
+
+            # scale cell
+            factor = 1.0
+            atomic_numbers = cell.get_atomic_numbers()
+            for i in range(len(pos)):
+                covalent_dim = 2.0*covalent_radii[atomic_numbers[i]]
+
+                this_factor = covalent_dim / a
+                if(this_factor > factor):
+                    factor = this_factor
+                this_factor = covalent_dim / b
+                if(this_factor > factor):
+                    factor = this_factor
+                this_factor = covalent_dim / c
+                if(this_factor > factor):
+                    factor = this_factor
+
+                for j in range(i+1, len(pos)):
+                    distance = cell.get_distance(i, j, mic=True)
+                    covalent_dim = covalent_radii[atomic_numbers[i]] + covalent_radii[atomic_numbers[j]]
+                    this_factor = covalent_dim / distance
+                    if(this_factor > factor):
+                        factor = this_factor
+
+            cell.set_cell(cellpar_to_cell([a*factor, b*factor, c*factor, alpha, beta, gamma]))
+            cell.set_scaled_positions(pos)
+
+            if(cell.get_volume() < best_volume):
+    #Modificado aqui
+                test=True
+                for i in range(len(cell)):
+                    for j in range(i+1,len(cell)):
+                        distance = cell.get_distance(i, j, mic=True)
+                        covalent_dim = covalent_radii[atomic_numbers[i]] + covalent_radii[atomic_numbers[j]]
+                        if distance < covalent_dim:
+                            print 'This could not be the best cell (DISCARTED):', covalent_dim/distance
+                            print cell
+                            test=False
+                if test:
+                    best_volume = cell.get_volume()
+                    best_cell = cell.copy()
+    # This was Commented:
+    #            best_volume = cell.get_volume()
+    #            best_cell = cell.copy()
+
+        return best_cell
+
+
     def set_cell(self, cell):
         """
         Set the vectors defining the cell
@@ -513,7 +532,7 @@ class Structure():
         """
         npcell = _np.array(cell)
         if npcell.shape == () or npcell.shape == (1,):
-            self.cell = npcell*_np.eye(3)
+            self.cell = npcell * _np.eye(3)
         elif npcell.shape == (3,):
             self.cell = _np.diag(npcell)
         else:
@@ -621,7 +640,8 @@ class Structure():
 
     def plot(self):
         from mayavi import mlab
-        assert(self.natom > 0)
+
+        assert (self.natom > 0)
 
         x = self.positions[:, 0]
         y = self.positions[:, 1]
@@ -651,33 +671,40 @@ class Structure():
                'cell': self.cell.tolist(),
                'positions': self.positions.tolist(),
                'reduced': self.reduced.tolist(),
-               'vector_info': self.vector_info
-               }
+               'vector_info': self.vector_info,
+               'nspecies': len(self.species),
+               'density': self.density,
+               'formula': self.formula
+        }
         return ret
 
-    def fromdict(self, structdict):
+    @staticmethod
+    def fromdict(structdict):
 
-        self.name = structdict['name']
-        self.comment = structdict['comment']
-        self.natom = structdict['natom']
-        self.symbols = structdict['symbols']
-        self.periodicity = structdict['periodicity']
-        self.cell = _np.array(structdict['cell'])
-        self.positions = _np.array(structdict['positions'])
-        self.reduced = _np.array(structdict['reduced'])
-        self.vector_info = structdict['vector_info']
+        name = structdict['name']
+        comment = structdict['comment']
+        natom = structdict['natom']
+        symbols = unicode2string(structdict['symbols'])
+        periodicity = structdict['periodicity']
+        cell = _np.array(structdict['cell'])
+        positions = _np.array(structdict['positions'])
+        reduced = _np.array(structdict['reduced'])
+        vector_info = structdict['vector_info']
+        return Structure(name=name, comment=comment, natom=natom, symbols=symbols, periodicity=periodicity, cell=cell,
+                         positions=positions, reduced=reduced, vector_info=vector_info)
 
     def save_json(self, filename):
 
         filep = open(filename, 'w')
-        _json.dump(self.todict(), filep, sort_keys=True, indent=4, separators=(',', ': '))
+        json.dump(self.todict(), filep, sort_keys=True, indent=4, separators=(',', ': '))
         filep.close()
 
-    def load_json(self, filename):
+    @staticmethod
+    def load_json(filename):
 
         filep = open(filename, 'r')
-        structdict = unicode2string(_json.load(filep))
-        self.fromdict(structdict)
+        structdict = unicode2string(json.load(filep))
+        return Structure().fromdict(structdict)
 
     def distance2(self, atom1, atom2):
         assert (isinstance(atom1, int))
@@ -688,8 +715,8 @@ class Structure():
 
     def valence_electrons(self):
         ret = 0
-        for key,value in self.composition.items():
-            ret += value*valence(key)
+        for key, value in self.composition.items():
+            ret += value * valence(key)
         return ret
 
     def __eq__(self, other):
@@ -710,9 +737,84 @@ class Structure():
     def __ne__(self, other):
         return not self.__eq__(other)
 
+
+    @property
+    def is_periodic(self):
+        """
+        Return True if the Structure is periodic in any direction
+        False for non-periodic structures
+
+        :rtype : bool
+
+        :return: bool
+        """
+        return any(self.periodicity)
+
+    @property
+    def is_crystal(self):
+        """
+        True if structure is periodic in all directions
+        False otherwise
+
+        :rtype : bool
+
+        :return: bool
+        """
+        if not self.is_periodic:
+            return False
+        else:
+            return self.get_cell().periodic_dimensions == 3
+
+    @property
+    def composition(self):
+        """
+        Dictionary with the composition, the keys are the species and the values
+        represent the number of atoms of that specie
+
+        :rtype : dict
+
+        :return: dict
+        """
+        return self.get_composition().composition
+
+    @property
+    def formula(self):
+        """
+        String with the chemical formula
+
+        :rtype: str
+
+        :return: str
+        """
+        return self.get_composition().formula
+
+    @property
+    def density(self):
+        """
+        Computes the density of the cell
+
+        :rtype: float
+
+        :return: float
+        """
+        return sum(_np.array(mass(self.symbols))) / self.volume
+
+    @property
+    def volume(self):
+        """
+        Computes the volume of the cell
+
+        :rtype: float
+
+        :return: float
+        """
+        return abs(_np.linalg.det(self.cell))
+
     @property
     def species(self):
         return self.get_composition().species
+
+
 
 def load_structure_json(filename):
     ret = Structure()
@@ -729,11 +831,13 @@ class DynamicStructure(Structure):
     def __init__(self, **kwargs):
         Structure.__init__(self, **kwargs)
 
+
 class MetaStructure():
     """
     This class offer the possibility for atoms of being in a certain
     position with a probability lower than 1
     For example alloys and structural vacancies
     """
+
     def __init__(self):
         pass

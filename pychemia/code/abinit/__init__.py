@@ -7,9 +7,9 @@ ABINIT '_OUT.nc' output files
 
 """
 
-from _abifiles import *
-from _input import *
-from _utils import *
-from _parser import *
+from pychemia.code.abinit._abifiles import *
+from pychemia.code.abinit._input import *
+from pychemia.code.abinit._utils import *
+from pychemia.code.abinit._parser import *
 
 #__all__ = filter(lambda s: not s.startswith('_'), dir())

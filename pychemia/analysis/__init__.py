@@ -6,7 +6,8 @@ from pychemia import Structure
 from pychemia.db import StructureEntry
 from pychemia.utils.periodic import atomic_number, covalent_radius, valence
 from itertools import combinations
-
+from numpy import unique, array, zeros
+from numpy.linalg import eig
 
 class StructureAnalysis():
     """
@@ -69,7 +70,10 @@ class StructureAnalysis():
                     index += 1
             self._pairs = pairs_dict
             self._distances = distances_list
-
+        
+        #print self.structure.natom
+        #print len(self._pairs)
+        #print len(self._distances)
         return self._pairs, self._distances
 
     def get_bonds_coordination(self, tolerance=1.2, ensure_conectivity=False):
@@ -83,6 +87,8 @@ class StructureAnalysis():
         :return: tuple
         """
         bonds_dict, distances_list = self.close_distances()
+        #print 'Bonds',len(bonds_dict)
+        #print 'Dists',len(distances_list)
         bonds = []
         tolerances = []
         for i in range(self.structure.natom):
@@ -156,7 +162,7 @@ class StructureAnalysis():
         f = 1.0 - (len(atomicnumbers) * f_n ** (1.0 / len(atomicnumbers)) / f_d) ** 2
 
         # Selection of different bonds
-        diff_bonds = _np.unique(_np.array(reduce(lambda x, y: x+y, bonds)))
+        diff_bonds = unique( array(reduce(lambda x, y: x+y, bonds)))
         for i in diff_bonds:
             i1 = all_distances[i]['pair'][0]
             i2 = all_distances[i]['pair'][1]
@@ -209,7 +215,7 @@ class StructureAnalysis():
             print('Starting with R_cut = %s' % radius)
 
         while True:
-            lap_m = _np.zeros((n, n))
+            lap_m = zeros((n, n))
             dis_dic = {}
             ndifbonds = 0
             found = False
@@ -228,9 +234,9 @@ class StructureAnalysis():
                                     break
                         if not found:
                             ndifbonds += 1
-                            kstr = "%s%s%s%s" % (self.symbols[i],
-                                                 self.symbols[j],
-                                                 self.symbols[i],
+                            kstr = "%s%s%s%s" % (self.structure.symbols[i],
+                                                 self.structure.symbols[j],
+                                                 self.structure.symbols[i],
                                                  ndifbonds)
                             dis_dic[kstr] = [dis, 1, [i, j]]
 
@@ -244,7 +250,7 @@ class StructureAnalysis():
                 coordination.append(lap_m[i, i])
 
             # Get eigenvalues and check how many zeros;
-            eigen = _np.linalg.eig(lap_m)[0]
+            eigen = eig(lap_m)[0]
 
             nzeros = 0
             for i in eigen:
@@ -281,17 +287,19 @@ class StructureAnalysis():
         :rtype : (float)
         """
 
-        spc = self.structure.copy()
-        spc.supercell(2, 2, 2)
-        natom = spc.natom
-        volume = spc.volume
+        superc = self.structure.copy()
+        superc.supercell(2, 2, 2)
+        structure_analisys=StructureAnalysis(superc)
 
-        max_covalent_radius = max(covalent_radius(spc.symbols))
+        natom = superc.natom
+        volume = superc.volume
+
+        max_covalent_radius = max(covalent_radius(superc.symbols))
         if verbose:
             print('Number of atoms', natom)
             print('Volume         ', volume)
             print('Covalent rad max', max_covalent_radius)
-        rcut, coord, dis_dic = spc.get_bonds(2.0 * max_covalent_radius, noupdate, verbose, tolerance)
+        rcut, coord, dis_dic = structure_analisys.get_bonds(2.0 * max_covalent_radius, noupdate, verbose, tolerance)
 
         sigma = 3.0
         c_hard = 1300.0
@@ -300,7 +308,7 @@ class StructureAnalysis():
         f_d = 0.0
         f_n = 1.0
         dic_atms = {}
-        for i in spc.symbols:
+        for i in superc.symbols:
             dic_atms[i] = atomic_number(i)
 
         for i in dic_atms.keys():
@@ -318,8 +326,8 @@ class StructureAnalysis():
             i1 = dis_dic[i][2][0]
             i2 = dis_dic[i][2][1]
 
-            ei = valence(spc.symbols[i1]) / covalent_radius(spc.symbols[i1])
-            ej = valence(spc.symbols[i2]) / covalent_radius(spc.symbols[i2])
+            ei = valence(superc.symbols[i1]) / covalent_radius(superc.symbols[i1])
+            ej = valence(superc.symbols[i2]) / covalent_radius(superc.symbols[i2])
 
             sij = sqrt(ei * ej) / (coord[i1] * coord[i2]) / dis_dic[i][0]
 

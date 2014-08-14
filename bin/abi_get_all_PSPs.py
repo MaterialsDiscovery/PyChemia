@@ -9,7 +9,7 @@
 
 import os
 
-import pychemia.dft.codes.abinit as pa
+import pychemia.code.abinit as pa
 
 
 if __name__ == '__main__':

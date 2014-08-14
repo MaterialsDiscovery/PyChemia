@@ -4,7 +4,6 @@ import os
 import numpy as _np
 import scipy.io
 from mayavi import mlab
-
 import numpy as np
 
 import pychemia
@@ -70,7 +69,7 @@ def oct_visualize(path='static',
         fig = visual.fig
 
     if spin_pol is None:
-        inp = pychemia.dft.codes.octopus.InputVariables('inp')
+        inp = pychemia.code.octopus.InputVariables('inp')
         if inp.variables['SpinComponents'] == 'spin_polarized':
             spin_pol = True
         else:

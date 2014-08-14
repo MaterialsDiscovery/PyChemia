@@ -16,11 +16,11 @@ __date__ = "Aug 27, 2012"
 
 import os as _os
 from scipy.io import netcdf_file as _netcdf_file
-
 import numpy as _np
+
 from pychemia.utils.periodic import atomic_symbol, covalent_radius, atomic_number
 from pychemia.utils.constants import bohr_angstrom, angstrom_bohr
-import pychemia.dft.codes.abinit
+import pychemia.code.abinit
 from pychemia.core import Structure
 
 
@@ -54,7 +54,7 @@ class InputVariables:
         filename = ''
         if len(args) == 1:
             x = args[0]
-            if isinstance(x, pychemia.dft.codes.abinit.AbiFiles):
+            if isinstance(x, pychemia.code.abinit.AbiFiles):
                 filename = x.basedir + "/" + x.files["in"]
             elif _os.path.isfile(x):
                 filename = x
@@ -66,7 +66,7 @@ class InputVariables:
             if filename[-3:] == '.in':
                 self.__import_input(filename)
             elif filename[-6:] == '.files':
-                abifile = pychemia.dft.codes.abinit.AbiFiles(filename)
+                abifile = pychemia.code.abinit.AbiFiles(filename)
                 filename = abifile.get_input_filename()
                 self.__import_input(filename)
             elif filename[-6:] == 'OUT.nc':
@@ -90,7 +90,7 @@ class InputVariables:
             filename:
                 ABINIT input filename
         """
-        ans = pychemia.dft.codes.abinit.parser(filename)
+        ans = pychemia.code.abinit.parser(filename)
         if ans is not None:
             self.variables = ans
 

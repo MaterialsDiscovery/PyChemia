@@ -2,7 +2,7 @@ def test_abinit_parser():
     """
     Test abinit parser module           :
     """
-    from pychemia.dft.codes.abinit import parser
+    from pychemia.code.abinit import parser
     from numpy import array, all, ones
     from math import sqrt
     import tempfile
@@ -45,7 +45,7 @@ def test_abinit_utils():
     """
     Test abinit utils module            :
     """
-    from pychemia.dft.codes.abinit import psp_name, xyz2input, netcdf2dict
+    from pychemia.code.abinit import psp_name, xyz2input, netcdf2dict
 
     filename = "pychemia/test/data/abinit_01/abinit-o_OUT.nc"
     print(len(netcdf2dict(filename)))
@@ -59,7 +59,7 @@ def test_abinit_abifiles():
     """
     Test abinit abifiles class          :
     """
-    from pychemia.dft.codes.abinit import AbiFiles
+    from pychemia.code.abinit import AbiFiles
 
     filename = "pychemia/test/data/abinit_01/abinit.files"
     abf = AbiFiles(filename)
@@ -71,7 +71,7 @@ def test_abinit_input():
     """
     Test abinit input class             :
     """
-    from pychemia.dft.codes.abinit import AbiFiles, InputVariables
+    from pychemia.code.abinit import AbiFiles, InputVariables
 
     filename = "pychemia/test/data/abinit_01/abinit.files"
     abf = AbiFiles(filename)
@@ -89,10 +89,10 @@ def test_abinit():
     """
     Test abinit module                  :
     """
-    import pychemia.dft.codes.abinit
+    import pychemia.code.abinit
 
-    af = pychemia.dft.codes.abinit.AbiFiles(basedir='pychemia/test/data/abinit_03')
-    iv = pychemia.dft.codes.abinit.InputVariables('pychemia/test/data/abinit_03/rnpg.in')
+    af = pychemia.code.abinit.AbiFiles(basedir='pychemia/test/data/abinit_03')
+    iv = pychemia.code.abinit.InputVariables('pychemia/test/data/abinit_03/rnpg.in')
     af.set_input(iv)
     af.set_psps('LDA', 'FHI')
     af.create()

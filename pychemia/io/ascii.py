@@ -100,7 +100,7 @@ def save(struct, filep, cartesian=True, long_format=True, angdeg=False):
     Saves a pychemia Structure object in  V_sim .ascii fileformat
     in the simplest way, i.e. using all
     defaults with no optional keywords. In the first line we add the
-    number of atoms, as this is used by certain codes
+    number of atoms, as this is used by certain code
     """
 
     if isinstance(filep, str):

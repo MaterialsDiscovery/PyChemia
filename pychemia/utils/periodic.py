@@ -231,7 +231,7 @@ def _get_property(table, value=None, scale_factor=1):
             ret = [scale_factor * table[int(x)] for x in value]
         except ValueError:
             if not all([(x in atomic_symbols) for x in value]):
-                raise ValueError('Not all the values are valid')
+                raise ValueError('Not all the values are valid:', value)
             else:
                 ret = [scale_factor * table[int(x)] for x in
                        atomic_number(value)]

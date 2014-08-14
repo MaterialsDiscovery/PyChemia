@@ -3,7 +3,8 @@ import math
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-from pychemia.dft.codes.abinit import InputVariables, AbiFiles
+
+from pychemia.code.abinit import InputVariables, AbiFiles
 from pychemia.utils.periodic import covalent_radius
 from pychemia.utils.constants import bohr_angstrom
 

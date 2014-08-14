@@ -1,8 +1,8 @@
 import os as _os
 import subprocess as _subprocess
 
-from _utils import netcdf2dict as _n2d
-from _utils import psp_name as _psp_name
+from pychemia.code.abinit._utils import netcdf2dict as _n2d
+from pychemia.code.abinit._utils import psp_name as _psp_name
 
 
 class AbiFiles:

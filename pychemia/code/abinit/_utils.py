@@ -4,6 +4,7 @@
 This module provides general routines used by abipython
 but not requiring the abipython classes
 """
+from pychemia.code.abinit import _htmlparser
 
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2012"
@@ -16,7 +17,6 @@ __date__ = "Aug 27, 2012"
 import os as _os
 from ftplib import FTP as _FTP
 from scipy.io import netcdf_file as _netcdf_file
-
 from numpy import array as _array
 
 from pychemia.utils.constants import angstrom_bohr as _angstrom_bohr
@@ -236,12 +236,11 @@ def plot_simple(variables, varname):
 
 
 def abihelp(varname):
-    import _htmlparser
     import json
 
     hp = _htmlparser.MyHTMLParser()
 
-    import pychemia.dft.codes.abinit as _pdca
+    import pychemia.code.abinit as _pdca
 
     rf = open(_pdca.__path__[0]+'/ABINIT_variables.json', 'r')
     variables = json.load(rf)

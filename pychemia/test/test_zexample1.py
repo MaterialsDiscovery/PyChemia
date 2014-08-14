@@ -12,7 +12,7 @@ import os
 import sys
 import subprocess
 
-import pychemia.dft.codes.abinit as pa
+import pychemia.code.abinit as pa
 
 
 path = 'pychemia/test/data'

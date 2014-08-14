@@ -1,13 +1,15 @@
 import sys
 import math
-
 import numpy as np
+from scipy.io import netcdf_file as _netcdf_file
+
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-from pychemia.dft.codes.abinit import InputVariables, AbiFiles
+
+from pychemia.code.abinit import InputVariables, AbiFiles
 from pychemia.utils.periodic import covalent_radius
 from pychemia.utils.constants import bohr_angstrom, angstrom_bohr
-from scipy.io import netcdf_file as _netcdf_file
+
 
 ############################################################
 ### 2D Plots for ABIPYTHON (Requires MATPLOTLIB)         ###

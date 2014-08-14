@@ -6,6 +6,7 @@ import os
 from math import acos, abs
 import scipy.io.netcdf
 from numpy import linalg, zeros, loadtxt, apply_along_axis, newaxis, polyfit, poly1d, dot, array
+
 import pychemia
 
 
@@ -39,7 +40,7 @@ def hirshfeld(dirname, iteration=None, spin=None):
     if iteration is None:
         iteration = get_last_iteration(dirname)
 
-    inp = pychemia.dft.codes.octopus.InputVariables(dirname + '/inp')
+    inp = pychemia.code.octopus.InputVariables(dirname + '/inp')
     if inp.variables['SpinComponents'] == 'spin_polarized':
         if spin is None:
             it, hirshfeld1 = hirshfeld(dirname, iteration, spin=1)
@@ -81,7 +82,7 @@ def deflection(dirname, iteration=None):
     if iteration is None:
         iteration = get_last_iteration(dirname)
 
-    natom, iterations, times, positions, velocities, forces = pychemia.dft.codes.octopus.coordinates(dirname)
+    natom, iterations, times, positions, velocities, forces = pychemia.code.octopus.coordinates(dirname)
     angle = zeros(natom)
     univel = zeros((natom, 3))
 
@@ -120,7 +121,7 @@ def magnitude_velocity(dirname, iteration=None):
     if iteration is None:
         iteration = get_last_iteration(dirname)
 
-    natom, iterations, times, positions, velocities, forces = pychemia.dft.codes.octopus.coordinates(dirname)
+    natom, iterations, times, positions, velocities, forces = pychemia.code.octopus.coordinates(dirname)
 
     magvel = apply_along_axis(linalg.norm, 1, velocities[iteration])
 
@@ -134,7 +135,7 @@ def change_kinetic_energy(dirname, iteration=None):
     if iteration is None:
         iteration = get_last_iteration(dirname)
 
-    iterations, times, energy_dict = pychemia.dft.codes.octopus.energy(dirname)
+    iterations, times, energy_dict = pychemia.code.octopus.energy(dirname)
 
     return energy_dict['Kinetic'][iteration] - energy_dict['Kinetic'][0]
 
@@ -147,10 +148,10 @@ def value_in_sphere(dirname, keys, iteration=None, radius=4.5, spin=None):
     if iteration is None:
         iteration = get_last_iteration(dirname)
 
-    natom, iterations, times, positions, velocities, forces = pychemia.dft.codes.octopus.coordinates(dirname)
+    natom, iterations, times, positions, velocities, forces = pychemia.code.octopus.coordinates(dirname)
 
     # Is spin polarized?
-    inp = pychemia.dft.codes.octopus.InputVariables(dirname + '/inp')
+    inp = pychemia.code.octopus.InputVariables(dirname + '/inp')
     if inp.variables['SpinComponents'] == 'spin_polarized':
         if spin is None:
             it, cis1 = value_in_sphere(dirname, keys, iteration, radius, spin=1)

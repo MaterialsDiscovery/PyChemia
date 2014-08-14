@@ -3,7 +3,8 @@
 import os
 import sys
 import numpy as _np
-import pychemia.dft.codes.abinit
+
+import pychemia.code.abinit
 from pychemia.utils.constants import bohr_angstrom
 
 
@@ -54,7 +55,7 @@ def abihist2xyz(abivar, basename, datasets, time='all'):
             history = abifile.files['tmpout'] + "_DS" + str(idts) + "_HIST"
         if os.path.isfile(history):
             print('Reading ', history)
-            nchist = pychemia.dft.codes.abinit.netcdf2dict(history)
+            nchist = pychemia.code.abinit.netcdf2dict(history)
 
             # Setting the output file
             if time == 'all':
@@ -111,7 +112,7 @@ def helper():
 
 
 def get_input_dts(filep, dataset):
-    abivar = pychemia.dft.codes.abinit.InputVariables(filep)
+    abivar = pychemia.code.abinit.InputVariables(filep)
     datasets = None
     if dataset == 0:
         datasets = abivar.get_dtsets_keys()
@@ -174,7 +175,7 @@ if __name__ == '__main__':
     dts = None
     if filename != '':
         if filename[-6:] == '.files':
-            abifile = pychemia.dft.codes.abinit.AbiFiles(filename)
+            abifile = pychemia.code.abinit.AbiFiles(filename)
             if has_input or hist:
                 (av, dts) = get_input_dts(abifile.get_input_filename(), dtset)
             elif has_output:

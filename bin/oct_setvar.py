@@ -3,7 +3,7 @@
 import os
 import sys
 
-import pychemia.dft.codes.octopus
+import pychemia.code.octopus
 
 
 def helper():
@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
     # Set the variables
     if os.path.isfile(filename):
-        data = pychemia.dft.codes.octopus.InputVariables(filename)
+        data = pychemia.code.octopus.InputVariables(filename)
         for i in toset.keys():
             data.variables[i] = toset[i]
         for i in todel:

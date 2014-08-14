@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import os
 import sys
-import pychemia.dft.codes.abinit
+
+import pychemia.code.abinit
 
 
 if __name__ == '__main__':
@@ -13,7 +14,7 @@ if __name__ == '__main__':
 
     filename = sys.argv[1]
     assert(os.path.isfile(filename))
-    iv = pychemia.dft.codes.abinit.xyz2input(filename)
-    av = pychemia.dft.codes.abinit.InputVariables()
+    iv = pychemia.code.abinit.xyz2input(filename)
+    av = pychemia.code.abinit.InputVariables()
     av.variables = iv.variables
     av.write(filename + ".in")

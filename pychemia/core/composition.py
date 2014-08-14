@@ -19,7 +19,7 @@ class Composition():
     string formulas sorted in various ways.
     """
 
-    def __init__(self, value):
+    def __init__(self, value=None):
         """
         Creates a new composition, internally it is a dictionary
         where each specie is the key and the value is an integer
@@ -32,9 +32,11 @@ class Composition():
         """
 
         if isinstance(value, str):
-            self._composition = formula_parser(value)
+            self._composition = Composition.formula_parser(value)
         elif isinstance(value, dict):
             self._set_composition(value)
+        else:
+            self._composition = {}
 
     def __len__(self):
         return len(self._composition)
@@ -82,11 +84,11 @@ class Composition():
         ret = {}
         jump = False
         for i in range(len(value)):
-            if jump > 0:
+            if jump > 0: # This char belongs to the current atom, move on
                 jump -= 1
-            elif value[i].isupper():
-                if i+1 < len(value) and value[i+1].islower():
-                    if i+2 < len(value) and value[i+2].islower():
+            elif value[i].isupper(): # Atom Name starts with Uppercase
+                if i+1 < len(value) and value[i+1].islower(): # Atom name has more than 1 char
+                    if i+2 < len(value) and value[i+2].islower(): # Atom name has more than 2 chars
                         specie = value[i:i+3]
                         jump = 2
                     else:
@@ -109,6 +111,28 @@ class Composition():
                     ret[specie] = int(number)
         return ret
 
+
+    @staticmethod
+    def explode_composition(formula, units=1):
+        import re
+
+        # decompose composition
+        a  = re.findall(r"[A-Z][a-z0-9]*", formula)
+        composition = []
+        for i in a:
+            m = re.match(r"([A-Za-z]+)([0-9]*)", i)
+            if (m.group(2) == ""):
+                n = int(1)
+            else:
+                n = int(m.group(2))
+
+            for j in range(n*units):
+                composition.append(m.group(1))
+
+        return composition
+
+
+
     @property
     def gcd(self):
         """
@@ -116,7 +140,10 @@ class Composition():
 
         :rtype: int
         """
-        return reduce(_gcd, self.values)
+        if self.natom > 0:
+            return reduce(_gcd, self.values)
+        else:
+            return 1
 
     @property
     def species(self):
@@ -202,3 +229,11 @@ class Composition():
             spec_hex += atom_number*(256**i)
             i += 1
         return spec_hex
+
+    def __repr__(self):
+        return 'Composition('+self.composition+')'
+
+    def __str__(self):
+        ret=''
+        for i in self.species:
+            print " %10s %10d" % (i, self.composition[i])

@@ -12,8 +12,8 @@ import os
 import shutil
 import subprocess
 
-import pychemia.dft.codes.abinit as pa
-import pychemia.dft.codes.abinit
+import pychemia.code.abinit as pa
+import pychemia.code.abinit
 
 
 def test_example2():
@@ -52,7 +52,7 @@ def test_example2():
             shutil.copyfile('abinit-o_WFK', 'abinit-i_WFK')
         os.chdir(cwd)
         print(os.getcwd())
-        data = pychemia.dft.codes.abinit.netcdf2dict(path + '/abinit-o_OUT.nc')
+        data = pychemia.code.abinit.netcdf2dict(path + '/abinit-o_OUT.nc')
         wf.write(str(data['ecut'][0]).rjust(20) + ' ' + str(data['etotal'][0]).rjust(20) + '\n')
         if os.path.isfile(path + '/abinit.out'):
             os.remove(path + '/abinit.out')

@@ -1,12 +1,18 @@
-import sys
-
 __author__ = 'Guillermo Avendano Franco'
 
+import sys
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 
 class DensityOfStates():
+    """
+    Stores the density of states
+    It its basically a numpy array with the first column representing energies
+    and all the extra columns representing density of states.
+    Those several columns could contain partial contributions due to spin and or
+    orbital
+    """
 
     def __init__(self, table = None, title = None):
         self._dos = None
@@ -25,7 +31,17 @@ class DensityOfStates():
 
     @staticmethod
     def read(filename, title = None):
+        """
+        Reads a file and returns a DensityOFStates object.
+        The file could contain concatenated two columns representing
+        the desnity of states. However, the energies should be
+        repetitivive and the number of values be the same for all the
+        sets
 
+        :param filename: (string) the file that contains the density of states
+        :param title: (string) customize title
+        :return: (DensityOfStates) object
+        """
         table = np.loadtxt(filename)
         if title is None:
             root, ext = os.path.splitext(os.path.basename(filename))
@@ -63,21 +79,51 @@ class DensityOfStates():
 
     @property
     def energies(self):
+        """
+        The energy values
+
+        :return: (numpy.ndarray) One-dimensional array of energies
+        """
         return self._dos[:,0]
 
     @property
     def values(self):
+        """
+        The density of states values, could be multidimensional
+
+        :return: (numpy.ndarray) Density of states values
+        """
         if self.ncols>1:
             return self._dos[:,range(1,self.ncols+1)]
         else:
             return self._dos[:,1]
 
 
-def plot_one_dos(dosobj, ax=None, horizontal=True):
+def plot_one_dos(dosobj, ax=None, horizontal=True, figwidth = 16, figheight = 12):
+    """
+    Plot a single density of states, if the values contains
+    several dimensions all the dimensions are plotted
+    If the axes is no given, a new figure is created and the
+    axes is returned
+
+    :param dosobj: (DensityOfStates) object
+    :param ax: (matplotlib.axes.Axes) object
+    :param horizontal: (bool) if the plot is horizontal or
+
+    :return: (matplotlib.figure.Figure, matplotlib.axes.Axes) the (fig, ax) tuple
+    """
 
     if ax is None:
         fig = plt.figure()
-        ax = plt.subplot(111)
+        fig.set_figheight(figheight)
+        fig.set_figwidth(figwidth)
+        ax = fig.add_subplot(111)
+        if horizontal:
+            ax.set_xlabel('Energy')
+        else:
+            ax.set_ylabel('Energy')
+    else:
+        fig=plt.gcf()
 
     X = dosobj.energies
 
@@ -97,8 +143,20 @@ def plot_one_dos(dosobj, ax=None, horizontal=True):
         else:
             ax.plot(Y, X)
 
+    #fig.savefig('test.pdf')
+    return fig, ax
 
-def plot_many_dos(doslist, minenergy = None, maxenergy = None):
+def plot_many_dos(doslist, minenergy = None, maxenergy = None, figwidth = 16, figheight = 12):
+    """
+    Plot multiple densities of states
+
+    :param doslist: (list) list of DensityOfStates objects
+    :param minenergy: (float) minimal energy to display
+    :param maxenergy: (float) maximal energy to display
+    :param figheight: (float) Height of figure
+    :param figwidth: (float) Width of figure
+    :param figname: (string) Path to the figure file
+    """
     ndos = len(doslist)
     if minenergy is None:
         minenergy = min([ min(x.energies) for x in doslist])
@@ -114,16 +172,18 @@ def plot_many_dos(doslist, minenergy = None, maxenergy = None):
                         maxval = i[icol+1]
                     if i[icol+1]<minval:
                         minval = i[icol+1]
-    print minval, maxval
 
     fig, ax = plt.subplots(nrows=1, ncols=ndos, sharex=False, sharey=True, squeeze=True)
-    fig.set_figheight(12)
-    fig.set_figwidth(16)
+    fig.set_figwidth(figwidth)
+    fig.set_figheight(figheight)
     plt.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.95, wspace=0, hspace=0)
     for i in range(ndos):
         plot_one_dos(doslist[i], ax[i], horizontal= False)
         ax[i].set_xlim(1.1*minval,1.1*maxval)
         ax[i].set_ylim(minenergy,maxenergy)
         ax[i].set_xlabel(doslist[i].title)
+        ax[i].spines['bottom'].set_linewidth(10)
+        ax[i].spines['left'].set_linewidth(10)
     ax[0].set_ylabel('Energy')
-    plt.savefig('dos.pdf')
+    fig.savefig('test.pdf')
+    return fig, ax
