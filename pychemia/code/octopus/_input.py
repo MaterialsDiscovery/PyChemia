@@ -7,7 +7,7 @@ import gzip as _gzip
 
 import numpy as _np
 
-import pychemia.execution
+import pychemia.runner
 import pychemia
 
 

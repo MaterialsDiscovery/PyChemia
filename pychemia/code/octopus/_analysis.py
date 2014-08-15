@@ -3,7 +3,7 @@ Useful routines to get physical data from octopus TD runs
 """
 
 import os
-from math import acos, abs
+from math import acos
 import scipy.io.netcdf
 from numpy import linalg, zeros, loadtxt, apply_along_axis, newaxis, polyfit, poly1d, dot, array
 

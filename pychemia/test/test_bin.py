@@ -3,9 +3,7 @@ import subprocess
 
 import pychemia
 
-
 path = 'pychemia/test/data'
-
 
 def test_abinit2xyz():
     """
@@ -30,7 +28,7 @@ def test_xyz2abinit():
     script = 'bin/abi_xyz2abinit.py'
     args = path + '/xyz/chlorophyll.xyz'
     subprocess.call(['python', script, args])
-    inp = pychemia.codes.abinit.InputVariables(path + '/xyz/chlorophyll.xyz.in')
+    inp = pychemia.code.abinit.InputVariables(path + '/xyz/chlorophyll.xyz.in')
     assert (inp.get_value('natom') == 140)
     os.remove(path + '/xyz/chlorophyll.xyz.in')
     return inp

@@ -2,7 +2,7 @@ __author__ = 'viviane'
 
 from abc import ABCMeta, abstractmethod
 
-class Codes(ABC):
+class Codes():
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -25,6 +25,6 @@ class Codes(ABC):
     def finalize(self):
         pass
 
-    @abstractproperty
-    def dirpath(self):
-
+    #@abstractproperty
+    #def dirpath():
+    #    pass
