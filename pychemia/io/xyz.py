@@ -1,4 +1,5 @@
 import numpy as _np
+
 import pychemia.core.structure
 
 

@@ -2,12 +2,14 @@ __author__ = 'Guillermo Avendano-Franco'
 
 from math import exp, sqrt
 from sys import float_info
-from pychemia import Structure
-from pychemia.db import StructureEntry
-from pychemia.utils.periodic import atomic_number, covalent_radius, valence
 from itertools import combinations
 from numpy import unique, array, zeros
 from numpy.linalg import eig
+
+from pychemia import Structure
+from pychemia.db import StructureEntry
+from pychemia.utils.periodic import atomic_number, covalent_radius, valence
+
 
 class StructureAnalysis():
     """
@@ -131,7 +133,8 @@ class StructureAnalysis():
         :rtype : (float)
         """
 
-        bonds, coordination, all_distances, tolerances = self.get_bonds_coordination(tolerance=tolerance, ensure_conectivity=True)
+        bonds, coordination, all_distances, tolerances = self.get_bonds_coordination(tolerance=tolerance,
+                                                                                     ensure_conectivity=True)
 
         if verbose:
             print 'BONDS'
@@ -162,7 +165,7 @@ class StructureAnalysis():
         f = 1.0 - (len(atomicnumbers) * f_n ** (1.0 / len(atomicnumbers)) / f_d) ** 2
 
         # Selection of different bonds
-        diff_bonds = unique( array(reduce(lambda x, y: x+y, bonds)))
+        diff_bonds = unique(array(reduce(lambda xx, y: xx+y, bonds)))
         for i in diff_bonds:
             i1 = all_distances[i]['pair'][0]
             i2 = all_distances[i]['pair'][1]
@@ -172,7 +175,8 @@ class StructureAnalysis():
             #print 'bond ->', sqrt(ei * ej), (coordination[i1] * coordination[i2]), all_distances[i]['distance']
 
             sij = sqrt(ei * ej) / (coordination[i1] * coordination[i2]) / all_distances[i]['distance']
-            num_i_j_bonds = len([j for j in diff_bonds if i1 in all_distances[j]['pair'] and i2 in all_distances[j]['pair']])
+            num_i_j_bonds = len([j for j in diff_bonds if i1 in all_distances[j]['pair'] and
+                                i2 in all_distances[j]['pair']])
             #print 'sij', sij
             #print 'num_i_j_bonds', num_i_j_bonds
             tot += num_i_j_bonds
@@ -185,7 +189,6 @@ class StructureAnalysis():
             print("x:", x)
 
         #print 'len_bonds', len(diff_bonds)
-        #print 'hardness_value =', c_hard, self.volume, (len(diff_bonds)), ( x ** (1. / (len(diff_bonds)))), exp(-sigma * f)
         hardness_value = c_hard / self.structure.volume * (len(diff_bonds) * x ** (1. / (len(diff_bonds)))) * exp(-sigma * f)
 
         if verbose:
@@ -289,7 +292,7 @@ class StructureAnalysis():
 
         superc = self.structure.copy()
         superc.supercell(2, 2, 2)
-        structure_analisys=StructureAnalysis(superc)
+        structure_analisys = StructureAnalysis(superc)
 
         natom = superc.natom
         volume = superc.volume
@@ -345,6 +348,7 @@ class StructureAnalysis():
             print hardness_value
 
         return round(hardness_value, 3)
+
 
 class EntryAnalysis():
     """

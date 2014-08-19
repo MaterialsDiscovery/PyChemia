@@ -1,8 +1,7 @@
 import os as _os
 import subprocess as _subprocess
 
-from pychemia.code.abinit._utils import netcdf2dict as _n2d
-from pychemia.code.abinit._utils import psp_name as _psp_name
+from _utils import netcdf2dict, psp_name
 
 
 class AbiFiles:
@@ -165,7 +164,7 @@ class AbiFiles:
         """
         Return the output as a dictionary
         """
-        return _n2d(self.get_OUT_filename())
+        return netcdf2dict(self.get_OUT_filename())
 
     def execute(self, abinit_binary):
         """
@@ -196,4 +195,4 @@ class AbiFiles:
             self.files['psps'] = []
             pspdir = _os.getenv('HOME') + '/.abinit/' + exchange + '_' + kind
             for i in self.inp.variables['znucl']:
-                self.files['psps'].append(pspdir + '/' + _psp_name(i, exchange, kind))
+                self.files['psps'].append(pspdir + '/' + psp_name(i, exchange, kind))

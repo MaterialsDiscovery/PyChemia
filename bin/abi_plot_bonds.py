@@ -76,7 +76,7 @@ def plot_bonds(listabifile, listidtset):
         allbonds = get_all_bonds(listabifile)
     else:
         allbonds = get_all_bonds(listabifile, listidtset)
-    fig = plt.figure(figsize=(32, 20), dpi=100)
+    plt.figure(figsize=(32, 20), dpi=100)
     plt.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.95,
                         wspace=None, hspace=None)
 

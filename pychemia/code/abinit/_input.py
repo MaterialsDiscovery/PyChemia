@@ -373,6 +373,7 @@ class InputVariables:
         Get the list of dtset suffix acording to
         the values given by ndtset, jdtset and udtset
         """
+        ret = None
         if 'jdtset' in self.variables and 'udtset' in self.variables:
             print('ERROR: Both udtset and jdtset could not be used ')
             return None
@@ -382,19 +383,19 @@ class InputVariables:
 
             if ndtset != 0:
                 if 'jdtset' in self.variables:
-                    dts = list(self.variables['jdtset'])
+                    ret = list(self.variables['jdtset'])
                 elif 'udtset' in self.variables:
-                    dts = []
+                    ret = []
                     udtset = self.get_value('udtset')
                     for i in range(1, udtset[0] + 1):
                         for j in range(1, udtset[1] + 1):
-                            dts.append(str(i) + str(j))
+                            ret.append(str(i) + str(j))
                 else:
-                    dts = range(1, ndtset + 1)
+                    ret = range(1, ndtset + 1)
         else:
-            dts = ['']
+            ret = ['']
 
-        return dts
+        return ret
 
     def atom_name(self, iatom, idtset=''):
         """

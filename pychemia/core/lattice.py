@@ -1,5 +1,5 @@
 import numpy as _np
-from math import ceil, sqrt, cos, sin, radians, acos, degrees
+from math import ceil, sqrt, cos, sin, radians, acos
 import itertools
 
 from pychemia.utils.mathematics import length_vectors, angle_vectors, wrap2_pmhalf
@@ -106,7 +106,7 @@ class Lattice():
             ret[i] = _np.dot(self.reciprocal().metric, i * _np.diagonal(self.metric))
         return ret
 
-    def distance2(self, x1, x2, option='reduced'):
+    def distance2(self, x1, x2, option='reduced', distmax=20):
 
         # Compute the vector from x1 to x2
         dv = _np.array(x2) - _np.array(x1)
@@ -126,9 +126,9 @@ class Lattice():
 
         # for key, value in corners.iteritems():
         #    print key, value
-        limits[0] = min( int(ceil(max(1e-14 + abs(_np.array([corners[x][0] for x in corners]))))), 5)
-        limits[1] = min( int(ceil(max(1e-14 + abs(_np.array([corners[x][1] for x in corners]))))), 5)
-        limits[2] = min( int(ceil(max(1e-14 + abs(_np.array([corners[x][2] for x in corners]))))), 5)
+        limits[0] = min(int(ceil(max(1e-14 + abs(_np.array([corners[x][0] for x in corners]))))), 5)
+        limits[1] = min(int(ceil(max(1e-14 + abs(_np.array([corners[x][1] for x in corners]))))), 5)
+        limits[2] = min(int(ceil(max(1e-14 + abs(_np.array([corners[x][2] for x in corners]))))), 5)
         #print limits
         #print self
 
@@ -138,7 +138,8 @@ class Lattice():
                 for i2 in _np.arange(-limits[2], limits[2] + 1):
                     dtot = dwrap + _np.array([i0, i1, i2])
                     norm2 = _np.dot(_np.dot(dtot, self.metric), dtot)
-                    ret[(i0, i1, i2)] = {'distance': sqrt(norm2), 'image': dtot}
+                    if norm2 < distmax*distmax:
+                        ret[(i0, i1, i2)] = {'distance': sqrt(norm2), 'image': dtot}
 
         #print len(ret)
         #print 'dist2',len(ret)
@@ -202,11 +203,11 @@ class Lattice():
         beta_radians = radians(beta)
         gamma_radians = radians(gamma)
         val = (cos(alpha_radians) * cos(beta_radians) - cos(gamma_radians)) \
-              / (sin(alpha_radians) * sin(beta_radians))
+            /(sin(alpha_radians) * sin(beta_radians))
         # Sometimes rounding errors result in values slightly > 1.
         val = val if abs(val) <= 1 else val / abs(val)
         gamma_star = acos(val)
-        cell=_np.zeros((3,3))
+        cell = _np.zeros((3, 3))
         cell[0] = [a * sin(beta_radians), 0.0, a * cos(beta_radians)]
         cell[1] = [-b * sin(alpha_radians) * cos(gamma_star),
                     b * sin(alpha_radians) * sin(gamma_star),
@@ -218,17 +219,18 @@ class Lattice():
         ret = 'Cell='
         for i in range(3):
             for j in range(3):
-                ret += "%12.3f " % (self.cell[i,j])
+                ret += "%12.3f " % (self.cell[i, j])
             ret += '\n'
-            if i<2: ret += 5*' '
+            if i < 2:
+                ret += 5*' '
         ret += '\n'
-        ret += 'Angles: alpha = %12.3f\n' % (self.alpha)
-        ret += '         beta = %12.3f\n' % (self.beta)
-        ret += '        gamma = %12.3f\n' % (self.gamma)
+        ret += 'Angles: alpha = %12.3f\n' % self.alpha
+        ret += '         beta = %12.3f\n' % self.beta
+        ret += '        gamma = %12.3f\n' % self.gamma
         ret += '\n'
-        ret += 'Lengths:    a = %12.3f\n' % (self.a)
-        ret += '            b = %12.3f\n' % (self.b)
-        ret += '            c = %12.3f\n' % (self.c)
+        ret += 'Lengths:    a = %12.3f\n' % self.a
+        ret += '            b = %12.3f\n' % self.b
+        ret += '            c = %12.3f\n' % self.c
         return ret
 
     @property

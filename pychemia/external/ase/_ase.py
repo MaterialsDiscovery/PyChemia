@@ -13,9 +13,10 @@ __date__ = "March 31, 2014"
 
 from pyspglib import spglib
 
-import pychemia
 import ase.atoms
 import ase.io
+
+import pychemia
 
 
 def cif2structure(filename, primitive=False, symprec=0.001):

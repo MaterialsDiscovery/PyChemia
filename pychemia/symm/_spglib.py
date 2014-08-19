@@ -1,12 +1,16 @@
 __author__ = 'Guillermo Avendano-Franco'
 
 import numpy as np
-from pychemia.utils.periodic import atomic_number
 
 try:
     import pyspglib._spglib as spg
 except ImportError:
-    msg = "Spglib required. Please either install pyspglib from spglib."
+    msg = """Spglib required. Please install pyspglib from spglib.
+    Try to test that you are able to import correctly the module
+    using:
+
+    import pyspglib._spglib as spg
+    """
     raise ImportError(msg)
 
 
@@ -36,24 +40,23 @@ class Symmetry(object):
         self._reduced = np.array(structure.reduced, dtype='double', order='C')
 
         numbers = list(structure.symbols)
-        index=0
+        index = 0
         for i in range(structure.natom):
-            index+=1
+            index += 1
             if numbers[i].isalpha():
-                for j in range(i,structure.natom):
-                    if numbers[j]==structure.symbols[i]:
-                        numbers[j]=str(index)
+                for j in range(i, structure.natom):
+                    if numbers[j] == structure.symbols[i]:
+                        numbers[j] = str(index)
             else:
-                index-=1
+                index -= 1
 
         for i in range(structure.natom):
-            numbers[i]=int(numbers[i])
+            numbers[i] = int(numbers[i])
 
         self._numbers = np.array(numbers, dtype='intc')
         self._spacegroup_data = spg.spacegroup(
             self._transposed_cell.copy(), self._reduced.copy(),
             self._numbers, self._tolerance, self._angle_tolerance)
-
 
     @property
     def symbol(self):

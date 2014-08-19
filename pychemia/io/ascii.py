@@ -8,10 +8,9 @@ This code was originally created for ASE
 """
 
 import re as _re
+
 from pychemia.utils.constants import bohr_angstrom
 from pychemia.core import Structure
-from numpy import sqrt, dot, cross
-from numpy.linalg import norm
 
 
 def load(filep):
@@ -156,7 +155,7 @@ def cell_to_reduced(full):
     subroutine tool_matrix_reducePrimitiveVectors
     """
 
-    from numpy import array, zeros
+    from numpy import zeros
     from numpy.linalg import norm
 
     xcoord = full[0]

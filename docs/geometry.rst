@@ -1,5 +1,5 @@
 Geometry (pychemia.core)
-============================
+========================
 
 .. automodule:: pychemia.core
    :members:

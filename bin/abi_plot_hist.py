@@ -28,8 +28,8 @@ def plot_history_energy(etotal, ekin, fcart, labels, bonds, filep):
     ### Page No 1
     ############################################################
 
-    fig = plt.figure(figsize=(16, 10), dpi=100)
-    xticklabels = []
+    plt.figure(figsize=(16, 10), dpi=100)
+    #xticklabels = []
 
     left = 0.1
     width = 0.8
@@ -52,12 +52,12 @@ def plot_history_energy(etotal, ekin, fcart, labels, bonds, filep):
         ax2.semilogy(ekin, lw=2)
         ax2.grid(True)
         plt.ylabel("Ionic Kinetic Energy")
-        xticklabels = ax2.get_xticklabels()
+        #xticklabels = ax2.get_xticklabels()
 
     bottom += height
     ax3 = plt.axes([left, bottom, width, height], sharex=ax1)
     forces = fcart.transpose((1, 0, 2))
-    xticklabels = xticklabels + ax3.get_xticklabels()
+    #xticklabels = xticklabels + ax3.get_xticklabels()
 
     for i in range(len(forces)):
         list2 = []
@@ -74,7 +74,7 @@ def plot_history_energy(etotal, ekin, fcart, labels, bonds, filep):
     ### Page No 2
     ############################################################
 
-    fig = plt.figure(figsize=(10, 16), dpi=100)
+    plt.figure(figsize=(10, 16), dpi=100)
 
     left = 0.1
     width = 0.8
@@ -102,7 +102,7 @@ def plot_history_energy(etotal, ekin, fcart, labels, bonds, filep):
     ### Page No 3
     ############################################################
 
-    fig = plt.figure(figsize=(10, 16), dpi=100)
+    plt.figure(figsize=(10, 16), dpi=100)
 
     bonds_dict = {}
     # t is time
@@ -208,7 +208,7 @@ def get_history(abinitfile, dataset=""):
     else:
         filep = abinitfile.basedir + "/" + abinitfile.files['tmpout'] + "_DS" + str(dataset) + "_HIST"
         #print filename
-    inp = InputVariables(abinitfile.get_input_filename())
+    #inp = InputVariables(abinitfile.get_input_filename())
 
     ret = _netcdf_file(filep, 'r', mmap=False)
 
@@ -226,7 +226,7 @@ def plot_history(abinitfile, dataset=""):
 
     xcart = history.variables['xcart'][:]
     fcart = history.variables['fcart'][:]
-    rprimd = history.variables['rprimd'][:]
+    #rprimd = history.variables['rprimd'][:]
     etotal = history.variables['etotal'][:]
     if 'ekin' in history.variables:
         ekin = history.variables['ekin'][:]
@@ -241,7 +241,7 @@ def plot_history(abinitfile, dataset=""):
     typat = av.get_value('typat', idtset=dataset, full=True)
 
     bonds = compute_bonds(typat, xcart, znucl)
-    natom = len(xcart[0])
+    #natom = len(xcart[0])
     #ComputeAngles(bonds,natom)
 
     plot_history_energy(etotal, ekin, fcart, labels, bonds, filep)

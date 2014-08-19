@@ -6,6 +6,7 @@ import matplotlib
 matplotlib.use('Agg')
 import pychemia
 
+
 def helper():
     print(""" Plot the density of states from a given list of files
    Use:
@@ -24,13 +25,13 @@ if __name__ == '__main__':
         helper()
         sys.exit(1)
 
-    figname='DensityOfStates.pdf'
+    figname = 'DensityOfStates.pdf'
     minenergy = None
     maxenergy = None
     figheight = None
     figwidth = None
-    filelist=[]
-    doslist=[]
+    filelist = []
+    doslist = []
 
     for i in range(1, len(sys.argv)):
         if sys.argv[i].startswith('--'):
@@ -49,23 +50,22 @@ if __name__ == '__main__':
                 figheight = float(sys.argv[i + 2])
             else:
                 print('Unknown option. --' + option)
-        elif os.path.isfile(sys.argv[i]) and sys.argv[i][-4:]=='.dat':
+        elif os.path.isfile(sys.argv[i]) and sys.argv[i][-4:] == '.dat':
             filelist.append(sys.argv[i])
 
     print figname
     for i in filelist:
-        a=pychemia.report.DensityOfStates().read(i)
+        a = pychemia.report.DensityOfStates().read(i)
         doslist.append(a)
 
-    if len(doslist)==0:
+    if len(doslist) == 0:
         helper()
         sys.exit(1)
-    elif len(doslist)==1:
+    elif len(doslist) == 1:
         fig, ax = pychemia.report.plot_one_dos(doslist[0], ax=None, horizontal=True,
-                                               figwidth = figwidth, figheight = figheight)
+                                               figwidth=figwidth, figheight=figheight)
         #fig.savefig(figname)
     else:
-        fig, ax = pychemia.report.plot_many_dos(doslist,
-                                    minenergy = minenergy, maxenergy = maxenergy,
-                                    figwidth = figwidth, figheight = figheight)
+        fig, ax = pychemia.report.plot_many_dos(doslist, minenergy=minenergy, maxenergy=maxenergy,
+                                                figwidth=figwidth, figheight=figheight)
         #fig.savefig(figname)

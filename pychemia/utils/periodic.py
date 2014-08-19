@@ -254,13 +254,13 @@ def valence(value=None):
 
     Examples:
 
-    >>> from pychemia.utils.periodic import valence
-    >>> valence(1)
-    1
-    >>> valence([1,2])
-    [1, 0]
-    >>> valence(['H','He'])
-    [1, 0]
+>>> from pychemia.utils.periodic import valence
+>>> valence(1)
+1
+>>> valence([1,2])
+[1, 0]
+>>> valence(['H','He'])
+[1, 0]
     """
     return _get_property(valences, value)
 
@@ -306,15 +306,15 @@ def covalent_radius(value=None, units='ang'):
         By default the return value is in angstroms
 
     Examples:
-    >>> from pychemia.utils.periodic import covalent_radius
-    >>> covalent_radius('H')
-    0.31
-    >>> covalent_radius(1)
-    0.31
-    >>> covalent_radius([1,2])
-    [0.31, 0.28]
-    >>> covalent_radius(['H','He'])
-    [0.31, 0.28]
+>>> from pychemia.utils.periodic import covalent_radius
+>>> covalent_radius('H')
+0.31
+>>> covalent_radius(1)
+0.31
+>>> covalent_radius([1,2])
+[0.31, 0.28]
+>>> covalent_radius(['H','He'])
+[0.31, 0.28]
     """
 
     return _get_property(covalent_radii, value)
@@ -335,11 +335,11 @@ def atomic_symbol(value=None):
 
     Examples:
 
-    >>> from pychemia.utils.periodic import atomic_symbol
-    >>> atomic_symbol(1)
-    'H'
-    >>> atomic_symbol([1,2])
-    ['H', 'He']
+>>> from pychemia.utils.periodic import atomic_symbol
+>>> atomic_symbol(1)
+'H'
+>>> atomic_symbol([1,2])
+['H', 'He']
     """
     ret = None
     if value is None:
@@ -373,13 +373,13 @@ def mass(value=None, units='saw'):
 
     Examples:
 
-    >>> from pychemia.utils.periodic import mass
-    >>> mass(1)
-    1.00794
-    >>> mass([1,2])
-    [1.00794, 4.002602]
-    >>> mass(['H','He'])
-    [1.00794, 4.002602]
+>>> from pychemia.utils.periodic import mass
+>>> mass(1)
+1.00794
+>>> mass([1,2])
+[1.00794, 4.002602]
+>>> mass(['H','He'])
+[1.00794, 4.002602]
     """
     return _get_property(masses, value)
 
@@ -398,11 +398,11 @@ def atomic_number(value):
 
     Examples:
 
-    >>> from pychemia.utils.periodic import atomic_number
-    >>> atomic_number('H')
-    1
-    >>> atomic_number(['H','He'])
-    [1, 2]
+>>> from pychemia.utils.periodic import atomic_number
+>>> atomic_number('H')
+1
+>>> atomic_number(['H', 'He'])
+[1, 2]
     """
     symbol_dict = dict(atomic_symbol())
 

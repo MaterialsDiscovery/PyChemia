@@ -11,12 +11,12 @@ Also each calculation has it own metadata accessible by ExecutionEntry
 object
 """
 import hashlib
-
 import json as _json
 import os as _os
 import uuid as _uuid
 import shutil as _shutil
 import math
+
 from pychemia.core import load_structure_json
 from pychemia.utils.computing import unicode2string
 
@@ -105,8 +105,8 @@ class StructureEntry():
             rf = open(self.path + '/properties.json', 'r')
             try:
                 self.properties = unicode2string(_json.load(rf))
-            except:
-                _os.rename(self.path + '/properties.json',self.path + '/properties.json.FAILED')
+            except ValueError:
+                _os.rename(self.path + '/properties.json', self.path + '/properties.json.FAILED')
                 self.properties = None
             rf.close()
         self.load_originals()
@@ -198,23 +198,23 @@ class StructureEntry():
             print 'Not equal structure'
             ret = False
         elif self.children is None and other.children is not None:
-            ret =False
+            ret = False
         elif self.children is not None and other.children is None:
-            ret =False
+            ret = False
         elif self.children is not None and set(self.children) != set(other.children):
             print 'Not equal children'
             ret = False
         elif self.parents is None and other.parents is not None:
-            ret =False
+            ret = False
         elif self.parents is not None and other.parents is None:
-            ret =False
+            ret = False
         elif self.parents is not None and set(self.parents) != set(other.parents):
             print 'Not equal parents'
             ret = False
         elif self.tags is None and other.tags is not None:
-            ret =False
+            ret = False
         elif self.tags is not None and other.tags is None:
-            ret =False
+            ret = False
         elif self.tags is not None and set(self.tags) != set(other.tags):
             print 'Not equal tags'
             ret = False
@@ -235,6 +235,7 @@ class StructureEntry():
         if self.structure.is_crystal:
             ret += "_%5.3f" % self.structure.density
         return ret
+
 
 class PropertiesEntry():
     """
@@ -264,8 +265,9 @@ class PropertiesEntry():
         Loads an existing db from its configuration file
         """
         rf = open(self.path + '/properties.json', 'r')
-        self.properties(unicode2string(_json.load(rf)))
+        self.properties = unicode2string(_json.load(rf))
         rf.close()
+
 
 class StructureRepository():
     """
@@ -320,7 +322,7 @@ class StructureRepository():
         """
         rf = open(self.path + '/db.json', 'r')
         try:
-            jsonload=unicode2string(_json.load(rf))
+            jsonload = unicode2string(_json.load(rf))
         except ValueError:
             print "Error deserializing the object"
             jsonload = {'tags': {}}
@@ -432,30 +434,30 @@ class StructureRepository():
         from threading import Thread
         from pychemia.external.pymatgen import cif2structure
 
-        def worker(cifs, tag, results):
+        def worker(cifs, tags, results):
             results['succeed'] = []
             results['failed'] = []
-            for i in cifs:
+            for icif in cifs:
                 try:
-                    struct=cif2structure(i, primitive=True)
-                except:
-                    struct=None
-                    results['failed'].append(i)
+                    struct = cif2structure(icif, primitive=True)
+                except ValueError:
+                    struct = None
+                    results['failed'].append(icif)
                 if struct is not None:
-                    structentry = StructureEntry(structure=struct, original_file=i, tags=[tag])
+                    structentry = StructureEntry(structure=struct, original_file=icif, tags=[tags])
                     self.add_entry(structentry)
-                    results['succeed'].append(i)
+                    results['succeed'].append(icif)
 
-        results={}
         th = []
-        results = []
+        result_list = []
         num = int(math.ceil(float(len(list_of_entries))/number_threads))
         for i in range(number_threads):
-            results.append({})
-            th.append(Thread(target=worker, args=(list_of_entries[i*num:min((i+1)*num, len(list_of_entries))], tag, results[i])))
+            result_list.append({})
+            th.append(Thread(target=worker,
+                             args=(list_of_entries[i*num:min((i+1)*num, len(list_of_entries))], tag, result_list[i])))
         for i in th:
             i.start()
-        return th, results
+        return th, result_list
 
     def del_entry(self, entry):
         print 'Deleting ', entry.identifier

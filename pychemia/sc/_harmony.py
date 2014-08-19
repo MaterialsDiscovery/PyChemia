@@ -1,6 +1,7 @@
 __author__ = 'Guillermo Avendano-Franco'
 
-from pychemia.sc import MetaHeuristics
+from _metaheuristics import MetaHeuristics
+
 
 class HarmonySearch(MetaHeuristics):
 

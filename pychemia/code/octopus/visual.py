@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import numpy as _np
 import scipy.io
 from mayavi import mlab
 import numpy as np
@@ -75,48 +74,56 @@ def oct_visualize(path='static',
         else:
             spin_pol = False
 
+    rdata = []
+    pos = []
     if not spin_pol:
-        rdata, pos = _read_netcdf(path + '/density.ncdf')
+        r, p = _read_netcdf(path + '/density.ncdf')
+        rdata.append(r)
+        pos.append(p)
         b = list(rdata.shape)
     else:
         if spin[0]:
-            rdata1, pos1 = _read_netcdf(path + '/density-sp1.ncdf')
-            b = list(rdata1.shape)
-            pos = pos1
+            r, p = _read_netcdf(path + '/density-sp1.ncdf')
+            rdata.append(r)
+            pos.append(p)
+            b = list(r.shape)
+            pos = p
         if spin[1]:
-            rdata2, pos2 = _read_netcdf(path + '/density-sp2.ncdf')
-            b = list(rdata2.shape)
-            pos = pos2
+            r, p = _read_netcdf(path + '/density-sp2.ncdf')
+            rdata.append(r)
+            pos.append(p)
+            b = list(r.shape)
+            pos = p
 
-        if spin[0] is True and spin[1] is True and not np.all(pos1 == pos2):
+        if spin[0] is True and spin[1] is True and not np.all(pos[0] == pos[1]):
             print('ERROR box not consistent on', path)
             exit()
 
     if visual is None:
         fs = []
         if not spin_pol:
-            fs1 = mlab.pipeline.scalar_field(_np.log(rdata))
-            myden = mlab.pipeline.volume(fs1, vmin=-4, vmax=-1)
+            fs1 = mlab.pipeline.scalar_field(np.log(rdata))
+            mlab.pipeline.volume(fs1, vmin=-4, vmax=-1)
             fs.append(fs1)
         else:
             if spin[0]:
-                fs1 = mlab.pipeline.scalar_field(_np.log(rdata1))
-                myden1 = mlab.pipeline.volume(fs1, vmin=-4, vmax=-1, color=(1, 0, 0))
+                fs1 = mlab.pipeline.scalar_field(np.log(rdata1))
+                mlab.pipeline.volume(fs1, vmin=-4, vmax=-1, color=(1, 0, 0))
                 fs.append(fs1)
             if spin[1]:
-                fs2 = mlab.pipeline.scalar_field(_np.log(rdata2))
-                myden2 = mlab.pipeline.volume(fs2, vmin=-4, vmax=-1, color=(0, 0, 1))
+                fs2 = mlab.pipeline.scalar_field(np.log(rdata2))
+                mlab.pipeline.volume(fs2, vmin=-4, vmax=-1, color=(0, 0, 1))
                 fs.append(fs2)
     else:
         count = 0
         if not spin_pol:
-            visual.fs[0].mlab_source.scalars = _np.log(rdata)
+            visual.fs[0].mlab_source.scalars = np.log(rdata)
         else:
             if spin[0]:
-                visual.fs[count].mlab_source.scalars = _np.log(rdata1)
+                visual.fs[count].mlab_source.scalars = np.log(rdata1)
                 count += 1
             if spin[1]:
-                visual.fs[count].mlab_source.scalars = _np.log(rdata2)
+                visual.fs[count].mlab_source.scalars = np.log(rdata2)
 
     if structure:
         geometry_file = pychemia.io.xyz.load(path + '/geo.xyz')

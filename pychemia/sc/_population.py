@@ -1,9 +1,9 @@
 __author__ = 'Guillermo Avendano-Franco'
 
-from pychemia.db import StructureRepository
-from _metaheuristics import MetaHeuristics
+from pychemia.db import PyChemiaDB
 
-class Population(MetaHeuristics):
+
+class Population():
     """
     The class Population defines a set of structures stored in a Mongo Data Base
     This class is used by population-based optimization methods
@@ -19,7 +19,7 @@ class Population(MetaHeuristics):
         self.size = 0
         self._dynamic = True
         self._target_dim = 1
-        self.db = StructureRepository()
+        self.db = PyChemiaDB(name)
         self.leaders = []
         self.active = []
 

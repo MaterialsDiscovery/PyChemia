@@ -4,7 +4,7 @@
 This module provides general routines used by abipython
 but not requiring the abipython classes
 """
-from pychemia.code.abinit import _htmlparser
+from _htmlparser import MyHTMLParser
 
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2012"
@@ -238,7 +238,7 @@ def plot_simple(variables, varname):
 def abihelp(varname):
     import json
 
-    hp = _htmlparser.MyHTMLParser()
+    hp = MyHTMLParser()
 
     import pychemia.code.abinit as _pdca
 

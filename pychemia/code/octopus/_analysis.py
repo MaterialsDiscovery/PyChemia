@@ -194,13 +194,10 @@ def value_in_sphere(dirname, keys, iteration=None, radius=4.5, spin=None):
                 print('Error fitting value for:', filename)
 
             # Get fit
-            x = radius
             cis[i] = p(radius)
             data.close()
         else:
             print('ERROR Missing file:', filename)
-            x = None
-            y = None
 
     return iteration, cis
 

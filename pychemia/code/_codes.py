@@ -2,11 +2,12 @@ __author__ = 'viviane'
 
 from abc import ABCMeta, abstractmethod
 
+
 class Codes():
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def initialize(self):
+    def initialize(self, dirpath):
         pass
 
     @abstractmethod

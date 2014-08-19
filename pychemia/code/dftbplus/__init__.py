@@ -1,16 +1,17 @@
 __author__ = 'Guillermo Avendano Franco'
 
 import os
-from pychemia.code._codes import Codes
+
+from pychemia.code import Codes
 
 
 class DFTBplus(Codes):
 
     def __init__(self):
-        self._path = None
+        self._dirpath = None
 
     def initialize(self, dirpath):
-        self._path = dirpath
+        self._dirpath = dirpath
         if not os.path.lexists(dirpath):
             os.mkdir(dirpath)
 
@@ -28,8 +29,9 @@ class DFTBplus(Codes):
 
     @property
     def dirpath(self):
-        pass
+        return self._dirpath
 
+    @staticmethod
     def read_input(filepath):
         """
         Read an Input for DFTB+
@@ -46,10 +48,10 @@ class DFTBplus(Codes):
         rightside = None
         level = 0
         current_container = ret
-        tree_pos = [ ret ]
+        tree_pos = [ret]
         for line in rf.readlines():
-            print 'line--->',line
-            print 'return->',ret
+            print 'line--->', line
+            print 'return->', ret
             #print 'container',current_container
             #print 'tree_pos',tree_pos
             print 80*'-'
@@ -64,7 +66,7 @@ class DFTBplus(Codes):
                 if rightside == 'GenFormat':
                     gen_format = True
                 level += 1
-                print 'container',current_container
+                print 'container', current_container
             elif gen_format and line.strip() != '}':
                 if value is None:
                     value = line
@@ -78,12 +80,12 @@ class DFTBplus(Codes):
                     value = None
                     gen_format = False
                 tree_pos = tree_pos[:-1]
-                current_container= tree_pos[-1]
+                current_container = tree_pos[-1]
                 level -= 1
             elif '=' in line and level > 0:
                 current_container[line.split('=')[0].strip()] = line.split('=')[1]
             elif (not '=' in line) and (line.strip()[-1] == '{'):
-                if level>0:
+                if level > 0:
                     current_container[line.split()[0].strip()] = {}
                     current_container = current_container[line.split()[0].strip()]
                     tree_pos.append(current_container)
@@ -93,8 +95,8 @@ class DFTBplus(Codes):
                     current_container = ret[-1]
                     tree_pos.append(current_container)
                     level += 1
-            if line.strip()[-2:]=='{}':
-                if level==0:
+            if line.strip()[-2:] == '{}':
+                if level == 0:
                     ret. append({line.split()[0]: '{}'})
                 else:
                     raise ValueError('Line not parsed correctly: '+line)

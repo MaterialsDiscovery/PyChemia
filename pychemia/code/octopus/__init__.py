@@ -5,8 +5,8 @@ OCTOPUS 'inp' input files
 
 """
 
-from pychemia.code.octopus._input import *
-from pychemia.code.octopus._analysis import *
+from _input import *
+from _analysis import *
 
 #__all__ = filter(lambda s: not s.startswith('_'), dir())
 

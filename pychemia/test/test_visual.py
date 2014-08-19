@@ -4,8 +4,10 @@ Visualization of Anthracene
 
 import os
 import time
+
 import pychemia
 import pychemia.external.pymatgen
+
 
 path = 'pychemia/test/data'
 

@@ -3,7 +3,9 @@ __author__ = 'Guillermo Avendano Franco'
 import sys
 import os
 import numpy as np
+
 import matplotlib.pyplot as plt
+
 
 class DensityOfStates():
     """
@@ -14,7 +16,7 @@ class DensityOfStates():
     orbital
     """
 
-    def __init__(self, table = None, title = None):
+    def __init__(self, table=None, title=None):
         self._dos = None
         self._min_energy = None
         self._max_energy = None
@@ -24,13 +26,13 @@ class DensityOfStates():
 
         if table is not None:
             self._dos = np.array(table)
-            self.ncols= self._dos.shape[1]-1
-            self._min_energy = min(table[:,0])
-            self._max_energy = max(table[:,0])
-            self._max_dos = max(table[:,1])
+            self.ncols = self._dos.shape[1]-1
+            self._min_energy = min(table[:, 0])
+            self._max_energy = max(table[:, 0])
+            self._max_dos = max(table[:, 1])
 
     @staticmethod
-    def read(filename, title = None):
+    def read(filename, title=None):
         """
         Reads a file and returns a DensityOFStates object.
         The file could contain concatenated two columns representing
@@ -47,35 +49,39 @@ class DensityOfStates():
             root, ext = os.path.splitext(os.path.basename(filename))
             name = root
         else:
-            name=title
+            name = title
 
-        jump=0
-        jumplist=[0]
-        nsets=1
+        jump = 0
+        jumplist = [0]
+        nsets = 1
         for iline in range(len(table)-1):
-            if table[iline,0]!=table[iline-jump,0]:
-                print iline, jump, table[iline,0], table[iline-jump,0]
+            if table[iline, 0] != table[iline-jump, 0]:
+                print iline, jump, table[iline, 0], table[iline-jump, 0]
                 raise ValueError("No consistency on energy values")
             if table[iline+1, 0] < table[iline, 0]:
-                jump=iline+1
+                jump = iline+1
                 jumplist.append(jump)
-                nsets+=1
+                nsets += 1
 
-        if nsets>1:
-            jump1=jumplist[1]-jumplist[0]
-            for i in range(1,nsets-1):
-                if jumplist[i+1]-jumplist[i]!=jump1:
+        if nsets > 1:
+            jump1 = jumplist[1]-jumplist[0]
+            for i in range(1, nsets-1):
+                if jumplist[i+1]-jumplist[i] != jump1:
                     raise ValueError("No equal jumps")
-            table2=np.zeros((jump1,nsets+1))
-            table2[:,0]=table[:jump1,0]
+            table2 = np.zeros((jump1, nsets+1))
+            table2[:, 0] = table[:jump1, 0]
             for i in range(nsets):
-                table2[:,i+1]=table[i*jump1:(i+1)*jump1,1]
-                assert(np.all(table[i*jump1:(i+1)*jump1,0]==table[:jump1,0]))
+                table2[:, i+1] = table[i*jump1:(i+1)*jump1, 1]
+                assert(np.all(table[i*jump1:(i+1)*jump1, 0] == table[:jump1, 0]))
         else:
-            table2=table
+            table2 = table
 
-        dos = DensityOfStates(table= table2, title= name)
+        dos = DensityOfStates(table=table2, title=name)
         return dos
+
+    @property
+    def dos(self):
+        return self._dos
 
     @property
     def energies(self):
@@ -84,7 +90,7 @@ class DensityOfStates():
 
         :return: (numpy.ndarray) One-dimensional array of energies
         """
-        return self._dos[:,0]
+        return self._dos[:, 0]
 
     @property
     def values(self):
@@ -93,13 +99,13 @@ class DensityOfStates():
 
         :return: (numpy.ndarray) Density of states values
         """
-        if self.ncols>1:
-            return self._dos[:,range(1,self.ncols+1)]
+        if self.ncols > 1:
+            return self._dos[:, range(1, self.ncols+1)]
         else:
-            return self._dos[:,1]
+            return self._dos[:, 1]
 
 
-def plot_one_dos(dosobj, ax=None, horizontal=True, figwidth = 16, figheight = 12):
+def plot_one_dos(dosobj, ax=None, horizontal=True, figwidth=16, figheight=12):
     """
     Plot a single density of states, if the values contains
     several dimensions all the dimensions are plotted
@@ -123,30 +129,31 @@ def plot_one_dos(dosobj, ax=None, horizontal=True, figwidth = 16, figheight = 12
         else:
             ax.set_ylabel('Energy')
     else:
-        fig=plt.gcf()
+        fig = plt.gcf()
 
-    X = dosobj.energies
+    xx = dosobj.energies
 
-    if dosobj.ncols>1:
+    if dosobj.ncols > 1:
         for i in range(dosobj.ncols):
-            Y = dosobj.values[:,i]
+            yy = dosobj.values[:, i]
 
             if horizontal:
-                ax.plot(X, Y)
+                ax.plot(xx, yy)
             else:
-                ax.plot(Y, X)
+                ax.plot(yy, xx)
 
     else:
-        Y = dosobj.values
+        yy = dosobj.values
         if horizontal:
-            ax.plot(X, Y)
+            ax.plot(xx, yy)
         else:
-            ax.plot(Y, X)
+            ax.plot(yy, xx)
 
     #fig.savefig('test.pdf')
     return fig, ax
 
-def plot_many_dos(doslist, minenergy = None, maxenergy = None, figwidth = 16, figheight = 12):
+
+def plot_many_dos(doslist, minenergy=None, maxenergy=None, figwidth=16, figheight=12):
     """
     Plot multiple densities of states
 
@@ -159,18 +166,18 @@ def plot_many_dos(doslist, minenergy = None, maxenergy = None, figwidth = 16, fi
     """
     ndos = len(doslist)
     if minenergy is None:
-        minenergy = min([ min(x.energies) for x in doslist])
+        minenergy = min([min(x.energies) for x in doslist])
     if maxenergy is None:
-        maxenergy = max([ max(x.energies) for x in doslist])
+        maxenergy = max([max(x.energies) for x in doslist])
     minval = sys.float_info.max
     maxval = sys.float_info.min
     for idos in doslist:
-        for i in idos._dos:
-            if i[0]>minenergy and i[0]<maxenergy:
+        for i in idos.dos:
+            if minenergy < i[0] < maxenergy:
                 for icol in range(idos.ncols):
-                    if i[icol+1]>maxval:
+                    if i[icol+1] > maxval:
                         maxval = i[icol+1]
-                    if i[icol+1]<minval:
+                    if i[icol+1] < minval:
                         minval = i[icol+1]
 
     fig, ax = plt.subplots(nrows=1, ncols=ndos, sharex=False, sharey=True, squeeze=True)
@@ -178,9 +185,9 @@ def plot_many_dos(doslist, minenergy = None, maxenergy = None, figwidth = 16, fi
     fig.set_figheight(figheight)
     plt.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.95, wspace=0, hspace=0)
     for i in range(ndos):
-        plot_one_dos(doslist[i], ax[i], horizontal= False)
-        ax[i].set_xlim(1.1*minval,1.1*maxval)
-        ax[i].set_ylim(minenergy,maxenergy)
+        plot_one_dos(doslist[i], ax[i], horizontal=False)
+        ax[i].set_xlim(1.1*minval, 1.1*maxval)
+        ax[i].set_ylim(minenergy, maxenergy)
         ax[i].set_xlabel(doslist[i].title)
         ax[i].spines['bottom'].set_linewidth(10)
         ax[i].spines['left'].set_linewidth(10)

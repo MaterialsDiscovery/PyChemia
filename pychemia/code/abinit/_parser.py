@@ -11,7 +11,6 @@ __status__ = "Development"
 __date__ = "Aug 27, 2012"
 
 from math import sqrt as _sqrt
-
 from numpy import array as _array
 
 import pychemia.utils.constants as _pc

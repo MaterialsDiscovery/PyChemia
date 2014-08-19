@@ -4,7 +4,9 @@ Class Composition
 
 from numpy import array, argsort
 from fractions import gcd as _gcd
+
 from pychemia.utils.periodic import atomic_symbols, electronegativity, atomic_number
+
 
 __author__ = 'Guillermo Avendano-Franco'
 
@@ -84,11 +86,11 @@ class Composition():
         ret = {}
         jump = False
         for i in range(len(value)):
-            if jump > 0: # This char belongs to the current atom, move on
+            if jump > 0:  # This char belongs to the current atom, move on
                 jump -= 1
-            elif value[i].isupper(): # Atom Name starts with Uppercase
-                if i+1 < len(value) and value[i+1].islower(): # Atom name has more than 1 char
-                    if i+2 < len(value) and value[i+2].islower(): # Atom name has more than 2 chars
+            elif value[i].isupper():  # Atom Name starts with Uppercase
+                if i+1 < len(value) and value[i+1].islower():  # Atom name has more than 1 char
+                    if i+2 < len(value) and value[i+2].islower():  # Atom name has more than 2 chars
                         specie = value[i:i+3]
                         jump = 2
                     else:
@@ -111,17 +113,16 @@ class Composition():
                     ret[specie] = int(number)
         return ret
 
-
     @staticmethod
     def explode_composition(formula, units=1):
         import re
 
         # decompose composition
-        a  = re.findall(r"[A-Z][a-z0-9]*", formula)
+        a = re.findall(r"[A-Z][a-z0-9]*", formula)
         composition = []
         for i in a:
             m = re.match(r"([A-Za-z]+)([0-9]*)", i)
-            if (m.group(2) == ""):
+            if m.group(2) == "":
                 n = int(1)
             else:
                 n = int(m.group(2))
@@ -130,8 +131,6 @@ class Composition():
                 composition.append(m.group(1))
 
         return composition
-
-
 
     @property
     def gcd(self):
@@ -231,9 +230,9 @@ class Composition():
         return spec_hex
 
     def __repr__(self):
-        return 'Composition('+self.composition+')'
+        return 'Composition('+str(self.composition)+')'
 
     def __str__(self):
-        ret=''
+        ret = ''
         for i in self.species:
             print " %10s %10d" % (i, self.composition[i])

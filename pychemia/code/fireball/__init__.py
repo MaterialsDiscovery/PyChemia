@@ -1,15 +1,19 @@
 __author__ = 'Guillermo Avendano Franco'
 
-from pychemia.code._codes import Codes
+import os
+
+from pychemia.code import Codes
 
 
 class FireBall(Codes):
 
     def __init__(self):
-        pass
+        self._dirpath = None
 
-    def initialize(self):
-        pass
+    def initialize(self, dirpath):
+        self._dirpath = dirpath
+        if not os.path.lexists(dirpath):
+            os.mkdir(dirpath)
 
     def set_inputs(self):
         pass
@@ -25,4 +29,4 @@ class FireBall(Codes):
 
     @property
     def dirpath(self):
-        pass
+        return self._dirpath

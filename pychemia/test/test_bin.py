@@ -3,7 +3,9 @@ import subprocess
 
 import pychemia
 
+
 path = 'pychemia/test/data'
+
 
 def test_abinit2xyz():
     """

@@ -68,12 +68,7 @@ class InputVariables:
 
     variables = {}
 
-    def __init__(self, *args, **kwargs):
-
-        filename = None
-
-        if 'filename' in kwargs:
-            filename = kwargs['filename']
+    def __init__(self, filename=None):
 
         if filename is not None and _os.path.isfile(filename):
             try:

@@ -7,6 +7,7 @@ atomic structures such as molecules, clusters and crystals
 import numpy as _np
 import json
 from math import sin, cos
+import random
 
 from pychemia.core.lattice import Lattice
 from pychemia.core.delaunay import get_reduced_bases
@@ -76,22 +77,22 @@ class Structure():
 
         Examples:
 
-        >>> import pychemia
-        >>> a = pychemia.core.Structure()
-        >>> print a
-        Empty structure
-        >>> a = pychemia.core.Structure(symbols=['Xe'])
-        >>> print a.natom
-        1
-        >>> d = 1.104
-        >>> a = pychemia.core.Structure(symbols=['N', 'N'], positions=[[0, 0, 0], [0, 0, d]], periodicity=False)
-        >>> print a.natom
-        2
-        >>> a = 4.05
-        >>> b = a/2
-        >>> fcc = pychemia.core.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
-        >>> print fcc.natom
-        1
+>>> import pychemia
+>>> a = pychemia.core.Structure()
+>>> print a
+Empty structure
+>>> a = pychemia.core.Structure(symbols=['Xe'])
+>>> print a.natom
+1
+>>> d = 1.104
+>>> a = pychemia.core.Structure(symbols=['N', 'N'], positions=[[0, 0, 0], [0, 0, d]], periodicity=False)
+>>> print a.natom
+2
+>>> a = 4.05
+>>> b = a/2
+>>> fcc = pychemia.core.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
+>>> print fcc.natom
+1
         """
         self.vector_info = {}
         self.name = None
@@ -429,43 +430,34 @@ class Structure():
 
         return ret
 
+    @staticmethod
     def random_cell(composition, units=1):
         """generate a random cell"""
-
-        #import array
-        #import math
-        import random
-
-        #from ase import Atoms, Atom
-        #from ase.data import atomic_numbers, covalent_radii
-        #from ase.lattice.spacegroup.cell import cellpar_to_cell
-
-        #composition = explode_composition(formula, units=units)
 
         # find volume of unit cell by adding spheres
         volume = 0.0
         #cell = Atoms()
         #cell.set_pbc([True, True, True])
         for specie in composition:
-            natoms_specie=composition[specie]
+            natoms_specie = composition[specie]
             volume += 8.0*natoms_specie*covalent_radius(specie)**3
 
         random.seed()
 
         best_volume = 1e40
+        ret = None
         for ntrial in range(1000):
             # make 3 random lengths
-            length = volume**(1.0/3.0)
             a = (1.0 + 0.5*random.random())
             b = (1.0 + 0.5*random.random())
             c = (1.0 + 0.5*random.random())
 
             # now we make 3 random angles
             alpha = 60.0 + 60.0*random.random()
-            beta  = 60.0 + 60.0*random.random()
+            beta = 60.0 + 60.0*random.random()
             gamma = 60.0 + 60.0*random.random()
 
-            cell=Lattice().from_parameters_to_cell(a, b, c, alpha, beta, gamma).cell
+            cell = Lattice().from_parameters_to_cell(a, b, c, alpha, beta, gamma).cell
 
             pos = cell.get_scaled_positions()
             for i in range(len(pos)):
@@ -482,45 +474,40 @@ class Structure():
                 covalent_dim = 2.0*covalent_radii[atomic_numbers[i]]
 
                 this_factor = covalent_dim / a
-                if(this_factor > factor):
+                if this_factor > factor:
                     factor = this_factor
                 this_factor = covalent_dim / b
-                if(this_factor > factor):
+                if this_factor > factor:
                     factor = this_factor
                 this_factor = covalent_dim / c
-                if(this_factor > factor):
+                if this_factor > factor:
                     factor = this_factor
 
                 for j in range(i+1, len(pos)):
                     distance = cell.get_distance(i, j, mic=True)
                     covalent_dim = covalent_radii[atomic_numbers[i]] + covalent_radii[atomic_numbers[j]]
                     this_factor = covalent_dim / distance
-                    if(this_factor > factor):
+                    if this_factor > factor:
                         factor = this_factor
 
             cell.set_cell(cellpar_to_cell([a*factor, b*factor, c*factor, alpha, beta, gamma]))
             cell.set_scaled_positions(pos)
 
-            if(cell.get_volume() < best_volume):
-    #Modificado aqui
-                test=True
+            if cell.get_volume() < best_volume:
+                test = True
                 for i in range(len(cell)):
-                    for j in range(i+1,len(cell)):
+                    for j in range(i+1, len(cell)):
                         distance = cell.get_distance(i, j, mic=True)
                         covalent_dim = covalent_radii[atomic_numbers[i]] + covalent_radii[atomic_numbers[j]]
                         if distance < covalent_dim:
                             print 'This could not be the best cell (DISCARTED):', covalent_dim/distance
                             print cell
-                            test=False
+                            test = False
                 if test:
                     best_volume = cell.get_volume()
-                    best_cell = cell.copy()
-    # This was Commented:
-    #            best_volume = cell.get_volume()
-    #            best_cell = cell.copy()
+                    ret = cell.copy()
 
-        return best_cell
-
+        return ret
 
     def set_cell(self, cell):
         """
@@ -674,8 +661,7 @@ class Structure():
                'vector_info': self.vector_info,
                'nspecies': len(self.species),
                'density': self.density,
-               'formula': self.formula
-        }
+               'formula': self.formula}
         return ret
 
     @staticmethod
@@ -736,7 +722,6 @@ class Structure():
 
     def __ne__(self, other):
         return not self.__eq__(other)
-
 
     @property
     def is_periodic(self):
@@ -813,7 +798,6 @@ class Structure():
     @property
     def species(self):
         return self.get_composition().species
-
 
 
 def load_structure_json(filename):
