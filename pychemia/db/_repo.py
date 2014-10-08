@@ -17,7 +17,7 @@ import uuid as _uuid
 import shutil as _shutil
 import math
 
-from pychemia.core import load_structure_json
+from pychemia.core.structure import load_structure_json
 from pychemia.utils.computing import unicode2string
 
 

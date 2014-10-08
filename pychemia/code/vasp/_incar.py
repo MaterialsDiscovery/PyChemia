@@ -11,8 +11,8 @@ __status__ = "Development"
 __date__ = "March 16, 2014"
 
 import os as _os
-
 import numpy as _np
+from numbers import Number
 
 
 def load_INCAR(path):
@@ -68,7 +68,7 @@ class InputVariables:
 
     variables = {}
 
-    def __init__(self, filename=None):
+    def __init__(self, filename=None, variables=None):
 
         if filename is not None and _os.path.isfile(filename):
             try:
@@ -76,22 +76,32 @@ class InputVariables:
             except ValueError:
                 print('File format not identified')
 
+        if variables is not None:
+            self.variables = variables
+
     def __import_input(self, filename):
         rf = open(filename, 'r')
         for line in rf.readlines():
             if '=' in line:
-                varname = line.split('=')[0].strip()
+                varname = line.split('=')[0].strip().upper()
                 value = line.split('=')[1].strip()
-                try:
-                    self.variables[varname] = _np.array([int(value)])
-                except ValueError:
+                if value[-1] == ';':
+                    value = value[:-1]
+                if value.upper() == '.FALSE.':
+                    self.variables[varname] = False
+                elif value.upper() == '.TRUE.':
+                    self.variables[varname] = True
+                else:
                     try:
-                        self.variables[varname] = _np.array([float(value)])
+                        self.variables[varname] = _np.array([int(value)])
                     except ValueError:
-                        self.variables[varname] = _np.array([value])
+                        try:
+                            self.variables[varname] = _np.array([float(value)])
+                        except ValueError:
+                            self.variables[varname] = _np.array([value])
         rf.close()
 
-    def write(self, filename):
+    def write(self, filename='INCAR'):
         """
         Write an inputvars object into a text
         file that VASP can use as an INCAR
@@ -110,7 +120,7 @@ class InputVariables:
         ret = ''
         thekeys = self.variables.keys()
 
-        for i in thekeys:
+        for i in sorted(thekeys):
             ret += self.write_key(i)
 
         return ret
@@ -126,57 +136,68 @@ class InputVariables:
             wf:
                 The file object where the 'abinit.in' is been written
         """
-        ret = ''
-        if len(self.variables[varname]) == 0:
+        ret = (varname.ljust(15)) + " =  "
+        if varname not in self.variables:
             print("[ERROR] input variable: '%s' contains no elements" % varname)
             return
 
-        # Assume that the variables are integer and test if such assumption
-        # is true
-        integer = True
-        real = False
-        string = False
-        compact = True
+        value = self.variables[varname]
+        if isinstance(value, bool):
+            if value:
+                ret += '.TRUE.'
+            else:
+                ret += '.FALSE.'
+        elif isinstance(value, Number):
+            ret += str(value)
+        elif isinstance(value, basestring):
+            ret += value
+        else:
 
-        # Get the general kind of values for the input variable
-        for j in self.variables[varname]:
+            # Assume that the variables are integer and test if such assumption
+            # is true
+            integer = True
+            real = False
+            string = False
+            compact = True
 
-            try:
-                if not float(j).is_integer():
-                    # This is the case of non integer values
+            # Get the general kind of values for the input variable
+            for j in self.variables[varname]:
+
+                try:
+                    if not float(j).is_integer():
+                        # This is the case of non integer values
+                        integer = False
+                        real = True
+                        string = False
+                        if len(str(float(j))) > 7:
+                            compact = False
+
+                except ValueError:
+                    # This is the case of '*1' that could not
+                    # be converted because we do not know the size
+                    # of the array
                     integer = False
-                    real = True
-                    string = False
-                    if len(str(float(j))) > 7:
-                        compact = False
+                    real = False
+                    string = True
 
-            except ValueError:
-                # This is the case of '*1' that could not
-                # be converted because we dont know the size
-                # of the array
-                integer = False
-                real = False
-                string = True
+            for j in range(len(self.variables[varname])):
 
-        ret += (varname.ljust(15)) + " =  "
+                if real:
+                    if compact:
+                        ret += ("%g" % self.variables[varname][j]).rjust(8)
+                    else:
+                        ret += ("%17.10e" % self.variables[varname][j])
+                elif integer:
+                    ret += ("%d" % self.variables[varname][j])
+                elif string:
+                    ret += ("%s" % self.variables[varname][j])
 
-        for j in range(len(self.variables[varname])):
+                # Conditions to jump to a new line
+                if ((j + 1) % 3) == 0 and real and j < len(self.variables[varname]) - 1:
+                    ret += ";\n"
+                    ret += 17 * " "
+                elif j < len(self.variables[varname]) - 1:
+                    ret += " "
 
-            if real:
-                if compact:
-                    ret += ("%g" % self.variables[varname][j]).rjust(8)
-                else:
-                    ret += ("%17.10e" % self.variables[varname][j])
-            elif integer:
-                ret += ("%d" % self.variables[varname][j])
-            elif string:
-                ret += ("%s" % self.variables[varname][j])
-
-            # Conditions to jump to a new line
-            if ((j + 1) % 3) == 0 and real and j < len(self.variables[varname]) - 1:
-                ret += ";\n"
-                ret += 17 * " "
-            elif j < len(self.variables[varname]) - 1:
-                ret += " "
         ret += ";\n"
         return ret

@@ -37,6 +37,9 @@ Before installing PyChemia, you may need to first install a few critical depende
 3. [SciPy](http://scipy.org/ "SciPy") >= 0.9
    SciPy is used for many linear algebra and FFT calls
 
+4. [spglib](http://spglib.sourceforge.net/)
+   Spglib is used to determine symmetry groups for structures
+
 ### Optional
 
 1. [Pandas](http://pandas.pydata.org/ "Pandas")
@@ -87,3 +90,16 @@ Structure of the Library
 ![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/images/PyChemia_code.png)
 
 ![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/images/PyChemia_workflow.png)
+
+Contributors
+------------
+
+1. Prof. Aldo H. Romero [West Virginia University] (Project Director)
+
+1. Guillermo Avendaño-Franco [West Virginia University] (Basic Infraestructure)
+
+1. Irais Valencia Jaime [West Virginia University] (Simulation and testing)
+
+1. Sobhit Singh [West Virginia University] (Data-mining)
+
+1. Francisco Muñoz (Universidad de Chile)

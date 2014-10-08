@@ -33,8 +33,8 @@ class Composition():
         :rtype: Composition
         """
 
-        if isinstance(value, str):
-            self._composition = Composition.formula_parser(value)
+        if isinstance(value, basestring):
+            self._set_composition(self.formula_parser(value))
         elif isinstance(value, dict):
             self._set_composition(value)
         else:
@@ -236,3 +236,6 @@ class Composition():
         ret = ''
         for i in self.species:
             print " %10s %10d" % (i, self.composition[i])
+
+    def __iter__(self):
+        return iter(self.composition)

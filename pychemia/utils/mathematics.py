@@ -245,3 +245,54 @@ def wrap2_pmhalf(x):
     else:
         return wrap(x)
 
+
+def vector_set_perpendicular(vector3):
+    """
+    Produces a set of three mutually perpendicular vectors
+    The two other vectors will be unitary
+
+    :return: (tuple) Two numpy arrays
+    """
+    v1 = unit_vector(vector3)
+    v2 = None
+    v3 = None
+    while True:
+        other = unit_vector(_np.random.rand(3))
+        if _np.abs(_np.dot(v1, other)) > 0.05:
+            v2 = unit_vector(_np.cross(v1, other))
+            v3 = unit_vector(_np.cross(v1, v2))
+            break
+        else:
+            continue
+    #print _np.dot(v1, v2)
+    #print _np.dot(v1, v3)
+    #print _np.dot(v2, v3)
+    assert (_np.abs(_np.dot(v1, v2)) < 1E-15)
+    assert (_np.abs(_np.dot(v1, v3)) < 1E-15)
+    assert (_np.abs(_np.dot(v2, v3)) < 1E-15)
+    return v1, v2, v3
+
+
+def matrix_from_eig(v1, v2, v3, lam1, lam2, lam3):
+    """
+    Given 3 eigenvectors and 3 eigenvalues, returns the
+    matrix A that has those eigenvectors and eigenvalues.
+
+    The matrix $A = P.D.P^{-1}$
+
+    Where P is the column stack of eigenvectors and
+    D is a diagonal matrix of eigevalues
+
+    :param v1: First eigenvector
+    :param v2: Second eigenvector
+    :param v3: Third eigenvector
+    :param lam1: First eigenvalue
+    :param lam2: Second eigenvalue
+    :param lam3: Third eigenvalue
+    :return: (numpy.ndarray) The matrix
+    """
+    P = _np.vstack((v1, v2, v3)).T
+    D = _np.diag([lam1, lam2, lam3])
+    Pinv = _np.linalg.inv(P)
+    A = _np.dot(P, _np.dot(D, Pinv))
+    return A

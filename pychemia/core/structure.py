@@ -6,15 +6,17 @@ atomic structures such as molecules, clusters and crystals
 
 import numpy as _np
 import json
+import sys
 from math import sin, cos
 import random
+from itertools import combinations
 
 from pychemia.core.lattice import Lattice
 from pychemia.core.delaunay import get_reduced_bases
 from pychemia.core.composition import Composition
 from pychemia.utils.computing import unicode2string
 from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence, atomic_symbols
-
+from pychemia.utils.mathematics import unit_vector, matrix_from_eig, vector_set_perpendicular
 
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2014"
@@ -433,81 +435,90 @@ Empty structure
     @staticmethod
     def random_cell(composition, units=1):
         """generate a random cell"""
+        if isinstance(composition, dict):
+            comp = Composition(composition)
+        elif isinstance(composition, Composition):
+            comp = composition
+        else:
+            raise ValueError('Wrong composition value')
 
         # find volume of unit cell by adding spheres
         volume = 0.0
-        #cell = Atoms()
-        #cell.set_pbc([True, True, True])
-        for specie in composition:
-            natoms_specie = composition[specie]
+        natom = 0
+        symbols = []
+        for specie in comp:
+            natoms_specie = comp.composition[specie]
+            natom += natoms_specie
             volume += 8.0*natoms_specie*covalent_radius(specie)**3
+            for i in range(natoms_specie):
+                symbols.append(specie)
 
         random.seed()
 
         best_volume = 1e40
         ret = None
-        for ntrial in range(1000):
-            # make 3 random lengths
-            a = (1.0 + 0.5*random.random())
-            b = (1.0 + 0.5*random.random())
-            c = (1.0 + 0.5*random.random())
+        # make 3 random lengths
+        a = (1.0 + 0.5*random.random())
+        b = (1.0 + 0.5*random.random())
+        c = (1.0 + 0.5*random.random())
 
-            # now we make 3 random angles
-            alpha = 60.0 + 60.0*random.random()
-            beta = 60.0 + 60.0*random.random()
-            gamma = 60.0 + 60.0*random.random()
+        # now we make 3 random angles
+        alpha = 60.0 + 60.0*random.random()
+        beta = 60.0 + 60.0*random.random()
+        gamma = 60.0 + 60.0*random.random()
 
-            cell = Lattice().from_parameters_to_cell(a, b, c, alpha, beta, gamma).cell
+        lattice = Lattice().from_parameters_to_cell(a, b, c, alpha, beta, gamma)
 
-            pos = cell.get_scaled_positions()
-            for i in range(len(pos)):
-                pos[i][0] = random.random()
-                pos[i][1] = random.random()
-                pos[i][2] = random.random()
+        factor = (volume/lattice.volume)**0.33
+        lattice = Lattice().from_parameters_to_cell(factor*a, factor*b, factor*c, alpha, beta, gamma)
 
-            cell.set_scaled_positions(pos)
+        # Random reduced positions
+        rpos = _np.random.rand(natom, 3)
 
-            # scale cell
-            factor = 1.0
-            atomic_numbers = cell.get_atomic_numbers()
-            for i in range(len(pos)):
-                covalent_dim = 2.0*covalent_radii[atomic_numbers[i]]
+        mins = [min(rpos[:, i]) for i in range(3)]
+        rpos -= mins
 
-                this_factor = covalent_dim / a
-                if this_factor > factor:
-                    factor = this_factor
-                this_factor = covalent_dim / b
-                if this_factor > factor:
-                    factor = this_factor
-                this_factor = covalent_dim / c
-                if this_factor > factor:
-                    factor = this_factor
+        for i, j in combinations(range(natom), 2):
+            ret = lattice.distance2(rpos[i], rpos[j])
+            mindist = sys.float_info.max
+            for k in ret:
+                if 0 < ret[k]['distance'] < mindist:
+                    mindist = ret[k]['distance']
+                    eigv = ret[k]['image']
+                    testk = k
+            covalent_distance = sum(covalent_radius([symbols[i], symbols[j]]))
+            if mindist < covalent_distance:
+                #print 'Covalent distance', covalent_distance
+                #print lattice
+                #print 'Minimum distance', mindist
+                factor = covalent_distance / mindist
+                v1, v2, v3 = vector_set_perpendicular(eigv)
+                A = matrix_from_eig(v1, v2, v3, factor, 1, 1)
+                lattice = Lattice(_np.dot(A, lattice.cell))
+                #print lattice
+                ret = lattice.distance2(rpos[i], rpos[j])
+                #print 'Minimum distance', ret[testk]['distance']
 
-                for j in range(i+1, len(pos)):
-                    distance = cell.get_distance(i, j, mic=True)
-                    covalent_dim = covalent_radii[atomic_numbers[i]] + covalent_radii[atomic_numbers[j]]
-                    this_factor = covalent_dim / distance
-                    if this_factor > factor:
-                        factor = this_factor
+        for i, j in combinations(range(natom), 2):
+            ret = lattice.distance2(rpos[i], rpos[j])
+            mindist = sys.float_info.max
+            for k in ret:
+                if 0 < ret[k]['distance'] < mindist:
+                    mindist = ret[k]['distance']
+            covalent_distance = sum(covalent_radius([symbols[i], symbols[j]]))
+            if mindist < covalent_distance:
+                print 'Covalent distance: %7.4f  Minimal distance: %7.5f  Difference: %e' % \
+                      (covalent_distance, mindist, covalent_distance-mindist)
 
-            cell.set_cell(cellpar_to_cell([a*factor, b*factor, c*factor, alpha, beta, gamma]))
-            cell.set_scaled_positions(pos)
+        return Structure(symbols=symbols, reduced=rpos, cell=lattice.cell, periodicity=True)
 
-            if cell.get_volume() < best_volume:
-                test = True
-                for i in range(len(cell)):
-                    for j in range(i+1, len(cell)):
-                        distance = cell.get_distance(i, j, mic=True)
-                        covalent_dim = covalent_radii[atomic_numbers[i]] + covalent_radii[atomic_numbers[j]]
-                        if distance < covalent_dim:
-                            print 'This could not be the best cell (DISCARTED):', covalent_dim/distance
-                            print cell
-                            test = False
-                if test:
-                    best_volume = cell.get_volume()
-                    ret = cell.copy()
-
-        return ret
+    def adjust_reduced(self):
+        for i in range(self.natom):
+            for j in range(3):
+                for value in [0.5, 0.25, 0.75, 0.125]:
+                    if abs(value-self.reduced[i, j]) < 1E-4:
+                        self.reduced[i, j] = value
+        self.reduced2positions()
 
     def set_cell(self, cell):
         """
@@ -596,24 +607,29 @@ Empty structure
         self.positions = self.positions[order]
         self.symbols = self.symbols[order]
 
-    def supercell(self, nx, ny, nz):
+    def supercell(self, size):
         """
         Creates a supercell, replicating the positions
         of atoms in the x,y,z directions a number of
-        nx,ny,nz times
+        size=(nx,ny,nz) times
         """
-        old_natom = self.natom
-        for n in range(old_natom):
-            for i in range(nx):
-                for j in range(ny):
-                    for k in range(nz):
-                        if (i + j + k) > 0:
-                            name = self.symbols[n]
-                            position = self.positions[n] + (i * self.cell[0] + j * self.cell[1] + k * self.cell[2])
-                            self.add_atom(name, position)
-        self.cell[0] = nx * self.cell[0]
-        self.cell[1] = ny * self.cell[1]
-        self.cell[2] = nz * self.cell[2]
+        new_natom = _np.prod(size)*self.natom
+        new_symbols = _np.prod(size)*self.symbols
+        new_positions = _np.zeros((new_natom, 3))
+
+        index = 0
+        for i in range(size[0]):
+            for j in range(size[1]):
+                for k in range(size[2]):
+                    for n in range(self.natom):
+                        new_positions[index] = self.positions[n] + \
+                                               (i * self.cell[0] + j * self.cell[1] + k * self.cell[2])
+                        index += 1
+        new_cell = _np.zeros((3, 3))
+        new_cell[0] = size[0] * self.cell[0]
+        new_cell[1] = size[1] * self.cell[1]
+        new_cell[2] = size[2] * self.cell[2]
+        return Structure(symbols=new_symbols, positions=new_positions, cell=new_cell)
 
     def copy(self, deep=False):
         """
@@ -625,9 +641,13 @@ Empty structure
                                 symbols=self.symbols)
         return copy_struct
 
-    def plot(self):
+    def plot(self, figname='None', size=(300, 325), save=False):
         from mayavi import mlab
-
+        fig = mlab.figure(size=size)
+        figure = mlab.gcf()
+        fig.scene.disable_render = True
+        figure.scene.background = (0.0, 0.0, 0.0)
+        mlab.view(30, 30)
         assert (self.natom > 0)
 
         x = self.positions[:, 0]
@@ -640,13 +660,15 @@ Empty structure
         if self.is_crystal:
             frame, line1, line2, line3 = self.get_cell().get_path()
 
-            mlab.plot3d(frame[:, 0], frame[:, 1], frame[:, 2], tube_radius=.05, color=(1, 1, 1))
-            mlab.plot3d(line1[:, 0], line1[:, 1], line1[:, 2], tube_radius=.05, color=(1, 1, 1))
-            mlab.plot3d(line2[:, 0], line2[:, 1], line2[:, 2], tube_radius=.05, color=(1, 1, 1))
-            mlab.plot3d(line3[:, 0], line3[:, 1], line3[:, 2], tube_radius=.05, color=(1, 1, 1))
+            mlab.plot3d(frame[:, 0], frame[:, 1], frame[:, 2], tube_radius=.02, color=(1, 1, 1))
+            mlab.plot3d(line1[:, 0], line1[:, 1], line1[:, 2], tube_radius=.02, color=(1, 1, 1))
+            mlab.plot3d(line2[:, 0], line2[:, 1], line2[:, 2], tube_radius=.02, color=(1, 1, 1))
+            mlab.plot3d(line3[:, 0], line3[:, 1], line3[:, 2], tube_radius=.02, color=(1, 1, 1))
 
-        mlab.view()
-        return mlab.gcf()
+        fig.scene.disable_render = False
+        if save:
+            mlab.savefig(figname)
+        return figure
 
     def todict(self):
 
@@ -798,6 +820,10 @@ Empty structure
     @property
     def species(self):
         return self.get_composition().species
+
+    @property
+    def nspecies(self):
+        return len(self.get_composition().species)
 
 
 def load_structure_json(filename):

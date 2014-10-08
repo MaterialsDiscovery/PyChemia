@@ -38,6 +38,7 @@ class Lattice():
         self._angles = angle_vectors(self._cell, units='deg')
         self._metric = None
         self._inverse = None
+        self.limits_for_distance2 = None
 
     def reciprocal(self):
         """
@@ -120,17 +121,20 @@ class Lattice():
 
         dwrap = wrap2_pmhalf(dred)
 
-        limits = _np.zeros(3)
-        corners = self.get_wigner_seitz_container()
-        #print corners
+        if self.limits_for_distance2 is None:
+            limits = _np.zeros(3)
+            corners = self.get_wigner_seitz_container()
+            #print corners
 
-        # for key, value in corners.iteritems():
-        #    print key, value
-        limits[0] = min(int(ceil(max(1e-14 + abs(_np.array([corners[x][0] for x in corners]))))), 5)
-        limits[1] = min(int(ceil(max(1e-14 + abs(_np.array([corners[x][1] for x in corners]))))), 5)
-        limits[2] = min(int(ceil(max(1e-14 + abs(_np.array([corners[x][2] for x in corners]))))), 5)
-        #print limits
-        #print self
+            # for key, value in corners.iteritems():
+            #    print key, value
+            limits[0] = min(int(ceil(max(1e-14 + abs(_np.array([corners[x][0] for x in corners]))))), 5)
+            limits[1] = min(int(ceil(max(1e-14 + abs(_np.array([corners[x][1] for x in corners]))))), 5)
+            limits[2] = min(int(ceil(max(1e-14 + abs(_np.array([corners[x][2] for x in corners]))))), 5)
+            #print limits
+            self.limits_for_distance2 = limits
+        else:
+            limits = self.limits_for_distance2
 
         ret = {}
         for i0 in _np.arange(-limits[0], limits[0] + 1):

@@ -1,48 +1,44 @@
+__author__ = 'Guillermo Avendano Franco'
+
 from pymongo import MongoClient
 import collections
-
 import pychemia
-
-
-__author__ = 'Guillermo Avendano Franco'
 
 
 class PyChemiaDB():
 
-    def __init__(self, name='pychemiadb', host='localhost', port=27017):
+    def __init__(self, name='pychemiadb', host='localhost', port=27017, master=False):
 
-        client = MongoClient(host, port)
-        db = client[name]
+        self.name = name
+        self._is_master = master
+        self._client = MongoClient(host, port)
+        self.db = self._client[name]
+        self.entries = self.db.pychemia_entries
 
-        self.db = db
-        self.structures_col = self.db.structures
-        self.properties_col = self.db.properties
-
-    def insert(self, structure, properties):
-
-        struct_id = self.structures_col.insert(structure)
-        properties['struct_id'] = struct_id
-        prop_id = self.properties_col.insert(properties)
-        return struct_id, prop_id
+    def insert(self, structure, properties=None):
+        """
+        Insert a pychemia structure instance and properties
+        into the database
+        :param structure: (pychemia.Structure) An instance of Pychemia's Structure
+        :param properties: (dict) Dictionary of properties
+        :return:
+        """
+        entry_dict = structure.todict()
+        if properties is not None:
+            entry_dict['properties'] = properties
+        else:
+            entry_dict['properties'] = {}
+        entry_id = self.entries.insert(entry_dict)
+        return entry_id,
 
     def get_iterator(self):
         cursor = self.db.structures.find()
         return Iterator(self.db, cursor)
 
+    def clean(self):
+        self._client.drop_database(self.name)
+        self.db = self._client[self.name]
 
-class Iterator(collections.Iterable):
+    def is_master(self):
+        return self._is_master
 
-    def __init__(self, db, cursor):
-        self.db = db
-        self.cursor = cursor
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        structure_entry = self.cursor.next()
-        structure = pychemia.Structure().fromdict(structure_entry)
-        properties = self.db.properties.find_one({'struct_id': structure_entry['_id']})
-        return structure, structure_entry, properties
-
-    next = __next__

@@ -21,19 +21,19 @@ def load_POSCAR(path):
         print("POSCAR path not found")
         return
 
-    crystal = pychemia.core.Structure()
+    structure = pychemia.core.Structure()
 
     # Reading the POSCAR file
     rf = open(filename, 'r')
-    crystal.comment = rf.readline().strip()
+    structure.comment = rf.readline().strip()
     latconst = float(rf.readline())
     newcell = _np.zeros((3, 3))
 
-    newcell[0, :] = _np.array([float(x) for x in rf.readline().split()])
-    newcell[1, :] = _np.array([float(x) for x in rf.readline().split()])
-    newcell[2, :] = _np.array([float(x) for x in rf.readline().split()])
+    newcell[0, :] = latconst * _np.array([float(x) for x in rf.readline().split()])
+    newcell[1, :] = latconst * _np.array([float(x) for x in rf.readline().split()])
+    newcell[2, :] = latconst * _np.array([float(x) for x in rf.readline().split()])
 
-    crystal.set_cell(newcell)
+    structure.set_cell(newcell)
 
     # The call to add_atom naturally will increase the
     # internal variable crystal.natom
@@ -66,19 +66,35 @@ def load_POSCAR(path):
     for i in range(natom):
         pos = [float(x) for x in rf.readline().split()]
         if kmode == 'Cartesian':
-            crystal.add_atom(symbols[i], pos, option='cartesian')
+            structure.add_atom(symbols[i], pos, option='cartesian')
         elif kmode == 'Direct':
-            crystal.add_atom(symbols[i], pos, option='reduced')
+            structure.add_atom(symbols[i], pos, option='reduced')
 
-    return crystal
+    return structure
 
 
-def save_POSCAR(crystal, path):
+def save_POSCAR(structure, filepath='POSCAR'):
     """
     Takes an object crystal from pychemia and save the file
     POSCAR for VASP.
     """
-    pass
+    ret = ''
+    comp = structure.get_composition()
+    for i in comp.species:
+        ret += ' '+i
+    ret += '\n'
+    ret += '1.0\n'
+    for i in range(3):
+        ret += ' %20.16f %20.16f %20.16f\n' % tuple(structure.cell[i])
+    for i in comp.values:
+        ret += ' '+str(i)
+    ret += '\n'
+    ret += 'Direct\n'
+    for i in range(structure.natom):
+        ret += ' %20.16f %20.16f %20.16f\n' % tuple(structure.reduced[i])
+    wf = open(filepath, 'w')
+    wf.write(ret)
+    wf.close()
 
 
 def get_species(path):
@@ -89,3 +105,25 @@ def get_species(path):
             species.append(line.split()[1].split('_')[0])
 
     return species
+
+
+def save_POTCAR(structure, filepath='POTCAR', xc='PBE', options=None):
+
+    comp = structure.get_composition()
+    ret = ''
+    pspdir = os.getenv('HOME') + '/.vasp/PP-VASP/potpaw_PBE'
+
+    if xc == 'PBE':
+        for i in comp.species:
+            if options is not None and i in options:
+                psppath = pspdir+os.sep+i+'_'+options[i]+'/POTCAR'
+            else:
+                psppath = pspdir+os.sep+i+'/POTCAR'
+            if not os.path.isfile(psppath):
+                raise ValueError("File not found : "+psppath)
+            rf = open(psppath)
+            ret += rf.read()
+            rf.close()
+    wf = open(filepath, 'w')
+    wf.write(ret)
+    wf.close()

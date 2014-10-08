@@ -1,11 +1,16 @@
+"""
+Population class
+"""
+
 __author__ = 'Guillermo Avendano-Franco'
 
 from pychemia.db import PyChemiaDB
+from pychemia import Structure
 
 
 class Population():
     """
-    The class Population defines a set of structures stored in a Mongo Data Base
+    The class Population defines a set of structures stored in a MongoDB database
     This class is used by population-based optimization methods
     The population could be static or dynamic on their size.
     There are defined one or several leaders and the optimization function could be
@@ -14,12 +19,22 @@ class Population():
     to manipulate the entries on the database.
     """
 
-    def __init__(self, name):
+    def __init__(self, name, new=False):
+        """
+        Init
 
-        self.size = 0
+        :param name:
+        :param size:
+        :param new:
+        :return:
+        """
+
+        self.name = name
         self._dynamic = True
         self._target_dim = 1
-        self.db = PyChemiaDB(name)
+        self.pcdb = PyChemiaDB(name)
+        if new:
+            self.pcdb.clean()
         self.leaders = []
         self.active = []
 
@@ -43,5 +58,21 @@ class Population():
     def del_active(self, identifier):
         self.leaders.pop(identifier)
 
-    def replace_entry(self, identifier, structure):
-        pass
+    def add_random(self, composition, size=1):
+        """
+        Add random structures to the population
+
+        :param composition: (pychemia.Composition) The composition object
+        :param size: (int) Number of element (default=1)
+        """
+        for i in range(size):
+            structure = Structure().random_cell(composition)
+            self.pcdb.insert(structure)
+
+    def __repr__(self):
+        return str(self.__class__)+'({0.name!r})'.format(self)
+
+    def __str__(self):
+        ret = 'Population\n\nName: {0.name!s}\n'.format(self)
+        ret += 'Size: %d' % self.pcdb.entries.count()
+        return ret

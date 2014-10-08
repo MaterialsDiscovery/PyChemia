@@ -19,7 +19,7 @@ class KPoints():
     about kpoints mesh
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, kmode, comment=None, kpts=None, wgts=None, shifts=None, grid=None):
         """
         Creates a new object kpoints
         if no arguments are provided
@@ -30,36 +30,38 @@ class KPoints():
         kpts : Numpy array of kpoint positions
         wgts : Weights for all kpoints
         """
-        self.comment = ''
+        if comment is None:
+            self.comment = ''
+        else:
+            self.comment = comment.strip()
 
-        # Default to a single kpoint at gamma
-        if len(kwargs) == 0:
+        self.kmode = kmode.lower()
+        self.nkpt = 0
+
+        self.shifts = None
+        self.kpts = None
+        self.wgts = None
+        self.grid = None
+
+        if kpts is None and grid is None:
             self.nkpt = 1
             self.kpts = _np.array([[0, 0, 0]])
             self.wgts = _np.array([1])
-
-        # Setting the options provided by kwargs
-        if 'nkpt' in kwargs:
-            if kwargs['nkpt'] == 0 or kwargs['nkpt'] is None:
-                # Create an empty kpoints object
-                self.nkpt = 0
-                self.kpts = _np.array([[]])
-                self.wgts = _np.array([])
-            else:
-                self.nkpt = kwargs['nkpt']
-
-        if 'kpts' in kwargs:
-            self.kpts = _np.array(kwargs['kpts'])
-
-        if 'wgts' in kwargs:
-            self.wgts = _np.array(kwargs['wgts'])
-
-        # Autocompleting missing data
-        if self.nkpt != len(self.kpts):
+        elif kpts is not None and grid is not None:
+            raise ValueError("Both 'kpts' and 'grid' cannot be entered simultaneously")
+        elif kpts is not None:
+            self.kpts = _np.array(kpts)
             self.nkpt = len(self.kpts)
-
-        if len(self.wgts) != len(self.kpts):
-            self.wgts = _np.ones(self.nkpt)
+            if wgts is not None and len(wgts) == self.nkpt:
+                self.wgts = _np.array(wgts)
+            else:
+                self.wgts = _np.ones(self.nkpt)
+        elif grid is not None:
+            self.grid = _np.array(grid)
+            if shifts is not None and len(shifts) == 3:
+                self.shifts = _np.array(shifts)
+            else:
+                self.shifts = _np.zeros(3)
 
     def add_kpt(self, pos, wgt):
 
@@ -72,11 +74,23 @@ class KPoints():
 
         self.nkpt += 1
 
+    def set_grid(self, grid, shifts=None):
+        self.grid = _np.array(grid)
+        self.nkpt = 0
+        if shifts is not None and len(shifts) == 3:
+            self.shifts = _np.array(shifts)
+        else:
+            self.shifts = _np.zeros(3)
+
     def __str__(self):
         """
         String representation of the kpoints object
         """
-        if self.nkpt > 0:
+        kp = ' Mode  : '+self.kmode+'\n'
+        if self.kmode == 'gamma' or self.kmode == 'monkhorst-pack':
+            kp += ' Grid  : '+str(self.grid)+'\n'
+            kp += ' Shift : '+str(self.shifts)+'\n'
+        elif self.kmode == 'cartesian' or self.kmode == 'reciprocal':
             kp = str(self.nkpt) + '\n\n'
             for i in range(self.nkpt):
                 kp += (" %15.7f %15.7f %15.7f %20.7f\n"
@@ -84,6 +98,4 @@ class KPoints():
                        self.kpts[i, 1],
                        self.kpts[i, 2],
                        self.wgts[i]))
-        else:
-            kp = 'Empty KPOINTS'
         return kp

@@ -22,6 +22,7 @@ from pychemia.utils.periodic import atomic_symbol, covalent_radius, atomic_numbe
 from pychemia.utils.constants import bohr_angstrom, angstrom_bohr
 import pychemia.code.abinit
 from pychemia.core import Structure
+from pychemia.utils.mathematics import unit_vectors, length_vectors
 
 
 class InputVariables:
@@ -193,7 +194,7 @@ class InputVariables:
 
             except ValueError:
                 # This is the case of '*1' that could not
-                # be converted because we dont know the size
+                # be converted because we don't know the size
                 # of the array
                 integer = False
                 real = False
@@ -367,6 +368,27 @@ class InputVariables:
         crystal = Structure(natom=natom, symbols=symbols, positions=positions, cell=rprimd)
 
         return crystal
+
+    def from_structure(self, structure):
+        """
+        Set input variables for a given structure
+
+        :return:
+        """
+        natom = structure.natom
+        ntypat = len(structure.species)
+        znucl = atomic_number(structure.species)
+        typat_dict = {}
+        index = 1
+        for ispec in structure.species:
+            typat_dict[ispec] = index
+            index += 1
+        typat = [typat_dict[i] for i in structure.symbols]
+        xcart = pychemia.utils.constants.angstrom_bohr * structure.positions.flatten()
+        acell = pychemia.utils.constants.angstrom_bohr * length_vectors(structure.cell)
+        rprim = unit_vectors(structure.cell).T.flatten()
+        for i in ['natom', 'ntypat', 'znucl', 'typat', 'xcart', 'acell', 'rprim']:
+            self.set_value(i, eval(i))
 
     def get_dtsets_keys(self):
         """
