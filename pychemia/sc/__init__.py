@@ -2,13 +2,13 @@
 Routines related to Soft Computing optimization techniques
 """
 
-from _population import *
-from _bee import *
-from _firefly import *
-from _genetic import *
-from _harmony import *
-from _neural import *
-from _swarm import *
+from _population import Population
+from _bee import BeeAlgorithm
+from _firefly import FireFly
+from _genetic import GeneticAlgorithm
+from _harmony import HarmonySearch
+from _neural import Network, Neuron
+from _swarm import Swarm
 from _metaheuristics import MetaHeuristics
 
 #__all__ = filter(lambda s: not s.startswith('_'), dir())

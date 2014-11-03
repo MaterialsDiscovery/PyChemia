@@ -1,15 +1,14 @@
 __author__ = 'Guillermo Avendano-Franco'
 
-import os as _os
-import shutil as _shutil
+import os
 import subprocess as _subprocess
 from multiprocessing import Process
-import pychemia
+import time
 
 
 class Runner():
 
-    def __init__(self, code, environment, options):
+    def __init__(self, code, code_bin, environment, use_mpi=True, nmpiproc=2, nconcurrent=1):
 
         if code.lower() not in ['abinit', 'vasp', 'octopus', 'dftbplus', 'fireball']:
             raise ValueError('Code not supported: ', code)
@@ -21,31 +20,25 @@ class Runner():
         else:
             self.environment = environment.lower()
 
-        assert (isinstance(options, dict))
-        self.options = options
-        self.mpi = True
-        self.nproc = 2
-        if 'mpi' in options:
-            self.mpi = options['mpi']
-        if 'nproc' in options:
-            self.nproc = options['nproc']
-        if 'code_bin' in options:
-            self.code_bin = options['code_bin']
+        self.use_mpi = use_mpi
+        self.nmpiproc = nmpiproc
+        self.nconcurrent = nconcurrent
+        self.code_bin = code_bin
 
     def initialize(self, dirpath):
         """
         Utility that copy a given script and execute the given
         command inside the directory
         """
-        if not _os.path.isdir(dirpath):
-            _os.mkdir(dirpath)
+        if not os.path.isdir(dirpath):
+            os.mkdir(dirpath)
         if self.code == 'abinit':
             pass
             #pychemia.code.abinit.AbiFiles(basedir=dirpath)
         elif self.code == 'vasp':
             pass
 
-    def run(self, dirpath='.'):
+    def run(self, dirpath='.', verbose=False):
 
         if self.code == 'abinit':
             outfile = 'abinit.stdout'
@@ -59,31 +52,29 @@ class Runner():
         if self.environment == 'local':
 
             def worker(path):
-                cwd = _os.getcwd()
-                _os.chdir(path)
+                cwd = os.getcwd()
+                os.chdir(path)
                 outf = open(outfile, 'w')
                 errf = open(errfile, 'w')
                 if infile is not None:
                     rf = open(infile, 'r')
                 else:
                     rf = None
-                if self.mpi:
-                    print 'Launching '+self.code.upper()+' using MPI with '+str(self.nproc)+' processes'
-                    ret = _subprocess.call(['mpirun', '-np', str(self.nproc), self.code_bin],
+                if self.use_mpi:
+                    #print 'Launching '+self.code.upper()+' using MPI with '+str(self.nmpiproc)+' processes'
+                    ret = _subprocess.call(['mpirun', '-np', str(self.nmpiproc), self.code_bin],
                                            stdin=rf, stdout=outf, stderr=errf)
-                    if ret == 0:
-                        print 'Normal completion of '+self.code.upper()
-                    else:
-                        print 'Finished with error number:', ret
                 else:
-                    print 'Launching '+self.code.upper()+' using in serial mode'
+                    #print 'Launching '+self.code.upper()+' using in serial mode'
                     ret = _subprocess.call([self.code_bin], stdin=rf, stdout=outf, stderr=errf)
+
+                if verbose:
                     if ret == 0:
                         print 'Normal completion of '+self.code.upper()
                     else:
                         print 'Finished with error number:', ret
 
-                _os.chdir(cwd)
+                os.chdir(cwd)
                 errf.close()
                 outf.close()
 
@@ -93,3 +84,26 @@ class Runner():
 
         return p
 
+    def run_multidirs(self, workdirs, worker, checker):
+        pt = []
+        for i in range(self.nconcurrent):
+            pt.append(None)
+
+        index = 0
+        while True:
+            for i in range(self.nconcurrent):
+                if pt[i] is None or not pt[i].is_alive():
+                    ret = checker(workdirs[index])
+                    if ret:
+                        print 'Launching for process '+str(i)+' on dir '+workdirs[index]+' index '+str(index)
+                        pt[i] = Process(target=worker, args=(workdirs[index],))
+                        pt[i].start()
+                    index = (index+1) % len(workdirs)
+            time.sleep(30)
+            complete = True
+            for idir in workdirs:
+                if not os.path.isfile(idir+os.sep+'COMPLETE'):
+                    complete = False
+            if complete:
+                print 'Finishing...'
+                break

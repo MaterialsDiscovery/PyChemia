@@ -5,7 +5,7 @@ Population class
 __author__ = 'Guillermo Avendano-Franco'
 
 from pychemia.db import PyChemiaDB
-from pychemia import Structure
+from pychemia import Structure, Composition
 
 
 class Population():
@@ -76,3 +76,21 @@ class Population():
         ret = 'Population\n\nName: {0.name!s}\n'.format(self)
         ret += 'Size: %d' % self.pcdb.entries.count()
         return ret
+
+    def add_from_db(self, composition, dbname, sizemax=1):
+
+        comp = Composition(composition)
+        readdb = PyChemiaDB(dbname)
+
+        index = 0
+        for entry in readdb.entries.find({'formula': comp.formula}):
+            if index < sizemax:
+                self.pcdb.insert(Structure().fromdict(entry))
+                index += 1
+
+    def __len__(self):
+        return self.pcdb.entries.count()
+
+    @property
+    def entries_ids(self):
+        return [str(entry['_id']) for entry in self.pcdb.entries.find()]

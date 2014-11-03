@@ -7,6 +7,7 @@ import numpy as np
 import numpy.linalg
 from pychemia import Structure
 from pychemia.utils.periodic import atomic_number, covalent_radius, valence
+from pychemia.utils.mathematics import integral_gaussian
 
 
 class StructureAnalysis():
@@ -77,6 +78,51 @@ class StructureAnalysis():
         #print len(self._pairs)
         #print len(self._distances)
         return self._pairs, self._distances
+
+    def distances_between_species(self):
+        bonds_dict, distances = self.close_distances(verbose=False)
+
+        dist_spec = {}
+        for i, j in itertools.combinations_with_replacement(range(self.structure.nspecies), 2):
+            dist_spec[(i, j)] = []
+        for idistance in distances:
+            atom_pair = idistance['pair']
+            spec_pair = tuple(self.structure.species.index(self.structure.symbols[x]) for x in atom_pair)
+            dist_spec[spec_pair].append(idistance['distance'])
+        for x in dist_spec:
+            dist_spec[x].sort()
+        return dist_spec
+
+    def structure_distances(self, delta=0.01, sigma=0.01, rcut=None, integrated=True):
+        dist_spec = self.distances_between_species()
+        discrete_rdf = {}
+        if rcut is None:
+            rcut = max([max(dist_spec[x]) for x in dist_spec])
+        nbins = int((rcut+5*delta)/delta)
+        discrete_rdf_x = np.arange(0, nbins*delta, delta)
+        for spec_pair in dist_spec:
+            discrete_rdf[spec_pair] = np.zeros(nbins)
+            for Rij in dist_spec[spec_pair]:
+                if Rij > 0:
+                    for i in range(len(discrete_rdf[spec_pair])):
+                        x = discrete_rdf_x[i]
+                        if not integrated:
+                            discrete_rdf[spec_pair][i] += np.exp(-((x-Rij)**2)/(2*sigma*sigma))/(4*math.pi*Rij*Rij)
+                        else:
+                            discrete_rdf[spec_pair][i] += integral_gaussian(x, x+delta, Rij, sigma)/(4*math.pi*Rij*Rij)
+
+        return discrete_rdf_x, discrete_rdf
+
+    def fp_oganov(self, delta=0.01, sigma=0.01, rcut=None):
+        struc_dist_x, struc_dist = self.structure_distances(delta, sigma, rcut)
+        fp_oganov = struc_dist.copy()
+        vol = self.structure.volume
+        ns = self.structure.composition.values()
+        for spec_pair in struc_dist:
+            for i in range(len(struc_dist[spec_pair])):
+                fp_oganov[spec_pair][i] *= vol / (delta*ns[spec_pair[0]]*ns[spec_pair[1]])
+                fp_oganov[spec_pair][i] -= 1
+        return struc_dist_x, fp_oganov
 
     def get_bonds_coordination(self, tolerance=1.2, ensure_conectivity=False, use_laplacian=True, verbose=False):
         """
@@ -387,6 +433,3 @@ class StructureAnalysis():
             print hardness_value
 
         return round(hardness_value, 3)
-
-    def fingerprint_oganov(self, sigma=0.2, rcut=30, dbin=0.05):
-        pass

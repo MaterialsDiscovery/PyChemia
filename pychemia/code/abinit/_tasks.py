@@ -1,35 +1,42 @@
 __author__ = 'Guillermo Avendano Franco'
 
+import os
+import shutil
+import pychemia
 
-class Tasks():
 
-    def __init__(self, abinput):
-        """
-        Create a ABINIT tasks object completing information in the input for running
-        specific calculations using ABINIT
+class RelaxPopulation():
 
-        :param abinput:
-        """
-        self.abinput = abinput
+    def __init__(self, population, basedir):
+        self.population = population
+        self.basedir = basedir
+        self.AbinitJobs = {}
 
-    def geometry_opt(self, internal_opt=True, external_opt=True, ionmov=2, nstep=20, ntime=30,
-                     tolmxf=1E-7, tolrff=1E-3):
+    def create_dirs(self, clean=False):
+        if not os.path.isdir(self.basedir):
+            os.makedirs(self.basedir)
+        elif clean:
+            for i in os.listdir(self.basedir):
+                path = self.basedir+os.sep+i
+                if os.path.isfile(path):
+                    os.remove(path)
+                elif os.path.isdir(path):
+                    shutil.rmtree(path)
+        for i in self.population.pcdb.entries.find():
+            name = self.basedir+os.sep+str(i['_id'])
+            if not os.path.isdir(name):
+                os.mkdir(name)
 
-        if internal_opt and external_opt:
-            self.abinput.set_value('optcell', 0, idtset=1)
-            self.abinput.set_value('optcell', 2, idtset=2)
-        elif external_opt:
-            self.abinput.set_value('optcell', 2)
-
-        self.abinput.set_value('ionmov', ionmov)
-        self.abinput.set_value('nstep', nstep)
-        self.abinput.set_value('ntime', ntime)
-        self.abinput.set_value('tolmxf', tolmxf)
-        self.abinput.set_value('tolrff', tolrff)
-
-    def kpoints(self, ngkpt=(3, 3, 3)):
-        self.abinput.set_value('ngkpt', list(ngkpt))
-
-    def energetics(self, ecut=50):
-        self.abinput.set_value('ecut', ecut)
+    def create_inputs(self):
+        kpoints = pychemia.dft.KPoints(kmode='gamma', grid=[4, 4, 4])
+        for i in self.population.pcdb.entries.find():
+            name = str(i['_id'])
+            workdir = self.basedir+os.sep+name
+            struct = pychemia.Structure().fromdict(i)
+            job = pychemia.code.abinit.AbinitJob(struct, workdir)
+            job.set_kpoints(kpoints)
+            job.ion_relax(tolmxf=1E-4, tolrff=1E-2,)
+            job.energetics()
+            job.write_all()
+            self.AbinitJobs[name] = job
 

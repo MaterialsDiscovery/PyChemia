@@ -1,8 +1,6 @@
 __author__ = 'Guillermo Avendano Franco'
 
 from pymongo import MongoClient
-import collections
-import pychemia
 
 
 class PyChemiaDB():
@@ -29,7 +27,7 @@ class PyChemiaDB():
         else:
             entry_dict['properties'] = {}
         entry_id = self.entries.insert(entry_dict)
-        return entry_id,
+        return entry_id
 
     def get_iterator(self):
         cursor = self.db.structures.find()
@@ -39,6 +37,7 @@ class PyChemiaDB():
         self._client.drop_database(self.name)
         self.db = self._client[self.name]
 
+    @property
     def is_master(self):
         return self._is_master
 

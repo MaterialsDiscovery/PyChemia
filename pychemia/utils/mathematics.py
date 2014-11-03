@@ -4,6 +4,7 @@ Mathematical operations
 
 __author__ = 'Guillermo Avendano-Franco'
 
+import math
 import numpy as _np
 import itertools as _it
 
@@ -66,13 +67,13 @@ def unit_vectors(m):
     Example:
 >>> b = unit_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
 >>> b
-    array([[ 0.26726124,  0.53452248,  0.80178373],
-           [ 0.45584231,  0.56980288,  0.68376346],
-           [ 0.50257071,  0.57436653,  0.64616234],
-           [ 1.        ,  0.        ,  0.        ],
-           [ 0.        ,  0.        ,  1.        ]])
-    >>> length_vectors(b)
-    array([ 1.,  1.,  1.,  1.,  1.])
+array([[ 0.26726124,  0.53452248,  0.80178373],
+       [ 0.45584231,  0.56980288,  0.68376346],
+       [ 0.50257071,  0.57436653,  0.64616234],
+       [ 1.        ,  0.        ,  0.        ],
+       [ 0.        ,  0.        ,  1.        ]])
+>>> length_vectors(b)
+array([ 1.,  1.,  1.,  1.,  1.])
     """
     return _np.divide(_np.array(m, dtype=float).T, length_vectors(_np.array(m, dtype=float))).T
 
@@ -291,8 +292,28 @@ def matrix_from_eig(v1, v2, v3, lam1, lam2, lam3):
     :param lam3: Third eigenvalue
     :return: (numpy.ndarray) The matrix
     """
-    P = _np.vstack((v1, v2, v3)).T
-    D = _np.diag([lam1, lam2, lam3])
-    Pinv = _np.linalg.inv(P)
-    A = _np.dot(P, _np.dot(D, Pinv))
-    return A
+    matrixp = _np.vstack((v1, v2, v3)).T
+    matrixd = _np.diag([lam1, lam2, lam3])
+    matrixpinv = _np.linalg.inv(matrixp)
+    matrixa = _np.dot(matrixp, _np.dot(matrixd, matrixpinv))
+    return matrixa
+
+
+def integral_gaussian(a, b, mu, sigma):
+    """
+    Computes the integral of a gaussian centered
+    in mu with a given sigma
+    :param a:
+    :param b:
+    :param mu:
+    :param sigma:
+    :return:
+    """
+
+    #Integral from -\infty to a
+    val_floor = 0.5 * (1+math.erf((a-mu)/(sigma*math.sqrt(2.0))))
+
+    #Integral from -\infty to b
+    val_ceil = 0.5 * (1+math.erf((b-mu)/(sigma*math.sqrt(2.0))))
+
+    return val_ceil - val_floor

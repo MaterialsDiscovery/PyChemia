@@ -12,6 +12,7 @@ from _input import *
 from _utils import *
 from _parser import *
 from _htmlparser import *
-from _tasks import *
+from _tasks import RelaxPopulation
+from _abinit import AbinitJob
 
 #__all__ = filter(lambda s: not s.startswith('_'), dir())

@@ -493,8 +493,8 @@ Empty structure
                 #print 'Minimum distance', mindist
                 factor = covalent_distance / mindist
                 v1, v2, v3 = vector_set_perpendicular(eigv)
-                A = matrix_from_eig(v1, v2, v3, factor, 1, 1)
-                lattice = Lattice(_np.dot(A, lattice.cell))
+                matrixA = matrix_from_eig(v1, v2, v3, factor, 1, 1)
+                lattice = Lattice(_np.dot(matrixA, lattice.cell))
                 #print lattice
                 ret = lattice.distance2(rpos[i], rpos[j])
                 #print 'Minimum distance', ret[testk]['distance']

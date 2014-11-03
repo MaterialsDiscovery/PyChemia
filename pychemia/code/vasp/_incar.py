@@ -15,7 +15,7 @@ import numpy as _np
 from numbers import Number
 
 
-def load_INCAR(path):
+def read_incar(path):
     """
     Load the file INCAR in the directory 'path' or
     read directly the file 'path' and return an object
@@ -33,17 +33,17 @@ def load_INCAR(path):
     return iv
 
 
-def save_INCAR(iv, path):
+def write_incar(iv, filepath='INCAR'):
     """
     Takes an object inputvars from pychemia and
     save the file INCAR in the directory 'path' or
     save the file 'path' as a VASP INCAR file
     """
 
-    if _os.path.isdir(path):
-        filename = path + '/INCAR'
+    if _os.path.isdir(filepath):
+        filename = filepath + '/INCAR'
     else:
-        filename = path
+        filename = filepath
 
     iv.write(filename)
 
@@ -76,7 +76,9 @@ class InputVariables:
             except ValueError:
                 print('File format not identified')
 
-        if variables is not None:
+        if variables is None:
+            self.variables = {}
+        else:
             self.variables = variables
 
     def __import_input(self, filename):
@@ -201,3 +203,48 @@ class InputVariables:
 
         ret += ";\n"
         return ret
+
+    def set_minimum(self, PREC='Normal', ISPIN=2,  LREAL=False, ISMEAR=0, LORBIT=11):
+        self.variables['PREC'] = PREC
+        self.variables['LREAL'] = LREAL
+        self.variables['ISMEAR'] = ISMEAR
+        self.variables['ISPIN'] = ISPIN
+        self.variables['LORBIT'] = LORBIT
+
+    def set_encut(self, ENCUT=300, POTCAR=None):
+        self.variables['ENCUT'] = ENCUT
+        if POTCAR is not None and ENCUT < 10:
+            maxvalue = 0
+            if not _os.path.isfile(POTCAR):
+                raise ValueError('Not such file', POTCAR)
+            rf = open(POTCAR)
+            for line in rf.readlines():
+                if 'ENMAX' in line:
+                    list4line = line.split()
+                    assert(list4line[0].strip() == 'ENMAX')
+                    value = list4line[2].strip()
+                    if value[-1] == ';':
+                        value = value[:-1]
+                    value = float(value)
+                    if value > maxvalue:
+                        maxvalue = value
+            rf.close()
+            if ENCUT < 10:
+                self.variables['ENCUT'] = ENCUT*maxvalue
+            else:
+                self.variables['ENCUT'] = maxvalue
+
+    def set_ion_relax(self, NSW=100, ISIF=2):
+        self.variables['IBRION'] = 2
+        self.variables['NSW'] = NSW
+        self.variables['ISIF'] = ISIF
+
+    def set_break_conditions(self, EDIFF='1E-4', EDIFFG='-1E-3'):
+        self.variables['EDIFF'] = EDIFF
+        self.variables['EDIFFG'] = EDIFFG
+
+    def set_rough_relaxation(self):
+        self.variables['NELMIN'] = 5
+        self.variables['EDIFF'] = 1E-2
+        self.variables['EDIFFG'] = -0.3
+        self.variables['IBRION'] = 2

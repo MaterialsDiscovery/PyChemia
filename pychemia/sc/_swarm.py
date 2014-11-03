@@ -1,5 +1,5 @@
 
-from pychemia.sc import MetaHeuristics
+from _metaheuristics import MetaHeuristics
 
 
 class Swarm(MetaHeuristics):

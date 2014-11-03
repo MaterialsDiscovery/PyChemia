@@ -1,6 +1,7 @@
 __author__ = 'Guillermo Avendano-Franco'
 
 import os
+import numpy as np
 
 
 class VaspOutput():
@@ -27,7 +28,8 @@ class VaspOutput():
             elif lines[i].strip() == 'FREE ENERGIE OF THE ION-ELECTRON SYSTEM (eV)':
                 self.get_free_energy(i, lines)
             elif lines[i].strip() == 'FORCE on cell =-STRESS in cart. coord.  units (eV):':
-                self.get_stress(i, lines)
+                if lines[i+1].strip().startswith('Direction') and lines[i+2].strip().startswith('---'):
+                    self.get_stress(i, lines)
             elif lines[i].strip() == 'POSITION                                       TOTAL-FORCE (eV/Angst)':
                 self.get_forces(i, lines)
 
@@ -39,7 +41,7 @@ class VaspOutput():
             self.magnetization[k] = []
         while True:
             i += 1
-            if lines[iline+i].strip().startswith('-'):
+            if lines[iline+i].strip().startswith('---'):
                 break
             values = [float(x) for x in lines[iline + i].split()]
             assert(len(keys) == len(values))
@@ -54,7 +56,7 @@ class VaspOutput():
             self.total_charge[k] = []
         while True:
             i += 1
-            if lines[iline+i].strip().startswith('-'):
+            if lines[iline+i].strip().startswith('---'):
                 break
             values = lines[iline + i].split()
             assert(len(keys) == len(values))
@@ -69,10 +71,12 @@ class VaspOutput():
         self.forces = []
         while True:
             i += 1
-            if lines[iline+i].strip().startswith('-'):
+            if lines[iline+i].strip() == 83*'-':
                 break
             values = lines[iline + i].split()
             self.forces.append([float(x) for x in values[-3:]])
+        if not self.forces:
+            self.forces = None
 
     def get_stress(self, iline, lines):
         i = 2
@@ -80,16 +84,19 @@ class VaspOutput():
 
         while True:
             i += 1
-            if lines[iline+i].strip().startswith('-'):
+            if lines[iline+i].strip().startswith('---'):
                 break
             key = lines[iline + i][:9].strip()
             #print lines[iline + i][9:]
+            #print lines[iline+i]
             values = [float(x) for x in lines[iline + i][9:].split()]
             #print values
             self.stress[key] = values
         i += 1
         values = [float(x) for x in lines[iline + i][9:].split()]
         self.stress['Total'] = values
+        if self.stress == {}:
+            self.stress = None
 
     def __str__(self):
         ret = '\nForces:\n'
@@ -112,3 +119,13 @@ class VaspOutput():
         ret += '\nFree Energy:\n'
         ret += str(self.free_energy)
         return ret
+
+    def relaxation_info(self):
+
+        info = {}
+        if self.stress is not None:
+            info['avg_stress_diag'] = np.average(np.abs(self.stress['Total'][:3]))
+            info['avg_stress_non_diag'] = np.average(np.abs(self.stress['Total'][-3:]))
+        if self.forces is not None:
+            info['avg_force'] = np.average(np.abs(np.apply_along_axis(np.linalg.norm, 1, self.forces)))
+        return info

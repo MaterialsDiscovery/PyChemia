@@ -179,7 +179,7 @@ if __name__ == '__main__':
             if has_input or hist:
                 (av, dts) = get_input_dts(abifile.get_input_filename(), dtset)
             elif has_output:
-                (av, dts) = get_input_dts(abifile.get_OUT_filename(), dtset)
+                (av, dts) = get_input_dts(abifile.get_out_filename(), dtset)
             xyz = filename[:-6]
             if not hist:
                 input2xyz(av, xyz, dts)

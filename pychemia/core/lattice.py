@@ -190,7 +190,7 @@ class Lattice():
     @staticmethod
     def from_parameters_to_cell(a, b, c, alpha, beta, gamma):
         """
-        Create a Lattice using parameters a, b and c as box lenghts
+        Create a Lattice using parameters a, b and c as box lengths
         and corresponging angles alpha, beta, gamma
 
         :param a: (float): *a* lattice length.
@@ -206,8 +206,7 @@ class Lattice():
         alpha_radians = radians(alpha)
         beta_radians = radians(beta)
         gamma_radians = radians(gamma)
-        val = (cos(alpha_radians) * cos(beta_radians) - cos(gamma_radians)) \
-            /(sin(alpha_radians) * sin(beta_radians))
+        val = (cos(alpha_radians) * cos(beta_radians) - cos(gamma_radians)) / (sin(alpha_radians) * sin(beta_radians))
         # Sometimes rounding errors result in values slightly > 1.
         val = val if abs(val) <= 1 else val / abs(val)
         gamma_star = acos(val)

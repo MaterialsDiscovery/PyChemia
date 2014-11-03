@@ -129,7 +129,7 @@ class AbiFiles:
         """
         return self.basedir + "/" + self.files['out']
 
-    def get_OUT_filename(self):
+    def get_out_filename(self):
         """
         Return the OUT.nc filename
         """
@@ -140,7 +140,7 @@ class AbiFiles:
         Remove all the output
         """
         if _os.path.isdir(self.basedir):
-            _os.remove(self.get_OUT_filename())
+            _os.remove(self.get_out_filename())
             outfile = self.files['out']
             outs = [x for x in _os.listdir(self.basedir) if x[:len(outfile)] == outfile]
             for i in outs:
@@ -164,7 +164,7 @@ class AbiFiles:
         """
         Return the output as a dictionary
         """
-        return netcdf2dict(self.get_OUT_filename())
+        return netcdf2dict(self.get_out_filename())
 
     def execute(self, abinit_binary):
         """

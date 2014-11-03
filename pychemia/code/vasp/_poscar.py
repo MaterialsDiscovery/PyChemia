@@ -4,13 +4,12 @@ Routines to read and write POSCAR file
 
 import os
 import numpy as _np
-
 import pychemia
 
 
-def load_POSCAR(path):
+def read_poscar(path):
     """
-    Load a POSCAR file and return a pychemia crystal object
+    Load a POSCAR file and return a pychemia structure object
     """
 
     if os.path.isfile(path):
@@ -73,9 +72,9 @@ def load_POSCAR(path):
     return structure
 
 
-def save_POSCAR(structure, filepath='POSCAR'):
+def write_poscar(structure, filepath='POSCAR'):
     """
-    Takes an object crystal from pychemia and save the file
+    Takes an structure from pychemia and save the file
     POSCAR for VASP.
     """
     ret = ''
@@ -107,23 +106,40 @@ def get_species(path):
     return species
 
 
-def save_POTCAR(structure, filepath='POTCAR', xc='PBE', options=None):
+def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None, pspfiles=None):
 
     comp = structure.get_composition()
     ret = ''
-    pspdir = os.getenv('HOME') + '/.vasp/PP-VASP/potpaw_PBE'
+    psppath = os.getenv('HOME') + '/.vasp/PP-VASP/'+pspdir
 
-    if xc == 'PBE':
+    if pspfiles is None:
+        pspfiles = []
         for i in comp.species:
             if options is not None and i in options:
-                psppath = pspdir+os.sep+i+'_'+options[i]+'/POTCAR'
+                if isinstance(options[i], basestring):
+                    pspfile = psppath+os.sep+i+'_'+options[i]+'/POTCAR'
+                elif isinstance(options[i], list):
+                    for j in options[i]:
+                        pspfile = psppath+os.sep+i+'_'+options[i][j]+'/POTCAR'
+                        if os.path.isfile(psppath):
+                            break
+
             else:
-                psppath = pspdir+os.sep+i+'/POTCAR'
-            if not os.path.isfile(psppath):
-                raise ValueError("File not found : "+psppath)
-            rf = open(psppath)
-            ret += rf.read()
-            rf.close()
+                for j in ['', '_sv']:
+                    pspfile = psppath+os.sep+i+j+'/POTCAR'
+                    if os.path.isfile(pspfile):
+                        break
+                    else:
+                        print pspfile, 'is not present...'
+            if not os.path.isfile(pspfile):
+                raise ValueError("File not found : " + pspfile)
+            pspfiles.append(pspfile)
+
+    for pspfile in pspfiles:
+        rf = open(pspfile)
+        ret += rf.read()
+        rf.close()
     wf = open(filepath, 'w')
     wf.write(ret)
     wf.close()
+    return pspfiles

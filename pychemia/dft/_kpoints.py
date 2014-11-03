@@ -99,3 +99,12 @@ class KPoints():
                        self.kpts[i, 2],
                        self.wgts[i]))
         return kp
+
+    def todict(self):
+        ret = {'comment': self.comment,
+               'kmode': self.kmode,
+               'nkpt': self.nkpt,
+               'shifts': self.shifts,
+               'kpts': self.kpts,
+               'wgts': self.wgts,
+               'grid': self.grid}

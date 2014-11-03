@@ -15,7 +15,7 @@ import numpy as _np
 import pychemia
 
 
-def load_KPOINTS(path):
+def read_kpoints(path):
     """
     Load the file KPOINTS in the directory 'path' or
     read directly the file 'path' and return a kpoints
@@ -67,17 +67,17 @@ def load_KPOINTS(path):
     return kp
 
 
-def save_KPOINTS(kp, path='KPOINTS'):
+def write_kpoints(kp, filepath='KPOINTS'):
     """
     Takes an object kpoints from pychemia and
     save the file KPOINTS in the directory 'path' or
     save the file 'path' as a VASP KPOINTS file
     """
 
-    if os.path.isdir(path):
-        filename = path + '/KPOINTS'
+    if os.path.isdir(filepath):
+        filename = filepath + '/KPOINTS'
     else:
-        filename = path
+        filename = filepath
 
     wf = open(filename, 'w')
 
