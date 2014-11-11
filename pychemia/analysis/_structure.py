@@ -230,7 +230,7 @@ class StructureAnalysis():
         :rtype : (float)
         """
 
-        bonds, coordination, all_distances, tolerances, final_tolerance = \
+        bonds, coordination, all_distances, tolerances, cutoff_radius = \
             self.get_bonds_coordination(tolerance=tolerance, ensure_conectivity=False, use_laplacian=use_laplacian,
                                         verbose=verbose)
 
@@ -291,10 +291,7 @@ class StructureAnalysis():
         #print 'len_bonds', len(diff_bonds
         hardness_value = c_hard / vol * (len(diff_bonds) * x ** (1. / (len(diff_bonds)))) * math.exp(-sigma * f)
 
-        if verbose:
-            print hardness_value
-
-        return round(hardness_value, 3), final_tolerance
+        return round(hardness_value, 3), cutoff_radius
 
     def get_bonds(self, radius, noupdate=False, verbose=False, tolerance=0.05):
         """
