@@ -223,7 +223,7 @@ class StructureAnalysis():
                                         verbose=verbose)
 
         if verbose:
-            print 'Coordination : ', coordination
+            print 'Structure coordination : ', coordination
 
         sigma = 3.0
         c_hard = 1300.0
@@ -234,21 +234,25 @@ class StructureAnalysis():
         atomicnumbers = atomic_number(self.structure.species)
 
         if verbose:
-            print atomicnumbers
+            print 'Atomic numbers in the structure :', atomicnumbers
 
         for i in atomicnumbers:
             f_d += valence(i) / covalent_radius(i)
             f_n *= valence(i) / covalent_radius(i)
-        if verbose:
-            print 'fd', f_d
-            print 'fn', f_n
-            print atomicnumbers
+
+        #if verbose:
+        #    print 'fd', f_d
+        #    print 'fn', f_n
+        #    print atomicnumbers
         if f_d == 0:
             return 0.0
         f = 1.0 - (len(atomicnumbers) * f_n ** (1.0 / len(atomicnumbers)) / f_d) ** 2
 
         # Selection of different bonds
         diff_bonds = np.unique(np.array(reduce(lambda xx, y: xx+y, bonds)))
+        if verbose:
+            print 'Number of different bonds : ', len(diff_bonds)
+
         for i in diff_bonds:
             i1 = all_distances[i]['pair'][0]
             i2 = all_distances[i]['pair'][1]
@@ -268,9 +272,9 @@ class StructureAnalysis():
 
         vol = self.structure.volume
         if verbose:
-            print("V:", vol)
-            print("f:", f)
-            print("x:", x)
+            print("Structure volume:", vol)
+            #print("f:", f)
+            #print("x:", x)
 
         #print 'len_bonds', len(diff_bonds
         hardness_value = c_hard / vol * (len(diff_bonds) * x ** (1. / (len(diff_bonds)))) * math.exp(-sigma * f)
