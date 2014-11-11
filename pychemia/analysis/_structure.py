@@ -124,7 +124,7 @@ class StructureAnalysis():
                 fp_oganov[spec_pair][i] -= 1
         return struc_dist_x, fp_oganov
 
-    def get_bonds_coordination(self, tolerance=1.2, ensure_conectivity=False, use_laplacian=True, verbose=False):
+    def get_bonds_coordination(self, tolerance=1.2, ensure_conectivity=False, use_laplacian=True, verbose=False, tol=1E-15):
         """
         Computes simultaneously the bonds for all atoms and the coordination
         number using a multiplicative tolerance for the sum of covalent radius
@@ -189,10 +189,15 @@ class StructureAnalysis():
                     laplacian[i, i] = -sum(laplacian[i])
                 ev = numpy.linalg.eigvalsh(laplacian)
                 if verbose:
-                    print 'Lowest Eigenvalue :', min(ev)
-                    print 'Number of Eigenvalues close to zero :', sum(ev < 1E-16)
-                if sum(ev < 1E-16) > 1:
+                    print 'Number of Eigenvalues close to zero :', sum(ev < tol)
+                    if sum(ev < tol) > 10:
+                        print 'Lowest Eigenvalue :', min(ev)
+                    else:
+                        print 'Lowest Eigenvalues :', [x for x in ev if x < tol]
+                if sum(ev < tol) > 1:
                     _tolerance += 0.1
+                    if verbose:
+                            print 'Increasing cutoff radius by 0.1 A\n'
                 else:
                     increase = False
                     for i in bonds:
@@ -279,7 +284,7 @@ class StructureAnalysis():
 
         vol = self.structure.volume
         if verbose:
-            print("Structure volume:", vol)
+            print "Structure volume:", vol
             #print("f:", f)
             #print("x:", x)
 
