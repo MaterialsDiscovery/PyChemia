@@ -7,6 +7,7 @@ try:
     from _db import PyChemiaDB
     USE_MONGO = True
 except ImportError:
+    print 'PYMONGO not found, mongo database functionality disabled'
     USE_MONGO = False
 
 

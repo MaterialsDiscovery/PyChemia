@@ -9,5 +9,5 @@ try:
     from _spglib import *
     USE_SPGLIB = True
 except ImportError:
-    print 'spglib functionality disabled'
+    print 'SPGLIB not found, symmetry module disabled'
     USE_SPGLIB = False
