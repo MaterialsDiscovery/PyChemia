@@ -83,8 +83,9 @@ class Population():
         readdb = PyChemiaDB(dbname)
 
         index = 0
-        for entry in readdb.entries.find({'formula': comp.formula}):
+        for entry in readdb.entries.find({'formula': comp.formula, 'natom': comp.natom}):
             if index < sizemax:
+                print 'Adding entry '+str(entry['_id'])+' from '+dbname
                 self.pcdb.insert(Structure().fromdict(entry))
                 index += 1
 
@@ -94,3 +95,16 @@ class Population():
     @property
     def entries_ids(self):
         return [str(entry['_id']) for entry in self.pcdb.entries.find()]
+
+    def set_all_active(self):
+
+        for i in self.entries_ids:
+            self.active.append(i)
+
+    @property
+    def actives(self):
+        return self.active
+
+    def update_entry(self, mongoid, structure):
+
+        self.pcdb.update(mongoid, structure.todict())

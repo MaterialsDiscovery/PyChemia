@@ -1,4 +1,4 @@
-__author__ = 'guilleaf'
+__author__ = 'Guillermo Avendano Franco'
 
 import os
 from _poscar import write_poscar, write_potcar, read_poscar
@@ -7,7 +7,8 @@ from _incar import write_incar, InputVariables, read_incar
 from pychemia import Structure
 from pychemia.dft import KPoints
 import json
-
+from pychemia.utils.computing import unicode2string
+from _outcar import VaspOutput
 
 class VaspJob():
 
@@ -78,34 +79,79 @@ class VaspJob():
         self.write_kpoints()
         self.write_poscar()
         self.write_potcar()
+        self.save_json(self.workdir+os.sep+'vaspjob.json')
 
     @property
     def variables(self):
         return self.input_variables.variables
 
-    def todict(self):
+    @property
+    def to_dict(self):
         ret = {'structure': self.structure.todict(),
                'potcar_pspfiles': self.potcar_pspfiles,
                'potcar_setup': self.potcar_setup,
-               'potcar_workdir': self.workdir,
-               'variables': self.input_variables.variables,
-               'kpoints': self.kpoints.todict(),
+               'potcar_pspdir': self.potcar_pspdir,
+               'workdir': self.workdir,
+               'variables': self.variables,
+               'kpoints': self.kpoints.to_dict,
                'outcar': self.outcar,
                'poscar_setup': self.poscar_setup}
         return ret
 
+    def fromdict(self, vj_dict):
+        self.structure = Structure().fromdict(vj_dict['structure'])
+        self.potcar_pspfiles = vj_dict['potcar_pspfiles']
+        self.potcar_setup = vj_dict['potcar_setup']
+        self.workdir = vj_dict['workdir']
+        self.input_variables = InputVariables(variables=vj_dict['variables'])
+        self.kpoints = vj_dict['kpoints']
+        self.outcar = vj_dict['outcar']
+        self.poscar_setup = vj_dict['poscar_setup']
+        self.poscar_pspdir = vj_dict['poscar_pspdir']
+
+    def load_json(self, filename):
+        filep = open(filename, 'r')
+        vj_dict = unicode2string(json.load(filep))
+        self.fromdict(vj_dict)
+
     def save_json(self, filename):
 
         filep = open(filename, 'w')
-        json.dump(self.todict(), filep, sort_keys=True, indent=4, separators=(',', ': '))
+        json.dump(self.to_dict, filep, sort_keys=True, indent=4, separators=(',', ': '))
         filep.close()
 
     def read_incar(self):
         self.input_variables = read_incar(self.workdir+os.sep+'INCAR')
 
-    def read_kpoint(self):
+    def read_kpoints(self):
         self.kpoints = read_kpoints(self.workdir+os.sep+'KPOINTS')
 
     def read_poscar(self):
         self.structure = read_poscar(self.workdir+os.sep+'POSCAR')
 
+    def read_outcar(self):
+        if os.path.isfile(self.workdir+os.sep+'OUTCAR'):
+            vo = VaspOutput(self.workdir+os.sep+'OUTCAR')
+            self.outcar = vo.todict()
+
+    def update(self):
+        self.read_incar()
+        self.read_kpoints()
+        self.read_poscar()
+        self.read_outcar()
+
+
+def analyser():
+
+    rf = open('vasp.stdout', 'r')
+    lines = rf.readlines()
+    oldvalue = 0
+    lista = []
+    for i in lines:
+        if i[:4] == 'RMM:' or i[:4] == 'DAV:':
+            newvalue = int(i.split()[1])
+            if oldvalue > newvalue:
+                lista.append(oldvalue)
+            oldvalue = newvalue
+    rf.close()
+    return lista

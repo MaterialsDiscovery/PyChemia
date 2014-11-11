@@ -11,6 +11,7 @@ __status__ = "Development"
 __date__ = "March 16, 2014"
 
 import os as _os
+import math
 import numpy as _np
 from numbers import Number
 
@@ -70,16 +71,25 @@ class InputVariables:
 
     def __init__(self, filename=None, variables=None):
 
+        if variables is None:
+            self.variables = {}
+        else:
+            self.variables = variables
+
         if filename is not None and _os.path.isfile(filename):
             try:
                 self.__import_input(filename)
             except ValueError:
                 print('File format not identified')
 
-        if variables is None:
-            self.variables = {}
-        else:
-            self.variables = variables
+    def _clean_variables(self):
+        for i in self.variables:
+            value = self.variables[i]
+            if isinstance(value, _np.ndarray):
+                if len(value) == 1:
+                    self.variables[i]=value[0]
+                else:
+                    self.variables[i] = list(value)
 
     def __import_input(self, filename):
         rf = open(filename, 'r')
@@ -102,6 +112,7 @@ class InputVariables:
                         except ValueError:
                             self.variables[varname] = _np.array([value])
         rf.close()
+        self._clean_variables()
 
     def write(self, filename='INCAR'):
         """
@@ -230,11 +241,12 @@ class InputVariables:
                         maxvalue = value
             rf.close()
             if ENCUT < 10:
-                self.variables['ENCUT'] = ENCUT*maxvalue
+                self.variables['ENCUT'] = int(math.ceil(ENCUT*maxvalue))
             else:
                 self.variables['ENCUT'] = maxvalue
+        print self.variables['ENCUT']
 
-    def set_ion_relax(self, NSW=100, ISIF=2):
+    def set_ion_relax(self, NSW=50, ISIF=2):
         self.variables['IBRION'] = 2
         self.variables['NSW'] = NSW
         self.variables['ISIF'] = ISIF
@@ -245,6 +257,7 @@ class InputVariables:
 
     def set_rough_relaxation(self):
         self.variables['NELMIN'] = 5
-        self.variables['EDIFF'] = 1E-2
-        self.variables['EDIFFG'] = -0.3
+        self.variables['EDIFF'] = 1E-4
+        self.variables['EDIFFG'] = -1E-3
         self.variables['IBRION'] = 2
+        self.variables['IALGO'] = 48

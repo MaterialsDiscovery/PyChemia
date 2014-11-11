@@ -129,3 +129,9 @@ class VaspOutput():
         if self.forces is not None:
             info['avg_force'] = np.average(np.abs(np.apply_along_axis(np.linalg.norm, 1, self.forces)))
         return info
+
+    def todict(self):
+        ret = {}
+        for i in ['magnetization', 'total_charge', 'free_energy', 'forces', 'stress' ]:
+            ret[i] = eval('self.'+i)
+        return ret

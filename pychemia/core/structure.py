@@ -347,6 +347,10 @@ Empty structure
             self._lattice = Lattice(self.cell)
         return self._lattice
 
+    @property
+    def lattice(self):
+        return self.get_cell()
+
     def get_composition(self, gcd=True):
         """
         Computes the composition of the Structure

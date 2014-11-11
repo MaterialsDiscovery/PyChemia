@@ -39,7 +39,7 @@ def read_kpoints(path):
             kmode = 'Cartesian'
         else:
             kmode = 'Reciprocal'
-        kp = pychemia.dft.KPoints(kmode=kmode, comment=comment)
+        kp = pychemia.dft.KPoints(kmode=kmode)
         for i in range(nkpt):
             line = _np.array([float(x) for x in rf.readline().split()])
             pos = line[:3]
@@ -53,7 +53,7 @@ def read_kpoints(path):
             kmode = 'Monkhorst-pack'
         else:
             raise ValueError("Kpoints mode must be 'Gamma' or 'Monkhorst-pack'")
-        kp = pychemia.dft.KPoints(kmode=kmode, comment=comment)
+        kp = pychemia.dft.KPoints(kmode=kmode)
         line = _np.array([int(x) for x in rf.readline().split()])
         grid = line[:3]
         try:
@@ -81,17 +81,18 @@ def write_kpoints(kp, filepath='KPOINTS'):
 
     wf = open(filename, 'w')
 
-    wf.write(kp.comment + '\n')
-    wf.write(str(kp.nkpt) + '\n')
+    wf.write('\n')
     if kp.kmode == 'cartesian' or kp.kmode == 'reciprocal':
+        wf.write(str(kp.nkpt) + '\n')
         wf.write(kp.kmode.title()+'\n')
         for i in range(kp.nkpt):
             wf.write(" %15.7f %15.7f %15.7f %20.7f\n"
-                     % (kp.kpts[i, 0],
-                        kp.kpts[i, 1],
-                        kp.kpts[i, 2],
-                        kp.wgts[i]))
+                     % (kp.kpoints_list[i, 0],
+                        kp.kpoints_list[i, 1],
+                        kp.kpoints_list[i, 2],
+                        kp.weights[i]))
     elif kp.kmode == 'gamma' or kp.kmode == 'monkhorst-pack':
+        wf.write('0\n')
         wf.write(kp.kmode.title()+'\n')
         wf.write(" %7d %7d %7d\n" % tuple(kp.grid))
         wf.write(" %7.4f %7.4f %7.4f\n" % tuple(kp.shifts))

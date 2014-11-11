@@ -13,9 +13,14 @@ def read_poscar(path):
     """
 
     if os.path.isfile(path):
-        filename = path
-    elif os.path.isdir(path) and os.path.isfile(path + '/POSCAR'):
-        filename = path + '/POSCAR'
+        poscarfile = path
+        if os.path.dirname(path) != '':
+            potcarfile = os.path.dirname(path)+os.sep+'POTCAR'
+        else:
+            potcarfile = 'POTCAR'
+    elif os.path.isdir(path) and os.path.isfile(path + os.sep + 'POSCAR'):
+        poscarfile = path + os.sep + 'POSCAR'
+        potcarfile = path + os.sep + 'POTCAR'
     else:
         print("POSCAR path not found")
         return
@@ -23,7 +28,7 @@ def read_poscar(path):
     structure = pychemia.core.Structure()
 
     # Reading the POSCAR file
-    rf = open(filename, 'r')
+    rf = open(poscarfile, 'r')
     structure.comment = rf.readline().strip()
     latconst = float(rf.readline())
     newcell = _np.zeros((3, 3))
@@ -48,7 +53,7 @@ def read_poscar(path):
     natom = _np.sum(natom_per_species)
 
     if species is None:
-        species = get_species(path + '/POTCAR')
+        species = get_species(potcarfile)
 
     symbols = []
     for i in range(len(natom_per_species)):
@@ -111,6 +116,8 @@ def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None
     comp = structure.get_composition()
     ret = ''
     psppath = os.getenv('HOME') + '/.vasp/PP-VASP/'+pspdir
+    if not os.path.exists(psppath):
+        raise ValueError("The path for VASP Pseudo-potentials does not exists: "+psppath)
 
     if pspfiles is None:
         pspfiles = []

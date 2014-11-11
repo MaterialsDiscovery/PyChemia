@@ -1,7 +1,7 @@
 __author__ = 'Guillermo Avendano Franco'
 
 from pymongo import MongoClient
-
+from bson.objectid import ObjectId
 
 class PyChemiaDB():
 
@@ -41,3 +41,12 @@ class PyChemiaDB():
     def is_master(self):
         return self._is_master
 
+    def update(self, entryid, new_entry):
+
+        if isinstance(entryid, basestring):
+            entry_id = ObjectId(entryid)
+        elif isinstance(entryid, ObjectId):
+            entry_id = entryid
+
+        assert(self.entries.find_one({'_id': entry_id}) is not None)
+        self.entries.update({'_id': entry_id}, new_entry)

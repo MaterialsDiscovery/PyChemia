@@ -317,3 +317,12 @@ def integral_gaussian(a, b, mu, sigma):
     val_ceil = 0.5 * (1+math.erf((b-mu)/(sigma*math.sqrt(2.0))))
 
     return val_ceil - val_floor
+
+def frexp10(x):
+    exp = int(math.floor(math.log10(abs(x))))
+    return x / 10**exp, exp
+
+def round_small(number, ndigits=0):
+    mantissa, exponent = frexp10(number)
+    mantissa = round(mantissa, ndigits)
+    return mantissa*10**exponent

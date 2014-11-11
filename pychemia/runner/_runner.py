@@ -1,14 +1,14 @@
 __author__ = 'Guillermo Avendano-Franco'
 
 import os
-import subprocess as _subprocess
+import subprocess
 from multiprocessing import Process
 import time
 
 
 class Runner():
 
-    def __init__(self, code, code_bin, environment, use_mpi=True, nmpiproc=2, nconcurrent=1):
+    def __init__(self, code, code_bin, environment, use_mpi=True, nmpiproc=2, nconcurrent=1, runtime=3600):
 
         if code.lower() not in ['abinit', 'vasp', 'octopus', 'dftbplus', 'fireball']:
             raise ValueError('Code not supported: ', code)
@@ -24,6 +24,7 @@ class Runner():
         self.nmpiproc = nmpiproc
         self.nconcurrent = nconcurrent
         self.code_bin = code_bin
+        self.runtime = runtime
 
     def initialize(self, dirpath):
         """
@@ -38,7 +39,7 @@ class Runner():
         elif self.code == 'vasp':
             pass
 
-    def run(self, dirpath='.', verbose=False):
+    def run(self, dirpath='.', analyser=None):
 
         if self.code == 'abinit':
             outfile = 'abinit.stdout'
@@ -54,26 +55,40 @@ class Runner():
             def worker(path):
                 cwd = os.getcwd()
                 os.chdir(path)
-                outf = open(outfile, 'w')
-                errf = open(errfile, 'w')
+                outf = open(outfile, 'a')
+                errf = open(errfile, 'a')
+                for i in [outf, errf]:
+                    i.write(40*'='+' New Run '+40*'='+'\n')
                 if infile is not None:
                     rf = open(infile, 'r')
                 else:
                     rf = None
+
+                initime = time.time()
                 if self.use_mpi:
-                    #print 'Launching '+self.code.upper()+' using MPI with '+str(self.nmpiproc)+' processes'
-                    ret = _subprocess.call(['mpirun', '-np', str(self.nmpiproc), self.code_bin],
+                    childp = subprocess.Popen(['mpirun', '-np', str(self.nmpiproc), self.code_bin],
                                            stdin=rf, stdout=outf, stderr=errf)
                 else:
-                    #print 'Launching '+self.code.upper()+' using in serial mode'
-                    ret = _subprocess.call([self.code_bin], stdin=rf, stdout=outf, stderr=errf)
+                    childp = subprocess.Popen([self.code_bin], stdin=rf, stdout=outf, stderr=errf)
 
-                if verbose:
-                    if ret == 0:
-                        print 'Normal completion of '+self.code.upper()
+                childp.poll()
+                while childp.returncode is None:
+                    childp.poll()
+                    rf = open('vasp.stdout', 'r')
+                    for iline in rf.readlines()[-20:]:
+                        if iline.strip().startswith("WARNING: Sub-Space-Matrix is not hermitian in DAV"):
+                            print "[WARNING: Sub-Space-Matrix is not hermitian in DAV] Stopping now..."
+                            self._stop_run(childp)
+                    if time.time() - initime > self.runtime:
+                        self._stop_run(childp)
+                        break
                     else:
-                        print 'Finished with error number:', ret
+                        if analyser is not None:
+                            ret = analyser()
+                            print os.path.basename(path), ret
+                        time.sleep(60)
 
+                print 'The return code was', childp.returncode
                 os.chdir(cwd)
                 errf.close()
                 outf.close()
@@ -83,6 +98,30 @@ class Runner():
             p.join()
 
         return p
+
+    def _stop_run(self, childp, softtime=600, extratime=60):
+        print 'Creating Stoping files'
+        wf = open('CHKPT', 'w')
+        wf.close()
+        wf = open('STOPCAR', 'w')
+        wf.write('LSTOP = .TRUE.\n')
+        wf.close()
+        time.sleep(softtime)
+
+        childp.poll()
+        if childp.returncode is None:
+            print 'Sending SIGTERM to process'
+            childp.terminate()
+            time.sleep(extratime)
+
+        childp.poll()
+        if childp.returncode is None:
+            print 'Sending SIGKILL to process'
+            childp.kill()
+        if os.path.isfile('CHKPT'):
+            os.remove('CHKPT')
+        if os.path.isfile('STOPCAR'):
+            os.remove('STOPCAR')
 
     def run_multidirs(self, workdirs, worker, checker):
         pt = []
@@ -95,7 +134,7 @@ class Runner():
                 if pt[i] is None or not pt[i].is_alive():
                     ret = checker(workdirs[index])
                     if ret:
-                        print 'Launching for process '+str(i)+' on dir '+workdirs[index]+' index '+str(index)
+                        print 'Launching for process '+str(i)+' on dir '+os.path.basename(workdirs[index])+' index '+str(index)
                         pt[i] = Process(target=worker, args=(workdirs[index],))
                         pt[i].start()
                     index = (index+1) % len(workdirs)
