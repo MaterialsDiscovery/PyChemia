@@ -4,7 +4,9 @@ Population class
 
 __author__ = 'Guillermo Avendano-Franco'
 
-from pychemia.db import PyChemiaDB
+import pychemia
+if pychemia.db.USE_MONGO:
+    from pychemia.db import PyChemiaDB
 from pychemia import Structure, Composition
 
 
@@ -32,7 +34,8 @@ class Population():
         self.name = name
         self._dynamic = True
         self._target_dim = 1
-        self.pcdb = PyChemiaDB(name)
+        if pychemia.db.USE_MONGO:
+            self.pcdb = PyChemiaDB(name)
         if new:
             self.pcdb.clean()
         self.leaders = []

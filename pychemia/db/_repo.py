@@ -20,7 +20,6 @@ import math
 from pychemia.core.structure import load_structure_json
 from pychemia.utils.computing import unicode2string
 
-
 class StructureEntry():
     """
     Defines one entry in the repository of Structures
