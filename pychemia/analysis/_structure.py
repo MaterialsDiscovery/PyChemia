@@ -134,7 +134,12 @@ class StructureAnalysis():
                adjusted to ensure that each atom is connected at least once
         :return: tuple
         """
+        if verbose:
+            print 'Computing all distances...'
         bonds_dict, distances_list = self.close_distances(verbose=False)
+        if verbose:
+            print 'Number of distances computed: ', len(distances_list)
+
         _tolerance = tolerance
         bonds = None
         coordination = None
@@ -142,7 +147,7 @@ class StructureAnalysis():
 
         while True:
             if verbose:
-                print 'Current tolerance : ', _tolerance
+                print 'Current cutoff radius : ', _tolerance
             bonds = []
             tolerances = []
             for i in range(self.structure.natom):
@@ -195,6 +200,8 @@ class StructureAnalysis():
                             increase = True
                     if increase:
                         _tolerance += 0.1
+                        if verbose:
+                            print 'Increasing cutoff radius by 0.1 A\n'
                     else:
                         break
             else:
