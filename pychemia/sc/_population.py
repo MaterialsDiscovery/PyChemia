@@ -108,6 +108,7 @@ class Population():
     def actives(self):
         return self.active
 
-    def update_entry(self, mongoid, structure):
+    def update_entry(self, entry_id, structure):
 
-        self.pcdb.update(mongoid, structure.todict())
+        if pychemia.db.USE_MONGO:
+            self.pcdb.update(entry_id, structure.todict())

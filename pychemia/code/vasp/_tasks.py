@@ -6,7 +6,6 @@ import numpy as np
 import pychemia
 from _incar import InputVariables
 from _poscar import read_poscar
-from bson.objectid import ObjectId
 import logging.handlers
 import json
 from pychemia.utils.mathematics import round_small
@@ -66,7 +65,6 @@ class RelaxPopulation():
 
         #workdir = self.basedir + os.sep + entry_id
         entry_id = os.path.basename(workdir)
-        mongoid = ObjectId(entry_id)
         vj = self.vasp_jobs[entry_id]
         if os.path.isfile(workdir+os.sep+'OUTCAR'):
             vj.read_outcar()
@@ -154,7 +152,7 @@ class RelaxPopulation():
                     print 'Error reading CONTCAR'
                 vj.write_all()
 
-                self.population.update_entry(mongoid, vj.structure)
+                self.population.update_entry(entry_id, vj.structure)
                 vj.save_json(workdir+os.sep+'PyChemia.entry')
 
                 return True

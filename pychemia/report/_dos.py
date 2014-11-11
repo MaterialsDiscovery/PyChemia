@@ -4,8 +4,6 @@ import sys
 import os
 import numpy as np
 
-import matplotlib.pyplot as plt
-
 
 class DensityOfStates():
     """
@@ -118,6 +116,7 @@ def plot_one_dos(dosobj, ax=None, horizontal=True, figwidth=16, figheight=12):
 
     :return: (matplotlib.figure.Figure, matplotlib.axes.Axes) the (fig, ax) tuple
     """
+    import matplotlib.pyplot as plt
 
     if ax is None:
         fig = plt.figure()
