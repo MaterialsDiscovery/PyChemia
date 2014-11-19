@@ -66,7 +66,7 @@ class Runner():
 
                 initime = time.time()
                 if self.use_mpi:
-                    childp = subprocess.Popen(['mpirun', '-np', str(self.nmpiproc), self.code_bin],
+                    childp = subprocess.Popen(['mpirun', '-np', str(self.nmpiproc), '--map-by', 'socket:PE=2', self.code_bin],
                                            stdin=rf, stdout=outf, stderr=errf)
                 else:
                     childp = subprocess.Popen([self.code_bin], stdin=rf, stdout=outf, stderr=errf)
@@ -146,3 +146,11 @@ class Runner():
             if complete:
                 print 'Finishing...'
                 break
+
+    def run_multidirs_nonstop(self, workdirs, worker, checker):
+
+        def superworker(workdirs, worker, checker):
+            self.run_multidirs(workdirs, worker, checker)
+
+        proc = Process(target=superworker, args=(workdirs, worker, checker))
+        proc.start()

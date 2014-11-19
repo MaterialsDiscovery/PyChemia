@@ -10,13 +10,15 @@ import logging.handlers
 import json
 from pychemia.utils.mathematics import round_small
 
+
 class RelaxPopulation():
 
-    def __init__(self, population, basedir, target_force=1E-3, target_stress=1E-3):
+    def __init__(self, population, basedir, target_force=1E-2, target_stress=1E-2):
         self.population = population
         self.basedir = basedir
         self.vasp_jobs = {}
         self.runs = {}
+        self.status = {}
         self.target_force = target_force
         self.target_stress = target_stress
 
@@ -31,7 +33,7 @@ class RelaxPopulation():
             if not os.path.isdir(name):
                 os.mkdir(name)
 
-    def create_inputs(self, density_of_kpoints=10000, ENCUT=1.1):
+    def create_inputs(self, density_of_kpoints=10000, ENCUT=1.0):
         #kpoints = pychemia.dft.KPoints(kmode='gamma', grid=[4, 4, 4])
         kpoints = pychemia.dft.KPoints()
         for i in self.population.pcdb.entries.find():
@@ -43,9 +45,6 @@ class RelaxPopulation():
             vj = pychemia.code.vasp.VaspJob(struct, workdir)
             vj.set_kpoints(kpoints)
             inp = pychemia.code.vasp.InputVariables()
-            inp.set_minimum()
-            #inp.set_break_conditions()
-            inp.set_ion_relax()
             inp.set_rough_relaxation()
             vj.set_input_variables(inp)
             vj.write_potcar()
@@ -53,6 +52,26 @@ class RelaxPopulation():
             vj.write_all()
             self.vasp_jobs[name] = vj
             self.runs[name] = 0
+            self.status[name] = ['ACTIVE']
+
+    def add_status(self, entry_id, value):
+        if value not in self.status[entry_id]:
+            self.status[entry_id].append(value)
+
+    def del_status(self, entry_id, value):
+        if value in self.status[entry_id]:
+            self.status[entry_id].remove(value)
+
+    def flip_status(self, entry_id, oldvalue, newvalue):
+        self.del_status(entry_id, oldvalue)
+        self.add_status(entry_id, newvalue)
+
+    def modify_input(self, entry_id):
+        if 'RELAXED' not in self.status[entry_id] and 'NOPROCAR' not in self.status[entry_id] \
+                and 'NOOUTCAR' not in self.status[entry_id]:
+            return True
+        else:
+            return False
 
     def update(self, workdir):
         """
@@ -66,25 +85,28 @@ class RelaxPopulation():
         #workdir = self.basedir + os.sep + entry_id
         entry_id = os.path.basename(workdir)
         vj = self.vasp_jobs[entry_id]
+        runj = self.runs[entry_id]
         if os.path.isfile(workdir+os.sep+'OUTCAR'):
             vj.read_outcar()
         #vj.update()
         self.update_history(entry_id)
 
         if os.path.isfile(workdir+os.sep+'RELAXED'):
-            return False
+            self.add_status(entry_id, 'RELAXED')
         elif not os.path.isfile(workdir+os.sep+'PROCAR'):
-            return True
+            self.add_status(entry_id, 'NOPROCAR')
         else:
+            self.del_status(entry_id, 'NOPROCAR')
             if not os.path.isfile(workdir+os.sep+'OUTCAR'):
-                return True
+                self.add_status(entry_id, 'NOOUTCAR')
             else:
+                self.del_status(entry_id, 'NOOUTCAR')
                 print '-'
                 vo = pychemia.code.vasp.VaspOutput(workdir+os.sep+'OUTCAR')
                 info = vo.relaxation_info()
                 if len(info) != 3:
                     print '['+str(entry_id)+']'+' Missing some data in OUTCAR (forces or stress)'
-                    return True
+                    self.add_status(entry_id, 'NOOUTCAR')
 
                 print '['+str(entry_id)+']'+'Results:'
                 for i in info:
@@ -98,64 +120,86 @@ class RelaxPopulation():
                             for i in info:
                                 wf.write("%15s %12.3f" % (i, info[i]))
                             wf.close()
-                            return False
+                            wf = open(workdir+os.sep+'COMPLETE', 'w')
+                            for i in info:
+                                wf.write("%15s %12.3f" % (i, info[i]))
+                            wf.close()
+                            self.add_status(entry_id, 'RELAXED')
 
-                # How to change ISIF
-                if info['avg_force'] < 0.01:
-                    if info['avg_stress_diag'] < 0.01:
-                        if info['avg_stress_non_diag'] < 0.01:
-                            vj.input_variables.variables['ISIF'] = 3
-                        else:
-                            vj.input_variables.variables['ISIF'] = 3
+        if self.modify_input(entry_id):
+
+            # How to change ISIF
+            if info['avg_force'] < 0.1:
+                if info['avg_stress_diag'] < 0.1:
+                    if info['avg_stress_non_diag'] < 0.1:
+                        vj.input_variables.variables['ISIF'] = 3
                     else:
                         vj.input_variables.variables['ISIF'] = 3
                 else:
-                    vj.input_variables.variables['ISIF'] = 2
+                    vj.input_variables.variables['ISIF'] = 3
+            else:
+                vj.input_variables.variables['ISIF'] = 2
 
-                # How to change IBRION
-                if info['avg_force'] < 0.1 and info['avg_stress_diag'] < 0.1 and info['avg_stress_non_diag'] < 0.1:
-                    vj.input_variables.variables['IBRION'] = 1
-                elif info['avg_force'] < 1 and info['avg_stress_diag'] < 1 and info['avg_stress_non_diag'] < 1:
-                    vj.input_variables.variables['IBRION'] = 2
-                else:
-                    vj.input_variables.variables['IBRION'] = 3
+            # How to change IBRION
+            #if info['avg_force'] < 0.1 and info['avg_stress_diag'] < 0.1 and info['avg_stress_non_diag'] < 0.1:
+            #    vj.input_variables.variables['IBRION'] = 1
+            #elif info['avg_force'] < 1 and info['avg_stress_diag'] < 1 and info['avg_stress_non_diag'] < 1:
+            #    vj.input_variables.variables['IBRION'] = 2
+            #else:
+            #    vj.input_variables.variables['IBRION'] = 3
 
-                # How to change EDIFF
-                if vj.input_variables.variables['EDIFF'] > 2*1E-6:
-                    vj.input_variables.variables['EDIFF'] = round_small(vj.input_variables.variables['EDIFF'] / 2)
-                else:
-                    vj.input_variables.variables['EDIFF'] = 1E-6
+            # How to change EDIFF
+            if vj.input_variables.variables['EDIFF'] > 2*1E-4:
+                vj.input_variables.variables['EDIFF'] = round_small(vj.input_variables.variables['EDIFF'] / 2)
+            else:
+                vj.input_variables.variables['EDIFF'] = 1E-4
 
-                # How to change EDIFFG
-                if vj.input_variables.variables['EDIFFG'] < - 2*self.target_force:
-                    vj.input_variables.variables['EDIFFG'] = round_small(vj.input_variables.variables['EDIFFG'] / 2)
-                else:
-                    vj.input_variables.variables['EDIFFG'] = - self.target_force
+            # How to change EDIFFG
+            if vj.input_variables.variables['EDIFFG'] < - 2*self.target_force:
+                vj.input_variables.variables['EDIFFG'] = round_small(vj.input_variables.variables['EDIFFG'] / 2)
+            else:
+                vj.input_variables.variables['EDIFFG'] = - self.target_force
 
-                #Print new values
-                print '['+str(entry_id)+']'+'New Values:'
-                for i in ['ISIF', 'IBRION', 'EDIFF', 'EDIFFG']:
-                    print '['+str(entry_id)+']'+i+' : ', vj.input_variables.variables[i]
-                print '-'
+            #Print new values
+            print '['+str(entry_id)+']'+'New Values:'
+            for i in ['ISIF', 'IBRION', 'EDIFF', 'EDIFFG']:
+                print '['+str(entry_id)+']'+i+' : ', vj.input_variables.variables[i]
+            print '-'
 
-                for i in ['OUTCAR']:
-                    if not os.path.exists(workdir+os.sep+i):
-                        wf = open(workdir+os.sep+i, 'w')
-                        wf.write('')
-                        wf.close()
-                    log = logging.handlers.RotatingFileHandler(workdir+os.sep+i, maxBytes=1, backupCount=1000)
-                    log.doRollover()
+            for i in ['OUTCAR']:
+                if not os.path.exists(workdir+os.sep+i):
+                    wf = open(workdir+os.sep+i, 'w')
+                    wf.write('')
+                    wf.close()
+                log = logging.handlers.RotatingFileHandler(workdir+os.sep+i, maxBytes=1, backupCount=1000)
+                log.doRollover()
 
-                try:
-                    vj.structure = read_poscar(workdir+os.sep+'CONTCAR')
-                except ValueError:
-                    print 'Error reading CONTCAR'
-                vj.write_all()
+            try:
+                vj.structure = read_poscar(workdir+os.sep+'CONTCAR')
+            except ValueError:
+                print 'Error reading CONTCAR'
 
-                self.population.update_entry(entry_id, vj.structure)
-                vj.save_json(workdir+os.sep+'PyChemia.entry')
+            vj.write_all()
+            properties = vj.outcar
+            status = self.status[entry_id]
+            newentry = self.population.update_entry(entry_id, vj.structure, properties, status)
 
-                return True
+            vj.save_json(workdir+os.sep+'vaspjob.json')
+            wf = open(workdir+os.sep+'entry.json', 'w')
+            json.dump(newentry, wf, sort_keys=True, indent=4, separators=(',', ': '))
+            wf.close()
+            return True
+        else:
+            vj.write_all()
+            status = self.status[entry_id]
+            newentry = self.population.update_entry(entry_id, vj.structure, status=status)
+
+            vj.save_json(workdir+os.sep+'vaspjob.json')
+            wf = open(workdir+os.sep+'entry.json', 'w')
+            json.dump(newentry, wf, sort_keys=True, indent=4, separators=(',', ': '))
+            wf.close()
+            return True
+
 
 
     def update_history(self, entry_id):

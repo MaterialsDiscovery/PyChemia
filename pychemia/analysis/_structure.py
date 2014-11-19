@@ -124,7 +124,7 @@ class StructureAnalysis():
                 fp_oganov[spec_pair][i] -= 1
         return struc_dist_x, fp_oganov
 
-    def get_bonds_coordination(self, tolerance=1.2, ensure_conectivity=False, use_laplacian=True, verbose=False, tol=1E-15):
+    def get_bonds_coordination(self, tolerance=1.2, ensure_conectivity=False, use_laplacian=True, verbose=False, tol=1E-15, jump=0.01):
         """
         Computes simultaneously the bonds for all atoms and the coordination
         number using a multiplicative tolerance for the sum of covalent radius
@@ -190,21 +190,19 @@ class StructureAnalysis():
                 ev = numpy.linalg.eigvalsh(laplacian)
                 if verbose:
                     print 'Number of Eigenvalues close to zero :', sum(ev < tol)
-                    if sum(ev < tol) > 10:
-                        print 'Lowest Eigenvalue :', min(ev)
-                    else:
-                        print 'Lowest Eigenvalues :', [x for x in ev if x < tol]
+                    print 'Lowest Eigenvalues :', ev
+
                 if sum(ev < tol) > 1:
-                    _tolerance += 0.1
+                    _tolerance += jump
                     if verbose:
-                            print 'Increasing cutoff radius by 0.1 A\n'
+                            print 'Increasing cutoff radius by ', jump, 'A\n'
                 else:
                     increase = False
                     for i in bonds:
                         if sum(i) == 0:
                             increase = True
                     if increase:
-                        _tolerance += 0.1
+                        _tolerance += jump
                         if verbose:
                             print 'Increasing cutoff radius by 0.1 A\n'
                     else:
@@ -216,7 +214,7 @@ class StructureAnalysis():
             coordination = [len(x) for x in bonds]
         return bonds, coordination, distances_list, tolerances, _tolerance
 
-    def hardness(self, verbose=False, tolerance=1.0, use_laplacian=True):
+    def hardness(self, verbose=False, tolerance=0.8, use_laplacian=True):
         """
         Calculates the hardness of a structure based in the model of XX
         We use the covalent radii from pychemia.utils.periodic.

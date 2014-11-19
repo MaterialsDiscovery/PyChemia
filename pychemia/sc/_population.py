@@ -108,7 +108,15 @@ class Population():
     def actives(self):
         return self.active
 
-    def update_entry(self, entry_id, structure):
+    def update_entry(self, entry_id, structure, properties=None, status=None):
+
+        newentry = structure.todict()
+        if properties is not None:
+            newentry['properties'] = properties
+        if status is not None:
+            newentry['status'] = status
 
         if pychemia.db.USE_MONGO:
-            self.pcdb.update(entry_id, structure.todict())
+            self.pcdb.update(entry_id, newentry)
+
+        return newentry

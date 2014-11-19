@@ -215,13 +215,6 @@ class InputVariables:
         ret += ";\n"
         return ret
 
-    def set_minimum(self, PREC='Normal', ISPIN=2,  LREAL=False, ISMEAR=0, LORBIT=11):
-        self.variables['PREC'] = PREC
-        self.variables['LREAL'] = LREAL
-        self.variables['ISMEAR'] = ISMEAR
-        self.variables['ISPIN'] = ISPIN
-        self.variables['LORBIT'] = LORBIT
-
     def set_encut(self, ENCUT=300, POTCAR=None):
         self.variables['ENCUT'] = ENCUT
         if POTCAR is not None and ENCUT < 10:
@@ -246,18 +239,37 @@ class InputVariables:
                 self.variables['ENCUT'] = maxvalue
         print self.variables['ENCUT']
 
-    def set_ion_relax(self, NSW=50, ISIF=2):
-        self.variables['IBRION'] = 2
+    def set_ion_relax(self, NSW=50, ISIF=2, IBRION=2, EDIFFG=-1E-3):
+        self.variables['IBRION'] = IBRION
         self.variables['NSW'] = NSW
         self.variables['ISIF'] = ISIF
-
-    def set_break_conditions(self, EDIFF='1E-4', EDIFFG='-1E-3'):
-        self.variables['EDIFF'] = EDIFF
         self.variables['EDIFFG'] = EDIFFG
 
+    def set_electron_scf(self, NELM=60, NELMIN=2, EDIFF=1E-4, IALGO=48):
+        self.variables['NELMIN'] = NELMIN
+        self.variables['NELM'] = NELM
+        self.variables['EDIFF'] = EDIFF
+        self.variables['IALGO'] = IALGO
+
     def set_rough_relaxation(self):
-        self.variables['NELMIN'] = 5
-        self.variables['EDIFF'] = 1E-4
-        self.variables['EDIFFG'] = -1E-3
-        self.variables['IBRION'] = 2
-        self.variables['IALGO'] = 48
+        self.set_minimum(PREC='Normal', ISPIN=1,  LREAL=False, ISMEAR=0, LORBIT=11)
+        self.set_electron_scf(NELM=60, NELMIN=5, EDIFF=1E-4, IALGO=48)
+        self.set_ion_relax(NSW=50, ISIF=2, IBRION=2, EDIFFG=-1E-2)
+        self.variables['NPAR'] = 2
+
+    def set_mit_settings(self):
+        self.set_minimum(PREC='Accurate', ISPIN=2,  LREAL='Auto', ISMEAR=-5, LORBIT=11)
+        self.set_electron_scf(NELM=100, NELMIN=6, EDIFF=5E-5, IALGO=48)
+        self.set_ion_relax(NSW=99, ISIF=3, IBRION=2, EDIFFG=-1E-3)
+        self.variables['LWAVE'] = False
+        self.variables['SIGMA'] = 0.05
+        self.variables['LDAU'] = True
+        self.variables['LDAUTYPE'] = 2
+        self.variables['ICHARG'] = 1
+
+    def set_minimum(self, PREC='Normal', ISPIN=2,  LREAL=False, ISMEAR=0, LORBIT=11):
+        self.variables['PREC'] = PREC
+        self.variables['LREAL'] = LREAL
+        self.variables['ISMEAR'] = ISMEAR
+        self.variables['ISPIN'] = ISPIN
+        self.variables['LORBIT'] = LORBIT
