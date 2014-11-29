@@ -437,8 +437,20 @@ Empty structure
         return ret
 
     @staticmethod
-    def random_cell(composition, units=1):
-        """generate a random cell"""
+    def random_cell(composition, method='trial-error'):
+        """
+        Generate a random cell
+        There are two algorithms implemented:
+
+        trial-error: Generate a random cell by adding atoms
+                     and discarting cells with bad volume
+
+        streching: generating a random distribution of
+                   atoms and streching their bonds until
+                   the distance between any two atoms is
+                   always greater than the sum of covalent
+                   radius.
+        """
         if isinstance(composition, dict):
             comp = Composition(composition)
         elif isinstance(composition, Composition):

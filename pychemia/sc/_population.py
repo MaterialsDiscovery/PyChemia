@@ -8,7 +8,9 @@ import pychemia
 if pychemia.db.USE_MONGO:
     from pychemia.db import PyChemiaDB
 from pychemia import Structure, Composition
-
+from pychemia.sc import Population
+from pychemia import Composition
+from pychemia.code.vasp import analyser
 
 class Population():
     """
@@ -120,3 +122,23 @@ class Population():
             self.pcdb.update(entry_id, newentry)
 
         return newentry
+
+    def create_population(self, composition, size=None, dbmaster=None, nmaxfromdb=None):
+        if composition is not None:
+            comp = Composition(composition)
+            self.population = Population(name, new=True)
+
+            nindb = dbmaster.entries.find({'formula': comp.formula, 'natom': comp.natom}).count()
+            if nindb < nmaxfromdb:
+                nrandstruct = size - nindb
+            else:
+                nrandstruct = size - nmaxfromdb
+
+            if nrandstruct > 0:
+                self.population.add_random(composition, size=nrandstruct)
+            self.population.add_from_db(composition, dbmaster.name, sizemax=nmaxfromdb)
+
+        else:
+            print 'Reading from already present database'
+            self.population = Population(name)
+            print 'Number of entries: ', len(self)

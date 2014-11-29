@@ -5,6 +5,7 @@ import sys
 import itertools
 import numpy as np
 import numpy.linalg
+import scipy.sparse.linalg
 from pychemia import Structure
 from pychemia.utils.periodic import atomic_number, covalent_radius, valence
 from pychemia.utils.mathematics import integral_gaussian
@@ -22,9 +23,16 @@ class StructureAnalysis():
 
     def __init__(self, structure, supercell=(1, 1, 1)):
         assert (isinstance(structure, Structure))
-        self.structure = structure.supercell(supercell)
+        if supercell != (1,1,1):
+            print "Creating supercell"
+            self.structure = structure.supercell(supercell)
+            print 'done'
+        else:
+            self.structure = structure.copy()
+
         self._distances = None
         self._pairs = None
+        self.supercell = supercell
 
     def clean(self):
         """
@@ -42,6 +50,8 @@ class StructureAnalysis():
         :return: (tuple) Return a bond's dictionary and distance's list
         """
         if self._pairs is None or self._distances is None:
+            if verbose:
+                print 'Computing distances from scratch...'
             pairs_dict = {}
             distances_list = []
             index = 0
@@ -124,12 +134,12 @@ class StructureAnalysis():
                 fp_oganov[spec_pair][i] -= 1
         return struc_dist_x, fp_oganov
 
-    def get_bonds_coordination(self, tolerance=1.2, ensure_conectivity=False, use_laplacian=True, verbose=False, tol=1E-15, jump=0.01):
+    def get_bonds_coordination(self, initial_cutoff_radius=0.8, ensure_conectivity=False, use_laplacian=True, verbose=False, tol=1E-15, jump=0.01, use_jump=True):
         """
         Computes simultaneously the bonds for all atoms and the coordination
         number using a multiplicative tolerance for the sum of covalent radius
 
-        :param tolerance: (float) Tolerance factor (default is 1.2)
+        :param initial_cutoff_radius: (float) Tolerance factor (default is 1.2)
         :param ensure_conectivity: (bool) If True the tolerance of each bond is
                adjusted to ensure that each atom is connected at least once
         :return: tuple
@@ -140,18 +150,18 @@ class StructureAnalysis():
         if verbose:
             print 'Number of distances computed: ', len(distances_list)
 
-        _tolerance = tolerance
+        cutoff_radius = initial_cutoff_radius
         bonds = None
         coordination = None
         tolerances = None
 
         while True:
             if verbose:
-                print 'Current cutoff radius : ', _tolerance
+                print 'Current cutoff radius : ', cutoff_radius
             bonds = []
             tolerances = []
             for i in range(self.structure.natom):
-                tole = _tolerance
+                tole = cutoff_radius
                 while True:
                     tmp_bonds = []
                     min_proportion = sys.float_info.max
@@ -168,6 +178,7 @@ class StructureAnalysis():
                             tmp_bonds.append(j)
                     if len(tmp_bonds) == 0 and ensure_conectivity:
                         tole = min_proportion
+                        cutoff_radius = tole
                     else:
                         bonds.append(tmp_bonds)
                         tolerances.append(min_proportion)
@@ -187,24 +198,37 @@ class StructureAnalysis():
                 for i in range(self.structure.natom):
                     laplacian[i, i] = 0
                     laplacian[i, i] = -sum(laplacian[i])
+                if verbose:
+                    print laplacian
+                if np.max(np.abs(laplacian)) == 0:
+                    cutoff_radius += jump
+                    if verbose:
+                        print 'The laplacian is all zero'
+                        print 'Increasing cutoff radius by ', jump, 'A\n'
+                    continue
+
+                #if verbose:
+                #print laplacian
+                #evals, evecs = scipy.sparse.linalg.eigsh(laplacian)
                 ev = numpy.linalg.eigvalsh(laplacian)
                 if verbose:
                     print 'Number of Eigenvalues close to zero :', sum(ev < tol)
                     print 'Lowest Eigenvalues :', ev
+                    #print 'Lowest Eigenvalues :', evals
 
-                if sum(ev < tol) > 1:
-                    _tolerance += jump
+                if sum(ev < tol) > 1 and use_jump:
+                    cutoff_radius += jump
                     if verbose:
                             print 'Increasing cutoff radius by ', jump, 'A\n'
                 else:
                     increase = False
                     for i in bonds:
-                        if sum(i) == 0:
+                        if sum(i) == 0 and use_jump:
                             increase = True
                     if increase:
-                        _tolerance += jump
+                        cutoff_radius += jump
                         if verbose:
-                            print 'Increasing cutoff radius by 0.1 A\n'
+                            print 'Increasing cutoff radius by', jump, 'A\n'
                     else:
                         break
             else:
@@ -212,9 +236,9 @@ class StructureAnalysis():
 
         if bonds is not None:
             coordination = [len(x) for x in bonds]
-        return bonds, coordination, distances_list, tolerances, _tolerance
+        return bonds, coordination, distances_list, tolerances, cutoff_radius
 
-    def hardness(self, verbose=False, tolerance=0.8, use_laplacian=True):
+    def hardness(self, verbose=False, initial_cutoff_radius=0.8, ensure_conectivity=False, use_laplacian=True, use_jump=True):
         """
         Calculates the hardness of a structure based in the model of XX
         We use the covalent radii from pychemia.utils.periodic.
@@ -222,15 +246,18 @@ class StructureAnalysis():
         the Laplacian matrix method is not used and rcut is 2*max(cov_radii)
 
         :param verbose: (bool) To print some debug info
-        :param tolerance: (float)
+        :param initial_cutoff_radius: (float)
         :param use_laplacian: (bool) If True, the Laplacian method is used
 
         :rtype : (float)
         """
+        if self.supercell == (1,1,1) and verbose:
+            print "Only internal connectivity can be ensure, for complete connectivity in the crystal you must use a " \
+                  "supercell at of (2,2,2)"
 
         bonds, coordination, all_distances, tolerances, cutoff_radius = \
-            self.get_bonds_coordination(tolerance=tolerance, ensure_conectivity=False, use_laplacian=use_laplacian,
-                                        verbose=verbose)
+            self.get_bonds_coordination(initial_cutoff_radius=initial_cutoff_radius, ensure_conectivity=ensure_conectivity,
+                                        use_laplacian=use_laplacian, verbose=verbose, use_jump=use_jump)
 
         if verbose:
             print 'Structure coordination : ', coordination
@@ -289,7 +316,7 @@ class StructureAnalysis():
         #print 'len_bonds', len(diff_bonds
         hardness_value = c_hard / vol * (len(diff_bonds) * x ** (1. / (len(diff_bonds)))) * math.exp(-sigma * f)
 
-        return round(hardness_value, 3), cutoff_radius
+        return round(hardness_value, 3), cutoff_radius, coordination
 
     def get_bonds(self, radius, noupdate=False, verbose=False, tolerance=0.05):
         """

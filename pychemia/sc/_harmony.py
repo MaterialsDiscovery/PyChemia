@@ -1,94 +1,80 @@
 __author__ = 'Guillermo Avendano-Franco'
 
-import os
 import random
 from _metaheuristics import MetaHeuristics
-from pychemia.sc import Population
-from pychemia import Composition
-from pychemia.analysis import StructureChanger
-from pychemia.code.vasp import analyser
+import time
+
 
 class HarmonySearch(MetaHeuristics):
 
-    def __init__(self, name, composition=None, size=None, dbmaster=None, nmaxfromdb=None):
+    def __init__(self, population, objective_function, relax_population, hmcr, par, number_generations,
+                 ratio_relax=0.8):
 
-        self.name = name
-        self.size = size
-        self.hmcr = None
-        self.par = None
-        self.relax_population = None
-        self.runner = None
-        if composition is not None:
-            comp = Composition(composition)
-            self.population = Population(name, new=True)
-
-            nindb = dbmaster.entries.find({'formula': comp.formula, 'natom': comp.natom}).count()
-            if nindb < nmaxfromdb:
-                nrandstruct = size - nindb
-            else:
-                nrandstruct = size - nmaxfromdb
-
-            if nrandstruct > 0:
-                self.population.add_random(composition, size=nrandstruct)
-            self.population.add_from_db(composition, dbmaster.name, sizemax=nmaxfromdb)
-
-        else:
-            print 'Reading from already present database'
-            self.population = Population(name)
-            print 'Number of entries: ', len(self)
-
-        self.population.set_all_active()
+        self.population = population
+        self.objective_function = objective_function
+        self.relax_population = relax_population
+        self.hmcr = self.set_hmcr(hmcr)
+        self.par = self.set_par(par)
+        self.number_generations = number_generations
+        self.ratio_relax = ratio_relax
+        self.objective_function.initialize(self.population)
+        self.relax_population.initialize(self.population)
+        MetaHeuristics.__init__(self, self.population, self.relax_population)
 
     def __len__(self):
         return len(self.population)
 
     def set_hmcr(self, hmcr):
-        if 1.0 >= hmcr >= 0.0:
-            self.hmcr = hmcr
+        assert(1.0 >= hmcr >= 0.0)
+        self.hmcr = hmcr
 
     def set_par(self, par):
-        if 1.0 >= par >= 0.0:
-            self.par = par
+        assert(1.0 >= par >= 0.0)
+        self.par = par
 
-    def set_run(self, code, runner, basedir, density_of_kpoints=10000, ENCUT=1.1):
+    @property
+    def harmony_memory_considering_rate(self):
+        return self.hmcr
 
-        if code == 'vasp':
-            from pychemia.code.vasp import RelaxPopulation
-            self.relax_population = RelaxPopulation(self.population, basedir)
+    def run_one_cycle(self):
 
-        self.runner = runner
+        # Get a static selection of the values in the generation that are relaxed
+        selection = self.get_generation_relaxed()
+        for imember in selection:
 
-        self.relax_population.create_dirs(clean=True)
-        self.relax_population.create_inputs(density_of_kpoints=density_of_kpoints, ENCUT=ENCUT)
-
-    def run(self):
-
-        entries_ids = self.population.entries_ids
-
-        def worker(workdir):
-            wf = open(workdir+os.sep+'LOCK', 'w')
-            wf.write('')
-            wf.close()
-            self.runner.run(dirpath=workdir, analyser=analyser)
-            os.remove(workdir+os.sep+'LOCK')
-
-        def checker(workdir):
-            if os.path.isfile(workdir+os.sep+'LOCK'):
-                return False
-            return self.relax_population.update(workdir)
-
-        workdirs = [self.relax_population.basedir+os.sep+i for i in self.population.actives]
-        self.runner.run_multidirs(workdirs, worker, checker)
-
-        #self.search_harmony()
-
-    def search_harmony(self):
-
-        for i in self.population.actives:
-
-            rnd = random.random()
-            if rnd < self.hmcr:
+            if imember in self.objective_function.top(selection):
+                self.pass_to_new_generation(imember)
+            if imember in self.objective_function.tail(selection):
+                self.population.disable(imember)
+                new_member = self.population.add_random()
+                self.generation[new_member] = [self.current_generation + 1]
+            else:
                 rnd = random.random()
-                if rnd < self.par:
-                    changer = StructureChanger(self.population.structure[i])
-                    newstruct = changer.random_change(self.delta)
+                if rnd < self.hmcr:
+                    rnd = random.random()
+                    if rnd < self.par:
+                        new_member = self.population.add_modified(imember)
+                        self.generation[new_member] = [self.current_generation + 1]
+                    else:
+                        self.pass_to_new_generation(imember)
+                else:
+                    self.population.disable(imember)
+                    new_member = self.population.add_random()
+                    self.generation[new_member] = [self.current_generation + 1]
+
+        # Increase the current generation number
+        self.current_generation += 1
+
+    def run_all_cycles(self):
+
+        if not self.relax_population.is_running:
+            self.relax_population.run()
+
+        for i in range(self.number_generations):
+
+            self.population.check_duplicates()
+
+            if self.population.ratio_relaxed_active(self) > self.ratio_relax:
+                self.run_one_cycle()
+            else:
+                time.sleep(60)

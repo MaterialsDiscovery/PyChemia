@@ -227,6 +227,39 @@ class RelaxPopulation():
     def active_workdirs(self):
         return [self.basedir+os.sep+name for name in self.population.actives]
 
+    def run(self, runner):
+
+        entries_ids = self.population.entries_ids
+
+        def worker(workdir):
+            wf = open(workdir+os.sep+'LOCK', 'w')
+            wf.write('')
+            wf.close()
+            runner.run(dirpath=workdir, analyser=analyser)
+            os.remove(workdir+os.sep+'LOCK')
+
+        def checker(workdir):
+            if os.path.isfile(workdir+os.sep+'LOCK'):
+                return False
+            return self.update(workdir)
+
+        workdirs = [self.basedir+os.sep+i for i in self.population.actives]
+        runner.run_multidirs(workdirs, worker, checker)
+
+        if not self.relax_population.is_running:
+            self.relax_population.run()
+
+    def set_run(self, code, runner, basedir, density_of_kpoints=10000, ENCUT=1.1):
+
+        if code == 'vasp':
+            from pychemia.code.vasp import RelaxPopulation
+            self.relax_population = RelaxPopulation(self.population, basedir)
+
+        self.runner = runner
+
+        self.relax_population.create_dirs(clean=True)
+        self.relax_population.create_inputs(density_of_kpoints=density_of_kpoints, ENCUT=ENCUT)
+
 
 class Polarization():
 
