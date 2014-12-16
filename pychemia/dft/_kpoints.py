@@ -12,7 +12,9 @@ __date__ = "November 5, 2014"
 
 import numpy as np
 from math import sqrt, ceil
+
 from pychemia.serializer import PyChemiaJsonable, generic_serializer
+
 
 class KPoints(PyChemiaJsonable):
     """
@@ -114,8 +116,8 @@ class KPoints(PyChemiaJsonable):
         """
 
         assert (self.kmode in ['cartesian', 'reciprocal'])
-        self.kpts = np.append(self.kpts, kpoint).reshape([-1, 3])
-        self.wgts = np.append(self.wgts, weight)
+        self.kpoints_list = np.append(self.kpoints_list, kpoint).reshape([-1, 3])
+        self.weights = np.append(self.weights, weight)
 
     def set_kpoints_list(self, kpoints_list, weights):
         """
@@ -178,20 +180,19 @@ class KPoints(PyChemiaJsonable):
         elif self.kmode == 'path':
             return len(self.kvertices) * self.intermediates
 
-
     def __str__(self):
         """
         String representation of the KPoints object
         """
-        kp = ' Mode  : '+self.kmode+'\n'
+        kp = ' Mode  : ' + self.kmode + '\n'
         if self.kmode in ['cartesian', 'reciprocal']:
             kp += ' Number of k-points: ' + str(self.nkpt) + '\n\n'
             for i in range(self.nkpt):
                 kp += (" %10.5f %10.5f %10.5f %15.5f\n"
                        % (self.kpoints_list[i, 0], self.kpoints_list[i, 1], self.kpoints_list[i, 2], self.weights[i]))
         elif self.kmode in ['gamma', 'monkhorst-pack']:
-            kp += ' Grid  : '+str(self.grid)+'\n'
-            kp += ' Shift : '+str(self.shifts)+'\n'
+            kp += ' Grid  : ' + str(self.grid) + '\n'
+            kp += ' Shift : ' + str(self.shifts) + '\n'
         elif self.kmode == 'path':
             kp += ' Number of intermediates: ' + str(self.intermediates) + '\n\n'
             for vertex in self.kvertices:
@@ -209,14 +210,13 @@ class KPoints(PyChemiaJsonable):
     @classmethod
     def from_dict(cls, json_dict):
         if json_dict['kmode'] in ['cartesian', 'reciprocal']:
-            return cls(kmode= json_dict['kmode'], kpoints_list=json_dict['kpoints_list'],
-                       weights=json_dict['weights'] )
+            return cls(kmode=json_dict['kmode'], kpoints_list=json_dict['kpoints_list'],
+                       weights=json_dict['weights'])
         elif json_dict['kmode'] in ['gamma', 'monkhorst-pack']:
-            return cls(kmode= json_dict['kmode'], grid=json_dict['grid'], shifts=json_dict['shifts'])
+            return cls(kmode=json_dict['kmode'], grid=json_dict['grid'], shifts=json_dict['shifts'])
         elif json_dict['kmode'] == 'path':
-            return cls(kmode= json_dict['kmode'], kvertices=json_dict['kvertices'],
+            return cls(kmode=json_dict['kmode'], kvertices=json_dict['kvertices'],
                        intermediates=json_dict['intermediates'])
-
 
     @staticmethod
     def max_kpoints(structure, kpoints_per_atom=1000):
@@ -226,9 +226,9 @@ class KPoints(PyChemiaJsonable):
         pymatgen.
         """
 
-        lengths = [sqrt(sum(map(lambda y: y**2, structure.cell[i]))) for i in xrange(3)]
+        lengths = [sqrt(sum(map(lambda y: y ** 2, structure.cell[i]))) for i in xrange(3)]
         ngrid = kpoints_per_atom / structure.natom
-        mult = (ngrid * lengths[0] * lengths[1] * lengths[2]) ** (1.0/3.0)
+        mult = (ngrid * lengths[0] * lengths[1] * lengths[2]) ** (1.0 / 3.0)
         num_div = [int(ceil(1.0 / lengths[i] * mult)) for i in xrange(3)]
         num_div = [i if i > 0 else 1 for i in num_div]
         return num_div[0], num_div[1], num_div[2]
@@ -250,15 +250,15 @@ class KPoints(PyChemiaJsonable):
         rcell = rlattice.cell
 
         if number_of_kpoints is not None:
-            vol = 1.0/lattice.volume
-            density_of_kpoints = nkpt/vol
+            vol = 1.0 / lattice.volume
+            density_of_kpoints = nkpt / vol
 
         # lets get the cell ratios
-        a1 = sqrt(rcell[0][0]**2 + rcell[0][1]**2 + rcell[0][2]**2)
-        a2 = sqrt(rcell[1][0]**2 + rcell[1][1]**2 + rcell[1][2]**2)
-        a3 = sqrt(rcell[2][0]**2 + rcell[2][1]**2 + rcell[2][2]**2)
+        a1 = sqrt(rcell[0][0] ** 2 + rcell[0][1] ** 2 + rcell[0][2] ** 2)
+        a2 = sqrt(rcell[1][0] ** 2 + rcell[1][1] ** 2 + rcell[1][2] ** 2)
+        a3 = sqrt(rcell[2][0] ** 2 + rcell[2][1] ** 2 + rcell[2][2] ** 2)
 
-        factor = pow(density_of_kpoints, 1.0/3.0)
-        self.grid = np.array([int(max(ceil(factor*a1), 1)),
-                               int(max(ceil(factor*a2), 1)),
-                               int(max(ceil(factor*a3), 1))])
+        factor = pow(density_of_kpoints, 1.0 / 3.0)
+        self.grid = np.array([int(max(ceil(factor * a1), 1)),
+                              int(max(ceil(factor * a2), 1)),
+                              int(max(ceil(factor * a3), 1))])

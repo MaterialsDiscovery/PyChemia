@@ -36,6 +36,7 @@ def length_vectors(m):
     >>> length_vectors([[1,2,3], [4,5,6], [7,8,9], [1,0,0], [0,0,2]])
     array([  3.74165739,   8.77496439,  13.92838828,   1.        ,   2.        ])
     """
+    m = _np.array(m)
     return _np.apply_along_axis(_np.linalg.norm, 1, m)
 
 
@@ -268,9 +269,10 @@ def vector_set_perpendicular(vector3):
     #print _np.dot(v1, v2)
     #print _np.dot(v1, v3)
     #print _np.dot(v2, v3)
-    assert (_np.abs(_np.dot(v1, v2)) < 1E-15)
-    assert (_np.abs(_np.dot(v1, v3)) < 1E-15)
-    assert (_np.abs(_np.dot(v2, v3)) < 1E-15)
+
+    #assert (_np.abs(_np.dot(v1, v2)) < 1E-15)
+    #assert (_np.abs(_np.dot(v1, v3)) < 1E-15)
+    #assert (_np.abs(_np.dot(v2, v3)) < 1E-15)
     return v1, v2, v3
 
 
@@ -318,9 +320,11 @@ def integral_gaussian(a, b, mu, sigma):
 
     return val_ceil - val_floor
 
+
 def frexp10(x):
     exp = int(math.floor(math.log10(abs(x))))
     return x / 10**exp, exp
+
 
 def round_small(number, ndigits=0):
     mantissa, exponent = frexp10(number)

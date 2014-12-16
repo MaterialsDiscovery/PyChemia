@@ -1,14 +1,16 @@
 __author__ = 'Guillermo Avendano Franco'
 
 import os
+import json
+
 from _poscar import write_poscar, write_potcar, read_poscar
 from _kpoints import write_kpoints, read_kpoints
 from _incar import write_incar, InputVariables, read_incar
 from pychemia import Structure
 from pychemia.dft import KPoints
-import json
 from pychemia.utils.computing import unicode2string
 from _outcar import VaspOutput
+
 
 class VaspJob():
 
@@ -87,7 +89,7 @@ class VaspJob():
 
     @property
     def to_dict(self):
-        ret = {'structure': self.structure.todict(),
+        ret = {'structure': self.structure.to_dict(),
                'potcar_pspfiles': self.potcar_pspfiles,
                'potcar_setup': self.potcar_setup,
                'potcar_pspdir': self.potcar_pspdir,
@@ -107,7 +109,7 @@ class VaspJob():
         self.kpoints = vj_dict['kpoints']
         self.outcar = vj_dict['outcar']
         self.poscar_setup = vj_dict['poscar_setup']
-        self.poscar_pspdir = vj_dict['poscar_pspdir']
+        self.potcar_pspdir = vj_dict['potcar_pspdir']
 
     def load_json(self, filename):
         filep = open(filename, 'r')
@@ -132,7 +134,7 @@ class VaspJob():
     def read_outcar(self):
         if os.path.isfile(self.workdir+os.sep+'OUTCAR'):
             vo = VaspOutput(self.workdir+os.sep+'OUTCAR')
-            self.outcar = vo.todict()
+            self.outcar = vo.to_dict()
 
     def update(self):
         self.read_incar()

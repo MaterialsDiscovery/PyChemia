@@ -83,7 +83,7 @@ def plot_bonds(listabifile, listidtset):
     abivar = InputVariables(listabifile[0].get_input_filename())
 
     nbond = len(allbonds[0])
-    n=0
+    n = 0
     for ibond in allbonds:
         if len(ibond) != nbond:
             print('ERROR: Number of bonds changed')
@@ -92,7 +92,6 @@ def plot_bonds(listabifile, listidtset):
             else:
                 print(listabifile[n].filename + ':' + listidtset[n], 'contains', len(ibond), 'bonds')
                 n += 1
-        return
 
     iplot = 1
     for ibond in range(nbond):

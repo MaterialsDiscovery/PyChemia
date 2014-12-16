@@ -12,6 +12,7 @@ __date__ = "March 16, 2014"
 
 import os
 import numpy as _np
+
 import pychemia
 
 

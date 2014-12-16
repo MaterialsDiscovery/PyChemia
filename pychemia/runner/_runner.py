@@ -7,7 +7,6 @@ import time
 
 
 class Runner():
-
     def __init__(self, code, code_bin, environment, use_mpi=True, nmpiproc=2, nconcurrent=1, runtime=3600):
 
         if code.lower() not in ['abinit', 'vasp', 'octopus', 'dftbplus', 'fireball']:
@@ -35,7 +34,7 @@ class Runner():
             os.mkdir(dirpath)
         if self.code == 'abinit':
             pass
-            #pychemia.code.abinit.AbiFiles(basedir=dirpath)
+            # pychemia.code.abinit.AbiFiles(basedir=dirpath)
         elif self.code == 'vasp':
             pass
 
@@ -58,7 +57,7 @@ class Runner():
                 outf = open(outfile, 'a')
                 errf = open(errfile, 'a')
                 for i in [outf, errf]:
-                    i.write(40*'='+' New Run '+40*'='+'\n')
+                    i.write(40 * '=' + ' New Run ' + 40 * '=' + '\n')
                 if infile is not None:
                     rf = open(infile, 'r')
                 else:
@@ -66,8 +65,9 @@ class Runner():
 
                 initime = time.time()
                 if self.use_mpi:
-                    childp = subprocess.Popen(['mpirun', '-np', str(self.nmpiproc), '--map-by', 'socket:PE=2', self.code_bin],
-                                           stdin=rf, stdout=outf, stderr=errf)
+                    childp = subprocess.Popen(['mpirun', '-np', str(self.nmpiproc),
+                                               '--map-by', 'socket:PE=2', self.code_bin],
+                                              stdin=rf, stdout=outf, stderr=errf)
                 else:
                     childp = subprocess.Popen([self.code_bin], stdin=rf, stdout=outf, stderr=errf)
 
@@ -134,14 +134,15 @@ class Runner():
                 if pt[i] is None or not pt[i].is_alive():
                     ret = checker(workdirs[index])
                     if ret:
-                        print 'Launching for process '+str(i)+' on dir '+os.path.basename(workdirs[index])+' index '+str(index)
+                        print 'Launching for process ' + str(i) + ' on dir ' + os.path.basename(
+                            workdirs[index]) + ' index ' + str(index)
                         pt[i] = Process(target=worker, args=(workdirs[index],))
                         pt[i].start()
-                    index = (index+1) % len(workdirs)
+                    index = (index + 1) % len(workdirs)
             time.sleep(30)
             complete = True
             for idir in workdirs:
-                if not os.path.isfile(idir+os.sep+'COMPLETE'):
+                if not os.path.isfile(idir + os.sep + 'COMPLETE'):
                     complete = False
             if complete:
                 print 'Finishing...'
@@ -149,8 +150,8 @@ class Runner():
 
     def run_multidirs_nonstop(self, workdirs, worker, checker):
 
-        def superworker(workdirs, worker, checker):
-            self.run_multidirs(workdirs, worker, checker)
+        def superworker(s_workdirs, s_worker, s_checker):
+            self.run_multidirs(s_workdirs, s_worker, s_checker)
 
         proc = Process(target=superworker, args=(workdirs, worker, checker))
         proc.start()

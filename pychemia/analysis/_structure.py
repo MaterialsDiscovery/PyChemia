@@ -5,7 +5,7 @@ import sys
 import itertools
 import numpy as np
 import numpy.linalg
-import scipy.sparse.linalg
+
 from pychemia import Structure
 from pychemia.utils.periodic import atomic_number, covalent_radius, valence
 from pychemia.utils.mathematics import integral_gaussian
@@ -23,7 +23,7 @@ class StructureAnalysis():
 
     def __init__(self, structure, supercell=(1, 1, 1)):
         assert (isinstance(structure, Structure))
-        if supercell != (1,1,1):
+        if supercell != (1, 1, 1):
             print "Creating supercell"
             self.structure = structure.supercell(supercell)
             print 'done'
@@ -43,7 +43,7 @@ class StructureAnalysis():
         self._distances = None
         self._pairs = None
 
-    def close_distances(self, verbose=False):
+    def close_distances(self, verbose=False, radius=50):
         """
         Computes the closest distances for all the atoms
 
@@ -58,7 +58,8 @@ class StructureAnalysis():
             for i, j in itertools.combinations(range(self.structure.natom), 2):
                 if verbose and index % 100 == 0:
                     print 'Computing distance between atoms ', i, ' and ', j
-                ret = self.structure.get_cell().distance2(self.structure.reduced[i], self.structure.reduced[j])
+                ret = self.structure.get_cell().distance2(self.structure.reduced[i], self.structure.reduced[j],
+                                                          radius=radius)
                 for k in ret:
                     if str(i) not in pairs_dict:
                         pairs_dict[str(i)] = [index]
@@ -84,32 +85,34 @@ class StructureAnalysis():
             self._pairs = pairs_dict
             self._distances = distances_list
 
-        #print self.structure.natom
+        # print self.structure.natom
         #print len(self._pairs)
         #print len(self._distances)
         return self._pairs, self._distances
 
-    def distances_between_species(self):
-        bonds_dict, distances = self.close_distances(verbose=False)
+    def distances_between_species(self, radius=50):
+        bonds_dict, distances = self.close_distances(verbose=False, radius=radius)
 
         dist_spec = {}
         for i, j in itertools.combinations_with_replacement(range(self.structure.nspecies), 2):
-            dist_spec[(i, j)] = []
+            key = tuple(sorted([i, j]))
+            dist_spec[key] = []
         for idistance in distances:
             atom_pair = idistance['pair']
             spec_pair = tuple(self.structure.species.index(self.structure.symbols[x]) for x in atom_pair)
-            dist_spec[spec_pair].append(idistance['distance'])
+            key = tuple(sorted(spec_pair))
+            dist_spec[key].append(idistance['distance'])
         for x in dist_spec:
             dist_spec[x].sort()
         return dist_spec
 
-    def structure_distances(self, delta=0.01, sigma=0.01, rcut=None, integrated=True):
-        dist_spec = self.distances_between_species()
+    def structure_distances(self, delta=0.01, sigma=0.01, radius=50, integrated=True):
+        dist_spec = self.distances_between_species(radius=radius)
         discrete_rdf = {}
-        if rcut is None:
-            rcut = max([max(dist_spec[x]) for x in dist_spec])
-        nbins = int((rcut+5*delta)/delta)
-        discrete_rdf_x = np.arange(0, nbins*delta, delta)
+        if radius is None:
+            radius = max([max(dist_spec[x]) for x in dist_spec])
+        nbins = int((radius + 5 * delta) / delta)
+        discrete_rdf_x = np.arange(0, nbins * delta, delta)
         for spec_pair in dist_spec:
             discrete_rdf[spec_pair] = np.zeros(nbins)
             for Rij in dist_spec[spec_pair]:
@@ -117,24 +120,27 @@ class StructureAnalysis():
                     for i in range(len(discrete_rdf[spec_pair])):
                         x = discrete_rdf_x[i]
                         if not integrated:
-                            discrete_rdf[spec_pair][i] += np.exp(-((x-Rij)**2)/(2*sigma*sigma))/(4*math.pi*Rij*Rij)
+                            discrete_rdf[spec_pair][i] += np.exp(-((x - Rij) ** 2) / (2 * sigma * sigma)) / (
+                                4 * math.pi * Rij * Rij)
                         else:
-                            discrete_rdf[spec_pair][i] += integral_gaussian(x, x+delta, Rij, sigma)/(4*math.pi*Rij*Rij)
+                            discrete_rdf[spec_pair][i] += integral_gaussian(x, x + delta, Rij, sigma) / (
+                                4 * math.pi * Rij * Rij)
 
         return discrete_rdf_x, discrete_rdf
 
-    def fp_oganov(self, delta=0.01, sigma=0.01, rcut=None):
+    def fp_oganov(self, delta=0.01, sigma=0.01, rcut=50):
         struc_dist_x, struc_dist = self.structure_distances(delta, sigma, rcut)
         fp_oganov = struc_dist.copy()
         vol = self.structure.volume
         ns = self.structure.composition.values()
         for spec_pair in struc_dist:
             for i in range(len(struc_dist[spec_pair])):
-                fp_oganov[spec_pair][i] *= vol / (delta*ns[spec_pair[0]]*ns[spec_pair[1]])
+                fp_oganov[spec_pair][i] *= vol / (delta * ns[spec_pair[0]] * ns[spec_pair[1]])
                 fp_oganov[spec_pair][i] -= 1
         return struc_dist_x, fp_oganov
 
-    def get_bonds_coordination(self, initial_cutoff_radius=0.8, ensure_conectivity=False, use_laplacian=True, verbose=False, tol=1E-15, jump=0.01, use_jump=True):
+    def get_bonds_coordination(self, initial_cutoff_radius=0.8, ensure_conectivity=False, use_laplacian=True,
+                               verbose=False, tol=1E-15, jump=0.01, use_jump=True):
         """
         Computes simultaneously the bonds for all atoms and the coordination
         number using a multiplicative tolerance for the sum of covalent radius
@@ -172,7 +178,7 @@ class StructureAnalysis():
                         distance = distances_list[j]['distance']
                         if distance == 0.0:
                             continue
-                        proportion = distance/sum_covalent_radius
+                        proportion = distance / sum_covalent_radius
                         min_proportion = min(min_proportion, proportion)
                         if proportion <= tole:
                             tmp_bonds.append(j)
@@ -194,7 +200,7 @@ class StructureAnalysis():
                         j = data['pair'][1]
                         laplacian[i, j] = -1
                         laplacian[j, i] = -1
-                        #print '%d %d' % (i,j)
+                        # print '%d %d' % (i,j)
                 for i in range(self.structure.natom):
                     laplacian[i, i] = 0
                     laplacian[i, i] = -sum(laplacian[i])
@@ -207,7 +213,7 @@ class StructureAnalysis():
                         print 'Increasing cutoff radius by ', jump, 'A\n'
                     continue
 
-                #if verbose:
+                # if verbose:
                 #print laplacian
                 #evals, evecs = scipy.sparse.linalg.eigsh(laplacian)
                 ev = numpy.linalg.eigvalsh(laplacian)
@@ -219,7 +225,7 @@ class StructureAnalysis():
                 if sum(ev < tol) > 1 and use_jump:
                     cutoff_radius += jump
                     if verbose:
-                            print 'Increasing cutoff radius by ', jump, 'A\n'
+                        print 'Increasing cutoff radius by ', jump, 'A\n'
                 else:
                     increase = False
                     for i in bonds:
@@ -238,7 +244,8 @@ class StructureAnalysis():
             coordination = [len(x) for x in bonds]
         return bonds, coordination, distances_list, tolerances, cutoff_radius
 
-    def hardness(self, verbose=False, initial_cutoff_radius=0.8, ensure_conectivity=False, use_laplacian=True, use_jump=True):
+    def hardness(self, verbose=False, initial_cutoff_radius=0.8, ensure_conectivity=False, use_laplacian=True,
+                 use_jump=True):
         """
         Calculates the hardness of a structure based in the model of XX
         We use the covalent radii from pychemia.utils.periodic.
@@ -251,12 +258,13 @@ class StructureAnalysis():
 
         :rtype : (float)
         """
-        if self.supercell == (1,1,1) and verbose:
+        if self.supercell == (1, 1, 1) and verbose:
             print "Only internal connectivity can be ensure, for complete connectivity in the crystal you must use a " \
                   "supercell at of (2,2,2)"
 
         bonds, coordination, all_distances, tolerances, cutoff_radius = \
-            self.get_bonds_coordination(initial_cutoff_radius=initial_cutoff_radius, ensure_conectivity=ensure_conectivity,
+            self.get_bonds_coordination(initial_cutoff_radius=initial_cutoff_radius,
+                                        ensure_conectivity=ensure_conectivity,
                                         use_laplacian=use_laplacian, verbose=verbose, use_jump=use_jump)
 
         if verbose:
@@ -277,7 +285,7 @@ class StructureAnalysis():
             f_d += valence(i) / covalent_radius(i)
             f_n *= valence(i) / covalent_radius(i)
 
-        #if verbose:
+        # if verbose:
         #    print 'fd', f_d
         #    print 'fn', f_n
         #    print atomicnumbers
@@ -286,7 +294,7 @@ class StructureAnalysis():
         f = 1.0 - (len(atomicnumbers) * f_n ** (1.0 / len(atomicnumbers)) / f_d) ** 2
 
         # Selection of different bonds
-        diff_bonds = np.unique(np.array(reduce(lambda xx, y: xx+y, bonds)))
+        diff_bonds = np.unique(np.array(reduce(lambda xx, y: xx + y, bonds)))
         if verbose:
             print 'Number of different bonds : ', len(diff_bonds)
 
@@ -300,7 +308,7 @@ class StructureAnalysis():
 
             sij = math.sqrt(ei * ej) / (coordination[i1] * coordination[i2]) / all_distances[i]['distance']
             num_i_j_bonds = len([j for j in diff_bonds if i1 in all_distances[j]['pair'] and
-                                i2 in all_distances[j]['pair']])
+                                 i2 in all_distances[j]['pair']])
             #print 'sij', sij
             #print 'num_i_j_bonds', num_i_j_bonds
             tot += num_i_j_bonds

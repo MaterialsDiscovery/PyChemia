@@ -4,6 +4,7 @@ import json
 from abc import ABCMeta, abstractproperty
 import numpy as np
 
+
 class PyChemiaJsonable(object):
     """
     Abstract base class specifying how to convert objects from/to dictionaries.
@@ -63,7 +64,7 @@ def generic_serializer(value):
         if len(value.shape) == 1:
             return list(value)
         elif len(value.shape) == 2:
-            return [ list(i) for i in value]
+            return [list(i) for i in value]
     elif isinstance(value, basestring):
         return value
     elif isinstance(value, float):

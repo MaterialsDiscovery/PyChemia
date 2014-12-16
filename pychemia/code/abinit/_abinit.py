@@ -1,6 +1,7 @@
 __author__ = 'Guillermo Avendano Franco'
 
 import os
+
 from _abifiles import AbiFiles
 from _input import InputVariables
 

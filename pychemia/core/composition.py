@@ -2,13 +2,13 @@
 Class Composition
 """
 
+__author__ = 'Guillermo Avendano-Franco'
+
 from numpy import array, argsort
 from fractions import gcd as _gcd
+from math import pi
 
-from pychemia.utils.periodic import atomic_symbols, electronegativity, atomic_number
-
-
-__author__ = 'Guillermo Avendano-Franco'
+from pychemia.utils.periodic import atomic_symbols, electronegativity, atomic_number, covalent_radius
 
 
 class Composition():
@@ -145,6 +145,15 @@ class Composition():
             return 1
 
     @property
+    def symbols(self):
+        ret = []
+        for specie in self:
+            number_atoms_specie = self.composition[specie]
+            for i in range(number_atoms_specie):
+                ret.append(specie)
+        return ret
+
+    @property
     def species(self):
         """
         :return: The list of species
@@ -235,7 +244,25 @@ class Composition():
     def __str__(self):
         ret = ''
         for i in self.species:
-            print " %10s %10d" % (i, self.composition[i])
+            ret += " %3s: %4d  " % (i, self.composition[i])
+        return ret
 
     def __iter__(self):
         return iter(self.composition)
+
+    def covalent_volume(self, packing='cubes'):
+
+        if packing == 'cubes':
+            factor = 8
+        elif packing == 'spheres':
+            factor = 4 * pi / 3.0
+        else:
+            raise ValueError('Non-valid packing value ', packing)
+
+        # find volume of unit cell by adding cubes
+        volume = 0.0
+        for specie in self:
+            number_atoms_specie = self.composition[specie]
+            # Pack each atom in a cube (2*r)^3
+            volume += factor*number_atoms_specie*covalent_radius(specie)**3
+        return volume

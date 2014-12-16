@@ -59,4 +59,4 @@ def pychemia2ase(structure):
     cell = structure.cell
     scaled_positions = structure.reduced
     symbols = structure.symbols
-    return ase.atoms.atoms(cell=cell, scaled_positions=scaled_positions, symbols=symbols)
+    return ase.atoms.Atoms(cell=cell, scaled_positions=scaled_positions, symbols=symbols)

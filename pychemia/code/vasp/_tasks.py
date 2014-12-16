@@ -3,11 +3,12 @@ __author__ = 'Guillermo Avendano Franco'
 import os
 import shutil
 import numpy as np
+import logging.handlers
+import json
+
 import pychemia
 from _incar import InputVariables
 from _poscar import read_poscar
-import logging.handlers
-import json
 from pychemia.utils.mathematics import round_small
 
 
@@ -18,6 +19,7 @@ class RelaxPopulation():
         self.basedir = basedir
         self.vasp_jobs = {}
         self.runs = {}
+        self.runner = None
         self.status = {}
         self.target_force = target_force
         self.target_stress = target_stress
@@ -200,8 +202,6 @@ class RelaxPopulation():
             wf.close()
             return True
 
-
-
     def update_history(self, entry_id):
         filename = 'pychemia_relaxation.json'
         filepath = self.basedir+os.sep+entry_id+os.sep+filename
@@ -221,7 +221,7 @@ class RelaxPopulation():
 
     @property
     def workdirs(self):
-        return [self.basedir+os.sep+name for name in self.population.entries_ids]
+        return [self.basedir+os.sep+name for name in self.population.members]
 
     @property
     def active_workdirs(self):
@@ -229,7 +229,7 @@ class RelaxPopulation():
 
     def run(self, runner):
 
-        entries_ids = self.population.entries_ids
+        entries_ids = self.population.members
 
         def worker(workdir):
             wf = open(workdir+os.sep+'LOCK', 'w')
@@ -246,19 +246,15 @@ class RelaxPopulation():
         workdirs = [self.basedir+os.sep+i for i in self.population.actives]
         runner.run_multidirs(workdirs, worker, checker)
 
-        if not self.relax_population.is_running:
-            self.relax_population.run()
+        if not self.is_running:
+            self.run(runner)
 
     def set_run(self, code, runner, basedir, density_of_kpoints=10000, ENCUT=1.1):
 
-        if code == 'vasp':
-            from pychemia.code.vasp import RelaxPopulation
-            self.relax_population = RelaxPopulation(self.population, basedir)
-
         self.runner = runner
 
-        self.relax_population.create_dirs(clean=True)
-        self.relax_population.create_inputs(density_of_kpoints=density_of_kpoints, ENCUT=ENCUT)
+        self.create_dirs(clean=True)
+        self.create_inputs(density_of_kpoints=density_of_kpoints, ENCUT=ENCUT)
 
 
 class Polarization():

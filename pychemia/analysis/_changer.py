@@ -3,6 +3,7 @@ __author__ = 'Guillermo Avendano Franco'
 import random
 import itertools
 import numpy as np
+
 from pychemia.utils.mathematics import unit_vector
 
 
@@ -48,10 +49,9 @@ class StructureChanger():
 
     def deform_cell(self, stress_eps):
 
-        stress = np.eye(3) + np.diag(stress_eps[:3]) + \
-                 np.array([[0.0, stress_eps[3], stress_eps[4]],
-                           [stress_eps[3], 0.0, stress_eps[5]],
-                           [stress_eps[4], stress_eps[5], 0.0]])
+        stress = np.eye(3) + np.diag(stress_eps[:3]) + np.array([[0.0, stress_eps[3], stress_eps[4]],
+                                                                 [stress_eps[3], 0.0, stress_eps[5]],
+                                                                 [stress_eps[4], stress_eps[5], 0.0]])
 
         self.new_structure.set_cell(np.dot(stress, self.old_structure.cell))
 
@@ -60,7 +60,7 @@ class StructureChanger():
     def random_deform_cell(self, diag=True, nondiag=True, maxdelta=0.01):
 
         # 6 random numbers between -maxdelta and maxdelta
-        stress_eps = np.random.rand(6)*2*maxdelta-maxdelta
+        stress_eps = np.random.random(6)*2*maxdelta-maxdelta
 
         if diag:
             stress_eps[:3] = 0
@@ -77,8 +77,8 @@ class StructureChanger():
 
     def random_move_one_atom(self, epsilon):
 
-        index = random.randint(0, len(self.old_structure))
-        vector = unit_vector(np.random.rand(3)) * epsilon
+        index = random.randint(0, len(self.old_structure)-1)
+        vector = unit_vector(np.random.random(3)) * epsilon
 
         self.move_one_atom(index, vector)
 
@@ -97,3 +97,14 @@ class StructureChanger():
         for iatom in range(len(self.old_structure)):
             if iatom not in findices and self.new_structure.symbols[iatom] not in fspec:
                 self.random_move_one_atom(epsilon)
+
+    def random_change(self, epsilon):
+        rnd = np.random.random()
+        if rnd < 0.25:
+            self.random_deform_cell(maxdelta=epsilon)
+        elif rnd < 0.5:
+            self.random_move_many_atoms(epsilon=epsilon)
+        elif rnd < 0.75:
+            self.random_permutator()
+        else:
+            self.random_move_one_atom(epsilon=epsilon)
