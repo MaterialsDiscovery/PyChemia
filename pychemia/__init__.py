@@ -11,7 +11,7 @@ import report
 import runner
 import searcher
 import symm
-import tasks
+import task
 import utils
 import web
 import population

@@ -123,6 +123,7 @@ class FireFly(Genealogy):
                     self.run_one_cycle()
                     break
                 else:
+                    print 'Fraction evaluated:', self.population.fraction_evaluated
                     timeout += sleep_time
                     time.sleep(sleep_time)
                     if timeout > self.timeout_per_cycle:

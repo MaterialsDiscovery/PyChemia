@@ -25,6 +25,7 @@ class StructureChanger():
 
     def random_permutator(self, forbidden_list=None):
 
+        assert(self.old_structure.nspecies > 1)
         pairs = list(itertools.combinations(self.old_structure.species, 2))
 
         if forbidden_list is None:
@@ -104,7 +105,7 @@ class StructureChanger():
             self.random_deform_cell(maxdelta=epsilon)
         elif rnd < 0.5:
             self.random_move_many_atoms(epsilon=epsilon)
-        elif rnd < 0.75:
+        elif rnd < 0.75 and self.old_structure.nspecies > 1:
             self.random_permutator()
         else:
             self.random_move_one_atom(epsilon=epsilon)

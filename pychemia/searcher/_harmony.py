@@ -141,7 +141,7 @@ class HarmonySearch(Genealogy):
 
             timeout = 0
             while True:
-                if len(self.population.evaluated) > 0 and self.population.fraction_evaluated > self.fraction_evaluated:
+                if len(self.population.evaluated) > 0 and self.population.fraction_evaluated >= self.fraction_evaluated:
                     if self.population.fraction_evaluated < 1.0:
                         print "Some members lost: ", [x for x in self.population.actives
                                                       if x not in self.population.evaluated]
@@ -157,6 +157,7 @@ class HarmonySearch(Genealogy):
                     self.run_one_cycle()
                     break
                 else:
+                    print 'Fraction evaluated:', self.population.fraction_evaluated
                     timeout += sleep_time
                     time.sleep(sleep_time)
                     if timeout > self.timeout_per_cycle:
