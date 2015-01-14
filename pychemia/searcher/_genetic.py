@@ -6,11 +6,14 @@ This module should be general enough even for stock market prediction!
 """
 
 from _genealogy import Genealogy
+from _searcher import Searcher
 
+class GeneticAlgorithm(Genealogy, Searcher):
 
-class GeneticAlgorithm(Genealogy):
-
-    def __init__(self):
+    def __init__(self, population, evaluator, objective_function, params, stabilization_limit=10,
+                 fraction_evaluated=0.8):
+        self.population = population
+        self.evaluator = evaluator
         Genealogy.__init__(self, self.population, self.evaluator)
 
     def run_all_cycles(self):

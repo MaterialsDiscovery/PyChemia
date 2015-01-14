@@ -9,7 +9,9 @@ import json
 import numpy as np
 
 from pychemia import Composition, Structure
-from pychemia.db import PyChemiaDB, USE_MONGO
+from pychemia.db import USE_MONGO
+if USE_MONGO:
+    from pychemia.db import PyChemiaDB
 from pychemia.analysis import StructureAnalysis, StructureChanger
 from pychemia.utils.mathematics import unit_vector
 
@@ -27,7 +29,7 @@ class StructurePopulation():
 
         :param name: The name of the population. ie the name of the database
         :param composition: The composition uniform for all the members
-        :param tag: A tag to differentiate different isntances running concurrently
+        :param tag: A tag to differentiate different instances running concurrently
         :param delta: The parameter to scale the changers and mixers
         :param new: If true the database will be erased
         :return: A new StructurePopulation object

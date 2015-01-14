@@ -4,12 +4,12 @@ import math
 import time
 
 from _genealogy import Genealogy
+from _searcher import Searcher
 
+class FireFly(Genealogy, Searcher):
 
-class FireFly(Genealogy):
-
-    def __init__(self, population, objective_function, evaluator, gamma=0, stabilization_limit=5,
-                 fraction_evaluated=0.8, timeout_per_cycle=60):
+    def __init__(self, population, evaluator, objective_function, params, stabilization_limit=10,
+                 fraction_evaluated=0.8):
         """
         Implementation fo the Firefly algorithm for global minimization
         This searcher uses a metric to compute the attractiveness and the vector displacement
@@ -27,18 +27,18 @@ class FireFly(Genealogy):
         self.objective_function = objective_function
         self.evaluator = evaluator
         self.gamma = None
-        self.set_gamma(gamma)
+        self.set_params(params)
         self.stabilization_limit = stabilization_limit
         self.fraction_evaluated = fraction_evaluated
-        self.timeout_per_cycle = timeout_per_cycle
 
         self.objective_function.initialize(self.population)
         self.evaluator.initialize(self.population)
         Genealogy.__init__(self, self.population, self.evaluator)
 
-    def set_gamma(self, gamma):
-        assert(gamma >= 0.0)
-        self.gamma = gamma
+    def set_params(self, params):
+        assert('gamma' in params)
+        assert(params['gamma'] >= 0.0)
+        self.gamma = params['gamma']
 
     def run_one_cycle(self):
         # Get a static selection of the values in the generation that are relaxed

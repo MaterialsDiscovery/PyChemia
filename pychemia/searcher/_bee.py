@@ -3,20 +3,20 @@ __author__ = 'Guillermo Avendano-Franco'
 import time
 
 from _genealogy import Genealogy
+from _searcher import Searcher
 
+class BeeAlgorithm(Genealogy, Searcher):
 
-class BeeAlgorithm(Genealogy):
-
-    def __init__(self, population, objective_function, evaluator, ne, nre, nb, nrb, ns, stabilization_limit,
-                 fraction_evaluated=0.8, timeout_per_cycle=60):
+    def __init__(self, population, evaluator, objective_function, params, stabilization_limit=10,
+                 fraction_evaluated=0.8):
         """
         Implementation fo the Firefly algorithm for global minimization
 
         :param population:
         :param objective_function:
         :param evaluator:
-        :param number_generations:
-        :param ratio_relax:
+        :param stabilization_limit:
+        :param fraction_evaluated:
         :return:
         """
         self.population = population
@@ -28,10 +28,9 @@ class BeeAlgorithm(Genealogy):
         self.nrb = None  # Number of best foragers
         self.ns = None   # Number of scouts (include elites,  best and others)
         self.n = None    # Number of bees (size of colony n=ne*nre + nb*nrb + ns )
-        self.set_parameters(ne, nre, nb, nrb, ns)
+        self.set_params(params)
         self.stabilization_limit = stabilization_limit
         self.fraction_evaluated = fraction_evaluated
-        self.timeout_per_cycle = timeout_per_cycle
         self.objective_function.initialize(self.population)
         self.evaluator.initialize(self.population)
         Genealogy.__init__(self, self.population, self.evaluator)
@@ -40,29 +39,25 @@ class BeeAlgorithm(Genealogy):
         self.scouts_others = None
         self.foragers = {}
 
-    def set_parameters(self, ne, nre, nb, nrb, ns):
+    def set_params(self, params):
         """
         Set all the parameters required by the bee algorithm,
         Check right values for all the parameters
 
-        :param ne:
-        :param nre:
-        :param nb:
-        :param nrb:
-        :param ns:
+        :param params:
         """
-        assert(nre > 0)
-        assert(nrb > 0)
-        assert(ne > 0)
-        assert(nb > 0)
-        assert(nb > ne)
-        assert(ns > nb)
-        self.nb = nb
-        self.nrb = nrb
-        self.ne = ne
-        self.nre = nre
-        self.ns = ns
-        self.n = ne*nre+(nb-ne)*nrb+ns
+        assert(params['nre'] > 0)
+        assert(params['nrb'] > 0)
+        assert(params['ne'] > 0)
+        assert(params['nb'] > 0)
+        assert(params['nb'] > params['ne'])
+        assert(params['ns'] > params['nb'])
+        self.nb = params['nb']
+        self.nrb = params['nrb']
+        self.ne = params['ne']
+        self.nre = params['nre']
+        self.ns = params['ns']
+        self.n = self.ne*self.nre+(self.nb-self.ne)*self.nrb+self.ns
 
     def run_one_cycle(self):
 
