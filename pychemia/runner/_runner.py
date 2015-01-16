@@ -99,7 +99,8 @@ class Runner():
 
         return p
 
-    def _stop_run(self, childp, softtime=600, extratime=60):
+    @staticmethod
+    def _stop_run(childp, softtime=600, extratime=60):
         print 'Creating Stoping files'
         wf = open('CHKPT', 'w')
         wf.close()

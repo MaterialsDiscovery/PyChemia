@@ -290,6 +290,7 @@ class StructurePopulation():
         json.dump(ret, filep, sort_keys=True, indent=4, separators=(',', ': '))
 
     def member_str(self, imember):
+        data = self.get_member_dict(imember)
         ret = imember
         return ret
 

@@ -106,6 +106,7 @@ Empty structure
         self.cell = None
         self.periodicity = None
         self.vector_info['mag_moments'] = None
+        self.sites = None
 
         self._lattice = None
         self._composition = None

@@ -8,10 +8,17 @@ from pychemia.code import Codes
 class DFTBplus(Codes):
 
     def __init__(self):
-        self._dirpath = None
+        self.workingdirectory = None
+        self.geometry = {}
+        self.driver = {}
+        self.hamiltonian = {}
+        self.options = {}
+        self.analysis = {}
+        self.parser_options = {}
+        self.slater_koster = {}
 
     def initialize(self, dirpath):
-        self._dirpath = dirpath
+        self.workingdirectory = dirpath
         if not os.path.lexists(dirpath):
             os.mkdir(dirpath)
 
@@ -29,7 +36,7 @@ class DFTBplus(Codes):
 
     @property
     def dirpath(self):
-        return self._dirpath
+        return self.workingdirectory
 
     @staticmethod
     def read_input(filepath):
@@ -103,3 +110,8 @@ class DFTBplus(Codes):
             else:
                 raise ValueError('Line not parsed correctly: '+line)
         return ret
+
+    def get_geometry(self, structure):
+        self.geometry['TypeNames'] = list(structure.species)
+        self.geometry['TypesAndCoordinates']={'units':'Angstrom', 'coordinates':[]}
+        for i in structure
