@@ -1,4 +1,4 @@
-from core import *
+from core import Structure, Composition, Lattice
 import analysis
 import calc
 import code

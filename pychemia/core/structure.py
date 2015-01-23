@@ -107,6 +107,7 @@ Empty structure
         self.periodicity = None
         self.vector_info['mag_moments'] = None
         self.sites = None
+        self.occupancies = None
 
         self._lattice = None
         self._composition = None
@@ -134,6 +135,10 @@ Empty structure
             self.set_reduced(reduced)
         if 'mag_moments' in kwargs:
             self.set_mag_moments(_np.array(kwargs['mag_moments']))
+        if 'occupancies' in kwargs:
+            self.occupancies = kwargs['occupancies']
+        if 'sites' in kwargs:
+            self.sites = kwargs['sites']
 
         # Lets autocomplete the missing information
         self._autocomplete()
@@ -206,6 +211,9 @@ Empty structure
         ret += ')'
         return ret
 
+    def __iter__(self):
+        return iter(SiteSet(self))
+
     def _autocomplete(self):
         if self.natom is None:
             if not self.positions is None:
@@ -242,6 +250,12 @@ Empty structure
                 self.positions2reduced()
             else:
                 self.reduced = _np.array([])
+
+        if self.sites is None:
+            self.sites = range(self.natom)
+
+        if self.occupancies is None:
+            self.occupancies = _np.ones(self.natom)
 
     def _check(self):
         check = True
@@ -831,6 +845,23 @@ Empty structure
         return not self.__eq__(other)
 
     @property
+    def is_perfect(self):
+        """
+        Return True if two conditions are met:
+
+        1. The number of sites is equal to
+        the number of atoms. ie there is no more than
+        one atom on each site.
+
+        2. All the occupancies are equal to 1
+
+        :rtype : bool
+
+        :return: bool
+        """
+        return self.natom == self.nsites and min(self.occupancies)==1
+
+    @property
     def is_periodic(self):
         """
         Return True if the Structure is periodic in any direction
@@ -910,6 +941,9 @@ Empty structure
     def nspecies(self):
         return len(self.get_composition().species)
 
+    @property
+    def nsites(self):
+        return len(self.positions)
 
 def load_structure_json(filename):
     ret = Structure()
@@ -917,22 +951,60 @@ def load_structure_json(filename):
     return ret
 
 
-class DynamicStructure(Structure):
-    """
-    A DynamicStructure contains extra information such
-    as velocities, Constrains in the movement of atoms, etc
-    """
+class SiteSet():
 
-    def __init__(self, **kwargs):
-        Structure.__init__(self, **kwargs)
+    def __init__(self, structure):
+
+        self.structure = structure
+        self.sitelist = []
+
+        for isite in range(structure.nsites):
+            if structure.sites.count(isite) > 1:
+                symbols = []
+                occupancies = []
+                for jatom in range(structure.natom):
+                    if structure.sites[jatom] == isite:
+                        symbols.append(structure.symbols[jatom])
+                        occupancies.append(structure.occupancies[jatom])
+                position = structure.positions[isite]
+                reduced = structure.reduced[isite]
+            else:
+                symbols = [structure.symbols[isite]]
+                occupancies = [structure.occupancies[isite]]
+                position = structure.positions[isite]
+                reduced = structure.reduced[isite]
+            self.sitelist.append(Site(symbols=symbols, occupancies=occupancies, position=position, reduced=reduced))
+
+    def __iter__(self):
+        return iter(self.sitelist)
 
 
-class MetaStructure():
-    """
-    This class offer the possibility for atoms of being in a certain
-    position with a probability lower than 1
-    For example alloys and structural vacancies
-    """
+class Site():
 
-    def __init__(self):
-        pass
+    def __init__(self, symbols, occupancies, position, reduced):
+
+        if isinstance(symbols, list):
+            self.symbols = symbols
+        else:
+            self.symbols = [symbols]
+
+        if isinstance(occupancies, list):
+            self.occupancies = occupancies
+        else:
+            self.occupancies = [occupancies]
+
+        assert(len(self.occupancies)==len(self.symbols))
+
+        self.position = position
+        self.reduced = reduced
+
+    def __repr__(self):
+        ret = 'Site(symbols='+repr(self.symbols)
+        ret += ',occupancies='+repr(self.occupancies)
+        ret += ',position='+repr(self.position)
+        ret += ',reduced='+repr(self.reduced)
+        ret += ')'
+        return ret
+
+    def __str__(self):
+        return repr(self)

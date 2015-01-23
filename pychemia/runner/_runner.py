@@ -9,7 +9,7 @@ import time
 class Runner():
     def __init__(self, code, code_bin, environment, use_mpi=True, nmpiproc=2, nconcurrent=1, runtime=3600):
 
-        if code.lower() not in ['abinit', 'vasp', 'octopus', 'dftbplus', 'fireball']:
+        if code.lower() not in ['abinit', 'vasp', 'octopus', 'dftb', 'fireball']:
             raise ValueError('Code not supported: ', code)
         else:
             self.code = code.lower()
