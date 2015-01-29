@@ -1,12 +1,16 @@
 __author__ = 'Guillermo Avendano Franco'
 
 import os
+import re
 import subprocess
 import numpy as np
 import numbers
-from pychemia.code._codes import Codes
-from pychemia.dft._kpoints import KPoints
+import logging
+from pychemia.code import Codes
+from pychemia.dft import KPoints
 from pychemia import Structure
+
+logging.basicConfig(level=logging.INFO)
 
 class DFTBplus(Codes):
 
@@ -20,8 +24,11 @@ class DFTBplus(Codes):
         self.parser_options = {}
         self.slater_koster = None
         self.structure = None
+        self.binary = 'dftb+'
+        self.runner = None
+        self.kpoints = None
 
-    def initialize(self, workdir, structure, kpoints):
+    def initialize(self, workdir, structure, kpoints, binary='dftb+'):
         assert structure.is_crystal
         assert structure.is_perfect
         self.structure = structure
@@ -30,17 +37,37 @@ class DFTBplus(Codes):
         if not os.path.lexists(workdir):
             os.mkdir(workdir)
         self.kpoints = kpoints
+        self.binary = binary
 
     def set_inputs(self):
-        self.print_input(filename=self.workdir+os.sep+'dftb_in.hsd')
+        self.write_input(filename=self.workdir+os.sep+'dftb_in.hsd')
         self.print_slater_koster()
 
     def get_ouputs(self):
-        pass
+        self.output = read_detailed_out(filename=self.workdir+os.sep+'detailed.out')
 
     def run(self):
+        cwd = os.getcwd()
         os.chdir(self.workdir)
-        subprocess.call(["dftb+"])
+        stdout = open('dftb_stdout.log', 'w')
+        sp = subprocess.Popen(self.binary, stdout=stdout)
+        os.chdir(cwd)
+        self.runner = sp
+        return sp
+
+    def run_status(self):
+        if self.runner is None:
+            logging.info('DFTB+ not finish')
+            filename = self.workdir + os.sep + 'dftb_stdout.log'
+            if os.path.exists(filename):
+                booleans, geom_optimization, stats = read_dftb_stdout(filename=filename)
+                print booleans
+                print geom_optimization
+                print stats
+            return
+        if self.runner.poll() == 0:
+            logging.info('DFTB+ complete normally')
+
 
     def finalize(self):
         pass
@@ -250,7 +277,11 @@ class DFTBplus(Codes):
 
     def basic_input(self):
         self.basic_driver()
-        self.basic_hamiltonian()
+        if self.slater_koster is None:
+            print 'The Slater-Koster files were not selected'
+            print 'The Hamiltonian could not be setup'
+        else:
+            self.basic_hamiltonian()
         self.basic_options()
         self.basic_analysis()
         self.basic_parser_options()
@@ -264,13 +295,15 @@ class DFTBplus(Codes):
         ret += self.print_block('ParserOptions', self.parser_options)
         return ret
 
-    def print_input(self, filename='dftb_in.hsd'):
+    def write_input(self, filename='dftb_in.hsd'):
 
         wf = open(filename, 'w')
         wf.write(self.print_all())
         wf.close()
 
     def set_slater_koster(self, search_paths=[]):
+        if isinstance(search_paths, basestring):
+            search_paths = [search_paths]
         self.slater_koster = []
         for ispecie in self.structure.species:
             for jspecie in self.structure.species:
@@ -374,6 +407,10 @@ class DFTBplus(Codes):
                         ret['value'][3,i] = 0.5
         return ret
 
+    def roll_outputs(self, value):
+        for ifile in ['detailed.out', 'detailed.xml', 'dftb_stdout.log', 'geo_end.gen', 'geo_end.xyz']:
+            if os.path.exists(self.workdir + os.sep + ifile):
+                os.rename(self.workdir + os.sep + ifile, self.workdir + os.sep + ('%03d_%s' % (value, ifile)))
 
 def read_geometry_gen(filename):
     rf = open(filename, 'r')
@@ -408,3 +445,100 @@ def read_geometry_gen(filename):
         return Structure(symbols=symbols, cell=cell, positions=coords, periodicity=True)
     elif kind == 'C':
         return Structure(symbols=symbols, positions=coords, periodicity=False)
+
+def read_detailed_out(filename='detailed.out'):
+
+    rf = open(filename, 'r')
+    data = rf.read()
+
+    if re.findall(r'SCC is NOT converged, maximal SCC iterations exceeded', data):
+        print 'SCC is NOT converged, maximal SCC iterations exceeded'
+        return None, None, None
+
+    forces = re.findall(r'Total\s*Forces\s*([-.E\d\s]+)\n', data)
+    forces = np.array(forces[0].split(), dtype=float).reshape((-1,3))
+    logging.info('Forces :\n'+ str(forces))
+
+    stress = re.findall(r'Total\s*stress\s*tensor\s*([-.E\d\s]+)\n', data)
+    stress = np.array(stress[0].split(), dtype=float).reshape((3,3))
+    logging.info('Stress :\n'+ str(stress))
+
+    total_energy = re.findall(r'Total\s*energy\:\s*[\.\-\d\sE]*\s*H\s*([\.\-\d\sE]+)\s*eV', data)
+    total_energy = float(total_energy[0])
+    logging.info('Energy :' + str(total_energy))
+    return forces, stress, total_energy
+
+def read_dftb_stdout(filename='dftb_stdout.log'):
+
+    rf = open(filename, 'r')
+    data = rf.read()
+    booleans = {}
+    geom_optimization = {}
+    stats = {}
+
+    ionsteps = re.findall(r'Geometry step:', data)
+    nionsteps = 0
+    if ionsteps is not []:
+        nionsteps=len(ionsteps)
+
+    if nionsteps > 0:
+        booleans['SelfConsistentCharges'] = bool(re.findall(r'Self consistent charges:\s*([\w]+)[\s\w]*', data)[0])
+        booleans['SpinPolarization'] = bool(re.findall(r'Spin polarisation:\s*([\w]+)[\s\w]*', data)[0])
+        booleans['PeriodicBoundaries'] = bool(re.findall(r'Periodic boundaries:\s*([\w]+)[\s\w]*', data)[0])
+        lattice_optimization = re.findall(r'Lattice optimisation:\s*([\w]+)[\s\w]*', data)
+        if lattice_optimization:
+            booleans['LatticeOptimisation'] = bool([0])
+        else:
+            booleans['LatticeOptimisation'] = False
+        logging.info('Booleans : '+str(booleans))
+    else:
+        logging.info('Starting initialization...')
+
+    if nionsteps > 1:
+        scc_steps = re.findall(r'iSCC\s*Total\s*electronic\s*Diff\s*electronic\s*SCC\s*error\s*([\.\-+E\d\s]*)\s*\n', data)
+        scc_steps = [np.array(x.split(), dtype=float).reshape((-1, 4))[:,1:4] for x in scc_steps]
+        logging.debug('Self Consistent Charges :' +str(scc_steps))
+
+        nscc_per_ionstep = [len(x) for x in scc_steps]
+        geom_optimization['nscc_per_ionstep'] = nscc_per_ionstep
+        logging.info('SCC :' + str(nscc_per_ionstep))
+
+        total_energy = re.findall(r'Total Energy:\s*([\.\-+\dE]+)\s*H\s*',data)
+        total_energy = np.array(total_energy, dtype=float)
+        geom_optimization['total_energy'] = total_energy
+
+        max_force = re.findall(r'Maximal force component:\s*([\.\-+\dE]+)\s*',data)
+        max_force = np.array(max_force, dtype=float)
+        geom_optimization['max_force'] = max_force
+
+        logging.info('Forces [initial -> final] %12.5f -> %12.5f' %
+                     (geom_optimization['max_force'][0], geom_optimization['max_force'][-1]))
+        logging.info('Energy [initial -> final] %12.5f -> %12.5f' %
+                     (geom_optimization['total_energy'][0], geom_optimization['total_energy'][-1]))
+
+        max_lattice_force = re.findall(r'Maximal Lattice force component:\s*([\.\-+\dE]+)\s*',data)
+        if max_lattice_force:
+            max_lattice_force = np.array(max_lattice_force, dtype=float)
+            geom_optimization['max_lattice_force'] = max_lattice_force
+            logging.info('Stress [initial -> final] %12.5f -> %12.5f' %
+                    (geom_optimization['max_lattice_force'][0], geom_optimization['max_lattice_force'][-1]))
+
+        stats['mean_nscc'] = np.mean(nscc_per_ionstep)
+        stats['std_nscc'] = np.std(nscc_per_ionstep)
+
+    if re.findall('Geometry did NOT converge', data):
+        print 'Convergence not achieved!'
+        stats['ion_convergence'] = False
+    else:
+        stats['ion_convergence'] = True
+
+    if re.findall('Geometry converged', data):
+        print 'Convergence achieved!'
+        stats['ion_convergence'] = True
+    else:
+        stats['ion_convergence'] = False
+
+    logging.debug('Geometry Optimization:'+ str(geom_optimization))
+    logging.debug('Statistics:'+ str(stats))
+
+    return booleans, geom_optimization, stats

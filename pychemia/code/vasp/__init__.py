@@ -1,9 +1,9 @@
 """
 Routines specific for VASP
 """
-from _kpoints import *
-from _poscar import *
-from _incar import *
+from _kpoints import read_kpoints, write_kpoints
+from _poscar import read_poscar, write_poscar, write_potcar
+from _incar import read_incar, write_incar
 from _tasks import Polarization, RelaxPopulation
 from _outcar import VaspOutput
 from _vasp import VaspJob, analyser

@@ -2,7 +2,7 @@ __author__ = 'Guillermo Avendano Franco'
 
 import os
 
-from pychemia.code import Codes
+from pychemia.code._codes import Codes
 
 
 class FireBall(Codes):
