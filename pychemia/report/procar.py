@@ -1786,7 +1786,7 @@ def scriptBandsplot(args):
     plot.scatterPlot(mask=args.mask, size=args.markersize,
                      cmap=args.cmap, vmin=args.vmin,
                      vmax=args.vmax, marker=args.marker, ticks=ticks)
-    plt.colorbar()
+
     plt.ylabel(r"Energy [eV]")
     if args.elimit is not None:
       plt.ylim(args.elimit)
