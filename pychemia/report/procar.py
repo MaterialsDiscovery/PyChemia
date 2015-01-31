@@ -9,9 +9,10 @@
 
 
 """
-Impemented:
+Implemented Classes:
 
- -UtilsProcar: handy methods, not intented to be used by the user
+ -UtilsProcar: handy methods, not intented to be used directly by the
+  user
 
  -ProcarParser: reads data from a procar (may be compressed) and store
     them as arrays:
@@ -40,7 +41,7 @@ import sys
 
 class UtilsProcar:
   """
-  This class is to store handy methods that do not fit in other place
+  This class store handy methods that do not fit any other place
   
   members:
 
@@ -134,9 +135,12 @@ class UtilsProcar:
   
   def MergeFiles(self, inFiles, outFile, gzipOut=False):
     """
-    Concatenate two or more PROCAR files.
-    This methods takes care of the k-indexes.
+    Concatenate two or more PROCAR files. This methods
+    takes care of the k-indexes.
 
+    Useful when large number of K points have been calculated in
+    different PROCARs.
+    
     Args:
     -inFiles: an iterable with files to be concatenated
 
@@ -145,6 +149,7 @@ class UtilsProcar:
     -gzipOut: whether gzip or not the outout file.
 
     Warning: spin polarized case is not Ok!
+
     """
     import gzip
     
@@ -225,7 +230,7 @@ class UtilsProcar:
   
   def RecLatOutcar(self, filename):
     """Finds and return the reciprocal lattice vectors, if more than
-    one set present, it reutrn just the lasdt one.
+    one set present, it return just the last one.
 
     Args: 
     -filename: the name of the outcar file  to be read
@@ -254,7 +259,9 @@ class UtilsProcar:
     format of the stupid fortran.
 
     Up to now it only separes k-points as the following:
-    k-point    61 :    0.00000000 0.5000000010.00000000 ...
+    k-point    61 :    0.00000000-0.50000000 0.00000000 ...
+    to
+    k-point    61 :    0.00000000 -0.50000000 0.00000000 ...
 
     But as I found new stupid errors they should be fixed here.
     """
@@ -328,7 +335,7 @@ class ProcarParser:
     # -cartesian coords: if a recLattice was supplied to the parser.
     # In the later cases, self.kpoints.shape=(self.kpointsCount, 3)
     self.kpoints = None      
-    #Nunber of kpoints, as given by the KPOINTS header (PROCAR file)
+    # Number of kpoints, as given by the KPOINTS header (PROCAR file)
     self.kpointsCount = None
 
     # bands headers present in PROCAR file.
@@ -350,7 +357,8 @@ class ProcarParser:
 
     # number of spin components (blocks of data), 1: non-magnetic non
     # polarized, 2: spin polarized collinear, 4: non-collinear
-    # spin. Mind: before calling to `self._readOrbital` the case '4'
+    # spin. 
+    # NOTE: before calling to `self._readOrbital` the case '4'
     # is marked as '1'
     self.ispin = None        
     self.recLattice = None   #reciprocal lattice vectors
@@ -433,7 +441,7 @@ class ProcarParser:
     else:
       self.ispin = 1
 
-    #checking again, for sake of compatibility,
+    #checking again, for compatibility,
     if len(self.kpoints) != self.kpointsCount:
       raise RuntimeError("Kpoints number do not match with metadata (header of PROCAR)")
       
@@ -525,7 +533,7 @@ class ProcarParser:
 
     The data is stored in an array self.spd[kpoint][band][ispin][atom][orbital]
 
-    Undefined behavior in case of phase factors.
+    Undefined behavior in case of phase factors (LORBIT = 12). 
     """
     self.log.debug("readOrbital")
     if not self.fileStr:
@@ -705,7 +713,7 @@ class ProcarFileFilter:
   "adsorbate", or just keeping the bands close to the Fermi energy, or
   discarding the d-orbitals in a s-p system. You got the idea, rigth?
 
-  Examples:
+  Example:
 
   -To group the "s", "p" y "d" orbitals from the file PROCAR and write
    them in PROCAR-spd:
@@ -1329,16 +1337,24 @@ class ProcarPlot:
 
 
 class FermiSurface:
-  def __init__(self, kpoints, bands, spd, recbasis, loglevel=logging.WARNING):
-    # Original Kpoints list (the PROCAR's default is in Direct coords!)
-    self.kpoints  = kpoints  
+  def __init__(self, kpoints, bands, spd, loglevel=logging.WARNING):
+    """FermiSurface: Class to build and to plot a 2D fermi surface.  It
+    finds the relevant bands (crossig the Fermi level) and interpolate
+    them
+    
+    args:
+      kpoints: Numpy array with kpoints Nx3.
+      bands: the bands with Fermi energy already substracted!, numpy array,
+             Nkpoints x Nbands.
+      spd: character (atomic, orbital) of each bands at each Kpoint, numpy
+           array Nkpoints x Nbands.
+      loglevel(=logging.WARNING): the verbosity level. 
+    """
+    #Since some time ago Kpoints are in cartesian coords (ready to use)  
+    self.kpoints  = kpoints 
     self.bands    = bands
     self.spd      = spd
-    self.RecBasis = recbasis # Basis Vectors (Rec. Space), see Rec2Cart
-    self.kcart    = None     # Kpoints in Cartesian coords (filled in Rec2Cart)
-    self.useful   = None     # List of useful bands (filled in findEnergy)
-    self.inversion = False
-    self.order     = 1
+    self.useful   = None   # List of useful bands (filled in findEnergy)
     self.energy    = None
 
     self.log = logging.getLogger("FermiSurface")
@@ -1349,91 +1365,29 @@ class FermiSurface:
     self.ch.setLevel(logging.DEBUG)
     self.log.addHandler(self.ch)
 
-    self.log.debug("FermiSurface: ...")
-    self.log.info("Kpoints : " + str(self.kpoints))
-    self.log.info("bands   : " + str(self.bands.shape))
-    self.log.info("spd     : " + str(self.spd.shape))
-    self.log.debug("FermiSurface: ...Done")
+    self.log.debug("FermiSurface.init: ...")
+    self.log.info("Kpoints.shape : " + str(self.kpoints.shape))
+    self.log.info("bands.shape   : " + str(self.bands.shape))
+    self.log.info("spd.shape     : " + str(self.spd.shape))
+    self.log.debug("FermiSurface.init: ...Done")
     return
-
-  def Rec2Cart(self):
-    self.log.debug("Rec2Cart: ...")
-    self.kcart = self.kpoints.dot(self.RecBasis)
-    self.log.debug("Rec2Cart: ...Done")
     
   def FindEnergy(self, energy):
     self.log.debug("FindEnergy: ...")
     self.energy = energy
     self.log.info("Energy   : " + str(energy))
     bands = self.bands.transpose()
-    #searching bands who has a value at energy
+    #searching for bands crossing the desired energy
     self.useful = np.where(np.logical_and(bands.min(axis=1)<energy,
                                           bands.max(axis=1)>energy))
-    self.log.debug("set of useful bands    : " + str(self.useful))
+    self.log.info("set of useful bands    : " + str(self.useful))
     bands = bands[self.useful]
     self.log.debug("new bands.shape : " + str(bands.shape))
+    if len(bands) == 0:
+      self.log.error("No bands found in that range. Check your data. Returning")
+      raise RuntimeError("No bands to plot")
     self.log.debug("FindEnergy: ...Done")
     return
-
-  def SetInversion(self, value=True):
-    self.log.debug("SetInversion: ...")
-    self.log.info("Applying inversion symmetry to the K-mesh")
-    self.inversion = value
-    self.log.debug("SetInversion: ...Done")
-    return
-
-  def SetRotAxis(self, order, axis="z"):
-    self.log.debug("SetRotAxis: ...")
-    self.log.info("axis     : " + str(axis))
-    if axis not in ["x" ,"y", "z"]:
-      self.log.error("Wrong axis argument")
-      raise RuntimeError("axis is wrong!")
-    
-    self.log.info("rotational order : " + str(order))
-    if order not in [1,2,3,4,6]:
-      self.log.error("Wrong rotational order!")
-      raise RuntimeError("rotational order is wrong")
-
-    self.order = order
-    self.log.debug("SetRotAxis: ...Done")
-    return
-  
-  def ApplySymm(self, x, y, z):
-    """Note that z does not rotates, only is repeated.  Also the 1st
-    axis of z is a list of bands, and the second are their values.
-    
-    """
-    
-    self.log.debug("ApplySymm(): ...")
-    #initialization
-    xnew = x
-    ynew = y
-    znew = z
-    self.log.debug("x.shape : " + str(x.shape))
-    self.log.debug("y.shape : " + str(y.shape))
-    self.log.debug("z.shape : " + str(z.shape))
-
-    if self.order > 1: 
-      self.log.info("Applying rotation symmetry, order :" + str(self.order))
-    #The first rotation (no rotation) is already in the initailization
-    for i in range(self.order-1):
-      c,s = np.cos(2*np.pi/self.order), np.sin(2*np.pi/self.order)
-      xnew,ynew = xnew*c - ynew*s,  xnew*s + ynew*c
-      x = np.concatenate((x, xnew))
-      y = np.concatenate((y, ynew))
-      z = np.concatenate((z, znew), axis=1)
-    self.log.debug("new x,y,z shapes : " + 
-                   str(x.shape) + str(y.shape) + str(z.shape))
-
-    if self.inversion: 
-      self.log.info("Applying rotation symmetry : ")
-      x = np.concatenate((x, -x))
-      y = np.concatenate((y, -y))
-      z = np.concatenate((z,  z), axis=1)
-    
-
-    self.log.debug("ApplySymm(): ...Done")
-    return (x,y,z)
 
 
   def Plot(self, interpolation=200, mask=None):
@@ -1441,20 +1395,15 @@ class FermiSurface:
     self.log.debug("Plot: ...")
     from scipy.interpolate import griddata, interp2d
     
-    if self.kcart is None:
-      self.Rec2Cart()
-
     if self.useful is None:
-      raise RuntimeError("FindEnergy must be called before Interpolate")
+      raise RuntimeError("self.FindEnergy() must be called before Plotting")
 
 
     #selecting components of K-points
-    x,y = self.kcart[:,0], self.kcart[:,1]
+    x,y = self.kpoints[:,0], self.kpoints[:,1]
     self.log.debug( "k_x[:10], k_y[:10] values" +  str([x[:10],y[:10]]))
 
     bands = self.bands.transpose()[self.useful]
-    (x,y,bands) = self.ApplySymm(x,y, bands)
-
 
     #and new, interpolated component
     xmax,xmin = x.max(), x.min()
@@ -1466,60 +1415,40 @@ class FermiSurface:
 
     #interpolation
     bnew = []
-    # spd = self.spd.transpose()[self.useful]
-    # if mask is not None:
-    #   to_mask = np.where(np.abs(spd) < mask)
-    #   bands[to_mask] = np.nan
-      
     for band in bands:
-      #print x.shape, y.shape, band.shape
       self.log.debug("Interpolating ...")
-      bnew.append( griddata((x,y), band, (xnew, ynew) ) )
-      #print "interpolated data shape : ", bnew[-1].shape
+      bnew.append( griddata((x,y), band, (xnew, ynew), method='cubic' ) )
 
-    for i in range(1): # self.order):
-      #print "going to plot"
-      [plt.contour(xnew, ynew, z, [self.energy], linewidths=0.5,colors='k',
-                   linestyles='solid') for z in bnew]
-
-      # if self.inversion:
-      #   [plt.contour(-xnew, -ynew, z, [self.energy], linewidths=0.5,colors='k',
-      #                 linestyles='solid') for z in bnew]
-
-      # c,s = np.cos(2*np.pi/self.order), np.sin(2*np.pi/self.order)
-      
-      # xnew,ynew = xnew*c - ynew*s,  xnew*s + ynew*c
-
+    plots = [plt.contour(xnew, ynew, z, [self.energy], linewidths=0.5,colors='k',
+                 linestyles='solid') for z in bnew]
     plt.axis("equal")
-
-    #storing values
     self.log.debug("Plot: ...Done")
-    return
+    return plots
 
-  def st(self, sx, sy, sz, interpolation=200):
+  def st(self, sx, sy, sz, spin=None, noarrow=False, interpolation=300):
     """Only 2D layer geometry along z. It is like a enhanced version
-    of 'plot' method."""
+    of 'plot' method.
+
+    sx, sy, sz are spin projected Nkpoints x Nbands numpy arrays. They
+    also are (already) projected by orbital and atom (from other
+    class)
+
+    """
     self.log.debug("st: ...")
     from scipy.interpolate import griddata, interp2d, BivariateSpline
     
-    if self.kcart is None:
-      self.Rec2Cart()
     if self.useful is None:
-      raise RuntimeError("FindEnergy must be called before")
+      raise RuntimeError("self.FindEnergy() must be called before Plotting")
 
     #selecting components of K-points
-    xold,yold = self.kcart[:,0], self.kcart[:,1]
+    x,y = self.kpoints[:,0], self.kpoints[:,1]
 
     bands = self.bands.transpose()[self.useful]
-    (x,y,bands) = self.ApplySymm(xold,yold, bands)
 
     sx = sx.transpose()[self.useful]
     sy = sy.transpose()[self.useful]
     sz = sz.transpose()[self.useful]
-    (x,y,sx) = self.ApplySymm(xold,yold, sx)
-    (x,y,sy) = self.ApplySymm(xold,yold, sy)
-    (x,y,sz) = self.ApplySymm(xold,yold, sz)
-
+ 
     #and new, interpolated component
     xmax,xmin = x.max(), x.min()
     ymax,ymin = y.max(), y.min()
@@ -1532,10 +1461,14 @@ class FermiSurface:
     bnew = []
     for band in bands:
       self.log.debug("Interpolating ...")
-      bnew.append( griddata((x,y), band, (xnew, ynew) ) )
-
-    cont = [plt.contour(xnew, ynew, z, [self.energy], linewidths=0.5,
-                        colors='k', linestyles='solid') for z in bnew]
+      bnew.append( griddata((x,y), band, (xnew, ynew), method='cubic' ) )
+    
+    linewidths=0.7
+    if noarrow:
+      linewidths=0.2
+    cont = [plt.contour(xnew, ynew, z, [self.energy],
+                        linewidths=linewidths, colors='k',
+                        linestyles='solid') for z in bnew]
     plt.axis("equal")
 
     for (contour, spinX, spinY, spinZ) in zip(cont, sx, sy, sz):
@@ -1544,26 +1477,212 @@ class FermiSurface:
       paths = contour.collections[0].get_paths()
       verts = [xx.vertices for xx in paths]
       points = np.concatenate(verts) 
-      print "Fermi surf. points.shape", points.shape
+      self.log.debug("Fermi surf. points.shape: " +str(points.shape))
       
-
       newSx = griddata((x,y), spinX, (points[:,0], points[:,1]))
       newSy = griddata((x,y), spinY, (points[:,0], points[:,1]))
       newSz = griddata((x,y), spinZ, (points[:,0], points[:,1]))
       
-      print "newSx.shape: ", newSx.shape
+      self.log.info("newSx.shape: "+ str(newSx.shape))
 
       import matplotlib.colors as colors
       
-      plt.quiver(points[::6,0], points[::6,1], newSx[::6], newSy[::6],
-                 newSz[::6],scale_units='xy', angles='xy',
-                 norm=colors.normalize(-0.5,0.5))
+      if noarrow is False:
+        plt.quiver(points[::6,0], points[::6,1], newSx[::6],
+                   newSy[::6], newSz[::6],scale_units='xy',
+                   angles='xy', norm=colors.Normalize(-0.5,0.5))
+      else:
+        #a dictionary to select the right spin component
+        spinDict = { 1 : newSx[::6], 2 : newSy[::6], 3 : newSz[::6] }
+        plt.scatter(points[::6,0], points[::6,1], c=spinDict[spin],
+                    s=50, edgecolor='none', alpha=1.0, marker=".",
+                    cmap='seismic', norm=colors.normalize(-0.5,0.5)) 
     plt.colorbar()
     plt.axis("equal")
-
+    font = { 'size' : 16}
+    plt.rc('font', **font)
 
     self.log.debug("st: ...Done")
     return
+
+
+
+
+
+class ProcarSymmetry:
+  def __init__(self, kpoints, bands, character=None, sx=None, sy=None,
+               sz=None, loglevel=logging.WARNING):
+    self.log = logging.getLogger("ProcarSymmetry")
+    self.log.setLevel(loglevel)
+    self.ch = logging.StreamHandler()
+    self.ch.setFormatter(logging.Formatter("%(name)s::%(levelname)s: "
+                                           "%(message)s"))
+    self.ch.setLevel(logging.DEBUG)
+    self.log.addHandler(self.ch)
+    self.log.debug("ProcarSymmetry.__init__: ...")
+
+    self.kpoints = kpoints
+    self.bands = bands
+    #optional arguments when not given will False, but they can still
+    #be treated like arrays
+    self.character = np.array([])
+    if character != None:
+      self.character = character
+    self.sx = np.array([])
+    if sx != None:  
+      self.sx = sx
+    self.sy = np.array([])
+    if sy != None: 
+      self.sy = sy
+    self.sz = np.array([])
+    if sz != None:
+      self.sz = sz
+
+    self.log.info("Kpoints : " + str(self.kpoints.shape))
+    self.log.info("bands   : " + str(self.bands.shape))
+    self.log.info("character  : " + str(self.character.shape))
+    self.log.info("sx      : " + str(self.sx.shape))
+    self.log.info("sy      : " + str(self.sy.shape))
+    self.log.info("sz      : " + str(self.sz.shape))
+    self.log.debug("ProcarSymmetry.__init__: ...Done")
+
+    return
+
+  def _q_mult(self,q1, q2):
+    """
+    Multiplication of quaternions, it doesn't fit in any other place
+    """
+    w1, x1, y1, z1 = q1
+    w2, x2, y2, z2 = q2
+    w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
+    x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
+    y = w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2
+    z = w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2
+    return np.array((w, x, y, z))
+
+  def GeneralRotation(self, angle, rotAxis=[0,0,1], store=True):
+    """Apply a rotation defined by an angle and an axis.
+    
+    Returning value: (Kpoints, sx,sy,sz), the rotated Kpoints and spin
+                     vectors (if not the case, they will be empty
+                     arrays).
+
+    Arguments
+    angle: the rotation angle, must be in degrees!
+
+    rotAxis : a fixed Axis when applying the symmetry, usually it is
+    from Gamma to another point). It doesn't need to be normalized. 
+    The RotAxis can be:
+       [x,y,z] : a cartesian vector in k-space.
+       'x': [1,0,0], a rotation in the yz plane. 
+       'y': [0,1,0], a rotation in the zx plane.
+       'z': [0,0,1], a rotation in the xy plane
+
+    """
+    if rotAxis == 'x'or rotAxis == 'X':
+      rotAxis = [1,0,0]
+    if rotAxis == 'y'or rotAxis == 'Y':
+      rotAxis = [0,1,0]
+    if rotAxis == 'z'or rotAxis == 'Z':
+      rotAxis = [0,0,1]
+    rotAxis = np.array(rotAxis, dtype=float)
+    self.log.debug("rotAxis : " + str(rotAxis))
+    rotAxis = rotAxis/np.linalg.norm(rotAxis)
+    self.log.debug("rotAxis Normalized : " + str(rotAxis))
+    self.log.debug("Angle : " + str(angle))
+    angle = angle*np.pi/180
+    #defining a quaternion for rotatoin
+    angle = angle/2
+    rotAxis = rotAxis*np.sin(angle)
+    qRot = np.array((np.cos(angle), rotAxis[0], rotAxis[1], rotAxis[2]))
+    qRotI = np.array((np.cos(angle), -rotAxis[0], -rotAxis[1], -rotAxis[2]))
+    self.log.debug("Rot. quaternion : " + str(qRot))
+    self.log.debug("Rot. quaternion conjugate : " + str(qRotI))
+    #converting self.kpoints into quaternions
+    w = np.zeros((len(self.kpoints),1))
+    qvectors = np.column_stack((w, self.kpoints)).transpose()
+    self.log.debug("Kpoints-> quaternions (transposed):\n" + str(qvectors.transpose()))
+    qvectors = self._q_mult(qRot, qvectors)
+    qvectors = self._q_mult(qvectors, qRotI).transpose()
+    kpoints = qvectors[:,1:]
+    self.log.debug("Rotated kpoints :\n" + str(qvectors))
+    
+    #rotating the spin vector (if exist)
+    sxShape, syShape, szShape = self.sx.shape, self.sy.shape, self.sz.shape 
+    self.log.debug("Spin vector Shapes : " + str((sxShape, syShape, szShape)))
+    #The first entry has to be an array of 0s, w could do the work,
+    #but if len(self.sx)==0 qvectors will have a non-defined length
+    qvectors = (0*self.sx.flatten(), self.sx.flatten(),
+                self.sy.flatten(), self.sz.flatten())
+    self.log.debug("Spin vector quaternions: \n" + str(qvectors))
+    qvectors = self._q_mult(qRot, qvectors)
+    qvectors = self._q_mult(qvectors, qRotI)
+    self.log.debug("Spin quaternions after rotation:\n" + str(qvectors))
+    sx, sy, sz = qvectors[1], qvectors[2], qvectors[3]
+    sx.shape, sy.shape, sz.shape = sxShape, syShape, szShape
+
+    if store is True:
+      self.kpoints, self.sx, self.sy, self.sz = kpoints, sx, sy, sz
+    self.log.debug("GeneralRotation: ...Done")
+    return (kpoints, sx, sy, sz)
+
+
+  def RotSymmetryZ(self, order):
+    """Applies the given rotational crystal symmetry to the current
+    system. ie: to unfold the irreductible BZ to the full BZ.
+
+    Only rotations along z-axis are performed, you can use
+    self.GeneralRotation first. 
+
+    The user is responsible of provide a useful input. The method
+    doesn't check the physics.
+
+    """
+    self.log.debug("RotSymmetryZ:...")
+    rotations = [self.GeneralRotation(360*i/order, store=False) for i
+                 in range(order)]
+    rotations = zip(*rotations)
+    self.log.debug("self.kpoints.shape (before concat.): " +
+                   str(self.kpoints.shape))
+    self.kpoints = np.concatenate(rotations[0], axis=0)
+    self.log.debug("self.kpoints.shape (after concat.): " + 
+                   str(self.kpoints.shape))
+    self.sx = np.concatenate(rotations[1], axis=0)
+    self.sy = np.concatenate(rotations[2], axis=0)
+    self.sz = np.concatenate(rotations[3], axis=0)
+    #the bands and proj. character also need to be enlarged
+    bandsChar = [(self.bands, self.character) for i in range(order)]
+    bandsChar = zip(*bandsChar)
+    self.bands = np.concatenate(bandsChar[0], axis=0)
+    self.character = np.concatenate(bandsChar[1], axis=0)
+    self.log.debug("RotSymmZ:...Done")
+
+    return 
+
+  def Translate(self, newOrigin):
+    """Centers the Kpoints at newOrigin, newOrigin is either and index (of
+   some Kpoint) or the cartesian coordinates of one point in the
+   reciprocal space.
+
+    """
+    self.log.debug("Translate():  ...")
+    if len(newOrigin) == 1:
+      newOrigin = int(newOrigin[0])
+      newOrigin = self.kpoints[newOrigin]
+    #Make sure newOrigin is a numpy array
+    newOrigin = np.array(newOrigin)
+    self.log.debug("newOrigin: " + str(newOrigin))
+    self.kpoints = self.kpoints - newOrigin
+    self.log.debug("new Kpoints:\n" + str(self.kpoints))
+    self.log.debug("Translate(): ...Done")
+    return
+
+
+
+
+
+
+
 
 
 
@@ -1838,26 +1957,31 @@ def scriptFermi2D(args):
     args.rec_basis = np.array(args.rec_basis)
     args.rec_basis.shape = (3,3)
 
-  if args.quiet is False:
-    print "file           : ", args.file
-    print "atoms          : ", args.atoms
-    print "orbitals       : ", args.orbitals
-    print "spin comp.     : ", args.spin
-    print "energy         : ", args.energy
-    print "fermi energy   : ", args.fermi
-    print "Rec. basis     : ", args.rec_basis
-    print "inversion sym. : ", args.inversion
-    print "rot. symmetry  : ", args.rotation
-    print "masking thres. : ", args.mask
-    print "save figure    : ", args.savefig
-    print "outcar         : ", args.outcar
-    print "st             : ", args.st
+  if len(args.translate) != 3 and len(args.translate) != 1:
+    print "Error: --translate option is invalid! (", args.translate,")"
+    raise RuntimeError("invalid option --translate")
 
+  if args.quiet is False:
+    print "file            : ", args.file
+    print "atoms           : ", args.atoms
+    print "orbitals        : ", args.orbitals
+    print "spin comp.      : ", args.spin
+    print "energy          : ", args.energy
+    print "fermi energy    : ", args.fermi
+    print "Rec. basis      : ", args.rec_basis
+    print "rot. symmetry   : ", args.rot_symm
+    print "origin (trasl.) : ", args.translate
+    print "rotation        : ", args.rotation
+    print "masking thres.  : ", args.mask
+    print "save figure     : ", args.savefig
+    print "outcar          : ", args.outcar
+    print "st              : ", args.st
+    print "no_arrows       : ", args.noarrow
   if args.verbose > 2:
     args.verbose = 2
   loglevel = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}[args.verbose]
 
-  #first parse the outcar if given
+  #first parse the outcar, if given
   if args.rec_basis is None and args.outcar:
     outcarparser = UtilsProcar(loglevel=loglevel)
     if args.fermi is None:
@@ -1865,54 +1989,68 @@ def scriptFermi2D(args):
       if args.quiet is False:
         print "Fermi energy found in outcar file = " + str(args.fermi)
     args.rec_basis = outcarparser.RecLatOutcar(args.outcar)
-
-
+  #Reciprocal lattices are needed!
+  elif arg.rec_basis is None and args.outcar is None:
+    print "ERORR: Reciprocal Lattice is needed, use --rec_basis or --outcar"
+    raise RuntimeError("Reciprocal Lattice not found")
+    
   #parsing the file
   procarFile = ProcarParser(loglevel)
-  procarFile.readFile(args.file)
+  #permissive incompatible with Fermi surfaces
+  procarFile.readFile(args.file, permissive=False, recLattice=args.rec_basis)
 
   if args.st is not True:
-
     # processing the data
-    data = ProcarSelect(procarFile, deepCopy=False, loglevel=loglevel)
+    data = ProcarSelect(procarFile, loglevel=loglevel)
     data.selectIspin([args.spin])
     # fortran flag is equivalent to human,
     # but the later seems more human-friendly
     data.selectAtoms(args.atoms, fortran=args.human)
     data.selectOrbital(args.orbitals)
-
   else:
     # first get the sdp reduced array for all spin components.
     stData = []
     for i in [1,2,3]:
-      data = ProcarSelect(procarFile, deepCopy=False, loglevel=loglevel)
+      data = ProcarSelect(procarFile, loglevel=loglevel)
       data.selectIspin([i])
       data.selectAtoms(args.atoms, fortran=args.human)
       data.selectOrbital(args.orbitals)
       stData.append(data.spd)
 
+  #Once the PROCAR is parsed and reduced to 2x2 arrays, we can apply
+  #symmetry operations to unfold the Brillouin Zone
+  kpoints = data.kpoints
+  bands = data.bands
+  character = data.spd
+  if args.st is True:
+    sx, sy, sz = stData[0], stData[1], stData[2]
+    symm = ProcarSymmetry(kpoints, bands, sx=sx, sy=sy, sz=sz,
+                          loglevel=logging.DEBUG)
+  else:
+    symm = ProcarSymmetry(kpoints, bands, character=character,
+                          loglevel=logging.DEBUG)
+
+  symm.Translate(args.translate)
+  symm.GeneralRotation(args.rotation[0], args.rotation[1:])
+  symm.RotSymmetryZ(args.rot_symm)
+
 
   # plotting the data
-  fs = FermiSurface(data.kpoints, data.bands-args.fermi, data.spd, 
-                    recbasis=args.rec_basis, loglevel=loglevel)
+  print "Bands will be shifted by the Fermi energy = ", args.fermi
+  fs = FermiSurface(symm.kpoints, symm.bands-args.fermi, character,
+                    loglevel=loglevel)
   fs.FindEnergy(args.energy)
   
-  # going to real space and interpolating
-  # now applying all symmetry operations
-  fs.SetRotAxis(args.rotation,"z")
-  fs.SetInversion(args.inversion)
   if not args.st:
     fs.Plot(mask=args.mask, interpolation=300)
   else:
-    fs.st(sx=stData[0], sy=stData[1], sz=stData[2])
+    fs.st(sx=symm.sx, sy=symm.sy, sz=symm.sz, noarrow=args.noarrow, spin=args.spin)
   
   if args.savefig:
     plt.savefig(args.savefig)
   else:
     plt.show()
     
-
-
   return
 
 
@@ -2305,8 +2443,12 @@ if __name__ == "__main__":
 
 
   phelp = ("Spin component to be used: for non-polarized calculations density "
-           "is '-s 0'. Non-collinear calculation: density=0, sx=1, sy=2, sz=3."
-           "Collinear polarized calculation is not suported yet. Default: s=0")
+           "is '-s 0'. For spin polarized case test '-s 0' (ignore the spin) or"
+           " '-s 1' (assing a sign to the spin channel). For "
+           "non-collinear stuff you can use '-s 0', '-s 1', '-s 2', -s "
+           "3 for the magnitude, x, y, z components of your spin "
+           "vector, in this case you really want to see spin textures "
+           "'--st'. Default: s=0")
   parserFermi2D.add_argument("-s", "--spin" , type=int, choices=[0,1,2,3], 
                              default=0, help=phelp)
 
@@ -2335,14 +2477,31 @@ if __name__ == "__main__":
            "`--outcar`")
   parserFermi2D.add_argument("--rec_basis", help=phelp, type=float, nargs=9)
 
-  phelp = ("Switch on (apply it) inversion symmetry (just to the plot, after "
-           "interpolation the data)")
-  parserFermi2D.add_argument("-i", "--inversion", help=phelp, 
-                             action="store_true")
+  phelp = ("Apply a rotational symmetry to unfold the Kpoints found. If your"
+           "PROCAR only has a portion of the Brillouin Zone, you may want to "
+           "plot the FULL BZ (ie: a Dirac cone at Gamma will look like a cone "
+           "and not like a segment of circle). Supported rotations are "
+           "1,2,3,4,6. All of them along Z and centered at Gamma. Consider to "
+           "'--translate' your cell to rotate with other origin. This is the "
+           "last symmetry operation to be performed.")
+  parserFermi2D.add_argument("--rot_symm", help=phelp, type=int, default=1)
 
-  phelp = ("Switch on (apply it) rotational symmetry to the plot. It requires "
-           "the order of the rotation")
-  parserFermi2D.add_argument("-r", "--rotation", help=phelp, type=int, default=1)
+  phelp = ("Translate your mesh to the specified point. The point can be 3 "
+           "coordinates (numbers) or the index of one K-point (zero-based, as "
+           "usual). This is the first symmetry operation to be performed "
+           "(i.e. rotations will take this point as the origin).") 
+  parserFermi2D.add_argument("--translate", help=phelp, nargs='+',
+                             default=[0,0,0])
+
+  phelp = ("A general rotation is applied to the data in the PROCAR. While this "
+           " script has a large bias to work on the 'xy' plane, with this option"
+           " you can rotate your whole PROCAR to fit the 'xy' plane. A rotation "
+           "is composed by one angle plus one fixed axis, eg: '--rotation 90 1 0"
+           " 0' is 90 degrees along the x axis, this changes the 'xy'->'xz'. The"
+           " rotation is performed after the translation and before applying "
+           "rot_symm. ")
+  parserFermi2D.add_argument("--rotation", help=phelp, type=float,
+                             nargs=4, default=[0,0,0,1])
 
   phelp = ("enable to give atoms list"
                              " in a more human, 1-based way (say the 1st is 1,"
@@ -2370,6 +2529,12 @@ if __name__ == "__main__":
   phelp = ("Plot of the spin texture (ie: spin arrows) on the Fermi's surface."
            " This option works quite indepentent of another options.")
   parserFermi2D.add_argument('--st', help=phelp, action='store_true')
+
+  phelp = ("Plot of the spin texture without arrows (just intensity) for a "
+           "given spin direction on the Fermi's surface.  This option works"
+           "quite indepentent of another options but needs to set '--st' and "
+           "'--spin'.")
+  parserFermi2D.add_argument('--noarrow', help=phelp, action='store_true')
 
   parserFermi2D.set_defaults(func=scriptFermi2D)
 
