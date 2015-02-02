@@ -2299,7 +2299,7 @@ if __name__ == "__main__":
            "(kx,ky) vector. Useful for Rashba-like states in surfaces. Use\n "
            "'--cmap seismic'\n\n ")
   parserBandsplot.add_argument("-s", "--spin" , choices=['0','1','2','3', 'st'],
-                               default=0, help=phelp)
+                               default='0', help=phelp)
 
   phelp = ("List of rows (atoms) to be used. This list refers to the rows of\n"
            "(each block of) your PROCAR file. If you haven't manipulated your\n"
