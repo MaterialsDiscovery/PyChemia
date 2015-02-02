@@ -114,7 +114,7 @@ class FireFly(Genealogy, Searcher):
                     if self.population.fraction_evaluated < 1.0:
                         print "Some members lost"
                         self.print_status()
-                        for imember in self.population.active_no_evaluated():
+                        for imember in self.population.active_no_evaluated:
                             print 'Removing: ', imember
                             self.replacing(imember)
 
@@ -128,7 +128,7 @@ class FireFly(Genealogy, Searcher):
                     time.sleep(sleep_time)
                     if timeout > self.timeout_per_cycle:
                         print 'Timeout for a single cycle, discarding unevaluated members'
-                        for imember in self.population.active_no_evaluated():
+                        for imember in self.population.active_no_evaluated:
                             print 'Removing: ', imember
                             self.print_status()
                             self.replacing(imember)

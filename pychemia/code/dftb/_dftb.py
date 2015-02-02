@@ -10,7 +10,7 @@ from pychemia.code import Codes
 from pychemia.dft import KPoints
 from pychemia import Structure
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 class DFTBplus(Codes):
 
@@ -61,9 +61,9 @@ class DFTBplus(Codes):
             filename = self.workdir + os.sep + 'dftb_stdout.log'
             if os.path.exists(filename):
                 booleans, geom_optimization, stats = read_dftb_stdout(filename=filename)
-                print booleans
-                print geom_optimization
-                print stats
+                logging.debug(str(booleans))
+                logging.debug(str(geom_optimization))
+                logging.debug(str(stats))
             return
         if self.runner.poll() == 0:
             logging.info('DFTB+ complete normally')
@@ -278,8 +278,8 @@ class DFTBplus(Codes):
     def basic_input(self):
         self.basic_driver()
         if self.slater_koster is None:
-            print 'The Slater-Koster files were not selected'
-            print 'The Hamiltonian could not be setup'
+            logging.debug('The Slater-Koster files were not selected')
+            logging.debug('The Hamiltonian could not be setup')
         else:
             self.basic_hamiltonian()
         self.basic_options()
@@ -315,15 +315,16 @@ class DFTBplus(Codes):
                         self.slater_koster.append(path)
                         pair_found = True
                 if pair_found:
-                    print 'Slater_Koster for ' + pair + ' found on ' + path
+                    logging.debug('Slater_Koster for ' + pair + ' found on ' + path)
                 else:
-                    print 'ERROR: Slater_Koster for ' + pair + ' not found'
+                    logging.debug('ERROR: Slater_Koster for ' + pair + ' not found')
 
     def print_slater_koster(self):
         for i in self.slater_koster:
             filename = self.workdir+os.sep+os.path.basename(i)
-            if not os.path.lexists(filename):
-                os.symlink(i, filename)
+            if os.path.lexists(filename):
+                os.remove(filename)
+            os.symlink(i, filename)
 
     def get_shells(self, slater_koster):
 
@@ -446,29 +447,68 @@ def read_geometry_gen(filename):
     elif kind == 'C':
         return Structure(symbols=symbols, positions=coords, periodicity=False)
 
-def read_detailed_out(filename='detailed.out'):
 
+def read_detailed_out(filename='detailed.out'):
+    """
+    Read a 'detailed.out' file and extract the values
+    of forces, stress and total energy
+    If those any of those three properties are not present
+    its value will be set to None
+
+    :param filename: The filename in the format of DFTB+ 'detailed.out'
+    :return: tuple (forces, stress, total_energy)
+    """
     rf = open(filename, 'r')
     data = rf.read()
 
+    # In this case no values of forces, stress and energy are produced
     if re.findall(r'SCC is NOT converged, maximal SCC iterations exceeded', data):
-        print 'SCC is NOT converged, maximal SCC iterations exceeded'
+        logging.debug('SCC is NOT converged, maximal SCC iterations exceeded')
         return None, None, None
 
+    # Extracting the data from 'detailed.out'
     forces = re.findall(r'Total\s*Forces\s*([-.E\d\s]+)\n', data)
-    forces = np.array(forces[0].split(), dtype=float).reshape((-1,3))
-    logging.info('Forces :\n'+ str(forces))
-
     stress = re.findall(r'Total\s*stress\s*tensor\s*([-.E\d\s]+)\n', data)
-    stress = np.array(stress[0].split(), dtype=float).reshape((3,3))
-    logging.info('Stress :\n'+ str(stress))
-
     total_energy = re.findall(r'Total\s*energy\:\s*[\.\-\d\sE]*\s*H\s*([\.\-\d\sE]+)\s*eV', data)
-    total_energy = float(total_energy[0])
-    logging.info('Energy :' + str(total_energy))
+
+    logging.debug('Results parsing ' + filename)
+    if forces:
+        forces = np.array(forces[0].split(), dtype=float).reshape((-1, 3))
+        logging.debug('Forces :\n'+str(forces))
+    else:
+        forces = None
+
+    if stress:
+        stress = np.array(stress[0].split(), dtype=float).reshape((3, 3))
+        logging.debug('Stress :\n'+ str(stress))
+    else:
+        stress = None
+
+    if total_energy:
+        total_energy = float(total_energy[0])
+        logging.debug('Energy :' + str(total_energy))
+    else:
+        total_energy = None
+
     return forces, stress, total_energy
 
+
 def read_dftb_stdout(filename='dftb_stdout.log'):
+    """
+    Read the standard output stored in a file
+    (by default 'dftb_stdout.log') and extract
+    relevant information useful for a relaxation
+    procedure
+
+    :param filename: The standard output stored in a file
+    :return:
+    """
+
+    def yes_no_to_boolean(value):
+        if value == 'Yes':
+            return True
+        else:
+            return False
 
     rf = open(filename, 'r')
     data = rf.read()
@@ -482,26 +522,24 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
         nionsteps=len(ionsteps)
 
     if nionsteps > 0:
-        booleans['SelfConsistentCharges'] = bool(re.findall(r'Self consistent charges:\s*([\w]+)[\s\w]*', data)[0])
-        booleans['SpinPolarization'] = bool(re.findall(r'Spin polarisation:\s*([\w]+)[\s\w]*', data)[0])
-        booleans['PeriodicBoundaries'] = bool(re.findall(r'Periodic boundaries:\s*([\w]+)[\s\w]*', data)[0])
+        booleans['SelfConsistentCharges'] = yes_no_to_boolean(re.findall(r'Self consistent charges:\s*([\w]+)[\s\w]*', data)[0])
+        booleans['SpinPolarisation'] = yes_no_to_boolean(re.findall(r'Spin polarisation:\s*([\w]+)[\s\w]*', data)[0])
+        booleans['PeriodicBoundaries'] = yes_no_to_boolean(re.findall(r'Periodic boundaries:\s*([\w]+)[\s\w]*', data)[0])
         lattice_optimization = re.findall(r'Lattice optimisation:\s*([\w]+)[\s\w]*', data)
         if lattice_optimization:
-            booleans['LatticeOptimisation'] = bool([0])
+            booleans['LatticeOptimisation'] = True
         else:
             booleans['LatticeOptimisation'] = False
-        logging.info('Booleans : '+str(booleans))
-    else:
-        logging.info('Starting initialization...')
+        logging.debug('Booleans : '+str(booleans))
+        logging.debug('LatticeOptimisation: ' + str(booleans['LatticeOptimisation']))
 
     if nionsteps > 1:
         scc_steps = re.findall(r'iSCC\s*Total\s*electronic\s*Diff\s*electronic\s*SCC\s*error\s*([\.\-+E\d\s]*)\s*\n', data)
-        scc_steps = [np.array(x.split(), dtype=float).reshape((-1, 4))[:,1:4] for x in scc_steps]
-        logging.debug('Self Consistent Charges :' +str(scc_steps))
+        scc_steps = [np.array(x.split(), dtype=float).reshape((-1, 4))[:, 1:4] for x in scc_steps]
 
         nscc_per_ionstep = [len(x) for x in scc_steps]
         geom_optimization['nscc_per_ionstep'] = nscc_per_ionstep
-        logging.info('SCC :' + str(nscc_per_ionstep))
+        logging.debug('SCC :' + str(nscc_per_ionstep))
 
         total_energy = re.findall(r'Total Energy:\s*([\.\-+\dE]+)\s*H\s*',data)
         total_energy = np.array(total_energy, dtype=float)
@@ -511,34 +549,32 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
         max_force = np.array(max_force, dtype=float)
         geom_optimization['max_force'] = max_force
 
-        logging.info('Forces [initial -> final] %12.5f -> %12.5f' %
+        logging.debug('Forces [initial -> final] %12.5f -> %12.5f' %
                      (geom_optimization['max_force'][0], geom_optimization['max_force'][-1]))
-        logging.info('Energy [initial -> final] %12.5f -> %12.5f' %
-                     (geom_optimization['total_energy'][0], geom_optimization['total_energy'][-1]))
 
         max_lattice_force = re.findall(r'Maximal Lattice force component:\s*([\.\-+\dE]+)\s*',data)
         if max_lattice_force:
             max_lattice_force = np.array(max_lattice_force, dtype=float)
             geom_optimization['max_lattice_force'] = max_lattice_force
-            logging.info('Stress [initial -> final] %12.5f -> %12.5f' %
+            logging.debug('Stress [initial -> final] %12.5f -> %12.5f' %
                     (geom_optimization['max_lattice_force'][0], geom_optimization['max_lattice_force'][-1]))
+
+        logging.debug('Energy [initial -> final] %12.5f -> %12.5f' %
+                     (geom_optimization['total_energy'][0], geom_optimization['total_energy'][-1]))
 
         stats['mean_nscc'] = np.mean(nscc_per_ionstep)
         stats['std_nscc'] = np.std(nscc_per_ionstep)
 
     if re.findall('Geometry did NOT converge', data):
-        print 'Convergence not achieved!'
+        logging.debug('Convergence not achieved!')
         stats['ion_convergence'] = False
     else:
         stats['ion_convergence'] = True
 
     if re.findall('Geometry converged', data):
-        print 'Convergence achieved!'
+        logging.debug('Convergence achieved!')
         stats['ion_convergence'] = True
     else:
         stats['ion_convergence'] = False
-
-    logging.debug('Geometry Optimization:'+ str(geom_optimization))
-    logging.debug('Statistics:'+ str(stats))
 
     return booleans, geom_optimization, stats

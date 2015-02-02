@@ -39,13 +39,6 @@ class AseEvaluator():
         self.thread = None
         self.population = None
 
-    @property
-    def is_running(self):
-        if self.thread is not None:
-            return self.thread.is_alive()
-        else:
-            return False
-
     def initialize(self, population):
         self.population = population
 
@@ -72,6 +65,13 @@ class AseEvaluator():
                           'stress': generic_serializer(stress)}
 
         self.population.update_entry(imember, structure=new_structure, properties=new_properties)
+
+    @property
+    def is_running(self):
+        if self.thread is not None:
+            return self.thread.is_alive()
+        else:
+            return False
 
     def run(self):
 

@@ -146,7 +146,7 @@ class HarmonySearch(Genealogy):
                         print "Some members lost: ", [x for x in self.population.actives
                                                       if x not in self.population.evaluated]
                         self.print_status()
-                        for imember in self.population.active_no_evaluated():
+                        for imember in self.population.active_no_evaluated:
                             print 'Removing: ', imember
                             self.replacing(imember)
 
@@ -162,7 +162,7 @@ class HarmonySearch(Genealogy):
                     time.sleep(sleep_time)
                     if timeout > self.timeout_per_cycle:
                         print 'Timeout for a single cycle, discarding unevaluated members'
-                        for imember in self.population.active_no_evaluated():
+                        for imember in self.population.active_no_evaluated:
                             print 'Removing: ', imember
                             self.print_status()
                             self.replacing(imember)

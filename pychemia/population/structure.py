@@ -52,11 +52,18 @@ class StructurePopulation():
             self.db = {}
 
     def check_tags(self):
-        for entry in self.db.entries.find():
-            if self.tag not in entry['status']:
-                new_status = entry['status'].copy()
-                new_status[self.tag] = False
-                self.update_entry(entry['_id'], status=new_status)
+        if USE_MONGO:
+            for entry in self.db.entries.find():
+                if self.tag not in entry['status']:
+                    new_status = entry['status'].copy()
+                    new_status[self.tag] = False
+                    self.update_entry(entry['_id'], status=new_status)
+        else:
+            for entry in self.db:
+                if self.tag not in self.db[entry]['status']:
+                    new_status = db[entry]['status'].copy()
+                    new_status[self.tag] = False
+                    self.update_entry(entry, status=new_status)
 
     @property
     def actives(self):
@@ -275,7 +282,8 @@ class StructurePopulation():
         ret = np.sum([1 for i in self.actives if i in self.evaluated])
         return float(ret) / len(self.actives)
 
-    def active_no_evaluated(self):
+    @property
+    def actives_no_evaluated(self):
         ret = []
         for i in self.actives:
             if i not in self.evaluated:
