@@ -17,7 +17,7 @@ from pychemia.utils.mathematics import unit_vector
 
 
 class StructurePopulation():
-    def __init__(self, name, composition, tag='global', delta=0.1, new=False):
+    def __init__(self, name, composition, tag='global', delta=0.1, new=False, target_forces=1E-3):
         """
         Defines a population of PyChemia Structures,
 
@@ -38,6 +38,7 @@ class StructurePopulation():
         self.delta = delta
         self.name = name
         self.tag = tag
+        self.target_forces = target_forces
 
         self._members = []
         self._actives = []
@@ -160,6 +161,10 @@ class StructurePopulation():
                 return False
             if 'forces' not in entry['properties']:
                 return False
+            if 'forces' in entry['properties'] and np.max(np.abs(np.array(entry['properties']['forces'], dtype=float).flatten())) > self.target_forces:
+                return False
+            if 'stress' in entry['properties'] and np.max(np.abs(np.array(entry['properties']['stress'], dtype=float).flatten())) > self.target_forces:
+                return False
             return True
         else:
             return False
@@ -279,6 +284,8 @@ class StructurePopulation():
 
     @property
     def fraction_evaluated(self):
+        print 'Evaluated: ', self.evaluated
+        print 'Actives:', self.actives
         ret = np.sum([1 for i in self.actives if i in self.evaluated])
         return float(ret) / len(self.actives)
 
@@ -348,4 +355,22 @@ class StructurePopulation():
         ret += ' Members:         ' + str(len(self.members)) + '\n'
         ret += ' Actives:         ' + str(len(self.actives)) + '\n'
         ret += ' Evaluated:       ' + str(len(self.evaluated)) + '\n'
+        return ret
+
+class ObjectiveFunction():
+    def __init__(self):
+        self.population = None
+
+    def initialize(self, population):
+        self.population = population
+
+    def ids_sorted(self, selection):
+        values = np.array([self.population.value(i) for i in selection])
+        argsort = np.argsort(values)
+        return np.array(selection)[argsort]
+
+    def get_values(self, selection):
+        ret = {}
+        for i in selection:
+            ret[i] = self.population.value(i)
         return ret

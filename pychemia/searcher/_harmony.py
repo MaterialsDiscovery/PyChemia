@@ -9,7 +9,7 @@ from _genealogy import Genealogy
 class HarmonySearch(Genealogy):
 
     def __init__(self, population, objective_function, evaluator, hmcr=0.9, par=0.9, top=2, tail=2,
-                 stabilization_limit=5, fraction_evaluated=0.8, timeout_per_cycle=60):
+                 stabilization_limit=5, fraction_evaluated=0.8, timeout_per_cycle=60, generation_size=32):
         """
         Harmony Search Method:
         This searcher is the simplest one, does not require a metric space except for the evaluation
@@ -48,6 +48,7 @@ class HarmonySearch(Genealogy):
         # Initializing objects
         self.objective_function.initialize(self.population)
         self.evaluator.initialize(self.population)
+        self.generation_size = generation_size
         Genealogy.__init__(self, self.population, self.evaluator)
 
     def set_hmcr(self, hmcr):
@@ -118,7 +119,7 @@ class HarmonySearch(Genealogy):
             print imember, " Bad value, demoted ",  self.population.member_str(imember)
             self.population.disable(imember)
             new_member = self.population.add_random()
-            self.generation[new_member] = [self.current_generation + 1]
+            self.generation[new_member] = [self.current_generation +1]
 
         # Increase the current generation number
         self.current_generation += 1
@@ -129,7 +130,7 @@ class HarmonySearch(Genealogy):
 
         :return:
         """
-        sleep_time = 2
+        sleep_time = 30
 
         icycle = 0
         while True:
@@ -139,30 +140,52 @@ class HarmonySearch(Genealogy):
                 print 'Starting evaluator'
                 self.evaluator.run()
 
+            extras = len(self.population.actives) - self.generation_size
+            if  extras > 0:
+                if len(self.population.actives_no_evaluated) >= extras:
+                    for i in self.population.actives_no_evaluated[:extras]:
+                        self.population.disable(i)
+                elif len(self.population.actives_no_evaluated) > 0:
+                    for i in self.population.actives_no_evaluated:
+                        self.population.disable(i)
+                else:
+                    actives = self.objective_function.ids_sorted(self.population.actives)
+                    for i in actives[self.generation_size:]:
+                        self.population.disable(i)
+
             timeout = 0
             while True:
+                if not self.evaluator.is_running:
+                    print 'Starting evaluator'
+                    self.evaluator.run()
+
+                print 'Checking duplicates...'
+                for imember in self.population.check_duplicates():
+                    self.replacing(imember)
+
+                if not self.evaluator.is_running:
+                    print 'Starting evaluator'
+                    self.evaluator.run()
+
                 if len(self.population.evaluated) > 0 and self.population.fraction_evaluated >= self.fraction_evaluated:
                     if self.population.fraction_evaluated < 1.0:
                         print "Some members lost: ", [x for x in self.population.actives
                                                       if x not in self.population.evaluated]
                         self.print_status()
-                        for imember in self.population.active_no_evaluated:
+                        for imember in self.population.actives_no_evaluated:
                             print 'Removing: ', imember
                             self.replacing(imember)
-
-                    print 'Checking duplicates...'
-                    for imember in self.population.check_duplicates():
-                        self.replacing(imember)
-                    print 'Running one cycle...'
-                    self.run_one_cycle()
-                    break
+                    else:
+                        print 'Running one cycle...'
+                        self.run_one_cycle()
+                        break
                 else:
                     print 'Fraction evaluated:', self.population.fraction_evaluated
                     timeout += sleep_time
                     time.sleep(sleep_time)
                     if timeout > self.timeout_per_cycle:
                         print 'Timeout for a single cycle, discarding unevaluated members'
-                        for imember in self.population.active_no_evaluated:
+                        for imember in self.population.actives_no_evaluated:
                             print 'Removing: ', imember
                             self.print_status()
                             self.replacing(imember)

@@ -1,4 +1,4 @@
 __author__ = 'Guillermo'
 
-from structure import StructurePopulation
+from structure import StructurePopulation, ObjectiveFunction
 from euclidean import EuclideanPopulation

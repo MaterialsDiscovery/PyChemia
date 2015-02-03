@@ -74,6 +74,10 @@ class DFTBplusEvaluator(Evaluator):
         self._running = True
 
         actives_to_evaluate = self.population.actives
+        if len(actives_to_evaluate) == 0:
+            self._running = False
+            return
+
         setups = []
         for i in actives_to_evaluate:
             setup = {}
