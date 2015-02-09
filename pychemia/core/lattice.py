@@ -6,8 +6,7 @@ from math import ceil, sqrt, cos, sin, radians, acos, pi
 
 from pychemia.utils.mathematics import length_vectors, angle_vectors, wrap2_pmhalf
 from composition import Composition
-
-
+from pychemia import log
 __author__ = 'Guillermo Avendano-Franco'
 
 
@@ -79,7 +78,7 @@ class Lattice():
         dwrap = wrap2_pmhalf(dred)
 
         if limits is None:
-            limits = _np.zeros(3)
+            limits = _np.zeros(3, dtype=int)
             corners = self.get_wigner_seitz_container()
 
             limits[0] = min(int(ceil(max(1e-14 + abs(_np.array([corners[x][0] for x in corners]))))), 5)
@@ -204,14 +203,72 @@ class Lattice():
         diff_vectors = cart_coords2[None, :, :, :] - cart_coords1[:, None, None, :]
         return _np.min(_np.sum(diff_vectors ** 2, axis=3), axis=2) ** 0.5
 
-    def distances_in_sphere(self, x1, x2, radius, option='reduced'):
+    def distances_in_sphere(self, x1, x2, radius, option='reduced', exclude_out_sphere=True, sort_by_distance=True):
+        """
+        Returns all the distances between two positions x1 and x2
+        taking into account the periodicity of the cell
 
+        :param x1:
+        :param x2:
+        :param radius:
+        :param option:
+        :return:
+        """
+        # Compute the vector from x1 to x2
+        dv = _np.array(x2) - _np.array(x1)
+
+        # If the positions are not in reduced coordinates,convert into them
+        if option != 'reduced':
+            dred = self.cartesian2reduced(dv)
+        else:
+            dred = dv
+
+        dwrap = wrap2_pmhalf(dred)
+        log.debug('The wrap vector is: %7.3f %7.3f %7.3f' % tuple(dwrap))
+
+
+        # We need to compute the distances between equivalent faces
+        # For that we to compute the perpendicular distance between
+        # two faces, the reciprocal lattice produces the inverse of
+        # those distances
         recp_len = _np.array(self.reciprocal().lengths)
-        limits = _np.ceil(radius * recp_len / (2 * pi))
-        print 'The limits are:', limits
-        #points = _np.atleast_2d(x1)
-        #number_points = len(points)
-        return self.distance2(x1, x2, option=option, radius=radius, limits=limits)
+        # The reciprocal (2*pi) is not necessary
+        limits = _np.ceil(radius * recp_len).astype(int)
+        log.debug('The limits are: %d %d %d' % tuple(limits))
+
+        ret = {}
+        # The total size is the product of the number in the 3 directions
+        # that is double the limits plus 1 to include the zero
+        total_size = _np.prod(2*limits + 1)
+        log.debug('The total size is: %d' % total_size)
+
+        ret['distance'] = _np.zeros(total_size)
+        ret['image'] = _np.zeros((total_size, 3), dtype=int)
+        ret['dwrap'] = dwrap
+        ret['limits'] = limits
+
+        index = 0
+        for i0 in _np.arange(-limits[0], limits[0] + 1):
+            for i1 in _np.arange(-limits[1], limits[1] + 1):
+                for i2 in _np.arange(-limits[2], limits[2] + 1):
+                    dtot = dwrap + _np.array([i0, i1, i2])
+                    norm2 = _np.dot(_np.dot(dtot, self.metric), dtot)
+                    ret['distance'][index] = sqrt(norm2)
+                    ret['image'][index] = _np.array([i0, i1, i2])
+                    index += 1
+
+        # Exclude distances out of sphere
+        if exclude_out_sphere:
+            inside_sphere = ret['distance'] <= radius
+            ret['distance'] = ret['distance'][inside_sphere]
+            ret['image'] = ret['image'][inside_sphere]
+
+        if sort_by_distance:
+            sorted_indices = _np.argsort(ret['distance'])
+            ret['distance'] = ret['distance'][sorted_indices]
+            ret['image'] = ret['image'][sorted_indices]
+
+        return ret
 
     def plot(self, points=None):
         from mayavi import mlab

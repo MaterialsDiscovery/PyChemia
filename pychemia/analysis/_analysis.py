@@ -6,7 +6,7 @@ import itertools
 import numpy as np
 import numpy.linalg
 
-from pychemia import Structure
+from pychemia import Structure, log
 from pychemia.utils.periodic import atomic_number, covalent_radius, valence
 from pychemia.utils.mathematics import integral_gaussian
 
@@ -21,45 +21,54 @@ class StructureAnalysis():
     This class uses lazy evaluation for the distances and bonds to lower cpu and memory footprint.
     """
 
-    def __init__(self, structure, supercell=(1, 1, 1)):
+    def __init__(self, structure, supercell=(1, 1, 1), radius=50):
         assert (isinstance(structure, Structure))
         if supercell != (1, 1, 1):
-            print "Creating supercell"
             self.structure = structure.supercell(supercell)
-            print 'done'
         else:
             self.structure = structure.copy()
 
         self._distances = None
+        self._all_distances = None
         self._pairs = None
-        self.supercell = supercell
+        self._supercell = supercell
+        self._radius = radius
+        log.debug('Supercell : ' + str(self._supercell))
+        log.debug('Radius    : %7.2f' % self._radius )
 
-    def clean(self):
-        """
-        Delete the internal variables to allow them be recalculated again.
+    @property
+    def radius(self):
+        return self._radius
 
-        :return: None
-        """
-        self._distances = None
-        self._pairs = None
+    @radius.setter
+    def radius(self, value):
+        assert (value > 0.0)
+        if value != self._radius:
+            self._distances = None
+            self._pairs = None
+            self._all_distances = None
+        self._radius = value
 
-    def close_distances(self, verbose=False, radius=50):
+    @property
+    def distances(self):
+        return self._distances
+
+    def close_distances(self):
         """
         Computes the closest distances for all the atoms
 
         :return: (tuple) Return a bond's dictionary and distance's list
         """
         if self._pairs is None or self._distances is None:
-            if verbose:
-                print 'Computing distances from scratch...'
+            log.debug('Computing distances from scratch...')
             pairs_dict = {}
             distances_list = []
             index = 0
             for i, j in itertools.combinations(range(self.structure.natom), 2):
-                if verbose and index % 100 == 0:
-                    print 'Computing distance between atoms ', i, ' and ', j
-                ret = self.structure.get_cell().distance2(self.structure.reduced[i], self.structure.reduced[j],
-                                                          radius=radius)
+                if index % 100 == 0:
+                    log.debug('Computing distance between atoms %d and %d' % (i, j))
+                ret = self.structure.lattice.distance2(self.structure.reduced[i], self.structure.reduced[j],
+                                                          radius=self.radius)
                 for k in ret:
                     if str(i) not in pairs_dict:
                         pairs_dict[str(i)] = [index]
@@ -73,7 +82,7 @@ class StructureAnalysis():
                     distances_list.append(ret[k])
                     index += 1
             for i in range(self.structure.natom):
-                ret = self.structure.get_cell().distance2(self.structure.reduced[i], self.structure.reduced[i])
+                ret = self.structure.lattice.distance2(self.structure.reduced[i], self.structure.reduced[i])
                 for k in ret:
                     if str(i) not in pairs_dict:
                         pairs_dict[str(i)] = [index]
@@ -85,13 +94,43 @@ class StructureAnalysis():
             self._pairs = pairs_dict
             self._distances = distances_list
 
-        # print self.structure.natom
-        #print len(self._pairs)
-        #print len(self._distances)
         return self._pairs, self._distances
 
+    def all_distances(self):
+
+        if self._all_distances is None:
+            ret = {}
+            for i, j in itertools.combinations_with_replacement(range(self.structure.natom), 2):
+                pair = (i, j)
+                ret[pair] = self.structure.lattice.distances_in_sphere(self.structure.reduced[i],
+                                                                       self.structure.reduced[j],
+                                                                       radius=self.radius)
+            self._all_distances = ret
+
+        return self._all_distances
+
+    def all_distances_by_species(self):
+
+        all_distances = self.all_distances()
+        ret = {}
+        symbols_indexed = np.array([self.structure.species.index(x) for x in self.structure.symbols])
+        #print self.structure.symbols
+
+        for ipair in all_distances:
+            key = tuple(sorted(symbols_indexed[np.array(ipair)]))
+            #print ipair, key
+            if key in ret:
+                ret[key] = np.concatenate((ret[key], all_distances[ipair]['distance']))
+            else:
+                ret[key] = all_distances[ipair]['distance'].copy()
+        # Sorting arrays
+        for key in ret:
+            ret[key].sort()
+
+        return ret
+
     def distances_between_species(self, radius=50):
-        bonds_dict, distances = self.close_distances(verbose=False, radius=radius)
+        bonds_dict, distances = self.close_distances()
 
         dist_spec = {}
         for i, j in itertools.combinations_with_replacement(range(self.structure.nspecies), 2):
@@ -106,30 +145,34 @@ class StructureAnalysis():
             dist_spec[x].sort()
         return dist_spec
 
-    def structure_distances(self, delta=0.01, sigma=0.01, radius=50, integrated=True):
-        dist_spec = self.distances_between_species(radius=radius)
+    def structure_distances(self, delta=0.01, sigma=0.01, integrated=True):
+        dist_spec = self.all_distances_by_species()
         discrete_rdf = {}
-        if radius is None:
-            radius = max([max(dist_spec[x]) for x in dist_spec])
-        nbins = int((radius + 5 * delta) / delta)
+        nbins = int((self.radius + 5 * delta) / delta)
         discrete_rdf_x = np.arange(0, nbins * delta, delta)
         for spec_pair in dist_spec:
             discrete_rdf[spec_pair] = np.zeros(nbins)
-            for Rij in dist_spec[spec_pair]:
-                if Rij > 0:
-                    for i in range(len(discrete_rdf[spec_pair])):
-                        x = discrete_rdf_x[i]
-                        if not integrated:
-                            discrete_rdf[spec_pair][i] += np.exp(-((x - Rij) ** 2) / (2 * sigma * sigma)) / (
-                                4 * math.pi * Rij * Rij)
-                        else:
-                            discrete_rdf[spec_pair][i] += integral_gaussian(x, x + delta, Rij, sigma) / (
-                                4 * math.pi * Rij * Rij)
+            positive_distances = dist_spec[spec_pair][dist_spec[spec_pair] > 0]
+            log.debug('Pair %s' % str(spec_pair))
+            for Rij in positive_distances:
+                # Integrating for bin from - 8*sigma to +8*sigma centered on Rij
+                # Values outside this range are negligible
+                imin = int(max(0, (Rij-8*sigma)/delta))
+                imax = int(min(len(discrete_rdf_x), (Rij+8*sigma)/delta))
+                #log.debug('Computing for distance %7.3f for indices between %d and %d' % (Rij, imin, imax))
+                for i in range(imin, imax):
+                    x = discrete_rdf_x[i]
+                    if not integrated:
+                        discrete_rdf[spec_pair][i] += np.exp(-((x - Rij) ** 2) / (2 * sigma * sigma)) / (
+                            4 * math.pi * Rij * Rij)
+                    else:
+                        discrete_rdf[spec_pair][i] += integral_gaussian(x, x + delta, Rij, sigma) / (
+                            4 * math.pi * Rij * Rij)
 
         return discrete_rdf_x, discrete_rdf
 
-    def fp_oganov(self, delta=0.01, sigma=0.01, rcut=50):
-        struc_dist_x, struc_dist = self.structure_distances(delta, sigma, rcut)
+    def fp_oganov(self, delta=0.01, sigma=0.01):
+        struc_dist_x, struc_dist = self.structure_distances(delta=delta, sigma=sigma)
         fp_oganov = struc_dist.copy()
         vol = self.structure.volume
         ns = self.structure.composition.values()
@@ -258,7 +301,7 @@ class StructureAnalysis():
 
         :rtype : (float)
         """
-        if self.supercell == (1, 1, 1) and verbose:
+        if self._supercell == (1, 1, 1) and verbose:
             print "Only internal connectivity can be ensure, for complete connectivity in the crystal you must use a " \
                   "supercell at of (2,2,2)"
 

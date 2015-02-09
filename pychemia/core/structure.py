@@ -10,6 +10,7 @@ import sys
 from math import sin, cos
 from itertools import combinations
 
+from pychemia import log
 from pychemia.core.lattice import Lattice
 from pychemia.core.delaunay import get_reduced_bases
 from pychemia.core.composition import Composition
@@ -452,7 +453,7 @@ Empty structure
         return ret
 
     @staticmethod
-    def random_cell(composition, method='stretching', verbose=False, maxtrial=100):
+    def random_cell(composition, method='stretching', stabilization_number=100):
         """
         Generate a random cell
         There are two algorithms implemented:
@@ -464,23 +465,21 @@ Empty structure
                     and stretching their bonds until the distance between any
                     two atoms is always greater than the sum of covalent radius.
         """
-        if isinstance(composition, dict):
-            comp = Composition(composition)
-        elif isinstance(composition, Composition):
-            comp = composition
-        else:
-            raise ValueError('Wrong composition value')
-
+        comp = Composition(composition)
+        log.debug('Composition: ' + str(comp.composition))
         natom = comp.natom
         symbols = comp.symbols
 
         best_volume = sys.float_info.max
+        best_volume = float('inf')
         best_structure = None
         best_trial = 0
         optimal_volume = comp.covalent_volume('cubes')
+        stabilization_history = 0
+        ntrial = 0
 
-        if method == 'scaling':
-            for ntrial in range(maxtrial):
+        while stabilization_history < stabilization_number:
+            if method == 'scaling':
                 lattice = Lattice.random_cell(comp)
                 # Random reduced positions
                 rpos = _np.random.rand(natom, 3)
@@ -515,42 +514,7 @@ Empty structure
                 gamma = lattice.gamma
                 lattice = Lattice().from_parameters_to_cell(factor * a, factor * b, factor * c, alpha, beta, gamma)
 
-                if lattice.volume < best_volume:
-                    test = True
-                    for i in range(natom):
-                        for j in range(i + 1, natom):
-                            distance = lattice.minimal_distance(rpos[i], rpos[j])
-                            covalent_dim = sum(covalent_radius([symbols[i], symbols[j]]))
-                            if distance < covalent_dim:
-                                if verbose:
-                                    print 'At least two atoms are too close :', covalent_dim / distance
-                                    print lattice
-                                test = False
-                    if test:
-                        if verbose:
-                            print 'I found a better cell: ', lattice.volume, '<', best_volume
-                        best_volume = lattice.volume
-                        best_trial = ntrial
-                        best_structure = Structure(symbols=symbols, reduced=rpos, cell=lattice.cell, periodicity=True)
-            if verbose:
-                print 'The best trial was', best_trial
-                print 'The best volume was', best_volume
-                print 'The ratio between the final volume and the optimal is %12.3f' \
-                      % (best_structure.lattice.volume / optimal_volume)
-
-            # Analysis of the quality for the best structure
-            rpos = best_structure.reduced
-            for i, j in combinations(range(natom), 2):
-                distance = best_structure.lattice.minimal_distance(rpos[i], rpos[j])
-                covalent_distance = sum(covalent_radius([symbols[i], symbols[j]]))
-                if distance < covalent_distance:
-                    if verbose:
-                        print 'Covalent distance: %7.4f  Minimal distance: %7.5f  Difference: %e' % \
-                              (covalent_distance, distance, covalent_distance - distance)
-
-        elif method == 'stretching':
-
-            for ntrial in range(maxtrial):
+            elif method == 'stretching':
 
                 lattice = Lattice.random_cell(comp)
                 # Random reduced positions
@@ -575,38 +539,44 @@ Empty structure
                         matrixA = matrix_from_eig(v1, v2, v3, factor, 1, 1)
                         lattice = Lattice(_np.dot(matrixA, lattice.cell))
 
-                if lattice.volume < best_volume:
-                    test = True
-                    for i in range(natom):
-                        for j in range(i + 1, natom):
-                            distance = lattice.minimal_distance(rpos[i], rpos[j])
-                            covalent_dim = sum(covalent_radius([symbols[i], symbols[j]]))
-                            if distance < covalent_dim:
-                                if verbose:
-                                    print 'At least two atoms are too close :', covalent_dim / distance
-                                    print lattice
-                                test = False
-                    if test:
-                        if verbose:
-                            print 'I found a better cell: ', lattice.volume, '<', best_volume
-                        best_volume = lattice.volume
-                        best_trial = ntrial
-                        best_structure = Structure(symbols=symbols, reduced=rpos, cell=lattice.cell, periodicity=True)
-            if verbose:
-                print 'The best trial was', best_trial
-                print 'The best volume was', best_volume
-                print 'The ratio between the final volume and the optimal is %12.3f' \
-                      % (best_structure.lattice.volume / optimal_volume)
+            if lattice.volume < best_volume:
+                test = True
+                for i in range(natom):
+                    for j in range(i + 1, natom):
+                        distance = lattice.minimal_distance(rpos[i], rpos[j])
+                        covalent_dim = sum(covalent_radius([symbols[i], symbols[j]]))
+                        if distance < covalent_dim:
+                            log.debug('At least two atoms are too close. Ratio: %7.4e ', \
+                                          (covalent_dim / distance))
+                            test = False
+                if test:
+                    log.debug('A smaller cell was found. Volume: %7.4f < %7.4f' % (lattice.volume, best_volume))
+                    log.debug('Number of trial structures generated: %d' % ntrial)
+                    log.debug('Number of trial structures generated since the best cell: %d' % stabilization_history)
+                    stabilization_history = 0
+                    best_volume = lattice.volume
+                    best_trial = ntrial
+                    best_structure = Structure(symbols=symbols, reduced=rpos, cell=lattice.cell, periodicity=True)
+                else:
+                    stabilization_history += 1
+            else:
+                stabilization_history += 1
+            ntrial += 1
 
-            # Analysis of the quality for the best structure
-            rpos = best_structure.reduced
-            for i, j in combinations(range(natom), 2):
-                distance = best_structure.lattice.minimal_distance(rpos[i], rpos[j])
-                covalent_distance = sum(covalent_radius([symbols[i], symbols[j]]))
-                if distance < covalent_distance:
-                    if verbose:
-                        print 'Covalent distance: %7.4f  Minimal distance: %7.5f  Difference: %e' % \
-                              (covalent_distance, distance, covalent_distance - distance)
+        log.debug('The best trial was %d', best_trial)
+        log.debug('The best volume was %7.3f', best_volume)
+        log.debug('The ratio between the final volume and the optimal is %7.3e' \
+                  % (best_structure.lattice.volume / optimal_volume))
+
+        # Analysis of the quality for the best structure
+        rpos = best_structure.reduced
+        for i, j in combinations(range(natom), 2):
+            distance = best_structure.lattice.minimal_distance(rpos[i], rpos[j])
+            covalent_distance = sum(covalent_radius([symbols[i], symbols[j]]))
+            if distance < covalent_distance:
+
+                log.debug('Covalent distance: %7.4f  Minimal distance: %7.4f  Difference: %7.3e' % \
+                          (covalent_distance, distance, covalent_distance - distance))
 
         return best_structure
 
@@ -803,7 +773,7 @@ Empty structure
     def save_json(self, filename):
 
         filep = open(filename, 'w')
-        json.dump(self.todict(), filep, sort_keys=True, indent=4, separators=(',', ': '))
+        json.dump(self.to_dict(), filep, sort_keys=True, indent=4, separators=(',', ': '))
         filep.close()
 
     @staticmethod
@@ -811,14 +781,15 @@ Empty structure
 
         filep = open(filename, 'r')
         structdict = unicode2string(json.load(filep))
-        return Structure().fromdict(structdict)
+        filep.close()
+        return Structure.from_dict(structdict)
 
     def distance2(self, atom1, atom2):
         assert (isinstance(atom1, int))
         assert (isinstance(atom2, int))
         assert (atom1 < self.natom)
         assert (atom2 < self.natom)
-        return self.get_cell().distance2(self.reduced[atom1], self.reduced[atom2])
+        return self.lattice.distance2(self.reduced[atom1], self.reduced[atom2])
 
     def valence_electrons(self):
         ret = 0

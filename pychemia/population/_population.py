@@ -8,7 +8,7 @@ import uuid
 import json
 import numpy as np
 
-from pychemia import Composition, Structure
+from pychemia import Composition, Structure, log
 from pychemia.db import USE_MONGO
 if USE_MONGO:
     from pychemia.db import PyChemiaDB
@@ -230,13 +230,52 @@ class StructurePopulation():
             print 'No duplicates'
         return ret
 
-    def distance(self, imember, jmember):
+    def distance_matrix(self):
+
+        members = self.members
+        analysis = {}
+        ret = np.zeros((len(members), len(members)))
+        for i in members:
+            analysis[i] = StructureAnalysis(self.get_structure(i))
+
+        for i in range(len(members)):
+            log.debug('Fingerprint for %s' % str(members[i]))
+            x1, y1_dict = analysis[members[i]].fp_oganov()
+            for j in range(i, len(members)):
+                log.debug('Fingerprint for %s' % str(members[j]))
+                x2, y2_dict = analysis[members[j]].fp_oganov()
+
+                dij = []
+                for x in y1_dict:
+                    uvect1 = unit_vector(y1_dict[x])
+                    uvect2 = unit_vector(y2_dict[x])
+                    dij.append(0.5 * (1.0 - np.dot(uvect1, uvect2)))
+                ret[i, j] = np.mean(dij)
+                ret[j, i] = ret[i, j]
+        return ret
+
+    def diff_values_matrix(self):
+
+        members = self.members
+        ret = np.zeros((len(members), len(members)))
+
+        for i in range(len(members)):
+            for j in range(i, len(members)):
+
+                if self.value(members[i]) is not None and self.value(members[j]) is not None:
+                    ret[i, j] = np.abs(self.value(members[i])-self.value(members[j]))
+                else:
+                    ret[i, j] = float('nan')
+                ret[j, i] = ret[i, j]
+        return ret
+
+    def distance(self, imember, jmember, rcut=50):
         struct1 = Structure.from_dict(self.get_member_dict(imember)['structure'])
         struct2 = Structure.from_dict(self.get_member_dict(jmember)['structure'])
-        analysis1 = StructureAnalysis(struct1)
-        analysis2 = StructureAnalysis(struct2)
-        x1, y1_dict = analysis1.fp_oganov(rcut=10)
-        x2, y2_dict = analysis2.fp_oganov(rcut=10)
+        analysis1 = StructureAnalysis(struct1, radius=rcut)
+        analysis2 = StructureAnalysis(struct2, radius=rcut)
+        x1, y1_dict = analysis1.fp_oganov()
+        x2, y2_dict = analysis2.fp_oganov()
         # print len(x1)
         assert (len(x1) == len(x2))
         #print np.dot(unit_vector(x1), unit_vector(x2))

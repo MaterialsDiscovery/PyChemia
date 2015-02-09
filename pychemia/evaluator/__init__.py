@@ -27,3 +27,21 @@ class Evaluator():
     @abstractproperty
     def is_running(self):
         pass
+
+class EvaluatorDummy(Evaluator):
+
+    def __init__(self):
+        pass
+
+    def initialize(self, population):
+        self.population = population
+
+    def run(self):
+        pass
+
+    def stop(self):
+        pass
+
+    @property
+    def is_running(self):
+        return True

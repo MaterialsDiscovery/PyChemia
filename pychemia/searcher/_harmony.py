@@ -75,7 +75,7 @@ class HarmonySearch(Genealogy):
         """
         Run one cycle for the Harmony Search Method
         """
-        # Get a static selection of the values in the generation that are relaxed
+        # Get a static selection of the values in the generation that are evaluated
         selection = self.get_generation_evaluated()
         sorted_selection = self.objective_function.ids_sorted(selection)
         print 'Size of selection : ', len(selection)
@@ -141,7 +141,7 @@ class HarmonySearch(Genealogy):
                 self.evaluator.run()
 
             extras = len(self.population.actives) - self.generation_size
-            if  extras > 0:
+            if extras > 0:
                 if len(self.population.actives_no_evaluated) >= extras:
                     for i in self.population.actives_no_evaluated[:extras]:
                         self.population.disable(i)

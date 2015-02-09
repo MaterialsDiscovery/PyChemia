@@ -37,6 +37,8 @@ class Composition():
             self._set_composition(self.formula_parser(value))
         elif isinstance(value, dict):
             self._set_composition(value)
+        elif isinstance(value, Composition):
+            self._set_composition(value.composition)
         else:
             self._composition = {}
 

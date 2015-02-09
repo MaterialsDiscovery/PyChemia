@@ -1,5 +1,6 @@
 import logging
-logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
 
 from core import Structure, Composition, Lattice
 import analysis

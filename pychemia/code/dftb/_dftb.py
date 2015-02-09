@@ -5,12 +5,10 @@ import re
 import subprocess
 import numpy as np
 import numbers
-import logging
 from pychemia.code import Codes
 from pychemia.dft import KPoints
-from pychemia import Structure
+from pychemia import Structure, log
 
-logging.basicConfig(level=logging.DEBUG)
 
 class DFTBplus(Codes):
 
@@ -57,16 +55,16 @@ class DFTBplus(Codes):
 
     def run_status(self):
         if self.runner is None:
-            logging.info('DFTB+ not finish')
+            log.info('DFTB+ not finish')
             filename = self.workdir + os.sep + 'dftb_stdout.log'
             if os.path.exists(filename):
                 booleans, geom_optimization, stats = read_dftb_stdout(filename=filename)
-                logging.debug(str(booleans))
-                logging.debug(str(geom_optimization))
-                logging.debug(str(stats))
+                log.debug(str(booleans))
+                log.debug(str(geom_optimization))
+                log.debug(str(stats))
             return
         if self.runner.poll() == 0:
-            logging.info('DFTB+ complete normally')
+            log.info('DFTB+ complete normally')
 
 
     def finalize(self):
@@ -278,8 +276,8 @@ class DFTBplus(Codes):
     def basic_input(self):
         self.basic_driver()
         if self.slater_koster is None:
-            logging.debug('The Slater-Koster files were not selected')
-            logging.debug('The Hamiltonian could not be setup')
+            log.debug('The Slater-Koster files were not selected')
+            log.debug('The Hamiltonian could not be setup')
         else:
             self.basic_hamiltonian()
         self.basic_options()
@@ -315,9 +313,9 @@ class DFTBplus(Codes):
                         self.slater_koster.append(path)
                         pair_found = True
                 if pair_found:
-                    logging.debug('Slater_Koster for ' + pair + ' found on ' + path)
+                    log.debug('Slater_Koster for ' + pair + ' found on ' + path)
                 else:
-                    logging.debug('ERROR: Slater_Koster for ' + pair + ' not found')
+                    log.debug('ERROR: Slater_Koster for ' + pair + ' not found')
 
     def print_slater_koster(self):
         for i in self.slater_koster:
@@ -463,7 +461,7 @@ def read_detailed_out(filename='detailed.out'):
 
     # In this case no values of forces, stress and energy are produced
     if re.findall(r'SCC is NOT converged, maximal SCC iterations exceeded', data):
-        logging.debug('SCC is NOT converged, maximal SCC iterations exceeded')
+        log.debug('SCC is NOT converged, maximal SCC iterations exceeded')
         return None, None, None
 
     # Extracting the data from 'detailed.out'
@@ -471,22 +469,22 @@ def read_detailed_out(filename='detailed.out'):
     stress = re.findall(r'Total\s*stress\s*tensor\s*([-.E\d\s]+)\n', data)
     total_energy = re.findall(r'Total\s*energy\:\s*[\.\-\d\sE]*\s*H\s*([\.\-\d\sE]+)\s*eV', data)
 
-    logging.debug('Results parsing ' + filename)
+    log.debug('Results parsing ' + filename)
     if forces:
         forces = np.array(forces[0].split(), dtype=float).reshape((-1, 3))
-        logging.debug('Forces :\n'+str(forces))
+        log.debug('Forces :\n'+str(forces))
     else:
         forces = None
 
     if stress:
         stress = np.array(stress[0].split(), dtype=float).reshape((3, 3))
-        logging.debug('Stress :\n'+ str(stress))
+        log.debug('Stress :\n'+ str(stress))
     else:
         stress = None
 
     if total_energy:
         total_energy = float(total_energy[0])
-        logging.debug('Energy :' + str(total_energy))
+        log.debug('Energy :' + str(total_energy))
     else:
         total_energy = None
 
@@ -530,8 +528,8 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
             booleans['LatticeOptimisation'] = True
         else:
             booleans['LatticeOptimisation'] = False
-        logging.debug('Booleans : '+str(booleans))
-        logging.debug('LatticeOptimisation: ' + str(booleans['LatticeOptimisation']))
+        log.debug('Booleans : '+str(booleans))
+        log.debug('LatticeOptimisation: ' + str(booleans['LatticeOptimisation']))
 
     if nionsteps > 1:
         scc_steps = re.findall(r'iSCC\s*Total\s*electronic\s*Diff\s*electronic\s*SCC\s*error\s*([\.\-+E\d\s]*)\s*\n', data)
@@ -539,7 +537,7 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
 
         nscc_per_ionstep = [len(x) for x in scc_steps]
         geom_optimization['nscc_per_ionstep'] = nscc_per_ionstep
-        logging.debug('SCC :' + str(nscc_per_ionstep))
+        log.debug('SCC :' + str(nscc_per_ionstep))
 
         total_energy = re.findall(r'Total Energy:\s*([\.\-+\dE]+)\s*H\s*',data)
         total_energy = np.array(total_energy, dtype=float)
@@ -549,30 +547,30 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
         max_force = np.array(max_force, dtype=float)
         geom_optimization['max_force'] = max_force
 
-        logging.debug('Forces [initial -> final] %12.5f -> %12.5f' %
+        log.debug('Forces [initial -> final] %12.5f -> %12.5f' %
                      (geom_optimization['max_force'][0], geom_optimization['max_force'][-1]))
 
         max_lattice_force = re.findall(r'Maximal Lattice force component:\s*([\.\-+\dE]+)\s*',data)
         if max_lattice_force:
             max_lattice_force = np.array(max_lattice_force, dtype=float)
             geom_optimization['max_lattice_force'] = max_lattice_force
-            logging.debug('Stress [initial -> final] %12.5f -> %12.5f' %
+            log.debug('Stress [initial -> final] %12.5f -> %12.5f' %
                     (geom_optimization['max_lattice_force'][0], geom_optimization['max_lattice_force'][-1]))
 
-        logging.debug('Energy [initial -> final] %12.5f -> %12.5f' %
+        log.debug('Energy [initial -> final] %12.5f -> %12.5f' %
                      (geom_optimization['total_energy'][0], geom_optimization['total_energy'][-1]))
 
         stats['mean_nscc'] = np.mean(nscc_per_ionstep)
         stats['std_nscc'] = np.std(nscc_per_ionstep)
 
     if re.findall('Geometry did NOT converge', data):
-        logging.debug('Convergence not achieved!')
+        log.debug('Convergence not achieved!')
         stats['ion_convergence'] = False
     else:
         stats['ion_convergence'] = True
 
     if re.findall('Geometry converged', data):
-        logging.debug('Convergence achieved!')
+        log.debug('Convergence achieved!')
         stats['ion_convergence'] = True
     else:
         stats['ion_convergence'] = False
