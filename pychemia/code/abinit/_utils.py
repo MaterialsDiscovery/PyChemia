@@ -137,7 +137,7 @@ def xyz2input(filename):
     for i in range(natom):
         atom = data[i].split()
         atomnumber = atomdict[atom[0]]
-        if not atomnumber in znucl:
+        if atomnumber not in znucl:
             ntypat += 1
             znucl.append(atomnumber)
         typat.append(znucl.index(atomnumber) + 1)
@@ -242,11 +242,11 @@ def abihelp(varname):
 
     import pychemia.code.abinit as _pdca
 
-    rf = open(_pdca.__path__[0]+'/ABINIT_variables.json', 'r')
+    rf = open(_pdca.__path__[0] + '/ABINIT_variables.json', 'r')
     variables = json.load(rf)
     rf.close()
 
-    if not varname in variables.keys():
+    if varname not in variables.keys():
         print('ERROR: ' + varname + '  is not in the list of variables of ABINIT')
         return
     else:

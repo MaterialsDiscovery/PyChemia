@@ -3,57 +3,78 @@ __author__ = 'Guillermo Avendano Franco'
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 import numpy as np
+import socket
 
 from pychemia.utils.periodic import atomic_symbols
 from pychemia import Structure
 
 
 class PyChemiaDB():
-    def __init__(self, name='pychemiadb', host='localhost', port=27017, master=False):
 
+    def __init__(self, name='pychemiadb', host='localhost', port=27017, user=None, password=None):
+        """
+        Creates a MongoDB client to 'host' with 'port' and connect it to the database 'name'.
+        Authentication can be used with 'user' and 'password'
+
+        :param name: (str) The name of the database
+        :param host: (str) The host as name or IP
+        :param port: (int) The number of port to connect with the server (Default is 27017)
+        :param user: (str) The user with read or write permissions to the database
+        :param password: (str/int) Password to authenticate the user into the server
+
+        :return:
+        """
         self.name = name
-        self._is_master = master
-        self._client = MongoClient(host, port)
+        uri = 'mongodb://'
+        if user is not None:
+            uri += user
+            if password is not None:
+                uri += ':'+str(password)
+            uri += '@'
+        uri += host + ':' + str(port)
+        if user is not None:
+            uri += '/' + name
+        self._client = MongoClient(uri)
         self.db = self._client[name]
         self.entries = self.db.pychemia_entries
 
-    def insert(self, structure, properties=None):
+    def insert(self, structure, properties=None, status=None):
         """
         Insert a pychemia structure instance and properties
         into the database
         :param structure: (pychemia.Structure) An instance of Pychemia's Structure
         :param properties: (dict) Dictionary of properties
+        :param status: (dict) Dictionary of status
         :return:
         """
-        entry_dict = structure.to_dict()
-        if properties is not None:
-            entry_dict['properties'] = properties
-        else:
-            entry_dict['properties'] = {}
-        entry_id = self.entries.insert(entry_dict)
+        entry = {'structure': structure.to_dict(), 'properties': properties, 'status': status}
+        entry_id = self.entries.insert(entry)
         return entry_id
-
-    def get_iterator(self):
-        cursor = self.db.structures.find()
-        return Iterator(self.db, cursor)
 
     def clean(self):
         self._client.drop_database(self.name)
         self.db = self._client[self.name]
 
-    @property
-    def is_master(self):
-        return self._is_master
+    def update(self, entry_id, structure=None, properties=None, status=None):
 
-    def update(self, entry_id, new_entry):
-
-        if isinstance(entry_id, basestring):
-            entry_id = ObjectId(entry_id)
-        elif isinstance(entry_id, ObjectId):
-            entry_id = entry_id
+        entry_id = object_id(entry_id)
 
         assert (self.entries.find_one({'_id': entry_id}) is not None)
-        self.entries.update({'_id': entry_id}, new_entry)
+        entry = self.entries.find_one({'_id': entry_id})
+        if structure is not None:
+            if isinstance(structure, Structure):
+                entry['structure'] = structure.to_dict()
+            elif isinstance(structure, dict):
+                entry['structure'] = structure
+            else:
+                print 'ERROR: Could not process the structure'
+                print type(structure)
+        if properties is not None:
+            entry['properties'] = properties
+        if status is not None:
+            entry['status'] = status
+
+        self.entries.update({'_id': entry_id}, entry)
 
     def find_AnBm(self, specie_a=None, specie_b=None, n=1, m=1):
         """
@@ -81,7 +102,7 @@ class PyChemiaDB():
 
         ret = []
         for entry in self.entries.find({'nspecies': 2, 'formula': {'$regex': atom_fixed}}):
-            comp = Structure.from_dict(entry).get_composition()
+            comp = Structure.from_dict(entry['structure']).get_composition()
             if atom_fixed in comp.composition and comp.composition[atom_fixed] % number_fixed == 0:
                 species = comp.species
                 species.remove(atom_fixed)
@@ -103,7 +124,7 @@ class PyChemiaDB():
         """
         ret = []
         for entry in self.entries.find({'nspecies': len(composition)}):
-            comp = Structure.from_dict(entry).get_composition()
+            comp = Structure.from_dict(entry['structure']).get_composition()
             valid = True
             if sum(comp.composition.values()) % sum(composition.values()) != 0:
                 valid = False
@@ -120,3 +141,73 @@ class PyChemiaDB():
                 print comp.composition
                 ret.append(entry['_id'])
         return ret
+
+    def get_structure(self, entry_id):
+        entry_id = object_id(entry_id)
+        entry = self.entries.find_one({'_id': entry_id})
+        return Structure.from_dict(entry['structure'])
+
+    def get_dicts(self, entry_id):
+        entry_id = object_id(entry_id)
+        entry = self.entries.find_one({'_id': entry_id})
+        structure_dict = entry['structure']
+        if 'properties' in entry:
+            properties = entry['properties']
+        else:
+            properties = None
+        if 'status' in entry:
+            status = entry['status']
+        else:
+            status = None
+
+        return structure_dict, properties, status
+
+    def is_locked(self, entry_id):
+
+        entry_id = object_id(entry_id)
+        entry = self.entries.find_one({'_id': entry_id})
+
+        if 'status' in entry and 'lock' in entry['status']:
+            return True
+        else:
+            return False
+
+    def lock(self, entry_id):
+        entry_id = object_id(entry_id)
+        structure, properties, status = self.get_dicts(entry_id)
+        status['lock'] = socket.gethostname()
+        self.update(entry_id, status=status)
+
+    def unlock(self, entry_id, name=None):
+        entry_id = object_id(entry_id)
+        structure, properties, status = self.get_dicts(entry_id)
+        lockedby = None
+        if 'lock' in status:
+            if name is None:
+                lockedby = status.pop('lock')
+            elif status['lock'] == name:
+                lockedby = status.pop('lock')
+        self.update(entry_id, status=status)
+        return lockedby
+
+
+def get_database(db_settings):
+
+    if 'host' not in db_settings:
+        db_settings['host'] = 'localhost'
+    if 'port' not in db_settings:
+        db_settings['port'] = 27017
+
+    if 'user' not in db_settings:
+        db = PyChemiaDB(name=db_settings['name'], host=db_settings['host'], port=db_settings['port'])
+    else:
+        db = PyChemiaDB(name=db_settings['name'], host=db_settings['host'], port=db_settings['port'],
+                        user=db_settings['user'], password=db_settings['password'])
+    return db
+
+
+def object_id(entry_id):
+    if isinstance(entry_id, basestring):
+        return ObjectId(entry_id)
+    elif isinstance(entry_id, ObjectId):
+        return entry_id

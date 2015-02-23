@@ -25,6 +25,9 @@ class DFTBplus(Codes):
         self.binary = 'dftb+'
         self.runner = None
         self.kpoints = None
+        self.stdout_file = None
+        self.output = None
+        Codes.__init__(self)
 
     def initialize(self, workdir, structure, kpoints, binary='dftb+'):
         assert structure.is_crystal
@@ -41,14 +44,14 @@ class DFTBplus(Codes):
         self.write_input(filename=self.workdir+os.sep+'dftb_in.hsd')
         self.print_slater_koster()
 
-    def get_ouputs(self):
+    def get_outputs(self):
         self.output = read_detailed_out(filename=self.workdir+os.sep+'detailed.out')
 
     def run(self):
         cwd = os.getcwd()
         os.chdir(self.workdir)
-        stdout = open('dftb_stdout.log', 'w')
-        sp = subprocess.Popen(self.binary, stdout=stdout)
+        self.stdout_file = open('dftb_stdout.log', 'w')
+        sp = subprocess.Popen(self.binary, stdout=self.stdout_file)
         os.chdir(cwd)
         self.runner = sp
         return sp
@@ -66,9 +69,8 @@ class DFTBplus(Codes):
         if self.runner.poll() == 0:
             log.info('DFTB+ complete normally')
 
-
     def finalize(self):
-        pass
+        self.stdout_file.close()
 
     @staticmethod
     def read_input(filepath):
@@ -227,7 +229,10 @@ class DFTBplus(Codes):
             elif 'types' in the_dict:
                 ret += '\n'
                 for i in range(len(the_dict['types'])):
-                    ret += " %3d %10.7f %10.7f %10.7f\n" % ((the_dict['types'][i],) + tuple(the_dict['positions'][i]))
+                    ret += " %3d %10.7f %10.7f %10.7f\n" % (the_dict['types'][i],
+                                                            the_dict['positions'][i][0],
+                                                            the_dict['positions'][i][1],
+                                                            the_dict['positions'][i][2])
         else:
             ret += ' = {\n'
             for ivar in the_dict:
@@ -299,9 +304,11 @@ class DFTBplus(Codes):
         wf.write(self.print_all())
         wf.close()
 
-    def set_slater_koster(self, search_paths=[]):
+    def set_slater_koster(self, search_paths):
         if isinstance(search_paths, basestring):
             search_paths = [search_paths]
+        elif not isinstance(search_paths, list):
+            raise ValueError('search_path is not an string or list')
         self.slater_koster = []
         for ispecie in self.structure.species:
             for jspecie in self.structure.species:
@@ -339,8 +346,8 @@ class DFTBplus(Codes):
             if isxml:
                 xmldata += iline
 
-        import xml.etree.ElementTree as ET
-        root = ET.fromstring(xmldata)
+        import xml.etree.ElementTree
+        root = xml.etree.ElementTree.fromstring(xmldata)
         specie1 = root.findall('./General/Element1')[0].text
         specie2 = None
         if root.findall('./General/Element2'):
@@ -363,7 +370,7 @@ class DFTBplus(Codes):
             shells = self.get_shells(islater)
             for jspecie in shells:
                 if jspecie in ret:
-                    if not  shells[jspecie] in ret[jspecie]:
+                    if not shells[jspecie] in ret[jspecie]:
                         ret[jspecie].append(shells[jspecie])
                 else:
                     ret[jspecie] = [shells[jspecie]]
@@ -388,28 +395,29 @@ class DFTBplus(Codes):
         ret = None
         if self.kpoints.kmode in ['cartesian', 'reciprocal']:
             ret = np.zeros((self.kpoints.nkpt, 4))
-            ret[0:3,0:3] = self.kpoints.kpoints_list
-            ret[:,3] = self.kpoints.weights
+            ret[0:3, 0:3] = self.kpoints.kpoints_list
+            ret[:, 3] = self.kpoints.weights
         elif self.kpoints.kmode in ['gamma', 'monkhorst-pack']:
-            ret = {'name': 'SupercellFolding', 'value': np.zeros((4,3)) }
-            ret['value'][:3,:3] = np.diag(self.kpoints.grid)
+            ret = {'name': 'SupercellFolding', 'value': np.zeros((4, 3))}
+            ret['value'][:3, :3] = np.diag(self.kpoints.grid)
             if self.kpoints.kmode == 'gamma':
-                ret['value'][3,:] = np.zeros(3)
+                ret['value'][3, :] = np.zeros(3)
             elif self.kpoints.kmode == 'monkhorst-pack':
                 for i in range(3):
                     # Test if grid is odd
                     if self.kpoints.grid[i] & 1:
                         # ODD
-                        ret['value'][3,i] = 0
+                        ret['value'][3, i] = 0
                     else:
                         # EVEN
-                        ret['value'][3,i] = 0.5
+                        ret['value'][3, i] = 0.5
         return ret
 
     def roll_outputs(self, value):
-        for ifile in ['detailed.out', 'detailed.xml', 'dftb_stdout.log', 'geo_end.gen', 'geo_end.xyz']:
+        for ifile in ['detailed.out', 'detailed.xml', 'dftb_stdout.log', 'geo_end.gen', 'geo_end.xyz', 'dftb_in.hsd']:
             if os.path.exists(self.workdir + os.sep + ifile):
                 os.rename(self.workdir + os.sep + ifile, self.workdir + os.sep + ('%03d_%s' % (value, ifile)))
+
 
 def read_geometry_gen(filename):
     rf = open(filename, 'r')
@@ -462,14 +470,12 @@ def read_detailed_out(filename='detailed.out'):
     # In this case no values of forces, stress and energy are produced
     if re.findall(r'SCC is NOT converged, maximal SCC iterations exceeded', data):
         log.debug('SCC is NOT converged, maximal SCC iterations exceeded')
-        return None, None, None
 
     # Extracting the data from 'detailed.out'
-    forces = re.findall(r'Total\s*Forces\s*([-.E\d\s]+)\n', data)
-    stress = re.findall(r'Total\s*stress\s*tensor\s*([-.E\d\s]+)\n', data)
-    total_energy = re.findall(r'Total\s*energy\:\s*[\.\-\d\sE]*\s*H\s*([\.\-\d\sE]+)\s*eV', data)
+    forces = re.findall(r'Total\s*Forces\s*([\.\-\+E\d\s]+)\n', data)
+    stress = re.findall(r'Total\s*stress\s*tensor\s*([\.\-\+E\d\s]+)\n', data)
+    total_energy = re.findall(r'Total\s*energy:\s*[\.\-\+E\d\s]*\s*H\s*([\.\-\d\sE]+)\s*eV', data)
 
-    log.debug('Results parsing ' + filename)
     if forces:
         forces = np.array(forces[0].split(), dtype=float).reshape((-1, 3))
         log.debug('Forces :\n'+str(forces))
@@ -520,45 +526,47 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
         nionsteps=len(ionsteps)
 
     if nionsteps > 0:
-        booleans['SelfConsistentCharges'] = yes_no_to_boolean(re.findall(r'Self consistent charges:\s*([\w]+)[\s\w]*', data)[0])
+        self_consistent_charges = re.findall(r'Self consistent charges:\s*([\w]+)[\s\w]*', data)[0]
+        booleans['SelfConsistentCharges'] = yes_no_to_boolean(self_consistent_charges)
         booleans['SpinPolarisation'] = yes_no_to_boolean(re.findall(r'Spin polarisation:\s*([\w]+)[\s\w]*', data)[0])
-        booleans['PeriodicBoundaries'] = yes_no_to_boolean(re.findall(r'Periodic boundaries:\s*([\w]+)[\s\w]*', data)[0])
+        periodic_boundaries = re.findall(r'Periodic boundaries:\s*([\w]+)[\s\w]*', data)[0]
+        booleans['PeriodicBoundaries'] = yes_no_to_boolean(periodic_boundaries)
         lattice_optimization = re.findall(r'Lattice optimisation:\s*([\w]+)[\s\w]*', data)
         if lattice_optimization:
             booleans['LatticeOptimisation'] = True
         else:
             booleans['LatticeOptimisation'] = False
-        log.debug('Booleans : '+str(booleans))
-        log.debug('LatticeOptimisation: ' + str(booleans['LatticeOptimisation']))
+        #log.debug('Booleans : '+str(booleans))
+        log.info('LatticeOptimisation: ' + str(booleans['LatticeOptimisation']))
 
     if nionsteps > 1:
-        scc_steps = re.findall(r'iSCC\s*Total\s*electronic\s*Diff\s*electronic\s*SCC\s*error\s*([\.\-+E\d\s]*)\s*\n', data)
+        scc_steps = re.findall(r'iSCC\s*Total electronic\s*Diff electronic\s*SCC error\s*([\.\-+E\d\s]*)\s*\n', data)
         scc_steps = [np.array(x.split(), dtype=float).reshape((-1, 4))[:, 1:4] for x in scc_steps]
 
         nscc_per_ionstep = [len(x) for x in scc_steps]
         geom_optimization['nscc_per_ionstep'] = nscc_per_ionstep
-        log.debug('SCC :' + str(nscc_per_ionstep))
+        log.info('SCC :' + str(nscc_per_ionstep))
 
-        total_energy = re.findall(r'Total Energy:\s*([\.\-+\dE]+)\s*H\s*',data)
+        total_energy = re.findall(r'Total Energy:\s*([\.\-+\dE]+)\s*H\s*', data)
         total_energy = np.array(total_energy, dtype=float)
         geom_optimization['total_energy'] = total_energy
 
-        max_force = re.findall(r'Maximal force component:\s*([\.\-+\dE]+)\s*',data)
+        max_force = re.findall(r'Maximal force component:\s*([\.\-+\dE]+)\s*', data)
         max_force = np.array(max_force, dtype=float)
         geom_optimization['max_force'] = max_force
 
-        log.debug('Forces [initial -> final] %12.5f -> %12.5f' %
-                     (geom_optimization['max_force'][0], geom_optimization['max_force'][-1]))
+        log.info('Forces [initial -> final] %10.3E -> %10.3E' %
+                 (geom_optimization['max_force'][0], geom_optimization['max_force'][-1]))
 
-        max_lattice_force = re.findall(r'Maximal Lattice force component:\s*([\.\-+\dE]+)\s*',data)
+        max_lattice_force = re.findall(r'Maximal Lattice force component:\s*([\.\-+\dE]+)\s*', data)
         if max_lattice_force:
             max_lattice_force = np.array(max_lattice_force, dtype=float)
             geom_optimization['max_lattice_force'] = max_lattice_force
-            log.debug('Stress [initial -> final] %12.5f -> %12.5f' %
-                    (geom_optimization['max_lattice_force'][0], geom_optimization['max_lattice_force'][-1]))
+            log.info('Stress [initial -> final] %10.3E -> %10.3E' %
+                     (geom_optimization['max_lattice_force'][0], geom_optimization['max_lattice_force'][-1]))
 
-        log.debug('Energy [initial -> final] %12.5f -> %12.5f' %
-                     (geom_optimization['total_energy'][0], geom_optimization['total_energy'][-1]))
+        log.info('Energy [initial -> final] %10.3E -> %10.3E' %
+                 (geom_optimization['total_energy'][0], geom_optimization['total_energy'][-1]))
 
         stats['mean_nscc'] = np.mean(nscc_per_ionstep)
         stats['std_nscc'] = np.std(nscc_per_ionstep)

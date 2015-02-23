@@ -43,7 +43,7 @@ class AseEvaluator():
         self.population = population
 
     def evaluate(self, imember):
-        entry = self.population.get_member_dict(imember)
+        entry = self.population.get_entry(imember)
         pcm_structure = pychemia.Structure.from_dict(entry['structure'])
 
         ase_structure = pychemia.external.ase.pychemia2ase(pcm_structure)
@@ -64,7 +64,7 @@ class AseEvaluator():
         new_properties = {'energy': float(energy), 'forces': generic_serializer(forces),
                           'stress': generic_serializer(stress)}
 
-        self.population.update_entry(imember, structure=new_structure, properties=new_properties)
+        self.population.db.update(imember, structure=new_structure, properties=new_properties)
 
     @property
     def is_running(self):
@@ -86,7 +86,7 @@ class AseEvaluator():
                     return
 
         # self.process = Process(target=worker, args=(self.population,))
-        #self.process.start()
+        # self.process.start()
         self.thread = Thread(target=worker, args=(self, self.population,))
         self.thread.daemon = True
         self.thread.start()

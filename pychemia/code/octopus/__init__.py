@@ -7,8 +7,9 @@ OCTOPUS 'inp' input files
 
 from _input import *
 from _analysis import *
+import numpy as np
 
-#__all__ = filter(lambda s: not s.startswith('_'), dir())
+# __all__ = filter(lambda s: not s.startswith('_'), dir())
 
 
 def coordinates(dirname):
@@ -39,7 +40,7 @@ def coordinates(dirname):
 
     """
 
-    geo = _np.loadtxt(dirname + '/td.general/coordinates')
+    geo = np.loadtxt(dirname + '/td.general/coordinates')
     natom = (geo.shape[1] - 2) / 9
     iterations = geo[:, 0]
     times = geo[:, 1]
@@ -77,7 +78,7 @@ def energy(dirname):
 
     """
 
-    ene = _np.loadtxt(dirname + '/td.general/energy')
+    ene = np.loadtxt(dirname + '/td.general/energy')
     iterations = ene[:, 0]
     times = ene[:, 1]
 

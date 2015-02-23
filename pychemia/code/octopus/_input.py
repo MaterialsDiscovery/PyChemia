@@ -35,7 +35,7 @@ def get_vars():
         elif line[0] == '[':
             section = line.strip()[1:-1]
         elif len(line.strip()) > 0:
-            if not section in oct_variables.keys():
+            if section not in oct_variables.keys():
                 oct_variables[section] = [line]
             else:
                 oct_variables[section].append(line)
@@ -181,7 +181,7 @@ def _write_key(key, value):
     if isinstance(value, int) or isinstance(value, float):
         oct_str = oct_str + (key.ljust(keylen) + " = " + str(value) + '\n')
     elif isinstance(value, str):
-        if (key == 'XYZCoordinates' or key == 'XYZVelocities') and not '"' in value:
+        if (key == 'XYZCoordinates' or key == 'XYZVelocities') and '"' not in value:
             oct_str = oct_str + (key.ljust(keylen) + ' = "' + value + '"\n')
         else:
             oct_str = oct_str + (key.ljust(keylen) + " = " + value + '\n')

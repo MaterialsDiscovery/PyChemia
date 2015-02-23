@@ -2,11 +2,12 @@ import sys
 import random
 import itertools
 import numpy as _np
-from math import ceil, sqrt, cos, sin, radians, acos, pi
+from math import ceil, sqrt, cos, sin, radians, acos
 
 from pychemia.utils.mathematics import length_vectors, angle_vectors, wrap2_pmhalf
 from composition import Composition
 from pychemia import log
+
 __author__ = 'Guillermo Avendano-Franco'
 
 
@@ -43,7 +44,7 @@ class Lattice():
                 ret += "%12.3f " % (self.cell[i, j])
             ret += '\n'
             if i < 2:
-                ret += 5*' '
+                ret += 5 * ' '
         ret += '\n'
         ret += 'Angles: alpha = %12.3f\n' % self.alpha
         ret += '         beta = %12.3f\n' % self.beta
@@ -91,7 +92,7 @@ class Lattice():
                 for i2 in _np.arange(-limits[2], limits[2] + 1):
                     dtot = dwrap + _np.array([i0, i1, i2])
                     norm2 = _np.dot(_np.dot(dtot, self.metric), dtot)
-                    if norm2 < radius*radius:
+                    if norm2 < radius * radius:
                         ret[(i0, i1, i2)] = {'distance': sqrt(norm2), 'image': dtot}
 
         return ret
@@ -122,8 +123,8 @@ class Lattice():
         cell = _np.zeros((3, 3))
         cell[0] = [a * sin(beta_radians), 0.0, a * cos(beta_radians)]
         cell[1] = [-b * sin(alpha_radians) * cos(gamma_star),
-                    b * sin(alpha_radians) * sin(gamma_star),
-                    b * cos(alpha_radians)]
+                   b * sin(alpha_radians) * sin(gamma_star),
+                   b * cos(alpha_radians)]
         cell[2] = [0.0, 0.0, float(c)]
         return Lattice(cell)
 
@@ -226,7 +227,6 @@ class Lattice():
         dwrap = wrap2_pmhalf(dred)
         log.debug('The wrap vector is: %7.3f %7.3f %7.3f' % tuple(dwrap))
 
-
         # We need to compute the distances between equivalent faces
         # For that we to compute the perpendicular distance between
         # two faces, the reciprocal lattice produces the inverse of
@@ -239,7 +239,7 @@ class Lattice():
         ret = {}
         # The total size is the product of the number in the 3 directions
         # that is double the limits plus 1 to include the zero
-        total_size = _np.prod(2*limits + 1)
+        total_size = _np.prod(2 * limits + 1)
         log.debug('The total size is: %d' % total_size)
 
         ret['distance'] = _np.zeros(total_size)
@@ -272,7 +272,8 @@ class Lattice():
 
     def plot(self, points=None):
         from mayavi import mlab
-        tube_rad = max(self.lengths)/100.0
+
+        tube_rad = max(self.lengths) / 100.0
 
         frame, line1, line2, line3 = self.get_path()
         for i, j, k in [[frame[:, 0], frame[:, 1], frame[:, 2]],
@@ -299,7 +300,7 @@ class Lattice():
         points = scale * (points.reshape(-1, 3))
 
         index = 0
-        #triangles = index + _np.array(list(itertools.combinations(range(len(ws[0])), 3)))
+        # triangles = index + _np.array(list(itertools.combinations(range(len(ws[0])), 3)))
         #scalars = _np.ones(len(ws[0]))
         #for i in ws[1:]:
         #    index += len(i)
@@ -350,19 +351,19 @@ class Lattice():
         random.seed()
 
         # make 3 random lengths
-        a = (1.0 + 0.5*random.random())
-        b = (1.0 + 0.5*random.random())
-        c = (1.0 + 0.5*random.random())
+        a = (1.0 + 0.5 * random.random())
+        b = (1.0 + 0.5 * random.random())
+        c = (1.0 + 0.5 * random.random())
 
         # now we make 3 random angles
-        alpha = 60.0 + 60.0*random.random()
-        beta = 60.0 + 60.0*random.random()
-        gamma = 60.0 + 60.0*random.random()
+        alpha = 60.0 + 60.0 * random.random()
+        beta = 60.0 + 60.0 * random.random()
+        gamma = 60.0 + 60.0 * random.random()
 
         lattice = Lattice().from_parameters_to_cell(a, b, c, alpha, beta, gamma)
 
-        factor = (volume/lattice.volume)**(1 / 3.0)
-        lattice = Lattice().from_parameters_to_cell(factor*a, factor*b, factor*c, alpha, beta, gamma)
+        factor = (volume / lattice.volume) ** (1 / 3.0)
+        lattice = Lattice().from_parameters_to_cell(factor * a, factor * b, factor * c, alpha, beta, gamma)
 
         return lattice
 
@@ -382,9 +383,9 @@ class Lattice():
         if isinstance(periodicity, bool):
             self._periodicity = 3 * [periodicity]
         elif _np.iterable(periodicity):
-            assert(len(periodicity) == 3)
+            assert (len(periodicity) == 3)
             for i in periodicity:
-                assert(isinstance(i, bool))
+                assert (isinstance(i, bool))
             self._periodicity = list(periodicity)
         else:
             raise ValueError("Periodicity must be a boolean or list instead of: ", periodicity)
@@ -460,5 +461,10 @@ class Lattice():
 
     @property
     def lengths(self):
+        """
+        Return the 3 lenghts of the lattice in the same order as the lattice vectors
+
+        :rtype : list
+        """
         return self._lengths
 

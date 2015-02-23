@@ -33,7 +33,7 @@ class RelaxPopulation():
         for i in self.population.pcdb.entries.find():
             name = str(i['_id'])
             workdir = self.basedir+os.sep+name
-            struct = pychemia.Structure().fromdict(i)
+            struct = pychemia.Structure.from_dict(i)
             job = pychemia.code.abinit.AbinitJob(struct, workdir)
             job.set_kpoints(kpoints)
             job.ion_relax(tolmxf=1E-4, tolrff=1E-2,)

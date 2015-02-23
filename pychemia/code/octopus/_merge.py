@@ -34,10 +34,9 @@ class OctopusOccupancies():
         rf.close()
 
         self.data = _np.loadtxt(basedir + '/restart/gs/occs', ndmin=1, skiprows=2, delimiter=' | ', comments='%',
-                                dtype={
-                                'names': ['occupations', 'eigenvalue[a.u.]', 'k-points X', 'k-points Y', 'k-points Z',
-                                          'k-weights', 'filename', 'ik', 'ist', 'idim'],
-                                'formats': ['f8', 'f8', 'f8', 'f8', 'f8', 'f8', 'S10', 'i4', 'i4', 'i4']})
+                                dtype={'names': ['occupations', 'eigenvalue[a.u.]', 'k-points X', 'k-points Y',
+                                                 'k-points Z', 'k-weights', 'filename', 'ik', 'ist', 'idim'],
+                                       'formats': ['f8', 'f8', 'f8', 'f8', 'f8', 'f8', 'S10', 'i4', 'i4', 'i4']})
 
     def __repr__(self):
         return "occs('%s')" % self.basedir

@@ -32,8 +32,6 @@ class PyChemiaJsonable(object):
         argstring = argstring[:-2]
         print str(cls)+'('+argstring+')'
         return eval(str(cls)+'('+argstring+')')
-        #except:
-        #    raise ValueError("I could not recreate object using this list of arguments: "+argstring)
 
     @property
     def to_json(self):
@@ -61,9 +59,9 @@ def generic_serializer(value):
     if value is None:
         return None
     elif isinstance(value, np.ndarray):
-        if len(value.shape) == 1:
+        if value.shape[0] == 1:
             return list(value)
-        elif len(value.shape) == 2:
+        elif value.shape[0] == 2:
             return [list(i) for i in value]
     elif isinstance(value, basestring):
         return value

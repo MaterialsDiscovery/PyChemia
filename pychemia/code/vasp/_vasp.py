@@ -6,18 +6,19 @@ import json
 from _poscar import write_poscar, write_potcar, read_poscar
 from _kpoints import write_kpoints, read_kpoints
 from _incar import write_incar, InputVariables, read_incar
+from _outcar import VaspOutput
 from pychemia import Structure
 from pychemia.dft import KPoints
+from pychemia.code import Codes
 from pychemia.utils.computing import unicode2string
-from _outcar import VaspOutput
 
 
-class VaspJob():
+class VaspJob(Codes):
 
-    def __init__(self, structure=None, workdir=None):
+    def __init__(self):
 
-        self.structure = structure
-        self.workdir = workdir
+        self.structure = None
+        self.workdir = None
         self.input_variables = None
         self.potcar_setup = None
         self.potcar_pspfiles = None
@@ -25,6 +26,14 @@ class VaspJob():
         self.kpoints = None
         self.outcar = None
         self.poscar_setup = None
+        self.binary = None
+        Codes.__init__(self)
+
+    def initialize(self, workdir, structure, kpoints, binary='vasp'):
+        self.workdir = workdir
+        self.structure = structure
+        self.set_kpoints(kpoints)
+        self.binary = binary
 
     def _check_workdir(self):
 
@@ -75,7 +84,7 @@ class VaspJob():
         assert(isinstance(input_variables, InputVariables))
         self.input_variables = input_variables
 
-    def write_all(self):
+    def set_inputs(self):
 
         self.write_incar()
         self.write_kpoints()
@@ -101,7 +110,7 @@ class VaspJob():
         return ret
 
     def fromdict(self, vj_dict):
-        self.structure = Structure().fromdict(vj_dict['structure'])
+        self.structure = Structure.from_dict(vj_dict['structure'])
         self.potcar_pspfiles = vj_dict['potcar_pspfiles']
         self.potcar_setup = vj_dict['potcar_setup']
         self.workdir = vj_dict['workdir']
@@ -131,7 +140,7 @@ class VaspJob():
     def read_poscar(self):
         self.structure = read_poscar(self.workdir+os.sep+'POSCAR')
 
-    def read_outcar(self):
+    def get_outputs(self):
         if os.path.isfile(self.workdir+os.sep+'OUTCAR'):
             vo = VaspOutput(self.workdir+os.sep+'OUTCAR')
             self.outcar = vo.to_dict()
@@ -140,7 +149,13 @@ class VaspJob():
         self.read_incar()
         self.read_kpoints()
         self.read_poscar()
-        self.read_outcar()
+        self.get_outputs()
+
+    def run(self):
+        pass
+
+    def finalize(self):
+        pass
 
 
 def analyser():

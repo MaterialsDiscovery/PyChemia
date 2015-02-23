@@ -26,19 +26,15 @@ def read_poscar(path):
         print("POSCAR path not found")
         return
 
-    structure = pychemia.core.Structure()
-
     # Reading the POSCAR file
     rf = open(poscarfile, 'r')
-    structure.comment = rf.readline().strip()
+    comment = rf.readline().strip()
     latconst = float(rf.readline())
     newcell = _np.zeros((3, 3))
 
     newcell[0, :] = latconst * _np.array([float(x) for x in rf.readline().split()])
     newcell[1, :] = latconst * _np.array([float(x) for x in rf.readline().split()])
     newcell[2, :] = latconst * _np.array([float(x) for x in rf.readline().split()])
-
-    structure.set_cell(newcell)
 
     # The call to add_atom naturally will increase the
     # internal variable crystal.natom
@@ -68,14 +64,16 @@ def read_poscar(path):
     else:
         kmode = 'Direct'
 
+    pos = []
     for i in range(natom):
-        pos = [float(x) for x in rf.readline().split()]
-        if kmode == 'Cartesian':
-            structure.add_atom(symbols[i], pos, option='cartesian')
-        elif kmode == 'Direct':
-            structure.add_atom(symbols[i], pos, option='reduced')
+        pos += [float(x) for x in rf.readline().split()]
+    pos = _np.array(pos).reshape((-1,3))
 
-    return structure
+    if kmode == 'Cartesian':
+        return pychemia.Structure(cell=newcell, symbols=symbols, reduced=pos, comment=comment)
+    else:
+        return pychemia.Structure(cell=newcell, symbols=symbols, reduced=pos, comment=comment)
+
 
 
 def write_poscar(structure, filepath='POSCAR'):

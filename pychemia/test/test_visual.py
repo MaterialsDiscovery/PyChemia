@@ -54,7 +54,7 @@ def test_gold():
     """
     a = 4.05
     b = a/2
-    fcc = pychemia.core.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
+    fcc = pychemia.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
     assert(fcc.natom == 1)
     assert(fcc.is_periodic is True)
     assert(fcc.is_crystal is True)

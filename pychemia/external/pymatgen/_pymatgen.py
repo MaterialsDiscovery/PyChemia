@@ -29,16 +29,14 @@ def pymatgen2pychemia(pmg_struct):
     structure object
     """
 
-    #if not all([ x.species_and_occu.is_element for x in pmg_struct]):
     if not pmg_struct.is_ordered:
-        #print 'Error: Structure is not Ordered'
         return None
 
     cell = pmg_struct.lattice_vectors()
     an = pmg_struct.atomic_numbers
     symbols = pychemia.utils.periodic.atomic_symbol(an)
     positions = pmg_struct.cart_coords
-    return pychemia.core.Structure(cell=cell, positions=positions, symbols=symbols)
+    return pychemia.Structure(cell=cell, positions=positions, symbols=symbols)
 
 
 def pychemia2pymatgen(structure):

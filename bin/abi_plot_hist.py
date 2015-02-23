@@ -11,11 +11,9 @@ from pychemia.utils.periodic import covalent_radius
 from pychemia.utils.constants import bohr_angstrom, angstrom_bohr
 
 
-
 ############################################################
 ### 2D Plots for ABIPYTHON (Requires MATPLOTLIB)         ###
 ############################################################
-
 
 def plot_history_energy(etotal, ekin, fcart, labels, bonds, filep):
     """
@@ -30,7 +28,6 @@ def plot_history_energy(etotal, ekin, fcart, labels, bonds, filep):
     ############################################################
 
     plt.figure(figsize=(16, 10), dpi=100)
-    #xticklabels = []
 
     left = 0.1
     width = 0.8

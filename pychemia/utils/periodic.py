@@ -86,7 +86,7 @@ phases = [None, 'gas', 'gas', 'solid', 'solid', 'solid', 'solid', 'gas', 'gas', 
           'solid', 'solid', 'solid', 'solid', 'solid', 'solid', 'solid', 'solid', 'solid', 'solid',
           'solid', 'solid', 'unknown', 'solid', 'solid', 'solid', 'solid', 'solid', 'solid']
 
-#Van der Waals radii in Angstroms
+# Van der Waals radii in Angstroms
 van_der_waals_radii = [None, 1.20, 1.40, 1.82, 1.53, 1.92, 1.70, 1.55, 1.52, 1.35,
                        1.54, 2.27, 1.73, 1.84, 2.10, 1.80, 1.80, 1.75, 1.88, 2.75,
                        2.31, 2.11, None, None, None, None, None, None, 1.63, 1.40,
@@ -137,11 +137,10 @@ periods = [None, 1, 1,
            6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
            7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7]
 
-
 groups = [None,
-          1,                                                         18,
-          1, 2,                                  13, 14, 15, 16, 17, 18,
-          1, 2,                                  13, 14, 15, 16, 17, 18,
+          1, 18,
+          1, 2, 13, 14, 15, 16, 17, 18,
+          1, 2, 13, 14, 15, 16, 17, 18,
           1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
           1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
           1, 2, 3,
@@ -257,16 +256,15 @@ def valence(value=None):
 >>> from pychemia.utils.periodic import valence
 >>> valence(1)
 1
->>> valence([1,2])
+>>> valence([1, 2])
 [1, 0]
->>> valence(['H','He'])
+>>> valence(['H', 'He'])
 [1, 0]
     """
     return _get_property(valences, value)
 
 
 def period(value=None):
-
     return _get_property(periods, value)
 
 
@@ -311,9 +309,9 @@ def covalent_radius(value=None, units='ang'):
 0.31
 >>> covalent_radius(1)
 0.31
->>> covalent_radius([1,2])
+>>> covalent_radius([1, 2])
 [0.31, 0.28]
->>> covalent_radius(['H','He'])
+>>> covalent_radius(['H', 'He'])
 [0.31, 0.28]
     """
 
@@ -338,7 +336,7 @@ def atomic_symbol(value=None):
 >>> from pychemia.utils.periodic import atomic_symbol
 >>> atomic_symbol(1)
 'H'
->>> atomic_symbol([1,2])
+>>> atomic_symbol([1, 2])
 ['H', 'He']
     """
     ret = None
@@ -376,9 +374,9 @@ def mass(value=None, units='saw'):
 >>> from pychemia.utils.periodic import mass
 >>> mass(1)
 1.00794
->>> mass([1,2])
+>>> mass([1, 2])
 [1.00794, 4.002602]
->>> mass(['H','He'])
+>>> mass(['H', 'He'])
 [1.00794, 4.002602]
     """
     return _get_property(masses, value)

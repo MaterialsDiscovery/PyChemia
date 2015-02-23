@@ -1,4 +1,4 @@
-__author__ = 'viviane'
+__author__ = 'Guillermo Avendano-Franco'
 
 
 def test_good():

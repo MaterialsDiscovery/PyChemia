@@ -1,4 +1,4 @@
-__author__ = 'guilleaf'
+__author__ = 'Guillermo Avendano-Franco'
 
 from pychemia.db import StructureEntry
 

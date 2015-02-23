@@ -27,8 +27,6 @@ def cif2structure(filename, primitive=False, symprec=0.001):
     """
     aseatoms = ase.io.read(filename)
     if primitive:
-        #lattice, scaled_positions, numbers = spglib.refine_cell(aseatoms, symprec)
-        #ref_atoms=ase.atoms(cell=lattice,scaled_positions=scaled_positions,numbers=numbers)
         lattice, scaled_positions, numbers = spglib.find_primitive(aseatoms, symprec)
         if lattice is not None and scaled_positions is not None and numbers is not None:
             fin_atoms = ase.atoms.Atoms(cell=lattice, scaled_positions=scaled_positions, numbers=numbers, pbc=True)
@@ -49,7 +47,7 @@ def ase2pychemia(aseatoms):
     an = aseatoms.get_atomic_numbers()
     symbols = pychemia.utils.periodic.atomic_symbol(an)
     positions = aseatoms.get_positions()
-    return pychemia.core.Structure(cell=cell, positions=positions, symbols=symbols)
+    return pychemia.Structure(cell=cell, positions=positions, symbols=symbols)
 
 
 def pychemia2ase(structure):

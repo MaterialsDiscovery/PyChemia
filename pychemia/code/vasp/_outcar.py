@@ -2,14 +2,13 @@ __author__ = 'Guillermo Avendano-Franco'
 
 import re
 import os
-import sys
 import logging
 import numpy as np
 
 logging.basicConfig(level=logging.INFO)
 
-class VaspOutput():
 
+class VaspOutput():
     def __init__(self, filename='OUTCAR'):
 
         self.magnetization = {}
@@ -22,87 +21,90 @@ class VaspOutput():
         self.kpoints = None
         self.filename = filename
         self.array_sizes = {}
+        self.species = None
 
         if not os.path.isfile(filename):
-            raise ValueError('File not found '+filename)
+            raise ValueError('File not found ' + filename)
 
     def outcar_parser(self):
         rf = open(self.filename, 'r')
         data = rf.read()
         rf.close()
 
-        for istr in [ 'NKPTS', 'NBANDS', 'NEDOS', 'NIONS', 'NGX', 'NGY','NGZ', 'NGXF', 'NGYF','NGZF', 'ISPIN' ]:
-            self.array_sizes[istr] = int(re.findall(istr+r'\s*=\s*(\d+)',data)[0])
+        for istr in ['NKPTS', 'NBANDS', 'NEDOS', 'NIONS', 'NGX', 'NGY', 'NGZ', 'NGXF', 'NGYF', 'NGZF', 'ISPIN']:
+            self.array_sizes[istr] = int(re.findall(istr + r'\s*=\s*(\d+)', data)[0])
         logging.info('Array sizes : ' + str(self.array_sizes))
 
-        self.species = re.findall(r'POTCAR\s*:\s*[\w_]+\s*(\w+)',data)
-        self.species = self.species[:len(self.species)/2]
+        self.species = re.findall(r'POTCAR\s*:\s*[\w_]+\s*(\w+)', data)
+        self.species = self.species[:len(self.species) / 2]
         logging.info('Number of species (= number of POTCARs):' + str(self.species))
 
         pos_forces = re.findall(r'TOTAL-FORCE \(eV/Angst\)\s*-*\s*([-.\d\s]+)\s+-{2}', data)
         pos_forces = np.array([x.split() for x in pos_forces], dtype=float)
-        pos_forces.shape = (len(pos_forces),-1,6)
-        forces = pos_forces[:,:,3:]
-        positions = pos_forces[:,:,:3]
-        logging.debug('Positions from OUTCAR: \n'+str(positions))
-        logging.debug('Forces from OUTCAR: \n'+str(forces))
+        pos_forces.shape = (len(pos_forces), -1, 6)
+        forces = pos_forces[:, :, 3:]
+        positions = pos_forces[:, :, :3]
+        logging.debug('Positions from OUTCAR: \n' + str(positions))
+        logging.debug('Forces from OUTCAR: \n' + str(forces))
 
         self.forces = forces
         self.positions = positions
         self.array_sizes['NIONSTEPS'] = len(self.forces)
         logging.info('Number of Ionic steps: ' + str(self.array_sizes['NIONSTEPS']))
 
-        fermi = re.findall(r'E-fermi\s+:\s+([-.\d]+)',data)
+        fermi = re.findall(r'E-fermi\s+:\s+([-.\d]+)', data)
         fermi = np.array(fermi, dtype=float)
-        logging.debug('Fermi Level(eV): '+str(fermi))
+        logging.debug('Fermi Level(eV): ' + str(fermi))
         self.fermi = fermi
 
         # This regex covers the entire information for each electronic iteration.
         # The expression in the middle, catch everything but ('>' greater than)
         # The final part catch the value of the energy
         # It returns a list of tuples in the form [(ionic iter, Energy (elect. Iter), ...]
-        energy = re.findall(r'Iteration\s*(\d+)[-+*/=():.\s\d\w]+>0\)\s*=\s*([-.\d]+)',data)
-        logging.debug('Energy(eV) [(ionic iter, Energy (elect. Iter)),...]: '+str(energy))
+        energy = re.findall(r'Iteration\s*(\d+)[-+*/=():.\s\d\w]+>0\)\s*=\s*([-.\d]+)', data)
+        logging.debug('Energy(eV) [(ionic iter, Energy (elect. Iter)),...]: ' + str(energy))
         self.energy = energy
 
         # TODO: Check for magnetic cases
-        kpoints = re.findall(r'k-point\s*\d+\s*:\s*([-.\d\s]+)band',data)
+        kpoints = re.findall(r'k-point\s*\d+\s*:\s*([-.\d\s]+)band', data)
         kpoints = np.array([x.split() for x in kpoints], dtype=float)
 
-        if len(kpoints) == 2*self.array_sizes['NKPTS']*self.array_sizes['NIONSTEPS']:
+        if len(kpoints) == 2 * self.array_sizes['NKPTS'] * self.array_sizes['NIONSTEPS']:
             assert (self.array_sizes['ISPIN'] == 2)
         else:
-            assert (self.array_sizes['ISPIN'] == 1 )
+            assert (self.array_sizes['ISPIN'] == 1)
 
-        kpoints.shape = (self.array_sizes['NIONSTEPS'],self.array_sizes['ISPIN'],self.array_sizes['NKPTS'],3)
-        logging.debug('K-points:'+ str(kpoints))
+        kpoints.shape = (self.array_sizes['NIONSTEPS'], self.array_sizes['ISPIN'], self.array_sizes['NKPTS'], 3)
+        logging.debug('K-points:' + str(kpoints))
         logging.debug('K-points shape;:' + str(kpoints.shape))
 
         if self.array_sizes['ISPIN'] == 2:
-            assert( np.all(kpoints[:,0,:,:] == kpoints[:,1,:,:]))
-        kpoints = kpoints[:,0,:,:]
+            assert (np.all(kpoints[:, 0, :, :] == kpoints[:, 1, :, :]))
+        kpoints = kpoints[:, 0, :, :]
         self.kpoints = kpoints
 
         bands = re.findall(r'^\s*[1-9]\d*\s+([-\d]+\.[\d]+)\s+[-.\d]+\s*\n', data, re.MULTILINE)
-        assert(len(bands) == self.array_sizes['NBANDS']*self.array_sizes['ISPIN']*self.array_sizes['NKPTS']*self.array_sizes['NIONSTEPS'])
+        assert (len(bands) == self.array_sizes['NBANDS'] * self.array_sizes['ISPIN']
+                * self.array_sizes['NKPTS']
+                * self.array_sizes['NIONSTEPS'])
         bands = np.array(bands, dtype=float)
-        logging.info('Bands : '+str(bands))
+        logging.info('Bands : ' + str(bands))
 
         stress = re.findall(r'in\s+kB ([-.\s\d]+)external', data)
         # Converted from kBar to GPa
         if stress:
             stress = 0.1 * np.array([x.split() for x in stress], dtype=float)
-            stress.shape = (self.array_sizes['NIONSTEPS'],6)
-            self.stress = np.zeros((self.array_sizes['NIONSTEPS'],3,3))
-            self.stress[:,0,0] = stress[:,0]
-            self.stress[:,1,1] = stress[:,1]
-            self.stress[:,2,2] = stress[:,2]
-            self.stress[:,0,1] = stress[:,3]
-            self.stress[:,1,2] = stress[:,4]
-            self.stress[:,0,2] = stress[:,5]
-            self.stress[:,1,0] = stress[:,3]
-            self.stress[:,2,1] = stress[:,4]
-            self.stress[:,2,0] = stress[:,5]
+            stress.shape = (self.array_sizes['NIONSTEPS'], 6)
+            self.stress = np.zeros((self.array_sizes['NIONSTEPS'], 3, 3))
+            self.stress[:, 0, 0] = stress[:, 0]
+            self.stress[:, 1, 1] = stress[:, 1]
+            self.stress[:, 2, 2] = stress[:, 2]
+            self.stress[:, 0, 1] = stress[:, 3]
+            self.stress[:, 1, 2] = stress[:, 4]
+            self.stress[:, 0, 2] = stress[:, 5]
+            self.stress[:, 1, 0] = stress[:, 3]
+            self.stress[:, 2, 1] = stress[:, 4]
+            self.stress[:, 2, 0] = stress[:, 5]
             logging.info('Stress (GPa):\n ' + str(self.stress))
 
         charge = re.findall(r'total\s*charge\s*#\s*of\s*ion\s*s\s*p\s*d\s*tot\s*-+([-.\s\d]+)\s--', data)
@@ -166,5 +168,5 @@ class VaspOutput():
     def to_dict(self):
         ret = {}
         for i in ['magnetization', 'charge', 'energy', 'forces', 'stress']:
-            ret[i] = eval('self.'+i)
+            ret[i] = eval('self.' + i)
         return ret

@@ -57,7 +57,7 @@ class Runner():
                 outf = open(outfile, 'a')
                 errf = open(errfile, 'a')
                 for i in [outf, errf]:
-                    i.write(40 * '=' + ' New Run ' + 40 * '=' + '\n')
+                    i.write('' + (40 * '=') + ' New Run ' + (40 * '=') + '\n')
                 if infile is not None:
                     rf = open(infile, 'r')
                 else:

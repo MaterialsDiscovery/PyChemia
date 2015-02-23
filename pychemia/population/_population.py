@@ -10,14 +10,16 @@ import numpy as np
 
 from pychemia import Composition, Structure, log
 from pychemia.db import USE_MONGO
+
 if USE_MONGO:
-    from pychemia.db import PyChemiaDB
+    from pychemia.db import PyChemiaDB, get_database
 from pychemia.analysis import StructureAnalysis, StructureChanger
 from pychemia.utils.mathematics import unit_vector
 
 
 class StructurePopulation():
-    def __init__(self, name, composition, tag='global', delta=0.1, new=False, target_forces=1E-3):
+    def __init__(self, name, composition, tag='global', delta=0.1, target_forces=1E-3, value_tol=1E-2,
+                 distance_tol=0.3, min_comp_mult=2, max_comp_mult=8):
         """
         Defines a population of PyChemia Structures,
 
@@ -39,132 +41,72 @@ class StructurePopulation():
         self.name = name
         self.tag = tag
         self.target_forces = target_forces
-
-        self._members = []
-        self._actives = []
-        self._evaluated = []
-        if USE_MONGO:
-            self.db = PyChemiaDB(name)
-            if new:
-                self.db.clean()
-            else:
-                self.check_tags()
-        else:
-            self.db = {}
-
-    def check_tags(self):
-        if USE_MONGO:
-            for entry in self.db.entries.find():
-                if self.tag not in entry['status']:
-                    new_status = entry['status'].copy()
-                    new_status[self.tag] = False
-                    self.update_entry(entry['_id'], status=new_status)
-        else:
-            for entry in self.db:
-                if self.tag not in self.db[entry]['status']:
-                    new_status = db[entry]['status'].copy()
-                    new_status[self.tag] = False
-                    self.update_entry(entry, status=new_status)
+        self.value_tol = value_tol
+        self.distance_tol = distance_tol
+        self.min_comp_mult = min_comp_mult
+        self.max_comp_mult = max_comp_mult
+        self.db = PyChemiaDB(name)
 
     @property
     def actives(self):
-        self.check_tags()
-        if USE_MONGO:
-            self._actives = [entry['_id'] for entry in self.db.entries.find() if
-                             self.tag in entry['status'] and entry['status'][self.tag]]
-        return self._actives
+        return [entry['_id'] for entry in self.db.entries.find({'status.' + self.tag: True}, {'_id': 1})]
 
     @property
     def members(self):
-        if USE_MONGO:
-            self._members = [entry['_id'] for entry in self.db.entries.find()]
-        return self._members
+        return [x['_id'] for x in self.db.entries.find({}, {'_id': 1})]
 
     @property
     def evaluated(self):
-        if USE_MONGO:
-            self._evaluated = [entry['_id'] for entry in self.db.entries.find() if self.is_evaluated(entry['_id'])]
-        return self._evaluated
+        return [entry['_id'] for entry in self.db.entries.find() if self.is_evaluated(entry['_id'])]
 
-    def get_member_dict(self, imember, with_id=True):
+    def get_entry(self, entry_id, with_id=True):
         """
-        Return an entry identified by 'imember'
+        Return an entry identified by 'entry_id'
 
-        :param imember: A database identifier
+        :param entry_id: A database identifier
         :return:
         """
-        if USE_MONGO:
-            entry = self.db.entries.find_one({'_id': imember})
-            if not with_id:
-                entry.pop('_id')
-        else:
-            if imember in self.db:
-                entry = self.db[imember]
-                if with_id:
-                    entry['_id'] = imember
-            else:
-                entry = None
+        entry = self.db.entries.find_one({'_id': entry_id})
+        if entry is not None and not with_id:
+            entry.pop('_id')
         return entry
 
-    def get_structure(self, imember):
-        entry = self.get_member_dict(imember)
+    def get_structure(self, entry_id):
+        entry = self.get_entry(entry_id)
         return Structure.from_dict(entry['structure'])
-
-    def get_properties(self, imember):
-        entry = self.get_member_dict(imember)
-        return Structure.from_dict(entry['properties'])
-
-    def get_status(self, imember):
-        entry = self.get_member_dict(imember)
-        return Structure.from_dict(entry['status'])
-
-    def update_entry(self, imember, structure=None, properties=None, status=None):
-
-        entry = self.get_member_dict(imember)
-
-        if structure is not None:
-            entry['structure'] = structure.to_dict()
-        if properties is not None:
-            entry['properties'] = properties
-        if status is not None:
-            entry['status'] = status
-
-        if USE_MONGO:
-            self.db.update(imember, entry)
-        else:
-            self.db[imember] = entry
-        return imember
 
     @staticmethod
     def new_identifier():
         return str(uuid.uuid4())[-12:]
 
-    def new_entry(self, structure, active=True, properties=None):
-        entry = {'structure': structure.to_dict(), 'status': {self.tag: active}, 'properties': properties}
+    def new_entry(self, structure, active=True):
+        properties = {'forces': None, 'stress': None, 'energy': None}
+        status = {self.tag: active}
+        return self.db.insert(structure=structure, properties=properties, status=status)
 
-        if USE_MONGO:
-            ident = self.db.entries.insert(entry)
-        else:
-            ident = self.new_identifier()
-            self.db[ident] = entry
-            self._actives.append(ident)
-            self._members.append(ident)
-
-        return ident
-
-    def is_evaluated(self, imember):
-        entry = self.get_member_dict(imember)
+    def get_max_force_stress(self, imember):
+        entry = self.get_entry(imember)
         if entry is not None and entry['properties'] is not None:
-            if 'energy' not in entry['properties']:
-                return False
-            if 'stress' not in entry['properties']:
-                return False
-            if 'forces' not in entry['properties']:
-                return False
-            if 'forces' in entry['properties'] and np.max(np.abs(np.array(entry['properties']['forces'], dtype=float).flatten())) > self.target_forces:
-                return False
-            if 'stress' in entry['properties'] and np.max(np.abs(np.array(entry['properties']['stress'], dtype=float).flatten())) > self.target_forces:
-                return False
+            properties = entry['properties']
+            if 'forces' not in properties or 'stress' not in properties:
+                forces = None
+                stress = None
+            elif properties['forces'] is None or properties['stress'] is None:
+                forces = None
+                stress = None
+            else:
+                forces = np.max(np.abs(np.array(entry['properties']['forces'], dtype=float).flatten()))
+                stress = np.max(np.abs(np.array(entry['properties']['stress'], dtype=float).flatten()))
+        else:
+            forces = None
+            stress = None
+        return forces, stress
+
+    def is_evaluated(self, entry_id):
+        max_force, max_stress = self.get_max_force_stress(entry_id)
+        if max_force is None or max_stress is None:
+            return False
+        elif max_force < self.target_forces and max_stress < self.target_forces:
             return True
         else:
             return False
@@ -173,11 +115,13 @@ class StructurePopulation():
         """
         Add one random structure to the population
         """
-        if self.composition is None:
-            raise ValueError('First set a composition')
-        structure = Structure.random_cell(self.composition)
-        ident = self.new_entry(structure)
-        return ident
+        factor = np.random.randint(self.min_comp_mult, self.max_comp_mult + 1)
+        comp = self.composition.composition.copy()
+        for i in comp:
+            comp[i] *= factor
+
+        structure = Structure.random_cell(comp)
+        return self.new_entry(structure)
 
     def random_population(self, n):
         """
@@ -186,38 +130,29 @@ class StructurePopulation():
         :param n: (int) The number of new structures
         :return: (list) The identifiers for the new structures
         """
-        ret = []
-        for i in range(n):
-            ret.append(self.add_random())
-        return ret
+        return [self.add_random() for i in range(n)]
 
-    def value(self, imember):
-        entry = self.get_member_dict(imember)
-        return entry['properties']['energy']
-
-    def check_duplicates(self, value_tol=1E-2, distance_tol=0.3):
+    def check_duplicates(self):
         ret = []
-        ids = self.actives
-        values = np.array([self.value(i) for i in self.actives if i in self.evaluated])
-        print 'Values= ', sorted(values)
+        ids = self.actives_evaluated
+        values = np.array([self.value(i) for i in ids])
+        log.debug('Values: %s' % str(sorted(values)))
         if len(values) == 0:
             return ret
-        # else:
-        #    print 'Values', values
         argsort = np.argsort(values)
         diffs = np.ediff1d(values[argsort])
-        #print 'Values     ', values[argsort]
-        #print 'Differences', diffs
+
+        log.debug('Differences: %s' % str(diffs))
         for i in range(len(values) - 1):
             idiff = diffs[i]
-            if idiff < value_tol:
+            if idiff < self.value_tol:
                 ident1 = ids[argsort[i]]
                 ident2 = ids[argsort[i + 1]]
-                print 'Testing distances between ', ident1, ' and ', ident2
+                log.debug('Testing distances between %s and %s' % (str(ident1), str(ident2)))
                 distance = self.distance(ident1, ident2)
                 print 'Distance = ', distance
-                if distance < distance_tol:
-                    print "Very small distance ", distance
+                if distance < self.distance_tol:
+                    log.debug('Distance %7.3f < %7.3f' % (distance, self.distance_tol))
                     fx1 = self.value(ident1)
                     fx2 = self.value(ident2)
                     if fx2 < fx1:
@@ -230,13 +165,13 @@ class StructurePopulation():
             print 'No duplicates'
         return ret
 
-    def distance_matrix(self):
+    def distance_matrix(self, radius=20):
 
         members = self.members
         analysis = {}
         ret = np.zeros((len(members), len(members)))
         for i in members:
-            analysis[i] = StructureAnalysis(self.get_structure(i))
+            analysis[i] = StructureAnalysis(self.get_structure(i), radius=radius)
 
         for i in range(len(members)):
             log.debug('Fingerprint for %s' % str(members[i]))
@@ -263,90 +198,95 @@ class StructurePopulation():
             for j in range(i, len(members)):
 
                 if self.value(members[i]) is not None and self.value(members[j]) is not None:
-                    ret[i, j] = np.abs(self.value(members[i])-self.value(members[j]))
+                    ret[i, j] = np.abs(self.value(members[i]) - self.value(members[j]))
                 else:
                     ret[i, j] = float('nan')
                 ret[j, i] = ret[i, j]
         return ret
 
     def distance(self, imember, jmember, rcut=50):
-        struct1 = Structure.from_dict(self.get_member_dict(imember)['structure'])
-        struct2 = Structure.from_dict(self.get_member_dict(jmember)['structure'])
+        struct1 = self.get_structure(imember)
+        struct2 = self.get_structure(jmember)
         analysis1 = StructureAnalysis(struct1, radius=rcut)
         analysis2 = StructureAnalysis(struct2, radius=rcut)
         x1, y1_dict = analysis1.fp_oganov()
         x2, y2_dict = analysis2.fp_oganov()
-        # print len(x1)
         assert (len(x1) == len(x2))
-        #print np.dot(unit_vector(x1), unit_vector(x2))
         assert (len(y1_dict) == len(y2_dict))
         dij = []
         for i in y1_dict:
             uvect1 = unit_vector(y1_dict[i])
             uvect2 = unit_vector(y2_dict[i])
             dij.append(0.5 * (1.0 - np.dot(uvect1, uvect2)))
-        return np.mean(dij)
+        return float(np.mean(dij))
 
-    def add_from_db(self, dbname, sizemax=1):
+    def add_from_db(self, db_settings, sizemax=1):
 
         comp = Composition(self.composition)
-        readdb = PyChemiaDB(dbname)
+        readdb = get_database(db_settings)
 
         index = 0
-        for entry in readdb.entries.find({'formula': comp.formula, 'natom': comp.natom}):
+        for entry in readdb.entries.find({'structure.formula': comp.formula,
+                                          'structure.natom': {'$lte': self.min_comp_mult * comp.natom,
+                                                              '$gte': self.max_comp_mult * comp.natom}}):
             if index < sizemax:
                 print 'Adding entry ' + str(entry['_id']) + ' from ' + dbname
-                self.new_entry(Structure.from_dict(entry))
+                self.new_entry(readdb.get_structure(entry['_id']))
                 index += 1
 
-    def add_modified(self, ident):
+    def add_modified(self, entry_id):
 
-        structure = self.get_structure(ident)
-
+        structure = self.db.get_structure(entry_id)
         changer = StructureChanger(structure)
         changer.random_change(self.delta)
-
         new_structure = changer.new_structure
+        return self.new_entry(new_structure)
 
-        new_ident = self.new_entry(new_structure)
-        return new_ident
+    def disable(self, entry_id):
+        entry = self.get_entry(entry_id)
+        status = None
+        if 'status' in entry:
+            status = entry['status']
+        if status is None:
+            status = {}
+        status[self.tag] = False
+        self.db.update(entry_id, status=status)
 
-    def disable(self, ident):
-        if ident not in self.actives:
-            raise ValueError(str(ident) + ' not in actives')
-        entry = self.get_member_dict(ident)
-        entry['status'][self.tag] = False
-        structure = Structure.from_dict(entry['structure'])
-        self.update_entry(ident, structure=structure, properties=entry['properties'], status=entry['status'])
-        if not USE_MONGO:
-            self._actives.remove(ident)
+    def enable(self, entry_id):
+        entry = self.get_entry(entry_id)
+        status = None
+        if 'status' in entry:
+            status = entry['status']
+        if status is None:
+            status = {}
+        status[self.tag] = True
+        self.db.update(entry_id, status=status)
 
     @property
     def fraction_evaluated(self):
-        print 'Evaluated: ', self.evaluated
-        print 'Actives:', self.actives
-        ret = np.sum([1 for i in self.actives if i in self.evaluated])
+        ret = np.sum([1 for i in self.actives if self.is_evaluated(i)])
         return float(ret) / len(self.actives)
 
     @property
     def actives_no_evaluated(self):
-        ret = []
-        for i in self.actives:
-            if i not in self.evaluated:
-                ret.append(i)
-        return ret
+        return [x for x in self.actives if not self.is_evaluated(x)]
 
-    def save(self):
+    @property
+    def actives_evaluated(self):
+        return [x for x in self.actives if self.is_evaluated(x)]
+
+    def save_json(self, filename):
         ret = []
-        for imember in self.members:
-            ret.append(self.get_member_dict(imember, with_id=False))
-        filep = open(self.name + '.pop', 'w')
+        for entry_id in self.members:
+            ret.append(self.get_entry(entry_id, with_id=False))
+        filep = open(filename, 'w')
         json.dump(ret, filep, sort_keys=True, indent=4, separators=(',', ': '))
 
-    def member_str(self, imember):
-        data = self.get_member_dict(imember)
-        ret = imember
-        return ret
+    def load_json(self, filename):
+        filep = open(filename, 'r')
+        data = json.load(filep)
+        for entry in data:
+            self.db.entries.insert(entry)
 
     def move(self, imember, jmember, in_place=False):
         """
@@ -373,16 +313,9 @@ class StructurePopulation():
         new_cell = 0.5 * (structure1.cell + structure2.cell)
         new_structure = Structure(reduced=new_reduced, symbols=structure1.symbols, cell=new_cell)
         if not in_place:
-            new_ident = self.new_entry(new_structure)
+            return self.new_entry(new_structure)
         else:
-            new_ident = self.update_entry(imember, new_structure)
-        return new_ident
-
-    def complete_actives(self, n):
-        difference = n - len(self.actives)
-        if difference > 0:
-            print 'Adding ', difference, 'new random structures'
-            self.random_population(difference)
+            return self.db.update(imember, structure=new_structure)
 
     def __str__(self):
         ret = ' Structure Population\n\n'
@@ -396,20 +329,31 @@ class StructurePopulation():
         ret += ' Evaluated:       ' + str(len(self.evaluated)) + '\n'
         return ret
 
-class ObjectiveFunction():
-    def __init__(self):
-        self.population = None
-
-    def initialize(self, population):
-        self.population = population
+    def unlock_all(self, name=None):
+        for i in self.members:
+            self.db.unlock(i, name=name)
 
     def ids_sorted(self, selection):
-        values = np.array([self.population.value(i) for i in selection])
+        values = np.array([self.value(i) for i in selection])
         argsort = np.argsort(values)
         return np.array(selection)[argsort]
 
     def get_values(self, selection):
         ret = {}
         for i in selection:
-            ret[i] = self.population.value(i)
+            ret[i] = self.value(i)
         return ret
+
+    def value(self, imember):
+        entry = self.get_entry(imember)
+        struct = self.get_structure(imember)
+        if 'properties' not in entry:
+            log.debug('This entry has no properties %s' % str(entry['_id']))
+            return None
+        elif entry['properties'] is None:
+            return None
+        elif 'energy' not in entry['properties']:
+            log.debug('This entry has no energy in properties %s' % str(entry['_id']))
+            return None
+        else:
+            return entry['properties']['energy'] / struct.get_composition().gcd

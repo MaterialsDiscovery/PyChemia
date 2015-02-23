@@ -18,8 +18,8 @@ def length_vector(v):
     :rtype : float
 
     Example:
-    >>> length_vector([1,2,3])
-    3.7416573867739413
+>>> length_vector([1, 2, 3])
+3.7416573867739413
     """
     return _np.linalg.norm(v)
 
@@ -30,11 +30,13 @@ def length_vectors(m):
     arranged as rows in a MxN matrix
 
     :param m: numpy.ndarray
-    :rtype : object
 
-    Example:
-    >>> length_vectors([[1,2,3], [4,5,6], [7,8,9], [1,0,0], [0,0,2]])
-    array([  3.74165739,   8.77496439,  13.92838828,   1.        ,   2.        ])
+    :rtype : numpy.ndarray
+
+    Examples
+
+>>> length_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
+array([  3.74165739,   8.77496439,  13.92838828,   1.        ,   2.        ])
     """
     m = _np.array(m)
     return _np.apply_along_axis(_np.linalg.norm, 1, m)
@@ -47,7 +49,9 @@ def unit_vector(v):
 
     :param v: list, numpy.array
     :rtype : numpy.ndarray
-    Example:
+
+    Examples
+
 >>> a = unit_vector([1, 2, 3])
 >>> a
     array([ 0.26726124,  0.53452248,  0.80178373])
@@ -91,18 +95,18 @@ def angle_vector(v1, v2, units='rad'):
     :rtype : float
 
     Examples:
-    >>> angle_vector([1, 0, 0], [0, 1, 0])
-    1.5707963267948966
-    >>> angle_vector([1, 0, 0], [1, 0, 0])
-    0.0
-    >>> angle_vector([1, 0, 0], [-1, 0, 0])
-    3.1415926535897931
-    >>> angle_vector([1, 0, 0], [0, 1, 0],units='deg')
-    90.0
-    >>> angle_vector([1, 0, 0], [-1, 0, 0], units='deg')
-    180.0
+>>> angle_vector([1, 0, 0], [0, 1, 0])
+1.5707963267948966
+>>> angle_vector([1, 0, 0], [1, 0, 0])
+0.0
+>>> angle_vector([1, 0, 0], [-1, 0, 0])
+3.1415926535897931
+>>> angle_vector([1, 0, 0], [0, 1, 0], units='deg')
+90.0
+>>> angle_vector([1, 0, 0], [-1, 0, 0], units='deg')
+180.0
     """
-    assert(units in ['rad', 'deg'])
+    assert (units in ['rad', 'deg'])
 
     v1_u = unit_vector(v1)
     v2_u = unit_vector(v2)
@@ -172,13 +176,14 @@ def distance(v1, v2):
     :param v2: (list, numpy.ndarray)
     :rtype : tuple
 
-    Example:
-    >>> distance([0,0,0,1],[1,0,0,0])
+    Examples
+
+    >>> distance([0, 0, 0, 1], [1, 0, 0, 0])
     (array([ 1,  0,  0, -1]), 1.4142135623730951)
-    >>> distance([-1,0,0],[1,0,0])
+    >>> distance([-1, 0, 0], [1, 0, 0])
     (array([2, 0, 0]), 2.0)
     """
-    ret = _np.array(v2)-_np.array(v1)
+    ret = _np.array(v2) - _np.array(v1)
     return ret, length_vector(ret)
 
 
@@ -193,7 +198,7 @@ def distances(m):
     Example:
 
 >>> import pprint
->>> pprint.pprint(distances([[1,2,3], [4,5,6], [7,8,9], [1,0,0], [0,0,2]]))
+>>> pprint.pprint(distances([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]]))
     {(0, 1): (array([3, 3, 3]), 5.196152422706632),
      (0, 2): (array([6, 6, 6]), 10.392304845413264),
      (0, 3): (array([ 0, -2, -3]), 3.6055512754639891),
@@ -218,15 +223,15 @@ def wrap2_pmhalf(x):
 
     :param x:
 
-    Example:
+    Examples
 
     >>> wrap2_pmhalf(-0.5)
     0.5
     >>> wrap2_pmhalf(0.0)
     0.0
-    >>> wrap2_pmhalf([-0.75,-0.5,-0.25,0.0,0.25,0.5,0.75])
+    >>> wrap2_pmhalf([-0.75, -0.5, -0.25, 0.0, 0.25, 0.5, 0.75])
     array([ 0.25,  0.5 , -0.25,  0.  ,  0.25,  0.5 , -0.25])
-    >>> wrap2_pmhalf([[-0.75,-0.5,-0.25],[0.25,0.5,0.75]])
+    >>> wrap2_pmhalf([[-0.75, -0.5, -0.25], [0.25, 0.5, 0.75]])
     array([[ 0.25,  0.5 , -0.25],
            [ 0.25,  0.5 , -0.25]])
     """
@@ -234,11 +239,11 @@ def wrap2_pmhalf(x):
     def wrap(num):
         tol12 = 1e-12
         if num > 0:
-            ret = (num+0.5-tol12) % 1.0 - 0.5 + tol12
+            ret = (num + 0.5 - tol12) % 1.0 - 0.5 + tol12
         else:
             ret = -(-(num - 0.5 - tol12) % 1.0) + 0.5 + tol12
         for y in [-0.25, 0.0, 0.25, 0.5]:
-            ret = (lambda num2: y if abs(y-num2) < tol12 else num2)(ret)
+            ret = (lambda num2: y if abs(y - num2) < tol12 else num2)(ret)
         return ret
 
     if _np.iterable(x):
@@ -266,13 +271,13 @@ def vector_set_perpendicular(vector3):
             break
         else:
             continue
-    #print _np.dot(v1, v2)
-    #print _np.dot(v1, v3)
-    #print _np.dot(v2, v3)
+    # print _np.dot(v1, v2)
+    # print _np.dot(v1, v3)
+    # print _np.dot(v2, v3)
 
-    #assert (_np.abs(_np.dot(v1, v2)) < 1E-15)
-    #assert (_np.abs(_np.dot(v1, v3)) < 1E-15)
-    #assert (_np.abs(_np.dot(v2, v3)) < 1E-15)
+    # assert (_np.abs(_np.dot(v1, v2)) < 1E-15)
+    # assert (_np.abs(_np.dot(v1, v3)) < 1E-15)
+    # assert (_np.abs(_np.dot(v2, v3)) < 1E-15)
     return v1, v2, v3
 
 
@@ -312,21 +317,21 @@ def integral_gaussian(a, b, mu, sigma):
     :return:
     """
 
-    #Integral from -\infty to a
-    val_floor = 0.5 * (1+math.erf((a-mu)/(sigma*math.sqrt(2.0))))
+    # Integral from -\infty to a
+    val_floor = 0.5 * (1 + math.erf((a - mu) / (sigma * math.sqrt(2.0))))
 
-    #Integral from -\infty to b
-    val_ceil = 0.5 * (1+math.erf((b-mu)/(sigma*math.sqrt(2.0))))
+    # Integral from -\infty to b
+    val_ceil = 0.5 * (1 + math.erf((b - mu) / (sigma * math.sqrt(2.0))))
 
     return val_ceil - val_floor
 
 
 def frexp10(x):
     exp = int(math.floor(math.log10(abs(x))))
-    return x / 10**exp, exp
+    return x / 10 ** exp, exp
 
 
 def round_small(number, ndigits=0):
     mantissa, exponent = frexp10(number)
     mantissa = round(mantissa, ndigits)
-    return mantissa*10**exponent
+    return mantissa * 10 ** exponent

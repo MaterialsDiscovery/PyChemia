@@ -16,7 +16,7 @@ for i in range(len(data)):
         if Section == '':
             print('Error finding section for ', Variable)
 
-        if not Section in Sections.keys():
+        if Section not in Sections.keys():
             print('New Section ', Section)
             Sections[Section] = [Variable]
         else:

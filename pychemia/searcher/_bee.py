@@ -1,27 +1,20 @@
 __author__ = 'Guillermo Avendano-Franco'
 
-import time
-
-from _genealogy import Genealogy
 from _searcher import Searcher
 
-class BeeAlgorithm(Genealogy, Searcher):
 
-    def __init__(self, population, evaluator, objective_function, params, stabilization_limit=10,
-                 fraction_evaluated=0.8):
+class BeeAlgorithm(Searcher):
+
+    def __init__(self, population, params, fraction_evaluated=0.8, generation_size=32, stabilization_limit=10):
         """
         Implementation fo the Firefly algorithm for global minimization
 
         :param population:
-        :param objective_function:
-        :param evaluator:
         :param stabilization_limit:
         :param fraction_evaluated:
         :return:
         """
         self.population = population
-        self.objective_function = objective_function
-        self.evaluator = evaluator
         self.ne = None   # Number of elite scout bees
         self.nre = None  # Number of elite foragers
         self.nb = None   # Number of best scout bees (excluding elites)
@@ -29,11 +22,7 @@ class BeeAlgorithm(Genealogy, Searcher):
         self.ns = None   # Number of scouts (include elites,  best and others)
         self.n = None    # Number of bees (size of colony n=ne*nre + nb*nrb + ns )
         self.set_params(params)
-        self.stabilization_limit = stabilization_limit
-        self.fraction_evaluated = fraction_evaluated
-        self.objective_function.initialize(self.population)
-        self.evaluator.initialize(self.population)
-        Genealogy.__init__(self, self.population, self.evaluator)
+        Searcher.__init__(self, self.population, fraction_evaluated, generation_size, stabilization_limit)
         self.scouts_elite = None
         self.scouts_best = None
         self.scouts_others = None
@@ -69,7 +58,7 @@ class BeeAlgorithm(Genealogy, Searcher):
             # Lets choose from there the elite, the best and the actual
             # scouts for the next iterations
             if len(selection) >= self.ns:
-                members = self.objective_function.ids_sorted(selection)
+                members = self.population.ids_sorted(selection)
                 self.scouts_elite = members[:self.ne]
                 self.scouts_best = members[self.ne:self.ne+self.nb]
                 self.scouts_others = members[self.ne+self.nb:self.ns-self.ne+self.nb]
@@ -98,7 +87,7 @@ class BeeAlgorithm(Genealogy, Searcher):
                         # Consider a dead bee
                         self.foragers[ielite].remove(j)
                         dead_bees += 1
-                foragers_alive = self.objective_function.ids_sorted(self.foragers[ielite])
+                foragers_alive = self.population.ids_sorted(self.foragers[ielite])
                 best_forager = foragers_alive[0]
                 if self.population.value(best_forager) < self.population.value(ielite):
                     # We found a better elite
@@ -117,7 +106,7 @@ class BeeAlgorithm(Genealogy, Searcher):
                         # Consider a dead bee
                         self.foragers[ibest].remove(j)
                         dead_bees += 1
-                foragers_alive = self.objective_function.ids_sorted(self.foragers[ibest])
+                foragers_alive = self.population.ids_sorted(self.foragers[ibest])
                 best_forager = foragers_alive[0]
                 if self.population.value(best_forager) < self.population.value(ibest):
                     # We found a better elite
@@ -136,9 +125,9 @@ class BeeAlgorithm(Genealogy, Searcher):
                     # Consider a dead bee
                     self.scouts_others.remove(j)
                     dead_bees += 1
-            scouts_others_alive = self.objective_function.ids_sorted(self.scouts_others)
+            scouts_others_alive = self.population.ids_sorted(self.scouts_others)
             best_scout = scouts_others_alive[0]
-            worst_best = self.objective_function.ids_sorted(self.scouts_best)[-1]
+            worst_best = self.population.ids_sorted(self.scouts_best)[-1]
             if self.population.value(best_scout) < self.population.value(worst_best):
                 self.scouts_best.remove(worst_best)
                 self.scouts_best.append(best_scout)
@@ -166,59 +155,3 @@ class BeeAlgorithm(Genealogy, Searcher):
                 self.foragers[scout] = [forager]
             else:
                 self.foragers[scout].append(forager)
-
-    def run_all_cycles(self):
-        """
-        Execute the total number of cycles
-
-        :return:
-        """
-        sleep_time = 2
-
-        icycle = 0
-        while True:
-            print '\n GENERATION ', icycle
-
-            if not self.evaluator.is_running:
-                print 'Starting evaluator'
-                self.evaluator.run()
-
-            timeout = 0
-            while True:
-                if len(self.population.evaluated) > 0 and self.population.fraction_evaluated > self.fraction_evaluated:
-                    if self.population.fraction_evaluated < 1.0:
-                        print "Some members lost"
-                        self.print_status()
-                        for imember in self.population.active_no_evaluated:
-                            print 'Removing: ', imember
-                            self.replacing(imember)
-
-                    for imember in self.population.check_duplicates():
-                        self.replacing(imember)
-                    self.run_one_cycle()
-                    break
-                else:
-                    timeout += sleep_time
-                    time.sleep(sleep_time)
-                    if timeout > self.timeout_per_cycle:
-                        print 'Timeout for a single cycle, discarding unevaluated members'
-                        for imember in self.population.active_no_evaluated:
-                            print 'Removing: ', imember
-                            self.print_status()
-                            self.replacing(imember)
-                    elif timeout > 2*self.timeout_per_cycle:
-                        print 'Waiting too much, stopping now'
-                        self.evaluator.stop()
-                        return icycle
-            best_member = self.objective_function.ids_sorted(self.get_generation_evaluated())[0]
-            print 'Best member is :', best_member
-            print self.generation[best_member]
-            print len(self.generation[best_member])
-
-            if len(self.generation[best_member]) > self.stabilization_limit:
-                break
-            else:
-                icycle += 1
-
-        self.save_generations()
-        self.evaluator.stop()

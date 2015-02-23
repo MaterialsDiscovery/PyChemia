@@ -7,7 +7,7 @@ as a python dictionary called 'variables'
 """
 
 __author__ = "Guillermo Avendano-Franco"
-__copyright__ = "Copyright 2012"
+__copyright__ = "Copyright 2015"
 __version__ = "1.1"
 __maintainer__ = "Guillermo Avendano-Franco"
 __email__ = "guillermo.avendano@uclouvain.be"
@@ -16,13 +16,13 @@ __date__ = "Aug 27, 2012"
 
 import os as _os
 from scipy.io import netcdf_file as _netcdf_file
-import numpy as _np
+import numpy as np
 
 from pychemia.utils.periodic import atomic_symbol, covalent_radius, atomic_number
 from pychemia.utils.constants import bohr_angstrom, angstrom_bohr
 import pychemia.code.abinit
 from pychemia.core import Structure
-from pychemia.utils.mathematics import unit_vectors, length_vectors
+from pychemia.utils.mathematics import unit_vectors
 
 
 class InputVariables:
@@ -273,7 +273,7 @@ class InputVariables:
             npvalue = None
         # Remove the array if it is one one element
         if npvalue is not None:
-            if len(npvalue) == 1 and not full:
+            if npvalue.shape[0] == 1 and not full:
                 value = npvalue[0]
             else:
                 value = npvalue
@@ -291,9 +291,9 @@ class InputVariables:
         is always a numpy array.
         """
         if isinstance(value, (int, float)):
-            npvalue = _np.array([value])
+            npvalue = np.array([value])
         else:
-            npvalue = _np.array(value)
+            npvalue = np.array(value)
         if idtset == '':
             self.variables[varname] = npvalue
         else:
@@ -319,22 +319,22 @@ class InputVariables:
             else:
                 symbols.append(atomic_symbol(int(znucl[typat[i] - 1])))
         # POSITIONS
-        xangst = _np.array(self.get_value('xangst', idtset))
-        xcart = _np.array(self.get_value('xcart', idtset))
-        xred = _np.array(self.get_value('xred', idtset))
+        xangst = np.array(self.get_value('xangst', idtset))
+        xcart = np.array(self.get_value('xcart', idtset))
+        xred = np.array(self.get_value('xred', idtset))
         rprim = self.get_value('rprim', idtset)
-        acell = _np.array(self.get_value('acell', idtset))
+        acell = np.array(self.get_value('acell', idtset))
 
         # Set rprimd and acell using the default values
         # if not found
         if rprim is None:
-            rprim = _np.identity(3)
+            rprim = np.identity(3)
         else:
             rprim = rprim.reshape(3, 3)
         if acell is None:
-            acell = _np.ones(3)
+            acell = np.ones(3)
 
-        rprimd = _np.zeros((3, 3))
+        rprimd = np.zeros((3, 3))
         rprimd[0] = rprim[0] * acell
         rprimd[1] = rprim[1] * acell
         rprimd[2] = rprim[2] * acell
@@ -349,7 +349,7 @@ class InputVariables:
                 positions = positions * bohr_angstrom
         elif xred is not None:
             xred = xred.reshape(3, natom)
-            xcart = _np.zeros(3, natom)
+            xcart = np.zeros(3, natom)
 
             for i in range(natom):
                 xcart[i] = xred[0, i] * rprimd[0] + xred[1, i] * rprimd[1] + xred[2, i] * rprimd[2]
@@ -385,7 +385,7 @@ class InputVariables:
             index += 1
         typat = [typat_dict[i] for i in structure.symbols]
         xcart = pychemia.utils.constants.angstrom_bohr * structure.positions.flatten()
-        acell = pychemia.utils.constants.angstrom_bohr * length_vectors(structure.cell)
+        acell = pychemia.utils.constants.angstrom_bohr * np.array(structure.lattice.lengths)
         rprim = unit_vectors(structure.cell).T.flatten()
         for i in ['natom', 'ntypat', 'znucl', 'typat', 'xcart', 'acell', 'rprim']:
             self.set_value(i, eval(i))
@@ -442,9 +442,9 @@ class InputVariables:
         color = ['r', 'g', 'b']
         j = 0
 
-        cris = self.get_crystal()
+        structure = self.get_crystal()
 
-        for i in cris.cell:
+        for i in structure.cell:
             ax[0].plot([0, i[0]], [0, i[1]], color[j] + '-', lw=3)
             ax[1].plot([0, i[1]], [0, i[2]], color[j] + '-', lw=3)
             ax[2].plot([0, i[2]], [0, i[0]], color[j] + '-', lw=3)
@@ -456,17 +456,17 @@ class InputVariables:
         for j in range(3):
 
             patches = []
-            for i in range(cris.natom):
-                radius = 0.5 * covalent_radius(atomic_number(cris.symbols[i]))
-                pos = cris.positions[i]
+            for i in range(structure.natom):
+                radius = 0.5 * covalent_radius(atomic_number(structure.symbols[i]))
+                pos = structure.positions[i]
                 art = mpatches.Circle((pos[proj[j][0]], pos[proj[j][1]]), radius, fc='g', ec='g')
                 patches.append(art)
 
             collection = PatchCollection(patches, color='k', alpha=0.5)
 
             col = ax[j].add_collection(collection)
-            ax[j].set_xlim(min(cris.positions[:, proj[j][0]]) - 1, max(cris.positions[:, proj[j][0]]) + 1)
-            ax[j].set_ylim(min(cris.positions[:, proj[j][1]]) - 1, max(cris.positions[:, proj[j][1]]) + 1)
+            ax[j].set_xlim(min(structure.positions[:, proj[j][0]]) - 1, max(structure.positions[:, proj[j][0]]) + 1)
+            ax[j].set_ylim(min(structure.positions[:, proj[j][1]]) - 1, max(structure.positions[:, proj[j][1]]) + 1)
             ax[j].set_aspect('equal', adjustable='datalim')
             ax[j].set_xlabel(labels[j][0])
             ax[j].set_ylabel(labels[j][1])

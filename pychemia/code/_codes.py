@@ -1,4 +1,4 @@
-__author__ = 'viviane'
+__author__ = 'Guillermo Avendano-Franco'
 
 from abc import ABCMeta, abstractmethod
 
@@ -10,7 +10,7 @@ class Codes():
         pass
 
     @abstractmethod
-    def initialize(self, dirpath):
+    def initialize(self, workdir, structure, kpoints, binary):
         pass
 
     @abstractmethod
@@ -18,7 +18,7 @@ class Codes():
         pass
 
     @abstractmethod
-    def get_ouputs(self):
+    def get_outputs(self):
         pass
 
     @abstractmethod
@@ -29,6 +29,6 @@ class Codes():
     def finalize(self):
         pass
 
-    #@abstractproperty
+    # @abstractproperty
     #def dirpath():
     #    pass

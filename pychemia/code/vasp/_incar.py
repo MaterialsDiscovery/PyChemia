@@ -87,7 +87,7 @@ class InputVariables:
             value = self.variables[i]
             if isinstance(value, _np.ndarray):
                 if len(value) == 1:
-                    self.variables[i]=value[0]
+                    self.variables[i] = value[0]
                 else:
                     self.variables[i] = list(value)
 
@@ -225,7 +225,7 @@ class InputVariables:
             for line in rf.readlines():
                 if 'ENMAX' in line:
                     list4line = line.split()
-                    assert(list4line[0].strip() == 'ENMAX')
+                    assert (list4line[0].strip() == 'ENMAX')
                     value = list4line[2].strip()
                     if value[-1] == ';':
                         value = value[:-1]
@@ -234,7 +234,7 @@ class InputVariables:
                         maxvalue = value
             rf.close()
             if ENCUT < 10:
-                self.variables['ENCUT'] = int(math.ceil(ENCUT*maxvalue))
+                self.variables['ENCUT'] = int(math.ceil(ENCUT * maxvalue))
             else:
                 self.variables['ENCUT'] = maxvalue
         print self.variables['ENCUT']
@@ -252,13 +252,13 @@ class InputVariables:
         self.variables['IALGO'] = IALGO
 
     def set_rough_relaxation(self):
-        self.set_minimum(PREC='Normal', ISPIN=1,  LREAL=False, ISMEAR=0, LORBIT=11)
+        self.set_minimum(PREC='Normal', ISPIN=1, LREAL=False, ISMEAR=0, LORBIT=11)
         self.set_electron_scf(NELM=60, NELMIN=5, EDIFF=1E-4, IALGO=48)
         self.set_ion_relax(NSW=50, ISIF=2, IBRION=2, EDIFFG=-1E-2)
         self.variables['NPAR'] = 2
 
     def set_mit_settings(self):
-        self.set_minimum(PREC='Accurate', ISPIN=2,  LREAL='Auto', ISMEAR=-5, LORBIT=11)
+        self.set_minimum(PREC='Accurate', ISPIN=2, LREAL='Auto', ISMEAR=-5, LORBIT=11)
         self.set_electron_scf(NELM=100, NELMIN=6, EDIFF=5E-5, IALGO=48)
         self.set_ion_relax(NSW=99, ISIF=3, IBRION=2, EDIFFG=-1E-3)
         self.variables['LWAVE'] = False
@@ -267,7 +267,7 @@ class InputVariables:
         self.variables['LDAUTYPE'] = 2
         self.variables['ICHARG'] = 1
 
-    def set_minimum(self, PREC='Normal', ISPIN=2,  LREAL=False, ISMEAR=0, LORBIT=11):
+    def set_minimum(self, PREC='Normal', ISPIN=2, LREAL=False, ISMEAR=0, LORBIT=11):
         self.variables['PREC'] = PREC
         self.variables['LREAL'] = LREAL
         self.variables['ISMEAR'] = ISMEAR

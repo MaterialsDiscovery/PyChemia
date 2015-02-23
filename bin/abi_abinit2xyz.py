@@ -22,7 +22,6 @@ def input2xyz(abivar, basename, datasets):
             filep = basename + '.xyz'
         else:
             filep = basename + '_DS' + str(idts) + '.xyz'
-        #print 'Writing ',filename
         wf = open(filep, 'w')
         wf.write(str(natom) + '\n\n')
         for iatom in range(natom):

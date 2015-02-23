@@ -34,7 +34,7 @@ class StructureAnalysis():
         self._supercell = supercell
         self._radius = radius
         log.debug('Supercell : ' + str(self._supercell))
-        log.debug('Radius    : %7.2f' % self._radius )
+        log.debug('Radius    : %7.2f' % self._radius)
 
     @property
     def radius(self):
@@ -68,7 +68,7 @@ class StructureAnalysis():
                 if index % 100 == 0:
                     log.debug('Computing distance between atoms %d and %d' % (i, j))
                 ret = self.structure.lattice.distance2(self.structure.reduced[i], self.structure.reduced[j],
-                                                          radius=self.radius)
+                                                       radius=self.radius)
                 for k in ret:
                     if str(i) not in pairs_dict:
                         pairs_dict[str(i)] = [index]
@@ -114,7 +114,7 @@ class StructureAnalysis():
         all_distances = self.all_distances()
         ret = {}
         symbols_indexed = np.array([self.structure.species.index(x) for x in self.structure.symbols])
-        #print self.structure.symbols
+        # print self.structure.symbols
 
         for ipair in all_distances:
             key = tuple(sorted(symbols_indexed[np.array(ipair)]))
@@ -129,22 +129,6 @@ class StructureAnalysis():
 
         return ret
 
-    def distances_between_species(self, radius=50):
-        bonds_dict, distances = self.close_distances()
-
-        dist_spec = {}
-        for i, j in itertools.combinations_with_replacement(range(self.structure.nspecies), 2):
-            key = tuple(sorted([i, j]))
-            dist_spec[key] = []
-        for idistance in distances:
-            atom_pair = idistance['pair']
-            spec_pair = tuple(self.structure.species.index(self.structure.symbols[x]) for x in atom_pair)
-            key = tuple(sorted(spec_pair))
-            dist_spec[key].append(idistance['distance'])
-        for x in dist_spec:
-            dist_spec[x].sort()
-        return dist_spec
-
     def structure_distances(self, delta=0.01, sigma=0.01, integrated=True):
         dist_spec = self.all_distances_by_species()
         discrete_rdf = {}
@@ -157,9 +141,9 @@ class StructureAnalysis():
             for Rij in positive_distances:
                 # Integrating for bin from - 8*sigma to +8*sigma centered on Rij
                 # Values outside this range are negligible
-                imin = int(max(0, (Rij-8*sigma)/delta))
-                imax = int(min(len(discrete_rdf_x), (Rij+8*sigma)/delta))
-                #log.debug('Computing for distance %7.3f for indices between %d and %d' % (Rij, imin, imax))
+                imin = int(max(0, (Rij - 8 * sigma) / delta))
+                imax = int(min(len(discrete_rdf_x), (Rij + 8 * sigma) / delta))
+                # log.debug('Computing for distance %7.3f for indices between %d and %d' % (Rij, imin, imax))
                 for i in range(imin, imax):
                     x = discrete_rdf_x[i]
                     if not integrated:
@@ -182,6 +166,47 @@ class StructureAnalysis():
                 fp_oganov[spec_pair][i] -= 1
         return struc_dist_x, fp_oganov
 
+    def bonds_coordination(self, initial_cutoff_radius=0.8, use_laplacian=True, jump=0.01, tol=1E-15):
+
+        cutoff_radius = initial_cutoff_radius
+        ad = self.all_distances()
+        bonds = {}
+        while True:
+            laplacian = np.zeros((self.structure.natom, self.structure.natom), dtype=np.int8)
+
+            for pair in ad:
+                atom1 = self.structure.symbols[pair[0]]
+                atom2 = self.structure.symbols[pair[1]]
+                sum_covalent_radius = sum(covalent_radius([atom1, atom2]))
+                condition = np.bitwise_and(ad[pair]['distance'] < cutoff_radius * sum_covalent_radius,
+                                           ad[pair]['distance'] > 0)
+                bonds[pair] = ad[pair]['distance'][condition]
+                if len(bonds[pair]) > 0:
+                    laplacian[pair[0], pair[1]] = -1
+                    laplacian[pair[1], pair[0]] = -1
+            for i in range(self.structure.natom):
+                laplacian[i, i] = 0
+                laplacian[i, i] = -sum(laplacian[i])
+
+            if use_laplacian:
+                if np.max(np.abs(laplacian)) == 0:
+                    cutoff_radius += jump
+
+                ev = numpy.linalg.eigvalsh(laplacian)
+
+                if sum(ev < tol) > 1:
+                    cutoff_radius += jump
+                else:
+                    break
+            else:
+                break
+        coordination = np.zeros(self.structure.natom, dtype=int)
+        for pair in bonds:
+            coordination[pair[0]] += len(bonds[pair])
+            coordination[pair[1]] += len(bonds[pair])
+
+        return bonds, coordination, cutoff_radius
+
     def get_bonds_coordination(self, initial_cutoff_radius=0.8, ensure_conectivity=False, use_laplacian=True,
                                verbose=False, tol=1E-15, jump=0.01, use_jump=True):
         """
@@ -195,7 +220,7 @@ class StructureAnalysis():
         """
         if verbose:
             print 'Computing all distances...'
-        bonds_dict, distances_list = self.close_distances(verbose=False)
+        bonds_dict, distances_list = self.close_distances()
         if verbose:
             print 'Number of distances computed: ', len(distances_list)
 
@@ -257,7 +282,7 @@ class StructureAnalysis():
                     continue
 
                 # if verbose:
-                #print laplacian
+                # print laplacian
                 #evals, evecs = scipy.sparse.linalg.eigsh(laplacian)
                 ev = numpy.linalg.eigvalsh(laplacian)
                 if verbose:
@@ -286,6 +311,57 @@ class StructureAnalysis():
         if bonds is not None:
             coordination = [len(x) for x in bonds]
         return bonds, coordination, distances_list, tolerances, cutoff_radius
+
+    def hardness_XX(self, initial_cutoff_radius=0.8, use_laplacian=True):
+
+        bonds, coordination, cutoff_radius = self.bonds_coordination(initial_cutoff_radius=initial_cutoff_radius,
+                                                                     use_laplacian=use_laplacian)
+
+        sigma = 3.0
+        c_hard = 1300.0
+        xprod = 1.
+        tot = 0.0
+        f_d = 0.0
+        f_n = 1.0
+        atomicnumbers = atomic_number(self.structure.species)
+
+        log.debug('Atomic numbers in the structure : %s' % str(atomicnumbers))
+
+        for i in atomicnumbers:
+            f_d += valence(i) / covalent_radius(i)
+            f_n *= valence(i) / covalent_radius(i)
+
+        if f_d == 0:
+            log.debug('Returning zero as hardness. f_d= %10.3f' % f_d)
+            return 0.0
+        f = 1.0 - (self.structure.nspecies * f_n ** (1.0 / self.structure.nspecies) / f_d) ** 2
+
+        diff_bonds = [x for x in bonds if len(bonds[x]) > 0]
+
+        for pair in diff_bonds:
+            i1 = pair[0]
+            i2 = pair[1]
+
+            ei = valence(self.structure.symbols[i1]) / covalent_radius(self.structure.symbols[i1])
+            ej = valence(self.structure.symbols[i2]) / covalent_radius(self.structure.symbols[i2])
+
+            for dij in bonds[pair]:
+                sij = math.sqrt(ei * ej) / (coordination[i1] * coordination[i2]) / dij
+                xprod *= sij
+
+            num_i_j_bonds = len(bonds[pair])
+            log.debug('Number of bonds for pair %s = %d' % (str(pair), num_i_j_bonds))
+            tot += num_i_j_bonds
+
+        vol = self.structure.volume
+
+        log.debug("Structure volume: %7.3f" % vol)
+        log.debug("Total number of bonds: %d" % tot)
+        log.debug("Bonds: %s" % str(bonds))
+
+        hardness_value = (c_hard / vol) * tot * (xprod ** (1. / tot)) * math.exp(-sigma * f)
+
+        return round(hardness_value, 3), cutoff_radius, coordination
 
     def hardness(self, verbose=False, initial_cutoff_radius=0.8, ensure_conectivity=False, use_laplacian=True,
                  use_jump=True):
@@ -329,7 +405,7 @@ class StructureAnalysis():
             f_n *= valence(i) / covalent_radius(i)
 
         # if verbose:
-        #    print 'fd', f_d
+        # print 'fd', f_d
         #    print 'fn', f_n
         #    print atomicnumbers
         if f_d == 0:

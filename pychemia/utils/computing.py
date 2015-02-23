@@ -10,13 +10,14 @@ def unicode2string(value):
     :param value: (unicode, list, dict)
     :return: (str, list, dict)
 
-    Example:
-    >>> unicode2string(u'abc')
-    'abc'
-    >>> unicode2string([u'abc'])
-    ['abc']
-    >>> unicode2string({u'abc': u'def'})
-    {'abc': 'def'}
+    Examples
+
+>>> unicode2string(u'abc')
+'abc'
+>>> unicode2string([u'abc'])
+['abc']
+>>> unicode2string({u'abc': u'def'})
+{'abc': 'def'}
     """
     if isinstance(value, dict):
         return {unicode2string(key): unicode2string(value) for key, value in value.iteritems()}

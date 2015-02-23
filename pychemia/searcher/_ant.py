@@ -1,18 +1,13 @@
-__author__ = 'guilleaf'
+__author__ = 'Guillermo Avendano-Franco'
 
-from _genealogy import Genealogy
 from _searcher import Searcher
 
-class AntColony(Genealogy, Searcher):
 
-    def __init__(self, population, evaluator, objective_function, params, stabilization_limit=10,
-                 fraction_evaluated=0.8):
+class AntColony(Searcher):
+
+    def __init__(self, population, params, fraction_evaluated=0.8, generation_size=32, stabilization_limit=10):
         self.population = population
-        self.evaluator = evaluator
-        self.objective_function = objective_function
-        self.stabilization_limit = stabilization_limit
-        self.fraction_evaluated = fraction_evaluated
-        Genealogy.__init__(self, self.population, self.evaluator)
+        Searcher.__init__(self, self.population, fraction_evaluated, generation_size, stabilization_limit)
         self.params = None
         self.set_params(params)
 
@@ -20,7 +15,4 @@ class AntColony(Genealogy, Searcher):
         self.params = params
 
     def run_one_cycle(self):
-        pass
-
-    def run_all_cycles(self):
         pass

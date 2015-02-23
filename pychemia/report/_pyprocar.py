@@ -1,7 +1,8 @@
-__author__ = 'guilleaf'
+__author__ = 'Guillermo Avendano-Franco'
 
 import procar
 import numpy as np
+
 
 class BandStructure():
 
@@ -10,10 +11,9 @@ class BandStructure():
         rcell = self.structure.lattice.reciprocal().cell
         print rcell
         self.procarFile = procar.ProcarParser()
-        self.procarFile.readFile(procar=filename, permissive=False,recLattice=rcell)
+        self.procarFile.readFile(procar=filename, permissive=False, recLattice=rcell)
 
-        self.data= procar.ProcarSelect(self.procarFile, deepCopy=True)
-
+        self.data = procar.ProcarSelect(self.procarFile, deepCopy=True)
 
     def SimpleBands(self):
 

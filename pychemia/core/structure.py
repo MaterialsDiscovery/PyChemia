@@ -4,7 +4,7 @@ This class defines methods to create and manipulate
 atomic structures such as molecules, clusters and crystals
 """
 
-import numpy as _np
+import numpy as np
 import json
 import sys
 from math import sin, cos
@@ -50,8 +50,6 @@ class Structure():
 
     def __init__(self, **kwargs):
         """
-        :rtype : object
-
         :param comment:
         :param natom:
         :param symbols:
@@ -61,6 +59,7 @@ class Structure():
         :param reduced:
         :param mag_moments:
         :param kwargs:
+
         Args:
 
         natom      : Integer with number of atoms
@@ -81,19 +80,19 @@ class Structure():
         Examples:
 
 >>> import pychemia
->>> a = pychemia.core.Structure()
+>>> a = pychemia.Structure()
 >>> print a
 Empty structure
->>> a = pychemia.core.Structure(symbols=['Xe'])
+>>> a = pychemia.Structure(symbols=['Xe'])
 >>> print a.natom
 1
 >>> d = 1.104
->>> a = pychemia.core.Structure(symbols=['N', 'N'], positions=[[0, 0, 0], [0, 0, d]], periodicity=False)
+>>> a = pychemia.Structure(symbols=['N', 'N'], positions=[[0, 0, 0], [0, 0, d]], periodicity=False)
 >>> print a.natom
 2
 >>> a = 4.05
 >>> b = a/2
->>> fcc = pychemia.core.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
+>>> fcc = pychemia.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
 >>> print fcc.natom
 1
         """
@@ -126,16 +125,16 @@ Empty structure
             periodicity = kwargs['periodicity']
             self.set_periodicity(periodicity)
         if 'cell' in kwargs:
-            cell = _np.array(kwargs['cell'])
+            cell = np.array(kwargs['cell'])
             self.set_cell(cell)
         if 'positions' in kwargs:
-            positions = _np.array(kwargs['positions'])
+            positions = np.array(kwargs['positions'])
             self.set_positions(positions)
         if 'reduced' in kwargs:
-            reduced = _np.array(kwargs['reduced'])
+            reduced = np.array(kwargs['reduced'])
             self.set_reduced(reduced)
         if 'mag_moments' in kwargs:
-            self.set_mag_moments(_np.array(kwargs['mag_moments']))
+            self.set_mag_moments(np.array(kwargs['mag_moments']))
         if 'occupancies' in kwargs:
             self.occupancies = kwargs['occupancies']
         if 'sites' in kwargs:
@@ -197,8 +196,8 @@ Empty structure
     def __repr__(self):
         ret = 'Structure(symbols=' + str(self.symbols)
         if self.is_periodic:
-            if _np.all(_np.diag(self.cell.diagonal()) == self.cell):
-                if _np.max(self.cell.diagonal()) == _np.min(self.cell.diagonal()):
+            if np.all(np.diag(self.cell.diagonal()) == self.cell):
+                if np.max(self.cell.diagonal()) == np.min(self.cell.diagonal()):
                     ret += ', cell=' + str(self.cell[0, 0])
                 else:
                     ret += ', cell=' + str(self.cell.diagonal().tolist())
@@ -217,11 +216,11 @@ Empty structure
 
     def _autocomplete(self):
         if self.natom is None:
-            if not self.positions is None:
+            if self.positions is not None:
                 self.natom = len(self.positions)
-            elif not self.reduced is None:
+            elif self.reduced is not None:
                 self.natom = len(self.reduced)
-            elif not self.symbols is None:
+            elif self.symbols is not None:
                 self.natom = len(self.symbols)
             else:
                 self.natom = 0
@@ -236,13 +235,13 @@ Empty structure
             self.set_cell(1)
 
         if self.positions is None:
-            if not self.reduced is None:
+            if self.reduced is not None:
                 self.reduced2positions()
             else:
                 if self.natom == 0:
-                    self.positions = _np.array([])
+                    self.positions = np.array([])
                 elif self.natom == 1:
-                    self.positions = _np.array([[0.0, 0.0, 0.0]])
+                    self.positions = np.array([[0.0, 0.0, 0.0]])
                 else:
                     raise ValueError('Positions must be present for more than 1 atom')
 
@@ -250,13 +249,13 @@ Empty structure
             if self.positions is not None and self.natom > 0:
                 self.positions2reduced()
             else:
-                self.reduced = _np.array([])
+                self.reduced = np.array([])
 
         if self.sites is None:
             self.sites = range(self.natom)
 
         if self.occupancies is None:
-            self.occupancies = _np.ones(self.natom)
+            self.occupancies = np.ones(self.natom)
 
     def _check(self):
         check = True
@@ -293,15 +292,15 @@ Empty structure
 
         if option == 'cartesian':
             if self.natom == 0:
-                self.positions = _np.array(coordinates).reshape([-1, 3])
+                self.positions = np.array(coordinates).reshape([-1, 3])
             else:
-                self.positions = _np.append(self.positions, coordinates).reshape([-1, 3])
+                self.positions = np.append(self.positions, coordinates).reshape([-1, 3])
             self.positions2reduced()
         elif option == 'reduced':
             if self.natom == 0:
-                self.reduced = _np.array(coordinates).reshape([-1, 3])
+                self.reduced = np.array(coordinates).reshape([-1, 3])
             else:
-                self.reduced = _np.append(self.reduced, coordinates).reshape([-1, 3])
+                self.reduced = np.append(self.reduced, coordinates).reshape([-1, 3])
             self.reduced2positions()
 
     def del_atom(self, index):
@@ -314,8 +313,8 @@ Empty structure
         """
         assert (abs(index) < self.natom)
         self.symbols.pop(index)
-        _np.delete(self.positions, index, 0)
-        _np.delete(self.reduced, index, 0)
+        np.delete(self.positions, index, 0)
+        np.delete(self.reduced, index, 0)
         self.natom -= 1
         self._composition = None
 
@@ -331,7 +330,7 @@ Empty structure
             list_of_atoms = range(self.natom)
 
         total_mass = 0.0
-        center_of_mass = _np.zeros(3)
+        center_of_mass = np.zeros(3)
         if self.natom == 0:
             return center_of_mass
 
@@ -349,14 +348,14 @@ Empty structure
         Rotate the molecule in the three directions
         """
 
-        rotationx = _np.array([[1, 0, 0], [0, cos(tx), -sin(tx)], [0, sin(tx), cos(tx)]])
-        rotationy = _np.array([[cos(ty), 0, sin(ty)], [0, 1, 0], [-sin(ty), 0, cos(ty)]])
-        rotationz = _np.array([[cos(tz), -sin(tz), 0], [sin(tz), cos(tz), 0], [0, 0, 1]])
+        rotationx = np.array([[1, 0, 0], [0, cos(tx), -sin(tx)], [0, sin(tx), cos(tx)]])
+        rotationy = np.array([[cos(ty), 0, sin(ty)], [0, 1, 0], [-sin(ty), 0, cos(ty)]])
+        rotationz = np.array([[cos(tz), -sin(tz), 0], [sin(tz), cos(tz), 0], [0, 0, 1]])
 
-        rotation = _np.dot(_np.dot(rotationx, rotationy), rotationz)
+        rotation = np.dot(np.dot(rotationx, rotationy), rotationz)
 
         for i in range(self.natom):
-            self.positions[i] = _np.dot(rotation, self.positions[i])
+            self.positions[i] = np.dot(rotation, self.positions[i])
 
     def get_cell(self):
         if self._lattice is None:
@@ -376,7 +375,7 @@ Empty structure
 
         :param gcd: bool
 
-        :rtype : dict
+        :rtype : Composition
         """
         if self._composition is None:
             species = {}
@@ -393,7 +392,7 @@ Empty structure
         Computes the cell-reduced coordinates from the
         cartesian dimensional coordinates
         """
-        self.reduced = _np.linalg.solve(self.cell.T, self.positions.T).T
+        self.reduced = np.linalg.solve(self.cell.T, self.positions.T).T
         for i in range(3):
             if self.periodicity[i]:
                 self.reduced[:, i] %= 1.0
@@ -403,7 +402,7 @@ Empty structure
         Computes the dimensional cartesian coordinates
         from the adimensional cell-reduced coordinates
         """
-        self.positions = _np.dot(self.reduced, self.cell)
+        self.positions = np.dot(self.reduced, self.cell)
 
     def relocate_to_cm(self, list_of_atoms=None):
         """
@@ -430,7 +429,7 @@ Empty structure
 
         if with_periodicity:
             reduced_bases = get_reduced_bases(self.cell, tolerance)
-            scaled_pos = _np.dot(self.positions, _np.linalg.inv(reduced_bases))
+            scaled_pos = np.dot(self.positions, np.linalg.inv(reduced_bases))
             # move scaled atomic positions into -0.5 < r <= 0.5
             for pos in scaled_pos:
                 pos -= pos.round()
@@ -440,15 +439,15 @@ Empty structure
             for i in (-1, 0, 1):
                 for j in (-1, 0, 1):
                     for k in (-1, 0, 1):
-                        distances_list.append(_np.linalg.norm(
-                            _np.dot(scaled_pos[iatom] - scaled_pos[jatom] +
-                                    _np.array([i, j, k]), reduced_bases)))
+                        distances_list.append(np.linalg.norm(
+                            np.dot(scaled_pos[iatom] - scaled_pos[jatom] +
+                                   np.array([i, j, k]), reduced_bases)))
             ret = min(distances_list)
 
         else:
             posi = self.positions[iatom]
             posj = self.positions[jatom]
-            ret = _np.linalg.norm(posi - posj)
+            ret = np.linalg.norm(posi - posj)
 
         return ret
 
@@ -482,7 +481,7 @@ Empty structure
             if method == 'scaling':
                 lattice = Lattice.random_cell(comp)
                 # Random reduced positions
-                rpos = _np.random.rand(natom, 3)
+                rpos = np.random.rand(natom, 3)
                 mins = [min(rpos[:, i]) for i in range(3)]
                 rpos -= mins
 
@@ -518,11 +517,11 @@ Empty structure
 
                 lattice = Lattice.random_cell(comp)
                 # Random reduced positions
-                rpos = _np.random.rand(natom, 3)
+                rpos = np.random.rand(natom, 3)
                 mins = [min(rpos[:, i]) for i in range(3)]
                 rpos -= mins
                 # Dummy array that always will be overwritten
-                eigv = _np.array([1, 0, 0])
+                eigv = np.array([1, 0, 0])
 
                 for i, j in combinations(range(natom), 2):
                     ret = lattice.distance2(rpos[i], rpos[j])
@@ -537,7 +536,7 @@ Empty structure
                         factor = 1.1 * covalent_distance / mindist
                         v1, v2, v3 = vector_set_perpendicular(eigv)
                         matrixA = matrix_from_eig(v1, v2, v3, factor, 1, 1)
-                        lattice = Lattice(_np.dot(matrixA, lattice.cell))
+                        lattice = Lattice(np.dot(matrixA, lattice.cell))
 
             if lattice.volume < best_volume:
                 test = True
@@ -546,8 +545,8 @@ Empty structure
                         distance = lattice.minimal_distance(rpos[i], rpos[j])
                         covalent_dim = sum(covalent_radius([symbols[i], symbols[j]]))
                         if distance < covalent_dim:
-                            log.debug('At least two atoms are too close. Ratio: %7.4e ', \
-                                          (covalent_dim / distance))
+                            log.debug('At least two atoms are too close. Ratio: %7.4e ',
+                                      (covalent_dim / distance))
                             test = False
                 if test:
                     log.debug('A smaller cell was found. Volume: %7.4f < %7.4f' % (lattice.volume, best_volume))
@@ -565,7 +564,7 @@ Empty structure
 
         log.debug('The best trial was %d', best_trial)
         log.debug('The best volume was %7.3f', best_volume)
-        log.debug('The ratio between the final volume and the optimal is %7.3e' \
+        log.debug('The ratio between the final volume and the optimal is %7.3e'
                   % (best_structure.lattice.volume / optimal_volume))
 
         # Analysis of the quality for the best structure
@@ -574,8 +573,7 @@ Empty structure
             distance = best_structure.lattice.minimal_distance(rpos[i], rpos[j])
             covalent_distance = sum(covalent_radius([symbols[i], symbols[j]]))
             if distance < covalent_distance:
-
-                log.debug('Covalent distance: %7.4f  Minimal distance: %7.4f  Difference: %7.3e' % \
+                log.debug('Covalent distance: %7.4f  Minimal distance: %7.4f  Difference: %7.3e' %
                           (covalent_distance, distance, covalent_distance - distance))
 
         return best_structure
@@ -596,13 +594,13 @@ Empty structure
             cell: A matrix with the 3 unit cell
             vectors
         """
-        npcell = _np.array(cell)
+        npcell = np.array(cell)
         if npcell.shape == () or npcell.shape == (1,):
-            self.cell = npcell * _np.eye(3)
+            self.cell = npcell * np.eye(3)
         elif npcell.shape == (3,):
-            self.cell = _np.diag(npcell)
+            self.cell = np.diag(npcell)
         else:
-            self.cell = _np.array(cell).reshape([3, 3])
+            self.cell = np.array(cell).reshape([3, 3])
         self._lattice = None
 
     def set_mag_moments(self, mag_moments):
@@ -615,7 +613,7 @@ Empty structure
             vector for each atom.
             The values will be converted into a numpy array
         """
-        self.vector_info['mag_moments'] = _np.array(mag_moments).reshape([-1, 3])
+        self.vector_info['mag_moments'] = np.array(mag_moments).reshape([-1, 3])
 
     def set_periodicity(self, periodicity):
         """
@@ -645,7 +643,7 @@ Empty structure
             positions: A array of 3 vectors
             with dimensional coordinates
         """
-        self.positions = _np.array(positions).reshape([-1, 3])
+        self.positions = np.array(positions).reshape([-1, 3])
 
     def set_reduced(self, reduced):
         """
@@ -657,7 +655,7 @@ Empty structure
             positions: A array of 3 vectors
             with adimensional coordinates
         """
-        self.reduced = _np.array(reduced).reshape([-1, 3])
+        self.reduced = np.array(reduced).reshape([-1, 3])
 
     def sort_byaxis(self, axis):
         """
@@ -671,7 +669,7 @@ Empty structure
             index = 2
         else:
             return
-        order = _np.argsort(self.positions[:, index])
+        order = np.argsort(self.positions[:, index])
         self.positions = self.positions[order]
         self.symbols = self.symbols[order]
 
@@ -681,9 +679,9 @@ Empty structure
         of atoms in the x,y,z directions a number of
         size=(nx,ny,nz) times
         """
-        new_natom = _np.prod(size) * self.natom
-        new_symbols = _np.prod(size) * self.symbols
-        new_positions = _np.zeros((new_natom, 3))
+        new_natom = np.prod(size) * self.natom
+        new_symbols = np.prod(size) * self.symbols
+        new_positions = np.zeros((new_natom, 3))
 
         index = 0
         for i in range(size[0]):
@@ -693,20 +691,20 @@ Empty structure
                         new_positions[index] = self.positions[n] + (
                             i * self.cell[0] + j * self.cell[1] + k * self.cell[2])
                         index += 1
-        new_cell = _np.zeros((3, 3))
+        new_cell = np.zeros((3, 3))
         new_cell[0] = size[0] * self.cell[0]
         new_cell[1] = size[1] * self.cell[1]
         new_cell[2] = size[2] * self.cell[2]
         return Structure(symbols=new_symbols, positions=new_positions, cell=new_cell)
 
-    def copy(self, deep=False):
+    def copy(self):
         """
         Get a copy of the object
         """
-        copy_struct = Structure(cell=self.cell,
-                                positions=self.positions,
-                                periodicity=self.periodicity,
-                                symbols=self.symbols)
+        copy_struct = Structure(name=self.name, comment=self.comment, natom=self.natom, symbols=self.symbols,
+                                periodicity=self.periodicity, cell=self.cell, positions=self.positions,
+                                reduced=self.reduced, vector_info=self.vector_info, sites=self.sites,
+                                occupancies=self.occupancies)
         return copy_struct
 
     def plot(self, figname='None', size=(300, 325), save=False):
@@ -752,7 +750,9 @@ Empty structure
                'vector_info': self.vector_info,
                'nspecies': len(self.species),
                'density': self.density,
-               'formula': self.formula}
+               'formula': self.formula,
+               'sites': list(self.sites),
+               'occupancies': list(self.occupancies)}
         return ret
 
     @staticmethod
@@ -763,12 +763,21 @@ Empty structure
         natom = structdict['natom']
         symbols = unicode2string(structdict['symbols'])
         periodicity = structdict['periodicity']
-        cell = _np.array(structdict['cell'])
-        positions = _np.array(structdict['positions'])
-        reduced = _np.array(structdict['reduced'])
+        cell = np.array(structdict['cell'])
+        positions = np.array(structdict['positions'])
+        reduced = np.array(structdict['reduced'])
         vector_info = structdict['vector_info']
+        if 'sites' in structdict:
+            sites = structdict['sites']
+        else:
+            sites = range(natom)
+        if 'occupancies' in structdict:
+            occupancies = structdict['occupancies']
+        else:
+            occupancies = list(np.ones(natom))
         return Structure(name=name, comment=comment, natom=natom, symbols=symbols, periodicity=periodicity, cell=cell,
-                         positions=positions, reduced=reduced, vector_info=vector_info)
+                         positions=positions, reduced=reduced, vector_info=vector_info, sites=sites,
+                         occupancies=occupancies)
 
     def save_json(self, filename):
 
@@ -800,13 +809,13 @@ Empty structure
     def __eq__(self, other):
         if self.natom != other.natom:
             ret = False
-        elif not _np.array_equal(self.cell, other.cell):
+        elif not np.array_equal(self.cell, other.cell):
             ret = False
-        elif not _np.array_equal(self.positions, other.positions):
+        elif not np.array_equal(self.positions, other.positions):
             ret = False
-        elif not _np.array_equal(self.reduced, other.reduced):
+        elif not np.array_equal(self.reduced, other.reduced):
             ret = False
-        elif not _np.array_equal(self.periodicity, other.periodicity):
+        elif not np.array_equal(self.periodicity, other.periodicity):
             ret = False
         else:
             ret = True
@@ -830,7 +839,7 @@ Empty structure
 
         :return: bool
         """
-        return self.natom == self.nsites and min(self.occupancies)==1
+        return self.natom == self.nsites and min(self.occupancies) == 1
 
     @property
     def is_periodic(self):
@@ -891,7 +900,7 @@ Empty structure
 
         :return: float
         """
-        return sum(_np.array(mass(self.symbols))) / self.volume
+        return sum(np.array(mass(self.symbols))) / self.volume
 
     @property
     def volume(self):
@@ -902,7 +911,7 @@ Empty structure
 
         :return: float
         """
-        return abs(_np.linalg.det(self.cell))
+        return abs(np.linalg.det(self.cell))
 
     @property
     def species(self):
@@ -916,6 +925,7 @@ Empty structure
     def nsites(self):
         return len(self.positions)
 
+
 def load_structure_json(filename):
     ret = Structure()
     ret.load_json(filename)
@@ -923,7 +933,6 @@ def load_structure_json(filename):
 
 
 class SiteSet():
-
     def __init__(self, structure):
 
         self.structure = structure
@@ -951,7 +960,6 @@ class SiteSet():
 
 
 class Site():
-
     def __init__(self, symbols, occupancies, position, reduced):
 
         if isinstance(symbols, list):
@@ -964,16 +972,16 @@ class Site():
         else:
             self.occupancies = [occupancies]
 
-        assert(len(self.occupancies)==len(self.symbols))
+        assert (len(self.occupancies) == len(self.symbols))
 
         self.position = position
         self.reduced = reduced
 
     def __repr__(self):
-        ret = 'Site(symbols='+repr(self.symbols)
-        ret += ',occupancies='+repr(self.occupancies)
-        ret += ',position='+repr(self.position)
-        ret += ',reduced='+repr(self.reduced)
+        ret = 'Site(symbols=' + repr(self.symbols)
+        ret += ',occupancies=' + repr(self.occupancies)
+        ret += ',position=' + repr(self.position)
+        ret += ',reduced=' + repr(self.reduced)
         ret += ')'
         return ret
 

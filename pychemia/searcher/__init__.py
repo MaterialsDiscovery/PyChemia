@@ -10,6 +10,5 @@ from _harmony import HarmonySearch
 from _annealing import SimulatedAnnealing
 from _swarm import Swarm
 from _grey import GreyWolf
-from _genealogy import Genealogy
 
-#__all__ = filter(lambda s: not s.startswith('_'), dir())
+# __all__ = filter(lambda s: not s.startswith('_'), dir())
