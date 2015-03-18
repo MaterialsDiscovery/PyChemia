@@ -1,3 +1,9 @@
+"""
+PyChemia is an open-source Python Library for materials structural search. The purpose of the code is to create
+a method agnostic framework for materials discovery and design using a variety of methods from Metaheuristic to
+Dynamical such as minima hoping method (MHM)
+"""
+
 import logging
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())

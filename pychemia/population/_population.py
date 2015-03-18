@@ -383,6 +383,8 @@ class StructurePopulation():
 
         # We will move structure1 in the direction of structure2
         match = StructureMatch(structure_target, structure_mobile)
+        match.match_size()
+        match.match_shape()
         match.match_atoms()
         displacements = match.reduced_displacement()
 

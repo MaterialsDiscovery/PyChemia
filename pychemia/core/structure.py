@@ -517,6 +517,7 @@ Empty structure
                     log.debug('Covalent distance: %7.4f  Minimal distance: %7.4f  Difference: %7.3e' %
                               (covalent_distance, distance, covalent_distance - distance))
 
+        best_structure.canonical_form()
         return best_structure
 
     def adjust_reduced(self):
@@ -632,9 +633,15 @@ Empty structure
         self.set_cell(self.cell[sorted_indices])
         self.reduced = self.reduced[:, sorted_indices]
 
-    def align_with_axis(self, axis=0, round_decimals=8):
+    def align_with_axis(self, axis=0, round_decimals=14):
         lattice = self.lattice
         lattice.align_with_axis(axis=axis, round_decimals=round_decimals)
+        self.set_cell(lattice.cell)
+        self.reduced2positions()
+
+    def align_with_plane(self, axis=2, round_decimals=14):
+        lattice = self.lattice
+        lattice.align_with_plane(axis=axis, round_decimals=round_decimals)
         self.set_cell(lattice.cell)
         self.reduced2positions()
 
@@ -643,6 +650,7 @@ Empty structure
         self.sort_sites()
         self.sort_axes()
         self.align_with_axis()
+        self.align_with_plane()
 
     def supercell(self, size):
         """

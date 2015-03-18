@@ -1,13 +1,12 @@
 import sys
 import random
 import itertools
-import numpy as _np
+import numpy as np
 from math import ceil, sqrt, cos, sin, radians, acos
 
 from pychemia.utils.mathematics import length_vectors, angle_vectors, wrap2_pmhalf, \
     unit_vector, rotation_matrix_axis_angle, angle_vector
 from composition import Composition
-from pychemia import log
 
 __author__ = 'Guillermo Avendano-Franco'
 
@@ -22,16 +21,52 @@ class Lattice():
 
     def __init__(self, cell=None, periodicity=True):
         """
-        Defines an object lattice that could live
-        in arbitrary dimensions
+        Defines the lattice, basically it contains the lattice vectors arranged as rows in the cell array.
+        The Lattice class provides methods to compute the reciprocal lattice (That is another Lattice object)
+        and  basic routines related to the cell
+
+        Examples
+
+>>> import pychemia
+
+>>> cubic=pychemia.Lattice()
+>>> cubic.lengths
+array([ 1.,  1.,  1.])
+>>> cubic.angles
+array([ 90.,  90.,  90.])
+
+>>> ortho=pychemia.Lattice([1,2,3])
+>>> ortho.lengths
+array([ 1.,  2.,  3.])
+>>> ortho.angles
+array([ 90.,  90.,  90.])
+
+>>> bcc=pychemia.Lattice([[0.5,0.5,-0.5],[-0.5,0.5,0.5],[0.5,-0.5,0.5]])
+>>> bcc.angles
+array([ 109.47122063,  109.47122063,  109.47122063])
+>>> bcc.lengths
+array([ 0.8660254,  0.8660254,  0.8660254])
+
+>>> fcc=pychemia.Lattice([[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]])
+>>> fcc.lengths
+array([ 0.70710678,  0.70710678,  0.70710678])
+>>> fcc.angles
+array([ 60.,  60.,  60.])
         """
         if cell is None:
-            cell = _np.eye(3)
+            cell = np.eye(3)
+        else:
+            cell = np.array(cell)
+        if cell.shape == (3,):
+            cell = cell*np.eye(3)
+        elif cell.shape == ():
+            cell = cell*np.eye(3)
+
         self._periodicity = None
         self.set_periodicity(periodicity)
         self._dims = sum(self._periodicity)
-        assert (_np.prod(_np.array(cell).shape) == self.periodic_dimensions ** 2)
-        self._cell = _np.array(cell).reshape((self.periodic_dimensions, self.periodic_dimensions))
+        assert (np.prod(np.array(cell).shape) == self.periodic_dimensions ** 2)
+        self._cell = np.array(cell).reshape((self.periodic_dimensions, self.periodic_dimensions))
         self._lengths = length_vectors(self._cell)
         self._angles = angle_vectors(self._cell, units='deg')
         self._metric = None
@@ -57,7 +92,7 @@ class Lattice():
         return ret
 
     def cartesian2reduced(self, x):
-        return _np.dot(x, self.inverse)
+        return np.dot(x, self.inverse)
 
     def copy(self):
         """
@@ -68,7 +103,7 @@ class Lattice():
     def distance2(self, x1, x2, option='reduced', radius=20, limits=None):
 
         # Compute the vector from x1 to x2
-        dv = _np.array(x2) - _np.array(x1)
+        dv = np.array(x2) - np.array(x1)
 
         # If we are not in reduced coordinates,
         # Convert into them
@@ -80,19 +115,19 @@ class Lattice():
         dwrap = wrap2_pmhalf(dred)
 
         if limits is None:
-            limits = _np.zeros(3, dtype=int)
+            limits = np.zeros(3, dtype=int)
             corners = self.get_wigner_seitz_container()
 
-            limits[0] = min(int(ceil(max(1e-14 + abs(_np.array([corners[x][0] for x in corners]))))), 5)
-            limits[1] = min(int(ceil(max(1e-14 + abs(_np.array([corners[x][1] for x in corners]))))), 5)
-            limits[2] = min(int(ceil(max(1e-14 + abs(_np.array([corners[x][2] for x in corners]))))), 5)
+            limits[0] = min(int(ceil(max(1e-14 + abs(np.array([corners[x][0] for x in corners]))))), 5)
+            limits[1] = min(int(ceil(max(1e-14 + abs(np.array([corners[x][1] for x in corners]))))), 5)
+            limits[2] = min(int(ceil(max(1e-14 + abs(np.array([corners[x][2] for x in corners]))))), 5)
 
         ret = {}
-        for i0 in _np.arange(-limits[0], limits[0] + 1):
-            for i1 in _np.arange(-limits[1], limits[1] + 1):
-                for i2 in _np.arange(-limits[2], limits[2] + 1):
-                    dtot = dwrap + _np.array([i0, i1, i2])
-                    norm2 = _np.dot(_np.dot(dtot, self.metric), dtot)
+        for i0 in np.arange(-limits[0], limits[0] + 1):
+            for i1 in np.arange(-limits[1], limits[1] + 1):
+                for i2 in np.arange(-limits[2], limits[2] + 1):
+                    dtot = dwrap + np.array([i0, i1, i2])
+                    norm2 = np.dot(np.dot(dtot, self.metric), dtot)
                     if norm2 < radius * radius:
                         ret[(i0, i1, i2)] = {'distance': sqrt(norm2), 'image': dtot}
 
@@ -121,7 +156,7 @@ class Lattice():
         # Sometimes rounding errors result in values slightly > 1.
         val = val if abs(val) <= 1 else val / abs(val)
         gamma_star = acos(val)
-        cell = _np.zeros((3, 3))
+        cell = np.zeros((3, 3))
         cell[0] = [a * sin(beta_radians), 0.0, a * cos(beta_radians)]
         cell[1] = [-b * sin(alpha_radians) * cos(gamma_star),
                    b * sin(alpha_radians) * sin(gamma_star),
@@ -136,16 +171,16 @@ class Lattice():
 
         assert (self.periodic_dimensions == 3)
 
-        zero3 = _np.zeros(3)
+        zero3 = np.zeros(3)
         x = self.cell[0, :]
         y = self.cell[1, :]
         z = self.cell[2, :]
 
-        frame = _np.array([zero3, x, x + y, y, zero3, z, x + z, x + y + z, y + z, z])
+        frame = np.array([zero3, x, x + y, y, zero3, z, x + z, x + y + z, y + z, z])
 
-        line1 = _np.array([x, x + z])
-        line2 = _np.array([x + y, x + y + z])
-        line3 = _np.array([y, y + z])
+        line1 = np.array([x, x + z])
+        line2 = np.array([x + y, x + y + z])
+        line3 = np.array([y, y + z])
 
         return frame, line1, line2, line3
 
@@ -172,7 +207,7 @@ class Lattice():
         """
         ret = {}
         for i in itertools.product((-1, 1), repeat=3):
-            ret[i] = _np.dot(self.reciprocal().metric, i * _np.diagonal(self.metric))
+            ret[i] = np.dot(self.reciprocal().metric, i * np.diagonal(self.metric))
         return ret
 
     def minimal_distance(self, x1, x2, option='reduced'):
@@ -191,11 +226,38 @@ class Lattice():
         :param reduced1: List or array of reduced coordinates for the first
                             set of points
         :param reduced2: Second set of points
+
+        Example
+
+>>> import numpy as np
+>>> import pychemia
+
+>>> lattice=pychemia.Lattice.random_cell('C2')
+>>> r1=np.random.rand(4,3)
+>>> r2=np.random.rand(4,3)
+>>> dist, close_imgs = lattice.minimal_distances(r1,r2)
+
+>>> solution=np.zeros((len(r1),len(r2)))
+
+>>> for i in range(len(r1)):
+...        for j in range(len(r2)):
+...                reduced1=r1[i]
+...                reduced2=r2[j]+close_imgs[i,j]
+...                cartesian1 = lattice.reduced2cartesian(reduced1)
+...                cartesian2 = lattice.reduced2cartesian(reduced2)
+...                diff_vector = cartesian2 - cartesian1
+...                solution[i, j] = np.linalg.norm(diff_vector)
+
+>>> solution == dist
+array([[ True,  True,  True,  True],
+       [ True,  True,  True,  True],
+       [ True,  True,  True,  True],
+       [ True,  True,  True,  True]], dtype=bool)
         """
         # Just in case of one single coordinate
-        reduced1, reduced2 = _np.atleast_2d(reduced1, reduced2)
+        reduced1, reduced2 = np.atleast_2d(reduced1, reduced2)
 
-        images = _np.array([list(i) for i in itertools.product([-1, 0, 1], repeat=3)])
+        images = np.array([list(i) for i in itertools.product([-1, 0, 1], repeat=3)])
 
         red2_images = reduced2[:, None, :] + images[None, :, :]
 
@@ -203,7 +265,16 @@ class Lattice():
         cartesian2 = self.reduced2cartesian(red2_images)
 
         diff_vectors = cartesian2[None, :, :, :] - cartesian1[:, None, None, :]
-        return _np.min(_np.sum(diff_vectors ** 2, axis=3), axis=2) ** 0.5
+
+        distances = np.sum(diff_vectors ** 2, axis=3)
+
+        close_images = np.zeros((len(reduced1), len(reduced2), 3))
+        for i in range(len(reduced1)):
+            for j in range(len(reduced2)):
+                dij = distances[i, j]
+                close_images[i, j] = images[dij == min(dij)][0]
+
+        return np.min(distances, axis=2) ** 0.5, close_images
 
     def distances_in_sphere(self, x1, x2, radius, option='reduced', exclude_out_sphere=True, sort_by_distance=True):
         """
@@ -217,7 +288,7 @@ class Lattice():
         :return:
         """
         # Compute the vector from x1 to x2
-        dv = _np.array(x2) - _np.array(x1)
+        dv = np.array(x2) - np.array(x1)
 
         # If the positions are not in reduced coordinates,convert into them
         if option != 'reduced':
@@ -232,30 +303,30 @@ class Lattice():
         # For that we to compute the perpendicular distance between
         # two faces, the reciprocal lattice produces the inverse of
         # those distances
-        recp_len = _np.array(self.reciprocal().lengths)
+        recp_len = np.array(self.reciprocal().lengths)
         # The reciprocal (2*pi) is not necessary
-        limits = _np.ceil(radius * recp_len).astype(int)
+        limits = np.ceil(radius * recp_len).astype(int)
         #log.debug('The limits are: %d %d %d' % tuple(limits))
 
         ret = {}
         # The total size is the product of the number in the 3 directions
         # that is double the limits plus 1 to include the zero
-        total_size = _np.prod(2 * limits + 1)
+        total_size = np.prod(2 * limits + 1)
         # log.debug('The total size is: %d' % total_size)
 
-        ret['distance'] = _np.zeros(total_size)
-        ret['image'] = _np.zeros((total_size, 3), dtype=int)
+        ret['distance'] = np.zeros(total_size)
+        ret['image'] = np.zeros((total_size, 3), dtype=int)
         ret['dwrap'] = dwrap
         ret['limits'] = limits
 
         index = 0
-        for i0 in _np.arange(-limits[0], limits[0] + 1):
-            for i1 in _np.arange(-limits[1], limits[1] + 1):
-                for i2 in _np.arange(-limits[2], limits[2] + 1):
-                    dtot = dwrap + _np.array([i0, i1, i2])
-                    norm2 = _np.dot(_np.dot(dtot, self.metric), dtot)
+        for i0 in np.arange(-limits[0], limits[0] + 1):
+            for i1 in np.arange(-limits[1], limits[1] + 1):
+                for i2 in np.arange(-limits[2], limits[2] + 1):
+                    dtot = dwrap + np.array([i0, i1, i2])
+                    norm2 = np.dot(np.dot(dtot, self.metric), dtot)
                     ret['distance'][index] = sqrt(norm2)
-                    ret['image'][index] = _np.array([i0, i1, i2])
+                    ret['image'][index] = np.array([i0, i1, i2])
                     index += 1
 
         # Exclude distances out of sphere
@@ -265,7 +336,7 @@ class Lattice():
             ret['image'] = ret['image'][inside_sphere]
 
         if sort_by_distance:
-            sorted_indices = _np.argsort(ret['distance'])
+            sorted_indices = np.argsort(ret['distance'])
             ret['distance'] = ret['distance'][sorted_indices]
             ret['image'] = ret['image'][sorted_indices]
 
@@ -284,8 +355,8 @@ class Lattice():
             mlab.plot3d(i, j, k, tube_radius=tube_rad, color=(1, 1, 1), tube_sides=24, transparent=True, opacity=0.5)
 
         if points is not None:
-            ip = _np.array(points)
-            mlab.points3d(ip[:, 0], ip[:, 1], ip[:, 2], tube_rad * _np.ones(len(ip)), scale_factor=1)
+            ip = np.array(points)
+            mlab.points3d(ip[:, 0], ip[:, 1], ip[:, 2], tube_rad * np.ones(len(ip)), scale_factor=1)
 
         return mlab.pipeline
 
@@ -293,11 +364,11 @@ class Lattice():
         import itertools
         from tvtk.api import tvtk
 
-        ws = _np.array(self.get_wigner_seitz())
-        points = _np.array([])
+        ws = np.array(self.get_wigner_seitz())
+        points = np.array([])
         for i in ws:
             for j in i:
-                points = _np.concatenate((points, j))
+                points = np.concatenate((points, j))
         points = scale * (points.reshape(-1, 3))
 
         index = 0
@@ -312,18 +383,18 @@ class Lattice():
         triangles = None
         for i in ws:
             print i
-            iscalars = _np.ones(len(i))
-            itriangles = index + _np.array(list(itertools.combinations(range(len(i)), 3)))
+            iscalars = np.ones(len(i))
+            itriangles = index + np.array(list(itertools.combinations(range(len(i)), 3)))
             print iscalars
             print itriangles
             if triangles is None:
                 triangles = itriangles
             else:
-                triangles = _np.concatenate((triangles, itriangles))
+                triangles = np.concatenate((triangles, itriangles))
             if scalars is None:
                 scalars = iscalars
             else:
-                scalars = _np.concatenate((scalars, iscalars))
+                scalars = np.concatenate((scalars, iscalars))
             index += len(i)
 
         #print triangles
@@ -339,14 +410,7 @@ class Lattice():
 
     @staticmethod
     def random_cell(composition):
-
-        if isinstance(composition, dict):
-            comp = Composition(composition)
-        elif isinstance(composition, Composition):
-            comp = composition
-        else:
-            raise ValueError('Wrong composition value')
-
+        comp = Composition(composition)
         volume = comp.covalent_volume(packing='cubes')
 
         random.seed()
@@ -365,6 +429,8 @@ class Lattice():
 
         factor = (volume / lattice.volume) ** (1 / 3.0)
         lattice = Lattice().from_parameters_to_cell(factor * a, factor * b, factor * c, alpha, beta, gamma)
+        lattice.align_with_axis()
+        lattice.align_with_plane()
 
         return lattice
 
@@ -375,15 +441,15 @@ class Lattice():
         :rtype : Lattice
         :return:
         """
-        return self.__class__(_np.linalg.inv(self.cell.T))
+        return self.__class__(np.linalg.inv(self.cell.T))
 
     def reduced2cartesian(self, x):
-        return _np.dot(x, self.cell)
+        return np.dot(x, self.cell)
 
     def set_periodicity(self, periodicity):
         if isinstance(periodicity, bool):
             self._periodicity = 3 * [periodicity]
-        elif _np.iterable(periodicity):
+        elif np.iterable(periodicity):
             assert (len(periodicity) == 3)
             for i in periodicity:
                 assert (isinstance(i, bool))
@@ -418,18 +484,18 @@ class Lattice():
 
         :rtype : float
         """
-        return abs(_np.linalg.det(self.cell))
+        return abs(np.linalg.det(self.cell))
 
     @property
     def metric(self):
         if self._metric is None:
-            self._metric = _np.dot(self.cell, self.cell.T)
+            self._metric = np.dot(self.cell, self.cell.T)
         return self._metric
 
     @property
     def inverse(self):
         if self._inverse is None:
-            self._inverse = _np.linalg.inv(self.cell)
+            self._inverse = np.linalg.inv(self.cell)
         return self._inverse
 
     @property
@@ -446,7 +512,7 @@ class Lattice():
 
     @property
     def angles(self):
-        return self.alpha, self.beta, self.gamma
+        return np.round([self.alpha, self.beta, self.gamma], 14)
 
     @property
     def a(self):
@@ -469,19 +535,62 @@ class Lattice():
         """
         return self._lengths
 
-    def align_with_axis(self, axis=0, round_decimals=8):
+    def align_with_axis(self, axis=0, round_decimals=14):
         a = self.cell[0]
         if axis == 0:
-            b = _np.array([1, 0, 0])
+            b = np.array([1, 0, 0])
         elif axis == 1:
-            b = _np.array([0, 1, 0])
+            b = np.array([0, 1, 0])
         elif axis == 2:
-            b = _np.array([0, 0, 1])
+            b = np.array([0, 0, 1])
         else:
             raise ValueError('Axis must be an integer in (0,1,2)')
-        if _np.linalg.norm(_np.cross(a, b)) < 1E-10:
+        if np.linalg.norm(np.cross(a, b)) < 1E-10:
             return
-        c = unit_vector(_np.cross(a, b))
+        c = unit_vector(np.cross(a, b))
         av = angle_vector(a, b)
         rotation_matrix = rotation_matrix_axis_angle(c, av)
-        self._cell = _np.dot(rotation_matrix, self.cell.T).T.round(round_decimals)
+        self._cell = np.dot(rotation_matrix, self.cell.T).T.round(round_decimals)
+
+    def align_with_plane(self, axis=2, round_decimals=14):
+        a = self.cell[1]
+
+        if axis == 0:
+            p1 = np.array([0, 1, 0])
+            p2 = np.array([0, 0, 1])
+        elif axis == 1:
+            p1 = np.array([0, 0, 1])
+            p2 = np.array([1, 0, 0])
+        elif axis == 2:
+            p1 = np.array([1, 0, 0])
+            p2 = np.array([0, 1, 0])
+        else:
+            raise ValueError('Axis must be an integer in (0,1,2)')
+
+        if np.linalg.norm(np.cross(p1, a)) < 1E-10:
+            return
+        c = unit_vector(np.cross(p1, a))
+        # print c
+        # A vector perpendicular to the plane
+        vector_plane = unit_vector(np.cross(p1, p2))
+        v1_u = unit_vector(vector_plane)
+        v2_u = unit_vector(c)
+        proj = np.dot(v1_u, v2_u)
+        # print 'Projection', proj
+        av = np.arccos(proj)
+        # import math
+        # print 'Angle=', math.degrees(av)
+        rotation_matrix = rotation_matrix_axis_angle(p1, -av)
+        cell = np.dot(rotation_matrix, self.cell.T).T.round(round_decimals)
+        # print '-->',cell[1], vector_plane
+        # print 'PROJECTION', np.dot(cell[1], vector_plane)
+        if np.abs(np.dot(cell[1], vector_plane)) > 1E-10:
+            # print 'Failed projection', np.dot(cell[1], vector_plane)
+            # print cell
+            rotation_matrix = rotation_matrix_axis_angle(p1, av)
+            cell = np.dot(rotation_matrix, self.cell.T).T.round(round_decimals)
+            if np.dot(cell[1], vector_plane) > 1E-10:
+                #print 'Failed projection', np.dot(cell[1], vector_plane)
+                #print cell
+                pass
+        self._cell = cell

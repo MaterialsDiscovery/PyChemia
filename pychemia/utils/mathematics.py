@@ -5,8 +5,8 @@ Mathematical operations
 __author__ = 'Guillermo Avendano-Franco'
 
 import math
-import numpy as _np
-import itertools as _it
+import numpy as np
+import itertools as it
 from fractions import gcd
 
 
@@ -23,7 +23,7 @@ def length_vector(v):
 >>> length_vector([1, 2, 3])
 3.7416573867739413
     """
-    return _np.linalg.norm(v)
+    return np.linalg.norm(v)
 
 
 def length_vectors(m):
@@ -40,8 +40,8 @@ def length_vectors(m):
 >>> length_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
 array([  3.74165739,   8.77496439,  13.92838828,   1.        ,   2.        ])
     """
-    m = _np.array(m)
-    return _np.apply_along_axis(_np.linalg.norm, 1, m)
+    m = np.array(m)
+    return np.apply_along_axis(np.linalg.norm, 1, m)
 
 
 def unit_vector(v):
@@ -60,9 +60,9 @@ def unit_vector(v):
 >>> length_vector(a)
     1.0
     """
-    if length_vector(_np.array(v, dtype=float)) < 1E-10:
+    if length_vector(np.array(v, dtype=float)) < 1E-10:
         raise ValueError('Vector is null')
-    return _np.array(v) / length_vector(_np.array(v, dtype=float))
+    return np.array(v) / length_vector(np.array(v, dtype=float))
 
 
 def unit_vectors(m):
@@ -84,7 +84,7 @@ array([[ 0.26726124,  0.53452248,  0.80178373],
 >>> length_vectors(b)
 array([ 1.,  1.,  1.,  1.,  1.])
     """
-    return _np.divide(_np.array(m, dtype=float).T, length_vectors(_np.array(m, dtype=float))).T
+    return np.divide(np.array(m, dtype=float).T, length_vectors(np.array(m, dtype=float))).T
 
 
 def angle_vector(v1, v2, units='rad'):
@@ -114,16 +114,16 @@ def angle_vector(v1, v2, units='rad'):
 
     v1_u = unit_vector(v1)
     v2_u = unit_vector(v2)
-    angle = _np.arccos(_np.dot(v1_u, v2_u))
-    if _np.isnan(angle):
+    angle = np.arccos(np.dot(v1_u, v2_u))
+    if np.isnan(angle):
         if (v1_u == v2_u).all():
             return 0.0
         else:
-            return _np.pi
+            return np.pi
     if units == 'rad':
         return angle
     elif units == 'deg':
-        return 180.0 * angle / _np.pi
+        return 180.0 * angle / np.pi
 
 
 def angle_vectors(m, units='rad'):
@@ -166,7 +166,7 @@ def angle_vectors(m, units='rad'):
     """
 
     ret = {}
-    for i in _it.combinations(range(len(m)), 2):
+    for i in it.combinations(range(len(m)), 2):
         ret[i] = angle_vector(m[i[0]], m[i[1]], units=units)
     return ret
 
@@ -187,7 +187,7 @@ def distance(v1, v2):
 >>> distance([-1, 0, 0], [1, 0, 0])
 (array([2, 0, 0]), 2.0)
     """
-    ret = _np.array(v2) - _np.array(v1)
+    ret = np.array(v2) - np.array(v1)
     return ret, length_vector(ret)
 
 
@@ -215,7 +215,7 @@ def distances(m):
      (3, 4): (array([-1,  0,  2]), 2.2360679774997898)}
     """
     ret = {}
-    for i in _it.combinations(range(len(m)), 2):
+    for i in it.combinations(range(len(m)), 2):
         ret[i] = distance(m[i[0]], m[i[1]])
     return ret
 
@@ -250,8 +250,8 @@ array([[ 0.25,  0.5 , -0.25],
             ret = (lambda num2: y if abs(y - num2) < tol12 else num2)(ret)
         return ret
 
-    if _np.iterable(x):
-        vec = _np.vectorize(wrap)
+    if np.iterable(x):
+        vec = np.vectorize(wrap)
         return vec(x)
     else:
         return wrap(x)
@@ -268,10 +268,10 @@ def vector_set_perpendicular(vector3):
     v2 = None
     v3 = None
     while True:
-        other = unit_vector(_np.random.rand(3))
-        if _np.abs(_np.dot(v1, other)) > 0.05:
-            v2 = unit_vector(_np.cross(v1, other))
-            v3 = unit_vector(_np.cross(v1, v2))
+        other = unit_vector(np.random.rand(3))
+        if np.abs(np.dot(v1, other)) > 0.05:
+            v2 = unit_vector(np.cross(v1, other))
+            v3 = unit_vector(np.cross(v1, v2))
             break
         else:
             continue
@@ -303,10 +303,10 @@ def matrix_from_eig(v1, v2, v3, lam1, lam2, lam3):
     :param lam3: Third eigenvalue
     :return: (numpy.ndarray) The matrix
     """
-    matrixp = _np.vstack((v1, v2, v3)).T
-    matrixd = _np.diag([lam1, lam2, lam3])
-    matrixpinv = _np.linalg.inv(matrixp)
-    matrixa = _np.dot(matrixp, _np.dot(matrixd, matrixpinv))
+    matrixp = np.vstack((v1, v2, v3)).T
+    matrixd = np.diag([lam1, lam2, lam3])
+    matrixpinv = np.linalg.inv(matrixp)
+    matrixa = np.dot(matrixp, np.dot(matrixd, matrixpinv))
     return matrixa
 
 
@@ -425,18 +425,18 @@ def shortest_triple_set(n):
             prime_factors = [1]+prime_factors
         return prime_factors
     else:
-        factors = _np.array(prime_factors)
+        factors = np.array(prime_factors)
         while len(factors) > 3:
             print factors
             # Complete a multiple of 6 and sum folding lowest with highest
             while len(factors) % 6 != 0:
-                factors = _np.concatenate(([1], factors))
+                factors = np.concatenate(([1], factors))
             # Take the first half
             low = factors[:len(factors)/2]
             # take the second half and invert the order
             high = factors[len(factors)/2:][::-1]
             # Sum both arrays and sort them before reenter
-            factors = _np.sort(low * high)
+            factors = np.sort(low * high)
         return list(factors)
 
 
@@ -444,8 +444,30 @@ def rotation_matrix_axis_angle(axis, theta):
     # Given a unit vector u = (ux, uy, uz), where ux**2 + uy**2 + uz**2 = 1,
     u = unit_vector(axis)
     # with ux is the cross product matrix
-    ux = _np.array([[0, -u[2], u[1]], [u[2], 0, -u[0]], [-u[1], u[0], 0]])
+    ux = np.array([[0, -u[2], u[1]], [u[2], 0, -u[0]], [-u[1], u[0], 0]])
     # uxu is the tensor product of u
-    uxu = _np.tensordot(u, u.T, axes=0)
+    uxu = np.tensordot(u, u.T, axes=0)
     # This is a matrix form of Rodrigues 'rotation formula'
-    return _np.cos(theta)*_np.identity(3) + _np.sin(theta)*ux + (1-_np.cos(theta))*uxu
+    return np.cos(theta)*np.identity(3) + np.sin(theta)*ux + (1-np.cos(theta))*uxu
+
+
+def rotation_x(theta):
+    return np.array([[1, 0, 0],
+                     [0, np.cos(theta), -np.sin(theta)],
+                     [0, np.sin(theta),  np.cos(theta)]])
+
+
+def rotation_y(theta):
+    return np.array([[np.cos(theta), 0, np.sin(theta)],
+                     [0, 1, 0],
+                     [-np.sin(theta), 0, np.cos(theta)]])
+
+
+def rotation_z(theta):
+    return np.array([[np.cos(theta), -np.sin(theta), 0],
+                     [np.sin(theta),  np.cos(theta), 0],
+                     [0, 0, 1]])
+
+
+def apply_rotation(vector, theta_x, theta_y, theta_z):
+    return np.round(np.dot(rotation_x(theta_x), np.dot(rotation_y(theta_y), np.dot(rotation_z(theta_z), vector))), 14)

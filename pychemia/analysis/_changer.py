@@ -4,7 +4,7 @@ import random
 import itertools
 import numpy as np
 
-from pychemia.utils.mathematics import unit_vector
+from pychemia.utils.mathematics import apply_rotation
 
 
 class StructureChanger():
@@ -77,12 +77,16 @@ class StructureChanger():
 
         self.operations.append({'move_one_atom': (index, vector)})
 
-    def random_move_one_atom(self, epsilon):
+    def random_move_one_atom(self, mu=0.1, sigma=0.01):
 
         index = random.randint(0, len(self.old_structure)-1)
-        vector = unit_vector(np.random.random(3)) * epsilon
+        radius = np.abs(np.random.normal(mu, sigma))
+        theta_x = 2 * np.pi * np.random.rand()
+        theta_y = 2 * np.pi * np.random.rand()
+        theta_z = 2 * np.pi * np.random.rand()
+        vector = apply_rotation([1, 0, 0], theta_x, theta_y, theta_z)
 
-        self.move_one_atom(index, vector)
+        self.move_one_atom(index, vector * radius)
 
     def random_move_many_atoms(self, epsilon=0.01, forbidden_indices=None, forbidden_species=None):
 

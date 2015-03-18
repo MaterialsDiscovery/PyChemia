@@ -7,7 +7,7 @@ Python Materials Discovery Framework
 ![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/images/PyChemia_Small.png)
 </center>
 
-PyChemia is a open-source Python Library for materials structural search. The purpose of the initiative is to create
+PyChemia is an open-source Python Library for materials structural search. The purpose of the initiative is to create
 a method agnostic framework for materials discovery and design using a variety of methods from Minima Hoping to
 Soft-computing based methods. PyChemia is also a library for data-mining, using several methods to discover interesting
 candidates among the materials already processed.
@@ -39,6 +39,10 @@ Before installing PyChemia, you may need to first install a few critical depende
 
 4. [spglib](http://spglib.sourceforge.net/)
    Spglib is used to determine symmetry groups for structures
+
+5. [pymongo](http://api.mongodb.org/python/current/)
+   At least for structural search PyChemia relies strongly in MongoDB and its
+   python driver
 
 ### Optional
 

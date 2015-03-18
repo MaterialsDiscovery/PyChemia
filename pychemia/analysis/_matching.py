@@ -43,34 +43,32 @@ class StructureMatch():
         supercell_multiples = sts[self.structure2.lattice.lengths.argsort()[::-1]]
         self.structure2 = self.structure2.supercell(supercell_multiples)
 
-    def match_atoms(self):
-
-        if self.structure1.natom != self.structure2.natom:
-            self.match_size()
+    def match_shape(self):
 
         self.structure1.canonical_form()
         self.structure2.canonical_form()
         assert(self.structure1.symbols == self.structure2.symbols)
 
+    def match_atoms(self):
+
+        if self.structure1.natom != self.structure2.natom:
+            raise ValueError('Match the size first')
+
         best = {}
         for specie in self.structure1.species:
             selection = np.array(self.structure1.symbols) == specie
 
-            distance_matrix = self.structure1.lattice.minimal_distances(self.structure1.reduced[selection],
-                                                                        self.structure2.reduced[selection])
+            distance_matrix, close_images = self.base_lattice.minimal_distances(self.structure1.reduced[selection],
+                                                                                self.structure2.reduced[selection])
 
             min_trace = 1E10
             best[specie] = None
             if self.structure1.natom < 7:
                 for i in itertools.permutations(range(len(distance_matrix))):
-                    print i
-                    #print distance_matrix[:,np.array(i)].trace()
-                    #print distance_matrix[:,np.array(i)]
                     if distance_matrix[:, np.array(i)].trace() < min_trace:
                         min_trace = distance_matrix[:, np.array(i)].trace()
                         best[specie] = i
             else:
-                print distance_matrix
                 # Only consider permutations of 2 positions
                 for ipar in itertools.permutations(range(len(distance_matrix)), 2):
                     i = range(len(distance_matrix))
@@ -101,23 +99,20 @@ class StructureMatch():
 
         self.structure2.sort_sites_using_list(best_permutation)
 
-    def distance_matrix(self):
-
-        assert(self.structure1.symbols == self.structure2.symbols)
-        return self.base_lattice.minimal_distances(self.structure1.reduced, self.structure2.reduced)
-
     def reduced_displacement(self):
 
         assert(self.structure1.symbols == self.structure2.symbols)
         assert(self.structure1.nsites == self.structure2.nsites)
         assert(self.structure1.natom == self.structure2.natom)
         ret = np.zeros((self.structure1.nsites, 3))
+
+        distance_matrix, close_images = self.base_lattice.minimal_distances(self.structure1.reduced,
+                                                                            self.structure2.reduced)
+
         for i in range(self.structure1.nsites):
             x1 = self.structure1.reduced[i]
-            x2 = self.structure2.reduced[i]
-            ds = self.base_lattice.distances_in_sphere(x1, x2, radius=10)
-            print len(ds['image'])
-            ret[i]=x2+ds['image'][0]-x1
+            x2 = self.structure2.reduced[i] + close_images[i, i]
+            ret[i] = x2-x1
 
         return ret
 
