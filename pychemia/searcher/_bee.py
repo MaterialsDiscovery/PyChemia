@@ -5,7 +5,7 @@ from _searcher import Searcher
 
 class BeeAlgorithm(Searcher):
 
-    def __init__(self, population, params, fraction_evaluated=0.8, generation_size=32, stabilization_limit=10):
+    def __init__(self, population, params, fraction_evaluated=0.95, generation_size=32, stabilization_limit=10):
         """
         Implementation fo the Firefly algorithm for global minimization
 
@@ -48,31 +48,31 @@ class BeeAlgorithm(Searcher):
         self.ns = params['ns']
         self.n = self.ne*self.nre+(self.nb-self.ne)*self.nrb+self.ns
 
-    def run_one_cycle(self):
+    def run_one(self):
 
-        # Get a static selection of the values in the generation that are relaxed
-        selection = self.get_generation_evaluated()
+        selection = self.population.ids_sorted(self.generation_evaluated)
+        self.print_status()
+        print 'Size of selection : ', len(selection)
 
         if self.scouts_elite is None:
             # During the first iteration all the selection are scouts
             # Lets choose from there the elite, the best and the actual
             # scouts for the next iterations
             if len(selection) >= self.ns:
-                members = self.population.ids_sorted(selection)
-                self.scouts_elite = members[:self.ne]
-                self.scouts_best = members[self.ne:self.ne+self.nb]
-                self.scouts_others = members[self.ne+self.nb:self.ns-self.ne+self.nb]
+                self.scouts_elite = selection[:self.ne]
+                self.scouts_best = selection[self.ne:self.ne+self.nb]
+                self.scouts_others = selection[self.ne+self.nb:self.ns-self.ne+self.nb]
                 # Disable extra scouts (from an initial population)
-                for imember in members[self.ns:]:
-                    self.population.disable(imember)
+                for entry_id in selection[self.ns:]:
+                    self.population.disable(entry_id)
 
                 # Add nre foragers around each elite scout
-                for imember in self.scouts_elite:
-                    self.create_foragers(imember, self.nre)
+                for entry_id in self.scouts_elite:
+                    self.create_foragers(entry_id, self.nre)
 
                 # Add nrb foragers around each best scout
-                for imember in self.scouts_best:
-                    self.create_foragers(imember, self.nrb)
+                for entry_id in self.scouts_best:
+                    self.create_foragers(entry_id, self.nrb)
             else:
                 # Number of scouts insufficient, increase their number with more
                 # random members
@@ -134,12 +134,12 @@ class BeeAlgorithm(Searcher):
                 self.population.disable(worst_best)
 
             # Add nre foragers around each elite scout
-            for imember in self.scouts_elite:
-                self.create_foragers(imember, self.nre)
+            for entry_id in self.scouts_elite:
+                self.create_foragers(entry_id, self.nre)
 
             # Add nrb foragers around each best scout
-            for imember in self.scouts_best:
-                self.create_foragers(imember, self.nrb)
+            for entry_id in self.scouts_best:
+                self.create_foragers(entry_id, self.nrb)
 
             for i in self.scouts_others:
                 self.population.disable(i)
@@ -155,3 +155,6 @@ class BeeAlgorithm(Searcher):
                 self.foragers[scout] = [forager]
             else:
                 self.foragers[scout].append(forager)
+
+    def get_params(self):
+        pass

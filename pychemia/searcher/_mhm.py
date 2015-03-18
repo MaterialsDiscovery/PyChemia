@@ -22,5 +22,8 @@ class MinimaHopping(Searcher):
     def set_params(self, params):
         self.params = params
 
-    def run_one_cycle(self):
+    def run_one(self):
+        pass
+
+    def get_params(self):
         pass

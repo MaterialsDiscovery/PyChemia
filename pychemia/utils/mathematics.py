@@ -7,6 +7,7 @@ __author__ = 'Guillermo Avendano-Franco'
 import math
 import numpy as _np
 import itertools as _it
+from fractions import gcd
 
 
 def length_vector(v):
@@ -17,7 +18,8 @@ def length_vector(v):
     :param v: list, numpy.ndarray
     :rtype : float
 
-    Example:
+    Examples
+
 >>> length_vector([1, 2, 3])
 3.7416573867739413
     """
@@ -58,6 +60,8 @@ def unit_vector(v):
 >>> length_vector(a)
     1.0
     """
+    if length_vector(_np.array(v, dtype=float)) < 1E-10:
+        raise ValueError('Vector is null')
     return _np.array(v) / length_vector(_np.array(v, dtype=float))
 
 
@@ -178,10 +182,10 @@ def distance(v1, v2):
 
     Examples
 
-    >>> distance([0, 0, 0, 1], [1, 0, 0, 0])
-    (array([ 1,  0,  0, -1]), 1.4142135623730951)
-    >>> distance([-1, 0, 0], [1, 0, 0])
-    (array([2, 0, 0]), 2.0)
+>>> distance([0, 0, 0, 1], [1, 0, 0, 0])
+(array([ 1,  0,  0, -1]), 1.4142135623730951)
+>>> distance([-1, 0, 0], [1, 0, 0])
+(array([2, 0, 0]), 2.0)
     """
     ret = _np.array(v2) - _np.array(v1)
     return ret, length_vector(ret)
@@ -225,15 +229,15 @@ def wrap2_pmhalf(x):
 
     Examples
 
-    >>> wrap2_pmhalf(-0.5)
-    0.5
-    >>> wrap2_pmhalf(0.0)
-    0.0
-    >>> wrap2_pmhalf([-0.75, -0.5, -0.25, 0.0, 0.25, 0.5, 0.75])
-    array([ 0.25,  0.5 , -0.25,  0.  ,  0.25,  0.5 , -0.25])
-    >>> wrap2_pmhalf([[-0.75, -0.5, -0.25], [0.25, 0.5, 0.75]])
-    array([[ 0.25,  0.5 , -0.25],
-           [ 0.25,  0.5 , -0.25]])
+>>> wrap2_pmhalf(-0.5)
+0.5
+>>> wrap2_pmhalf(0.0)
+0.0
+>>> wrap2_pmhalf([-0.75, -0.5, -0.25, 0.0, 0.25, 0.5, 0.75])
+array([ 0.25,  0.5 , -0.25,  0.  ,  0.25,  0.5 , -0.25])
+>>> wrap2_pmhalf([[-0.75, -0.5, -0.25], [0.25, 0.5, 0.75]])
+array([[ 0.25,  0.5 , -0.25],
+       [ 0.25,  0.5 , -0.25]])
     """
 
     def wrap(num):
@@ -335,3 +339,113 @@ def round_small(number, ndigits=0):
     mantissa, exponent = frexp10(number)
     mantissa = round(mantissa, ndigits)
     return mantissa * 10 ** exponent
+
+
+def sieve_atkin(limit):
+    ret = [2, 3]
+    sieve = [False]*(limit+1)
+    for x in range(1, int(math.sqrt(limit))+1):
+        for y in range(1, int(math.sqrt(limit))+1):
+            n = 4*x*x + y*y
+            if n <= limit and (n % 12 == 1 or n % 12 == 5):
+                sieve[n] = not sieve[n]
+            n = 3*x*x+y*y
+            if n <= limit and n % 12 == 7:
+                sieve[n] = not sieve[n]
+            n = 3*x*x - y*y
+            if x > y and n <= limit and n % 12 == 11:
+                sieve[n] = not sieve[n]
+    for x in range(5, int(math.sqrt(limit))):
+        if sieve[x]:
+            for y in range(x*x, limit+1, x*x):
+                sieve[y] = False
+    for p in range(5, limit):
+        if sieve[p]:
+            ret.append(p)
+    return ret
+
+
+def trial_division(n):
+    """
+    Return a list of the prime factors for a natural number
+    uses the Sieve of Atkin as a list of primes
+
+    :param n: (int) A natural number
+
+    :rtype : (list)
+    """
+    if n == 1:
+        return [1]
+    primes = sieve_atkin(int(n**0.5) + 1)
+    prime_factors = []
+
+    for p in primes:
+        if p*p > n:
+            break
+        while n % p == 0:
+            prime_factors.append(p)
+            n /= p
+    if n > 1:
+        prime_factors.append(n)
+
+    return prime_factors
+
+
+def lcm(a, b):
+    """
+    Return the Least Common Multiple
+    the smallest positive integer that is divisible by both a and b
+    :param a: (int)
+    :param b: (int)
+    :return: (int)
+
+    :rtype : (int)
+    """
+    return a*b/gcd(a, b)
+
+
+def shortest_triple_set(n):
+    """
+    Return the smallest three numbers (a,b,c) such as
+    a*b*c=n
+    And a+b+c is as small as possible
+
+    :param n:
+    :return:
+    """
+    # First Compute the prime factors
+    prime_factors = trial_division(n)
+
+    if len(prime_factors) == 3:
+        # No choice return the three numbers
+        return prime_factors
+    elif len(prime_factors) < 3:
+        # If there are less than 3 complete the set with ones
+        while len(prime_factors) % 3 != 0:
+            prime_factors = [1]+prime_factors
+        return prime_factors
+    else:
+        factors = _np.array(prime_factors)
+        while len(factors) > 3:
+            print factors
+            # Complete a multiple of 6 and sum folding lowest with highest
+            while len(factors) % 6 != 0:
+                factors = _np.concatenate(([1], factors))
+            # Take the first half
+            low = factors[:len(factors)/2]
+            # take the second half and invert the order
+            high = factors[len(factors)/2:][::-1]
+            # Sum both arrays and sort them before reenter
+            factors = _np.sort(low * high)
+        return list(factors)
+
+
+def rotation_matrix_axis_angle(axis, theta):
+    # Given a unit vector u = (ux, uy, uz), where ux**2 + uy**2 + uz**2 = 1,
+    u = unit_vector(axis)
+    # with ux is the cross product matrix
+    ux = _np.array([[0, -u[2], u[1]], [u[2], 0, -u[0]], [-u[1], u[0], 0]])
+    # uxu is the tensor product of u
+    uxu = _np.tensordot(u, u.T, axes=0)
+    # This is a matrix form of Rodrigues 'rotation formula'
+    return _np.cos(theta)*_np.identity(3) + _np.sin(theta)*ux + (1-_np.cos(theta))*uxu

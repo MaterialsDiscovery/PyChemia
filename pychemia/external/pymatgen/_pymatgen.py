@@ -3,11 +3,12 @@ Routines used to interact between pymatgen objects and
 pymatdis objects
 """
 import pymatgen.io.cifio
+import numpy as np
+from pychemia.utils.periodic import atomic_symbol
+from pychemia import log, Structure
 
-import pychemia
 
-
-def cif2structure(filename, primitive=False, verbose=False):
+def cif2structure(filename, primitive=False):
     """
     Read a given file  as a cif file, convert it into a
     pymatgen structure and finally into a pychemia
@@ -15,11 +16,9 @@ def cif2structure(filename, primitive=False, verbose=False):
     """
     cifp = pymatgen.io.cifio.CifParser(filename)
     pmg_structs = cifp.get_structures(primitive)
-    if len(pmg_structs) != 1:
-        if verbose:
-            print filename, ' has ', len(pmg_structs), ' structures'
-        return None
-    ret = pymatgen2pychemia(pmg_structs[0])
+    ret = []
+    for i in pmg_structs:
+        ret.append(pymatgen2pychemia(i))
     return ret
 
 
@@ -29,14 +28,25 @@ def pymatgen2pychemia(pmg_struct):
     structure object
     """
 
-    if not pmg_struct.is_ordered:
-        return None
+    #if not pmg_struct.is_ordered:
+    #    return None
 
     cell = pmg_struct.lattice_vectors()
-    an = pmg_struct.atomic_numbers
-    symbols = pychemia.utils.periodic.atomic_symbol(an)
-    positions = pmg_struct.cart_coords
-    return pychemia.Structure(cell=cell, positions=positions, symbols=symbols)
+    reduced = np.array([])
+    sites = []
+    symbols = []
+    occupancies = []
+    index = 0
+    for i in pmg_struct:
+        for j in i.species_and_occu:
+            symbols.append(j.element.symbol)
+            occupancies.append(i.species_and_occu[j])
+            sites.append(index)
+        reduced = np.concatenate((reduced, i.frac_coords))
+        index += 1
+
+    reduced.reshape((-1, 3))
+    return Structure(cell=cell, reduced=reduced, symbols=symbols, sites=sites, occupancies=occupancies)
 
 
 def pychemia2pymatgen(structure):
@@ -46,4 +56,4 @@ def pychemia2pymatgen(structure):
     lattice = structure.cell
     coords = structure.reduced
     species = structure.symbols
-    return pymatgen.core.Structure(lattice, species, coords)
+    return Structure(lattice, species, coords)

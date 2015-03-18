@@ -67,13 +67,12 @@ def read_poscar(path):
     pos = []
     for i in range(natom):
         pos += [float(x) for x in rf.readline().split()]
-    pos = _np.array(pos).reshape((-1,3))
+    pos = _np.array(pos).reshape((-1, 3))
 
     if kmode == 'Cartesian':
         return pychemia.Structure(cell=newcell, symbols=symbols, reduced=pos, comment=comment)
     else:
         return pychemia.Structure(cell=newcell, symbols=symbols, reduced=pos, comment=comment)
-
 
 
 def write_poscar(structure, filepath='POSCAR'):

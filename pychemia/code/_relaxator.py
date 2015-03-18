@@ -3,22 +3,14 @@ __author__ = 'Guillermo Avendano-Franco'
 from abc import ABCMeta, abstractmethod
 
 
-class Codes():
+class Relaxator():
     __metaclass__ = ABCMeta
 
     def __init__(self):
         pass
 
     @abstractmethod
-    def initialize(self, workdir, structure, kpoints, binary):
-        pass
-
-    @abstractmethod
-    def set_inputs(self):
-        pass
-
-    @abstractmethod
-    def get_outputs(self):
+    def set_params(self, params):
         pass
 
     @abstractmethod
@@ -26,5 +18,9 @@ class Codes():
         pass
 
     @abstractmethod
-    def finalize(self):
+    def get_forces_stress_energy(self):
+        pass
+
+    @abstractmethod
+    def get_final_geometry(self):
         pass

@@ -6,20 +6,23 @@ __author__ = 'Guillermo Avendano-Franco'
 
 import uuid
 import json
+import random
 import numpy as np
+from fractions import gcd
 
 from pychemia import Composition, Structure, log
 from pychemia.db import USE_MONGO
 
 if USE_MONGO:
     from pychemia.db import PyChemiaDB, get_database
-from pychemia.analysis import StructureAnalysis, StructureChanger
+from pychemia.analysis import StructureAnalysis, StructureChanger, StructureMatch
 from pychemia.utils.mathematics import unit_vector
+from pychemia.utils.periodic import atomic_number, covalent_radius
 
 
 class StructurePopulation():
-    def __init__(self, name, composition, tag='global', delta=0.1, target_forces=1E-3, value_tol=1E-2,
-                 distance_tol=0.3, min_comp_mult=2, max_comp_mult=8):
+    def __init__(self, name, composition=None, tag='global', delta=0.3, target_forces=1E-3, value_tol=1E-2,
+                 distance_tol=0.3, min_comp_mult=2, max_comp_mult=8, pcdb_source=None):
         """
         Defines a population of PyChemia Structures,
 
@@ -33,31 +36,42 @@ class StructurePopulation():
         :param composition: The composition uniform for all the members
         :param tag: A tag to differentiate different instances running concurrently
         :param delta: The parameter to scale the changers and mixers
-        :param new: If true the database will be erased
         :return: A new StructurePopulation object
         """
-        self.composition = Composition(composition)
+        if composition is not None:
+            self.composition = Composition(composition)
+        else:
+            self.composition = None
         self.delta = delta
-        self.name = name
         self.tag = tag
         self.target_forces = target_forces
         self.value_tol = value_tol
         self.distance_tol = distance_tol
         self.min_comp_mult = min_comp_mult
         self.max_comp_mult = max_comp_mult
-        self.db = PyChemiaDB(name)
+        if isinstance(name, basestring):
+            self.name = name
+            self.pcdb = PyChemiaDB(name)
+        else:
+            self.name = name.name
+            self.pcdb = name
+        self.pcdb_source = pcdb_source
+        self.source_blacklist = []
 
     @property
     def actives(self):
-        return [entry['_id'] for entry in self.db.entries.find({'status.' + self.tag: True}, {'_id': 1})]
+        return [entry['_id'] for entry in self.pcdb.entries.find({'status.' + self.tag: True}, {'_id': 1})]
 
     @property
     def members(self):
-        return [x['_id'] for x in self.db.entries.find({}, {'_id': 1})]
+        return [x['_id'] for x in self.pcdb.entries.find({}, {'_id': 1})]
+
+    def __len__(self):
+        return len(self.members)
 
     @property
     def evaluated(self):
-        return [entry['_id'] for entry in self.db.entries.find() if self.is_evaluated(entry['_id'])]
+        return [entry['_id'] for entry in self.pcdb.entries.find() if self.is_evaluated(entry['_id'])]
 
     def get_entry(self, entry_id, with_id=True):
         """
@@ -66,7 +80,7 @@ class StructurePopulation():
         :param entry_id: A database identifier
         :return:
         """
-        entry = self.db.entries.find_one({'_id': entry_id})
+        entry = self.pcdb.entries.find_one({'_id': entry_id})
         if entry is not None and not with_id:
             entry.pop('_id')
         return entry
@@ -82,10 +96,17 @@ class StructurePopulation():
     def new_entry(self, structure, active=True):
         properties = {'forces': None, 'stress': None, 'energy': None}
         status = {self.tag: active}
-        return self.db.insert(structure=structure, properties=properties, status=status)
+        entry_id = self.pcdb.insert(structure=structure, properties=properties, status=status)
+        log.debug('Added new entry: %s with tag=%s: %s' % (str(entry_id), self.tag, str(active)))
+        return entry_id
 
-    def get_max_force_stress(self, imember):
-        entry = self.get_entry(imember)
+    def activate(self, entry_id):
+        structure, properties, status = self.pcdb.get_dicts(entry_id)
+        status[self.tag] = True
+        self.pcdb.update(entry_id, status=status)
+
+    def get_max_force_stress(self, entry_id):
+        entry = self.get_entry(entry_id)
         if entry is not None and entry['properties'] is not None:
             properties = entry['properties']
             if 'forces' not in properties or 'stress' not in properties:
@@ -111,16 +132,49 @@ class StructurePopulation():
         else:
             return False
 
-    def add_random(self):
+    def add_random(self, random_probability=0.3):
         """
         Add one random structure to the population
         """
-        factor = np.random.randint(self.min_comp_mult, self.max_comp_mult + 1)
+        if self.composition is None:
+            raise ValueError('No composition associated to this population')
         comp = self.composition.composition.copy()
-        for i in comp:
-            comp[i] *= factor
+        rnd = random.random()
+        natom_limit = self.max_comp_mult*self.composition.natom/self.composition.gcd
+        condition={'structure.nspecies': self.composition.nspecies,
+                   'structure.natom': {'$lte': natom_limit}}
 
-        structure = Structure.random_cell(comp)
+        if self.pcdb_source.entries.find(condition).count() <= len(self.source_blacklist):
+            rnd=0
+
+        print 'The random value is ', rnd
+        if self.pcdb_source is None or rnd < random_probability or self.composition.nspecies > 1:
+            factor = np.random.randint(self.min_comp_mult, self.max_comp_mult + 1)
+            for i in comp:
+                comp[i] *= factor
+            structure = Structure.random_cell(comp)
+        else:
+            print 'From source...'
+            while True:
+
+                entry=None
+                condition['properties.spacegroup']=random.randint(1, 230)
+                print 'Trying', condition['properties.spacegroup']
+                for ientry in self.pcdb_source.entries.find(condition):
+                    if ientry['_id'] not in self.source_blacklist:
+                        entry=ientry
+                        break
+                if entry is not None:
+                    structure = self.pcdb_source.get_structure(entry['_id'])
+                    factor = covalent_radius(self.composition.species[0])/ covalent_radius(structure.species[0])
+                    print 'From source: %s Spacegroup: %d Scaling: %7.3f' % (structure.formula,
+                                                                             entry['properties']['spacegroup'],
+                                                                             factor)
+                    structure.set_cell(np.dot(factor*np.eye(3), structure.cell))
+                    structure.symbols = structure.natom * self.composition.species
+                    self.source_blacklist.append(entry['_id'])
+                    break
+
         return self.new_entry(structure)
 
     def random_population(self, n):
@@ -132,17 +186,14 @@ class StructurePopulation():
         """
         return [self.add_random() for i in range(n)]
 
-    def check_duplicates(self):
-        ret = []
-        ids = self.actives_evaluated
+    def check_duplicates(self, ids):
+        ret = {}
         values = np.array([self.value(i) for i in ids])
-        log.debug('Values: %s' % str(sorted(values)))
         if len(values) == 0:
             return ret
         argsort = np.argsort(values)
         diffs = np.ediff1d(values[argsort])
 
-        log.debug('Differences: %s' % str(diffs))
         for i in range(len(values) - 1):
             idiff = diffs[i]
             if idiff < self.value_tol:
@@ -150,19 +201,17 @@ class StructurePopulation():
                 ident2 = ids[argsort[i + 1]]
                 log.debug('Testing distances between %s and %s' % (str(ident1), str(ident2)))
                 distance = self.distance(ident1, ident2)
-                print 'Distance = ', distance
+                # print 'Distance = ', distance
                 if distance < self.distance_tol:
                     log.debug('Distance %7.3f < %7.3f' % (distance, self.distance_tol))
                     fx1 = self.value(ident1)
                     fx2 = self.value(ident2)
                     if fx2 < fx1:
-                        ret.append(ident1)
+                        ret[ident1] = ident2
                     else:
-                        ret.append(ident2)
+                        ret[ident2] = ident1
         if len(ret) > 0:
-            print 'Duplicates', ret
-        else:
-            print 'No duplicates'
+            log.debug('Number of duplicates %d' % len(ret))
         return ret
 
     def distance_matrix(self, radius=20):
@@ -204,24 +253,43 @@ class StructurePopulation():
                 ret[j, i] = ret[i, j]
         return ret
 
-    def distance(self, imember, jmember, rcut=50):
-        struct1 = self.get_structure(imember)
-        struct2 = self.get_structure(jmember)
-        analysis1 = StructureAnalysis(struct1, radius=rcut)
-        analysis2 = StructureAnalysis(struct2, radius=rcut)
-        x1, y1_dict = analysis1.fp_oganov()
-        x2, y2_dict = analysis2.fp_oganov()
-        assert (len(x1) == len(x2))
-        assert (len(y1_dict) == len(y2_dict))
+    def distance(self, entry_id, entry_jd, rcut=50):
+
+        fingerprints = {}
+        for entry_ijd in [entry_id, entry_jd]:
+
+            if self.pcdb.db.fingerprints.find_one({'_id': entry_ijd}) is None:
+                structure = self.get_structure(entry_ijd)
+                analysis = StructureAnalysis(structure, radius=rcut)
+                x, ys = analysis.fp_oganov()
+                fingerprint = {'_id': entry_ijd}
+                for k in ys:
+                    atomic_number1 = atomic_number(structure.species[k[0]])
+                    atomic_number2 = atomic_number(structure.species[k[1]])
+                    pair = '%06d' % min(atomic_number1 * 1000 + atomic_number2,
+                                        atomic_number2 * 1000 + atomic_number1)
+                    fingerprint[pair] = list(ys[k])
+
+                if self.pcdb.db.fingerprints.find_one({'_id': entry_ijd}) is None:
+                    self.pcdb.db.fingerprints.insert(fingerprint)
+                else:
+                    self.pcdb.db.fingerprints.update({'_id': entry_ijd}, fingerprint)
+                fingerprints[entry_ijd] = fingerprint
+            else:
+                fingerprints[entry_ijd] = self.pcdb.db.fingerprints.find_one({'_id': entry_ijd})
+
         dij = []
-        for i in y1_dict:
-            uvect1 = unit_vector(y1_dict[i])
-            uvect2 = unit_vector(y2_dict[i])
-            dij.append(0.5 * (1.0 - np.dot(uvect1, uvect2)))
+
+        for pair in fingerprints[entry_id]:
+            if pair in fingerprints[entry_jd] and pair != '_id':
+                uvect1 = unit_vector(fingerprints[entry_id][pair])
+                uvect2 = unit_vector(fingerprints[entry_jd][pair])
+                dij.append(0.5 * (1.0 - np.dot(uvect1, uvect2)))
         return float(np.mean(dij))
 
     def add_from_db(self, db_settings, sizemax=1):
-
+        if self.composition is None:
+            raise ValueError('No composition associated to this population')
         comp = Composition(self.composition)
         readdb = get_database(db_settings)
 
@@ -230,37 +298,23 @@ class StructurePopulation():
                                           'structure.natom': {'$lte': self.min_comp_mult * comp.natom,
                                                               '$gte': self.max_comp_mult * comp.natom}}):
             if index < sizemax:
-                print 'Adding entry ' + str(entry['_id']) + ' from ' + dbname
+                print 'Adding entry ' + str(entry['_id']) + ' from ' + readdb.name
                 self.new_entry(readdb.get_structure(entry['_id']))
                 index += 1
 
     def add_modified(self, entry_id):
 
-        structure = self.db.get_structure(entry_id)
+        structure = self.pcdb.get_structure(entry_id)
         changer = StructureChanger(structure)
         changer.random_change(self.delta)
         new_structure = changer.new_structure
         return self.new_entry(new_structure)
 
     def disable(self, entry_id):
-        entry = self.get_entry(entry_id)
-        status = None
-        if 'status' in entry:
-            status = entry['status']
-        if status is None:
-            status = {}
-        status[self.tag] = False
-        self.db.update(entry_id, status=status)
+        self.pcdb.entries.update({'_id': entry_id}, {'$set': {'status.'+self.tag: False}})
 
     def enable(self, entry_id):
-        entry = self.get_entry(entry_id)
-        status = None
-        if 'status' in entry:
-            status = entry['status']
-        if status is None:
-            status = {}
-        status[self.tag] = True
-        self.db.update(entry_id, status=status)
+        self.pcdb.entries.update({'_id': entry_id}, {'$set': {'status.'+self.tag: True}})
 
     @property
     def fraction_evaluated(self):
@@ -286,57 +340,88 @@ class StructurePopulation():
         filep = open(filename, 'r')
         data = json.load(filep)
         for entry in data:
-            self.db.entries.insert(entry)
+            self.pcdb.entries.insert(entry)
 
-    def move(self, imember, jmember, in_place=False):
+    def move_random(self, entry_id, factor=0.2, in_place=False):
+        structure = self.get_structure(entry_id)
+
+        changer = StructureChanger(structure=structure)
+        changer.random_move_many_atoms(epsilon=factor)
+        if in_place:
+            return self.pcdb.update(entry_id, structure=changer.new_structure)
+        else:
+            return self.new_entry(changer.new_structure, active=False)
+
+    def move(self, entry_id, entry_jd, factor=0.2, in_place=False):
         """
-        Moves imember in the direction of jmember
+        Moves entry_id in the direction of entry_jd
         If in_place is True the movement occurs on the
-        same address as imember
+        same address as entry_id
 
-        :param imember:
-        :param jmember:
+        :param entry_id:
+        :param entry_jd:
         :param in_place:
         :return:
         """
-        structure1 = self.get_structure(imember)
-        structure2 = self.get_structure(jmember)
+        structure_mobile = self.get_structure(entry_id)
+        structure_target = self.get_structure(entry_jd)
 
-        assert (structure1.symbols == structure2.symbols)
+        if structure_mobile.natom != structure_target.natom:
+            # Moving structures with different number of atoms is only implemented for smaller structures moving
+            # towards bigger ones by making a super-cell and only if their size is smaller that 'max_comp_mult'
 
-        new_reduced = np.zeros((structure1.natom, 3))
-        for i in range(structure1.natom):
-            x1 = structure1.reduced[i]
-            x2 = structure2.reduced[i]
-            uvector = (x2 - x1) / np.linalg.norm(x2 - x1)
-            new_reduced[i] = structure1.reduced[i] + self.delta * uvector
-        new_cell = 0.5 * (structure1.cell + structure2.cell)
-        new_structure = Structure(reduced=new_reduced, symbols=structure1.symbols, cell=new_cell)
-        if not in_place:
-            return self.new_entry(new_structure)
+            mult1 = structure_mobile.get_composition().gcd
+            mult2 = structure_target.get_composition().gcd
+            lcd = mult1 * mult2 / gcd(mult1, mult2)
+            if lcd > self.max_comp_mult:
+                # The resulting structure is bigger than the limit
+                # cannot move
+                if not in_place:
+                    return self.new_entry(structure_mobile)
+                else:
+                    return entry_id
+
+        # We will move structure1 in the direction of structure2
+        match = StructureMatch(structure_target, structure_mobile)
+        match.match_atoms()
+        displacements = match.reduced_displacement()
+
+        new_reduced = match.structure2.reduced + factor * displacements
+        new_cell = match.structure2.cell
+        new_symbols = match.structure2.symbols
+        new_structure = Structure(reduced=new_reduced, symbols=new_symbols, cell=new_cell)
+        if in_place:
+            return self.pcdb.update(entry_id, structure=new_structure)
         else:
-            return self.db.update(imember, structure=new_structure)
+            return self.new_entry(new_structure)
 
     def __str__(self):
         ret = ' Structure Population\n\n'
-        ret += ' Name:        ' + self.name + '\n'
-        ret += ' Composition: ' + str(self.composition) + '\n'
-        ret += ' Delta:       ' + str(self.delta) + '\n'
-        ret += ' Tag:         ' + self.tag + '\n'
-        ret += '\n'
-        ret += ' Members:         ' + str(len(self.members)) + '\n'
-        ret += ' Actives:         ' + str(len(self.actives)) + '\n'
-        ret += ' Evaluated:       ' + str(len(self.evaluated)) + '\n'
+        ret += ' Name:               %s\n' % self.name
+        ret += ' Tag:                %s\n' % self.tag
+        ret += ' Delta:              %7.2E\n' % self.delta
+        ret += ' Target-Forces:      %7.2E\n' % self.target_forces
+        ret += ' Value tolerance:    %7.2E\n' % self.value_tol
+        ret += ' Distance tolerance: %7.2E\n\n' % self.distance_tol
+        if self.composition is not None:
+            ret += ' Composition:                  %s\n' % self.composition.formula
+            ret += ' Minimal composition multiplier: %d\n' % self.min_comp_mult
+            ret += ' Maximal composition multiplier: %d\n\n' % self.max_comp_mult
+        else:
+            ret += '\n'
+        ret += ' Members:            %d\n' % len(self.members)
+        ret += ' Actives:            %d\n' % len(self.actives)
+        ret += ' Evaluated:          %d\n' % len(self.evaluated)
         return ret
 
     def unlock_all(self, name=None):
         for i in self.members:
-            self.db.unlock(i, name=name)
+            self.pcdb.unlock(i, name=name)
 
     def ids_sorted(self, selection):
         values = np.array([self.value(i) for i in selection])
-        argsort = np.argsort(values)
-        return np.array(selection)[argsort]
+        sorted_indices = np.argsort(values)
+        return np.array(selection)[sorted_indices]
 
     def get_values(self, selection):
         ret = {}
@@ -344,9 +429,9 @@ class StructurePopulation():
             ret[i] = self.value(i)
         return ret
 
-    def value(self, imember):
-        entry = self.get_entry(imember)
-        struct = self.get_structure(imember)
+    def value(self, entry_id):
+        entry = self.get_entry(entry_id)
+        structure = self.get_structure(entry_id)
         if 'properties' not in entry:
             log.debug('This entry has no properties %s' % str(entry['_id']))
             return None
@@ -356,4 +441,27 @@ class StructurePopulation():
             log.debug('This entry has no energy in properties %s' % str(entry['_id']))
             return None
         else:
-            return entry['properties']['energy'] / struct.get_composition().gcd
+            return entry['properties']['energy'] / structure.get_composition().gcd
+
+    def to_dict(self):
+        return {'name': self.name,
+                'tag': self.tag,
+                'delta': self.delta,
+                'target_forces': self.target_forces,
+                'value_tol': self.value_tol,
+                'distance_tol': self.distance_tol}
+
+    @staticmethod
+    def from_dict(population_dict):
+        return StructurePopulation(name=population_dict['name'],
+                                   tag=population_dict['tag'],
+                                   delta=population_dict['delta'],
+                                   target_forces=population_dict['target_forces'],
+                                   value_tol=population_dict['value_tol'],
+                                   distance_tol=population_dict['distance_tol'])
+
+    def save_info(self):
+        self.pcdb.db.population_info.insert(self.to_dict())
+
+    def __iter__(self):
+        return self.pcdb.entries.find()

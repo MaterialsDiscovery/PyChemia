@@ -4,7 +4,8 @@ import itertools
 import numpy as _np
 from math import ceil, sqrt, cos, sin, radians, acos
 
-from pychemia.utils.mathematics import length_vectors, angle_vectors, wrap2_pmhalf
+from pychemia.utils.mathematics import length_vectors, angle_vectors, wrap2_pmhalf, \
+    unit_vector, rotation_matrix_axis_angle, angle_vector
 from composition import Composition
 from pychemia import log
 
@@ -182,26 +183,26 @@ class Lattice():
                 mindist = distances_dict[k]['distance']
         return mindist
 
-    def minimal_distances(self, red_coords1, red_coords2):
+    def minimal_distances(self, reduced1, reduced2):
         """
         Computes a matrix with the minimal distances between
         two sets of points represented as reciprocal coordinates
 
-        :param red_coords1: List or array of reduced coordinates for the first
+        :param reduced1: List or array of reduced coordinates for the first
                             set of points
-        :param red_coords2: Second set of points
+        :param reduced2: Second set of points
         """
         # Just in case of one single coordinate
-        red_coords1, red_coords2 = _np.atleast_2d(red_coords1, red_coords2)
+        reduced1, reduced2 = _np.atleast_2d(reduced1, reduced2)
 
         images = _np.array([list(i) for i in itertools.product([-1, 0, 1], repeat=3)])
 
-        red2_images = red_coords2[:, None, :] + images[None, :, :]
+        red2_images = reduced2[:, None, :] + images[None, :, :]
 
-        cart_coords1 = self.reduced2cartesian(red_coords1)
-        cart_coords2 = self.reduced2cartesian(red2_images)
+        cartesian1 = self.reduced2cartesian(reduced1)
+        cartesian2 = self.reduced2cartesian(red2_images)
 
-        diff_vectors = cart_coords2[None, :, :, :] - cart_coords1[:, None, None, :]
+        diff_vectors = cartesian2[None, :, :, :] - cartesian1[:, None, None, :]
         return _np.min(_np.sum(diff_vectors ** 2, axis=3), axis=2) ** 0.5
 
     def distances_in_sphere(self, x1, x2, radius, option='reduced', exclude_out_sphere=True, sort_by_distance=True):
@@ -225,7 +226,7 @@ class Lattice():
             dred = dv
 
         dwrap = wrap2_pmhalf(dred)
-        log.debug('The wrap vector is: %7.3f %7.3f %7.3f' % tuple(dwrap))
+        #log.debug('The wrap vector is: %7.3f %7.3f %7.3f' % tuple(dwrap))
 
         # We need to compute the distances between equivalent faces
         # For that we to compute the perpendicular distance between
@@ -234,13 +235,13 @@ class Lattice():
         recp_len = _np.array(self.reciprocal().lengths)
         # The reciprocal (2*pi) is not necessary
         limits = _np.ceil(radius * recp_len).astype(int)
-        log.debug('The limits are: %d %d %d' % tuple(limits))
+        #log.debug('The limits are: %d %d %d' % tuple(limits))
 
         ret = {}
         # The total size is the product of the number in the 3 directions
         # that is double the limits plus 1 to include the zero
         total_size = _np.prod(2 * limits + 1)
-        log.debug('The total size is: %d' % total_size)
+        # log.debug('The total size is: %d' % total_size)
 
         ret['distance'] = _np.zeros(total_size)
         ret['image'] = _np.zeros((total_size, 3), dtype=int)
@@ -468,3 +469,19 @@ class Lattice():
         """
         return self._lengths
 
+    def align_with_axis(self, axis=0, round_decimals=8):
+        a = self.cell[0]
+        if axis == 0:
+            b = _np.array([1, 0, 0])
+        elif axis == 1:
+            b = _np.array([0, 1, 0])
+        elif axis == 2:
+            b = _np.array([0, 0, 1])
+        else:
+            raise ValueError('Axis must be an integer in (0,1,2)')
+        if _np.linalg.norm(_np.cross(a, b)) < 1E-10:
+            return
+        c = unit_vector(_np.cross(a, b))
+        av = angle_vector(a, b)
+        rotation_matrix = rotation_matrix_axis_angle(c, av)
+        self._cell = _np.dot(rotation_matrix, self.cell.T).T.round(round_decimals)

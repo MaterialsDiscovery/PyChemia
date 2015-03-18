@@ -111,9 +111,11 @@ class StructureSymmetry(object):
         numbers[:natom] = np.array(self._numbers, dtype='intc')
 
         natom_bravais = spg.refine_cell(cell, pos, numbers, natom, symprec, angle_tolerance)
+        if natom_bravais == 0:
+            return self._structure.copy()
+
         cell = np.array(cell.T, dtype='double', order='C')
         reduced = np.array(pos[:natom_bravais], dtype='double', order='C')
-
         symbols = [self._structure.species[x] for x in (numbers[:natom_bravais]-1)]
 
         return Structure(cell=cell, symbols=symbols, reduced=reduced)
@@ -146,8 +148,10 @@ class StructureSymmetry(object):
             return self._structure.copy()
 
 
-def symmetrize(structure, initial_symprec=0.01, final_symprec=0.2, delta_symprec=0.01):
+def symmetrize(structure, initial_symprec=0.01, final_symprec=0.1, delta_symprec=0.01):
 
+    if structure.natom == 1:
+        return structure.copy()
     sym = StructureSymmetry(structure)
     prec = initial_symprec
     while prec < final_symprec:
@@ -155,6 +159,8 @@ def symmetrize(structure, initial_symprec=0.01, final_symprec=0.2, delta_symprec
             break
         else:
             prec += delta_symprec
+    if prec > final_symprec:
+        prec=final_symprec
     new_bravais = sym.refine_cell(symprec=prec)
     sym2 = StructureSymmetry(new_bravais)
     return sym2.find_primitive()

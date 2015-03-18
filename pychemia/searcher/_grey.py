@@ -26,5 +26,8 @@ class GreyWolf(Searcher):
         else:
             self.c = params['c']
 
-    def run_one_cycle(self):
+    def run_one(self):
+        pass
+
+    def get_params(self):
         pass

@@ -18,5 +18,5 @@ setup(
                       "matplotlib >= 1.2",
                       "mayavi >= 4.1",
                       "ScientificPython >2.6",
-                      "python-ase", 'pymongo', 'spglib'],
+                      "python-ase", 'pymongo', 'spglib', 'bson', 'ase', 'pyspglib', 'qmpy'],
 )

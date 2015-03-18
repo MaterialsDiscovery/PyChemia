@@ -320,7 +320,7 @@ class DFTBplus(Codes):
                         self.slater_koster.append(path)
                         pair_found = True
                 if pair_found:
-                    log.debug('Slater_Koster for ' + pair + ' found on ' + path)
+                    log.debug('Slater-Koster ' + pair + ':' + path)
                 else:
                     log.debug('ERROR: Slater_Koster for ' + pair + ' not found')
 
@@ -329,7 +329,7 @@ class DFTBplus(Codes):
             filename = self.workdir+os.sep+os.path.basename(i)
             if os.path.lexists(filename):
                 os.remove(filename)
-            os.symlink(i, filename)
+            os.symlink(os.path.abspath(i), filename)
 
     def get_shells(self, slater_koster):
 

@@ -1,9 +1,11 @@
 __author__ = 'Guillermo Avendano Franco'
 
 from pymongo import MongoClient
+from multiprocessing import Pool
 from bson.objectid import ObjectId
 import numpy as np
 import socket
+import itertools
 
 from pychemia.utils.periodic import atomic_symbols
 from pychemia import Structure
@@ -11,7 +13,7 @@ from pychemia import Structure
 
 class PyChemiaDB():
 
-    def __init__(self, name='pychemiadb', host='localhost', port=27017, user=None, password=None):
+    def __init__(self, name='pychemiadb', host='localhost', port=27017, user=None, passwd=None, ssl=False):
         """
         Creates a MongoDB client to 'host' with 'port' and connect it to the database 'name'.
         Authentication can be used with 'user' and 'password'
@@ -20,23 +22,25 @@ class PyChemiaDB():
         :param host: (str) The host as name or IP
         :param port: (int) The number of port to connect with the server (Default is 27017)
         :param user: (str) The user with read or write permissions to the database
-        :param password: (str/int) Password to authenticate the user into the server
+        :param passwd: (str/int) Password to authenticate the user into the server
 
         :return:
         """
+        self.db_settings = {'name': name, 'host': host, 'port': port, 'user': user, 'passwd': passwd, 'ssl': ssl}
         self.name = name
         uri = 'mongodb://'
         if user is not None:
             uri += user
-            if password is not None:
-                uri += ':'+str(password)
+            if passwd is not None:
+                uri += ':'+str(passwd)
             uri += '@'
         uri += host + ':' + str(port)
         if user is not None:
             uri += '/' + name
-        self._client = MongoClient(uri)
+        self._client = MongoClient(uri, ssl=ssl)
         self.db = self._client[name]
         self.entries = self.db.pychemia_entries
+        self.set_minimal_schema()
 
     def insert(self, structure, properties=None, status=None):
         """
@@ -47,6 +51,10 @@ class PyChemiaDB():
         :param status: (dict) Dictionary of status
         :return:
         """
+        if status is None:
+            status = {}
+        if properties is None:
+            properties = {}
         entry = {'structure': structure.to_dict(), 'properties': properties, 'status': status}
         entry_id = self.entries.insert(entry)
         return entry_id
@@ -56,7 +64,11 @@ class PyChemiaDB():
         self.db = self._client[self.name]
 
     def update(self, entry_id, structure=None, properties=None, status=None):
+        """
+        Update
 
+        :rtype : ObjectId
+        """
         entry_id = object_id(entry_id)
 
         assert (self.entries.find_one({'_id': entry_id}) is not None)
@@ -75,6 +87,7 @@ class PyChemiaDB():
             entry['status'] = status
 
         self.entries.update({'_id': entry_id}, entry)
+        return entry_id
 
     def find_AnBm(self, specie_a=None, specie_b=None, n=1, m=1):
         """
@@ -143,11 +156,22 @@ class PyChemiaDB():
         return ret
 
     def get_structure(self, entry_id):
+        """
+        Return the structure in the entry with id 'entry_id'
+
+        :rtype : Structure
+        """
         entry_id = object_id(entry_id)
         entry = self.entries.find_one({'_id': entry_id})
         return Structure.from_dict(entry['structure'])
 
     def get_dicts(self, entry_id):
+        """
+        Return a tuple with the fields in an entry
+        structure, properties and status
+
+        :rtype : tuple
+        """
         entry_id = object_id(entry_id)
         entry = self.entries.find_one({'_id': entry_id})
         structure_dict = entry['structure']
@@ -163,32 +187,54 @@ class PyChemiaDB():
         return structure_dict, properties, status
 
     def is_locked(self, entry_id):
+        """
+        Return if a given entry is locked by someone
+        evaluating the structure contained
 
+        :rtype : bool
+        """
         entry_id = object_id(entry_id)
         entry = self.entries.find_one({'_id': entry_id})
 
-        if 'status' in entry and 'lock' in entry['status']:
+        if 'status' in entry and entry['status'] is not None and 'lock' in entry['status']:
             return True
         else:
             return False
 
-    def lock(self, entry_id):
-        entry_id = object_id(entry_id)
-        structure, properties, status = self.get_dicts(entry_id)
-        status['lock'] = socket.gethostname()
-        self.update(entry_id, status=status)
+    def lock(self, entry_id, name=None):
+        if name is None:
+            name = socket.gethostname()
+        self.entries.update({'_id': entry_id}, {'$set': {'status.lock': name}})
 
     def unlock(self, entry_id, name=None):
-        entry_id = object_id(entry_id)
-        structure, properties, status = self.get_dicts(entry_id)
-        lockedby = None
-        if 'lock' in status:
-            if name is None:
-                lockedby = status.pop('lock')
-            elif status['lock'] == name:
-                lockedby = status.pop('lock')
-        self.update(entry_id, status=status)
-        return lockedby
+        if name is None:
+            self.entries.update({'_id': entry_id}, {'$unset': {'status.lock': 1}})
+        else:
+            self.entries.update({'_id': entry_id, 'status.lock': name}, {'$unset': {'status.lock': 1}})
+
+    def set_minimal_schema(self):
+        for entry_id in self.entries.find({'status': None}, {'status': 1}):
+            print entry_id
+            self.entries.update({'_id': entry_id['_id']}, {'$set': {'status': {}}})
+        for entry_id in self.entries.find({'properties': None}):
+            print entry_id
+            self.entries.update({'_id': entry_id['_id']}, {'$set': {'properties': {}}})
+
+    def create_static(self, field):
+
+        for entry in self.entries.find({}):
+            entry[field+'_static'] = entry[field]
+            self.db.pychemia_entries.update({'_id': entry['_id']}, entry)
+
+    def map_to_all(self, function, nparal=6):
+
+        pool = Pool(processes=nparal)
+        cursor = self.entries.find({}, no_cursor_timeout=True)
+        print cursor.count()
+        entries = [entry['_id'] for entry in cursor]
+        ret = pool.map(function, itertools.izip(itertools.repeat(self.db_settings), entries))
+        cursor.close()
+        return ret
 
 
 def get_database(db_settings):
@@ -197,13 +243,16 @@ def get_database(db_settings):
         db_settings['host'] = 'localhost'
     if 'port' not in db_settings:
         db_settings['port'] = 27017
+    if 'ssl' not in db_settings:
+        db_settings['ssl'] = False
 
     if 'user' not in db_settings:
-        db = PyChemiaDB(name=db_settings['name'], host=db_settings['host'], port=db_settings['port'])
+        pcdb = PyChemiaDB(name=db_settings['name'], host=db_settings['host'], port=db_settings['port'],
+                          ssl=db_settings['ssl'])
     else:
-        db = PyChemiaDB(name=db_settings['name'], host=db_settings['host'], port=db_settings['port'],
-                        user=db_settings['user'], password=db_settings['password'])
-    return db
+        pcdb = PyChemiaDB(name=db_settings['name'], host=db_settings['host'], port=db_settings['port'],
+                          user=db_settings['user'], passwd=db_settings['passwd'], ssl=db_settings['ssl'])
+    return pcdb
 
 
 def object_id(entry_id):
@@ -211,3 +260,20 @@ def object_id(entry_id):
         return ObjectId(entry_id)
     elif isinstance(entry_id, ObjectId):
         return entry_id
+
+
+def create_user(name, admin_name, admin_passwd, user_name, user_passwd, host='localhost', port=27017, ssl=False):
+    """
+    Creates a new user for the database "name"
+
+    :param name: (str) The name of the database
+    :param admin_name: (str) The administrator name
+    :param admin_passwd: (str) Administrator password
+    :param user_name: (str) Username for the database
+    :param user_passwd: (str) Password for the user
+    :param ssl
+    :return:
+    """
+    mc = MongoClient(host=host, port=port, ssl=ssl)
+    mc.admin.authenticate(admin_name, admin_passwd)
+    mc[name].add_user(user_name, user_passwd)

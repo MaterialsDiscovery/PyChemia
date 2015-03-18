@@ -73,6 +73,7 @@ class StructureChanger():
     def move_one_atom(self, index, vector):
 
         self.new_structure.positions[index] += vector
+        self.new_structure.positions2reduced()
 
         self.operations.append({'move_one_atom': (index, vector)})
 

@@ -12,17 +12,36 @@ try:
 except ImportError:
     def symmetrize(structure):
         return structure
+from pychemia.code import Relaxator
 
 
-class Relaxator():
-    def __init__(self, workdir, structure, slater_path, target_forces=1E-3, waiting=False):
+class DFTBplusRelaxator(Relaxator):
+    def __init__(self, workdir, structure, relaxator_params, target_forces=1E-3, waiting=False):
 
         self.workdir = workdir
         self.initial_structure = symmetrize(structure)
         self.structure = self.initial_structure.copy()
-        self.slater_path = slater_path
+        self.slater_path = None
+        self.set_params(relaxator_params)
         self.target_forces = target_forces
         self.waiting = waiting
+        Relaxator.__init__(self)
+
+    def set_params(self, params):
+        assert(isinstance(params, dict))
+        if 'slater_path' not in params:
+            raise ValueError('A least one path must to be present to search for Slater-Koster files')
+        else:
+            if isinstance(params['slater_path'], basestring):
+                assert os.path.exists(params['slater_path'])
+                self.slater_path = [params['slater_path']]
+            else:
+                self.slater_path = params['slater_path']
+                try:
+                    for x in self.slater_path:
+                        assert os.path.exists(x)
+                except TypeError:
+                    raise ValueError('Missing a valid slater_path or list of slater_paths')
 
     def run(self):
 
@@ -36,7 +55,7 @@ class Relaxator():
         dftb.driver['LatticeOpt'] = False
         # Decreasing the target_forces to avoid the final static
         # calculation of raising too much the forces after symmetrization
-        dftb.driver['MaxForceComponent'] = 0.9 * self.target_forces
+        dftb.driver['MaxForceComponent'] = 0.5 * self.target_forces
         dftb.driver['ConvergentForcesOnly'] = True
         dftb.driver['MaxSteps'] = 50
         dftb.hamiltonian['MaxSCCIterations'] = 50
@@ -155,7 +174,7 @@ class Relaxator():
 
         booleans, geom_optimization, stats = read_dftb_stdout(filename=dftb.workdir + os.sep + 'dftb_stdout.log')
 
-        # Increse the score on each iteration
+        # Increase the score on each iteration
         score += 1
 
         if stats['ion_convergence']:

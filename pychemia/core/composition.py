@@ -165,6 +165,10 @@ class Composition():
         return self._composition.keys()
 
     @property
+    def nspecies(self):
+        return len(self.species)
+
+    @property
     def values(self):
         """
         :return: The number of atoms of each specie

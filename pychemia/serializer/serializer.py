@@ -59,9 +59,9 @@ def generic_serializer(value):
     if value is None:
         return None
     elif isinstance(value, np.ndarray):
-        if value.shape[0] == 1:
+        if len(value.shape) == 1:
             return list(value)
-        elif value.shape[0] == 2:
+        elif len(value.shape) == 2:
             return [list(i) for i in value]
     elif isinstance(value, basestring):
         return value

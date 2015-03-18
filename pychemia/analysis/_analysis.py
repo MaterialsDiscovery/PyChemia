@@ -33,8 +33,8 @@ class StructureAnalysis():
         self._pairs = None
         self._supercell = supercell
         self._radius = radius
-        log.debug('Supercell : ' + str(self._supercell))
-        log.debug('Radius    : %7.2f' % self._radius)
+        #log.debug('Supercell : ' + str(self._supercell))
+        #log.debug('Radius    : %7.2f' % self._radius)
 
     @property
     def radius(self):
@@ -137,7 +137,7 @@ class StructureAnalysis():
         for spec_pair in dist_spec:
             discrete_rdf[spec_pair] = np.zeros(nbins)
             positive_distances = dist_spec[spec_pair][dist_spec[spec_pair] > 0]
-            log.debug('Pair %s' % str(spec_pair))
+            #log.debug('Pair %s' % str(spec_pair))
             for Rij in positive_distances:
                 # Integrating for bin from - 8*sigma to +8*sigma centered on Rij
                 # Values outside this range are negligible
@@ -205,7 +205,7 @@ class StructureAnalysis():
             coordination[pair[0]] += len(bonds[pair])
             coordination[pair[1]] += len(bonds[pair])
 
-        return bonds, coordination, cutoff_radius
+        return bonds, coordination, round(cutoff_radius, 3)
 
     def get_bonds_coordination(self, initial_cutoff_radius=0.8, ensure_conectivity=False, use_laplacian=True,
                                verbose=False, tol=1E-15, jump=0.01, use_jump=True):

@@ -11,12 +11,12 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   intro
-   tutorial
-   geometry
-   repositories
-   structural_search_general
-   structural_search_pychemia
+       intro
+       tutorial
+       geometry
+       db
+       structural_search_general
+       structural_search_pychemia
 
 
 Indices and tables
