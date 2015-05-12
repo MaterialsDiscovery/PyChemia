@@ -7,12 +7,13 @@ import numpy as np
 import numbers
 from pychemia.code import Codes
 from pychemia.dft import KPoints
-from pychemia import Structure, log
+from pychemia import Structure, pcm_log
 
 
 class DFTBplus(Codes):
 
     def __init__(self):
+        Codes.__init__(self)
         self.workdir = None
         self.geometry = {}
         self.driver = {}
@@ -27,7 +28,6 @@ class DFTBplus(Codes):
         self.kpoints = None
         self.stdout_file = None
         self.output = None
-        Codes.__init__(self)
 
     def initialize(self, workdir, structure, kpoints, binary='dftb+'):
         assert structure.is_crystal
@@ -47,7 +47,7 @@ class DFTBplus(Codes):
     def get_outputs(self):
         self.output = read_detailed_out(filename=self.workdir+os.sep+'detailed.out')
 
-    def run(self):
+    def run(self, use_mpi=False, omp_max_threads=0, mpi_num_procs=1):
         cwd = os.getcwd()
         os.chdir(self.workdir)
         self.stdout_file = open('dftb_stdout.log', 'w')
@@ -58,16 +58,16 @@ class DFTBplus(Codes):
 
     def run_status(self):
         if self.runner is None:
-            log.info('DFTB+ not finish')
+            pcm_log.info('DFTB+ not finish')
             filename = self.workdir + os.sep + 'dftb_stdout.log'
             if os.path.exists(filename):
                 booleans, geom_optimization, stats = read_dftb_stdout(filename=filename)
-                log.debug(str(booleans))
-                log.debug(str(geom_optimization))
-                log.debug(str(stats))
+                pcm_log.debug(str(booleans))
+                pcm_log.debug(str(geom_optimization))
+                pcm_log.debug(str(stats))
             return
         if self.runner.poll() == 0:
-            log.info('DFTB+ complete normally')
+            pcm_log.info('DFTB+ complete normally')
 
     def finalize(self):
         self.stdout_file.close()
@@ -281,8 +281,8 @@ class DFTBplus(Codes):
     def basic_input(self):
         self.basic_driver()
         if self.slater_koster is None:
-            log.debug('The Slater-Koster files were not selected')
-            log.debug('The Hamiltonian could not be setup')
+            pcm_log.debug('The Slater-Koster files were not selected')
+            pcm_log.debug('The Hamiltonian could not be setup')
         else:
             self.basic_hamiltonian()
         self.basic_options()
@@ -320,9 +320,9 @@ class DFTBplus(Codes):
                         self.slater_koster.append(path)
                         pair_found = True
                 if pair_found:
-                    log.debug('Slater-Koster ' + pair + ':' + path)
+                    pcm_log.debug('Slater-Koster ' + pair + ':' + path)
                 else:
-                    log.debug('ERROR: Slater_Koster for ' + pair + ' not found')
+                    pcm_log.debug('ERROR: Slater_Koster for ' + pair + ' not found')
 
     def print_slater_koster(self):
         for i in self.slater_koster:
@@ -469,7 +469,7 @@ def read_detailed_out(filename='detailed.out'):
 
     # In this case no values of forces, stress and energy are produced
     if re.findall(r'SCC is NOT converged, maximal SCC iterations exceeded', data):
-        log.debug('SCC is NOT converged, maximal SCC iterations exceeded')
+        pcm_log.debug('SCC is NOT converged, maximal SCC iterations exceeded')
 
     # Extracting the data from 'detailed.out'
     forces = re.findall(r'Total\s*Forces\s*([\.\-\+E\d\s]+)\n', data)
@@ -478,19 +478,19 @@ def read_detailed_out(filename='detailed.out'):
 
     if forces:
         forces = np.array(forces[0].split(), dtype=float).reshape((-1, 3))
-        log.debug('Forces :\n'+str(forces))
+        pcm_log.debug('Forces :\n'+str(forces))
     else:
         forces = None
 
     if stress:
         stress = np.array(stress[0].split(), dtype=float).reshape((3, 3))
-        log.debug('Stress :\n'+ str(stress))
+        pcm_log.debug('Stress :\n'+ str(stress))
     else:
         stress = None
 
     if total_energy:
         total_energy = float(total_energy[0])
-        log.debug('Energy :' + str(total_energy))
+        pcm_log.debug('Energy :' + str(total_energy))
     else:
         total_energy = None
 
@@ -536,8 +536,8 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
             booleans['LatticeOptimisation'] = True
         else:
             booleans['LatticeOptimisation'] = False
-        #log.debug('Booleans : '+str(booleans))
-        log.info('LatticeOptimisation: ' + str(booleans['LatticeOptimisation']))
+        # log.debug('Booleans : '+str(booleans))
+        pcm_log.info('LatticeOptimisation: ' + str(booleans['LatticeOptimisation']))
 
     if nionsteps > 1:
         scc_steps = re.findall(r'iSCC\s*Total electronic\s*Diff electronic\s*SCC error\s*([\.\-+E\d\s]*)\s*\n', data)
@@ -545,7 +545,7 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
 
         nscc_per_ionstep = [len(x) for x in scc_steps]
         geom_optimization['nscc_per_ionstep'] = nscc_per_ionstep
-        log.info('SCC :' + str(nscc_per_ionstep))
+        pcm_log.info('SCC :' + str(nscc_per_ionstep))
 
         total_energy = re.findall(r'Total Energy:\s*([\.\-+\dE]+)\s*H\s*', data)
         total_energy = np.array(total_energy, dtype=float)
@@ -555,30 +555,30 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
         max_force = np.array(max_force, dtype=float)
         geom_optimization['max_force'] = max_force
 
-        log.info('Forces [initial -> final] %10.3E -> %10.3E' %
-                 (geom_optimization['max_force'][0], geom_optimization['max_force'][-1]))
+        pcm_log.info('Forces [initial -> final] %10.3E -> %10.3E' %
+                     (geom_optimization['max_force'][0], geom_optimization['max_force'][-1]))
 
         max_lattice_force = re.findall(r'Maximal Lattice force component:\s*([\.\-+\dE]+)\s*', data)
         if max_lattice_force:
             max_lattice_force = np.array(max_lattice_force, dtype=float)
             geom_optimization['max_lattice_force'] = max_lattice_force
-            log.info('Stress [initial -> final] %10.3E -> %10.3E' %
+            pcm_log.info('Stress [initial -> final] %10.3E -> %10.3E' %
                      (geom_optimization['max_lattice_force'][0], geom_optimization['max_lattice_force'][-1]))
 
-        log.info('Energy [initial -> final] %10.3E -> %10.3E' %
+        pcm_log.info('Energy [initial -> final] %10.3E -> %10.3E' %
                  (geom_optimization['total_energy'][0], geom_optimization['total_energy'][-1]))
 
         stats['mean_nscc'] = np.mean(nscc_per_ionstep)
         stats['std_nscc'] = np.std(nscc_per_ionstep)
 
     if re.findall('Geometry did NOT converge', data):
-        log.debug('Convergence not achieved!')
+        pcm_log.debug('Convergence not achieved!')
         stats['ion_convergence'] = False
     else:
         stats['ion_convergence'] = True
 
     if re.findall('Geometry converged', data):
-        log.debug('Convergence achieved!')
+        pcm_log.debug('Convergence achieved!')
         stats['ion_convergence'] = True
     else:
         stats['ion_convergence'] = False

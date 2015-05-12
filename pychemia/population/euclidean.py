@@ -1,15 +1,31 @@
 __author__ = 'Guillermo Avendano-Franco'
 
 import uuid
+
+import scipy.optimize
 import numpy as np
 
+from pychemia.utils.mathematics import unit_vector
+from _population import Population
 
-class EuclideanPopulation():
 
-    def __init__(self, function, ndim, limits, delta=0.1):
+class EuclideanPopulation(Population):
+
+    def __init__(self, function, ndim, limits, local_minimization=False):
+        """
+        Creates a simple population of points in R^N with
+        N=ndim the dimensionality of space and
+        using an univaluated function 'function'
+
+        :param function:
+        :param ndim:
+        :param limits:
+        :return:
+        """
+        self.tag = 'global'
+        self.name = 'Euclidean'
         self.function = function
         self.ndim = ndim
-        self.delta = delta
         if len(limits) == 2:
             self.limits = np.zeros((ndim, 2))
             self.limits[:, 0] = limits[0]
@@ -18,58 +34,68 @@ class EuclideanPopulation():
             self.limits = np.array(limits)
             assert (self.limits.shape == (2, ndim))
 
-        self.members = []
-        self.actives = []
-        self.evaluated = []
+        self._members = []
+        self._actives = []
         self.db = {}
+        self.moves = {}
+        self.pcdb = None
+        self.local_minimization = local_minimization
 
-    @property
-    def all_entries(self):
-        return self.members
+    def __str__(self):
+        ret = ' Euclidean Population\n\n'
+        ret += ' Name:               %s\n' % self.name
+        ret += ' Tag:                %s\n' % self.tag
+        ret += '\n'
+        ret += ' Members:            %d\n' % len(self.members)
+        ret += ' Actives:            %d\n' % len(self.actives)
+        ret += ' Evaluated:          %d\n' % len(self.evaluated)
+        return ret
 
-    def is_evaluated(self, i):
-        if i in self.db and self.db[i]['fx'] is not None:
-            return True
-        else:
-            return False
+    def new_entry(self, data, active=True):
+        ident = self.new_identifier()
+        x = np.atleast_1d(data)
+        self.db[ident] = {'x': x, 'fx': None}
+        self.evaluate_entry(ident)
+        if active:
+            self.actives.append(ident)
+        self.members.append(ident)
+        return ident
+
+    def add_random(self):
+        x = np.random.random_sample(self.ndim)
+        x = x*(self.limits[:, 1]-self.limits[:, 0])+self.limits[:, 0]
+        return self.new_entry(x), None
+
+    def check_duplicates(self, ids):
+        ret = {}
+        if len(ids) == 0:
+            return ret
+        for i in range(len(ids)):
+            ident1 = ids[i]
+            for j in range(i+1, len(ids)):
+                ident2 = ids[j]
+                distance = self.distance(ident1, ident2)
+                if distance < 1E-2:
+                    ret[ident2] = ident1
+        return ret
 
     def coordinate(self, i):
         return self.db[i]['x']
 
-    def set_value(self, i, y):
-        self.db[i]['fx'] = y
-
-    def random_population(self, n):
-        for i in range(n):
-            self.add_random()
-
-    def check_duplicates(self):
-        ret = []
-        ids = self.actives
-        values = np.array([self.value(i) for i in self.actives if i in self.evaluated])
-        if len(values) == 0:
-            return ret
-        #else:
-        #    print 'Values', values
-        argsort = np.argsort(values)
-        diffs = np.ediff1d(values[argsort])
-        #print 'Values     ', values[argsort]
-        #print 'Differences', diffs
-        for i in range(len(values)-1):
-            idiff = diffs[i]
-            if idiff < 1E-2:
-                ident1 = ids[argsort[i]]
-                ident2 = ids[argsort[i+1]]
-                distance = self.distance(ident1, ident2)
-                if distance < 1E-2:
-                    #print x1, x2, "are too close"
-                    fx1 = self.value(ident1)
-                    fx2 = self.value(ident2)
-                    if fx2 < fx1:
-                        ret.append(ident1)
-                    else:
-                        ret.append(ident2)
-        return ret
+    def cross(self, ids):
+        assert len(ids) == 2
+        parent1 = self.coordinate(ids[0])
+        parent2 = self.coordinate(ids[1])
+        if self.ndim == 1:
+            son1 = 0.5*(parent1 + parent2)
+            son2 = np.abs(parent1 - parent2)
+        elif self.ndim == 2:
+            son1 = np.array([parent1[0], parent2[1]])
+            son2 = np.array([parent2[0], parent1[1]])
+        else:
+            split = np.random.randint(1, self.ndim-1)
+            son1 = np.concatenate((parent1[:split], parent2[split:]))
+            son2 = np.concatenate((parent2[:split], parent1[split:]))
 
     def distance(self, imember, jmember):
         # The trivial metric
@@ -77,62 +103,62 @@ class EuclideanPopulation():
         x2 = self.db[jmember]['x']
         return np.linalg.norm(x2-x1)
 
-    @staticmethod
-    def new_identifier():
-        return str(uuid.uuid4())[-12:]
+    def enable(self, ident):
+        if ident not in self.actives:
+            self.actives.append(ident)
 
-    def add_random(self):
-        ident = self.new_identifier()
-        x = np.random.rand(self.ndim)
-        x = x*(self.limits[:, 1]-self.limits[:, 0])+self.limits[:, 0]
-        self.db[ident] = {'x': x, 'fx': None}
-        self.actives.append(ident)
-        self.members.append(ident)
-        return ident
+    def evaluate(self):
+        for ident in self.members:
+            self.evaluate_entry(ident)
 
-    def add_modified(self, ident):
-        new_ident = self.new_identifier()
-        while True:
-            x = self.db[ident]['x'].copy()
-            for i in range(self.ndim):
-                x[i] += 2*self.delta*np.random.rand() - self.delta
-            if self.limits[i, 0] < x[i] < self.limits[i, 1]:
-                break
+    def evaluate_entry(self, ident):
+        x = self.db[ident]['x']
+        if self.local_minimization:
+            localmin = scipy.optimize.minimize(self.function, x)
+            if self.is_inside(localmin.x):
+                self.db[ident]['x'] = localmin.x
+                self.db[ident]['fx'] = localmin.fun
+            else:
+                self.db[ident]['fx'] = self.function(x)
+        else:
+            self.db[ident]['fx'] = self.function(x)
 
-        self.db[new_ident] = {'x': x, 'fx': None}
-        self.actives.append(new_ident)
-        self.members.append(new_ident)
-        return new_ident
+    # def evaluator_daemon(self):
+    #
+    #     def worker(db, function, d):
+    #         while True:
+    #             for entry_id in db:
+    #                 if db[entry_id]['fx'] is None:
+    #                     self.evaluate_entry(entry_id)
+    #             for entry_id in self.db:
+    #                 d[entry_id] = self.db[entry_id]
+    #             time.sleep(5)
+    #
+    #     manager = Manager()
+    #     d = manager.dict()
+    #
+    #     p = Process(target=worker, args=(self.db, self.function, d))
+    #     p.start()
+    #     return p, d
+
+    def is_evaluated(self, i):
+        if i in self.db and self.db[i]['fx'] is not None:
+            return True
+        else:
+            return False
+
+    def from_dict(self, population_dict):
+        pass
 
     def disable(self, ident):
-        if ident not in self.actives:
-            raise ValueError(ident + ' not in actives')
-        self.actives.remove(ident)
+        if ident in self.actives:
+            self.actives.remove(ident)
 
-    @property
-    def fraction_evaluated(self):
-        ret = np.sum([1 for i in self.actives if i in self.evaluated])
-        return float(ret)/len(self.actives)
-
-    def active_no_evaluated(self):
-        ret = []
-        for i in self.actives:
-            if i not in self.evaluated:
-                ret.append(i)
+    def get_values(self, selection):
+        ret = {}
+        for i in selection:
+            ret[i] = self.value(i)
         return ret
-
-    def value(self, imember):
-        return self.db[imember]['fx']
-
-    def save(self):
-        wf = open('population.dat', 'w')
-        for i in sorted(self.members):
-            wf.write("%15s %12.3f %12.3f\n" % (i, self.db[i]['x'][0], self.db[i]['x'][1]))
-        wf.close()
-        wf = open('members.dat', 'w')
-        for i in sorted(self.members):
-            wf.write("%15s\n" % i)
-        wf.close()
 
     def member_str(self, imember):
         ret = '('
@@ -148,7 +174,7 @@ class EuclideanPopulation():
             ret += 'None'
         return ret
 
-    def move(self, imember, jmember, in_place=False):
+    def move(self, imember, jmember, factor=0.2, in_place=False):
         """
         Moves imember in the direction of jmember
         If in_place is True the movement occurs on the
@@ -162,12 +188,108 @@ class EuclideanPopulation():
 
         x1 = self.db[imember]['x']
         x2 = self.db[jmember]['x']
-        uvector = (x2-x1)/np.linalg.norm(x2 - x1)
+        newx = x1 + factor*(x2-x1)
         if not in_place:
             new_ident = self.new_identifier()
             self.actives.append(new_ident)
             self.members.append(new_ident)
         else:
             new_ident = imember
-        self.db[new_ident] = {'x': x1 + self.delta*uvector, 'fx': None}
+
+        # print 'Moving',imember,'located at',x1
+        if new_ident not in self.moves:
+            # print 'No previous'
+            self.moves[new_ident] = np.vstack((x1, newx))
+        else:
+            # print 'With previous'
+            self.moves[new_ident]=np.vstack((self.moves[new_ident], newx))
+        # print self.moves[new_ident]
+        self.db[new_ident] = {'x': newx, 'fx': None}
+        self.evaluate_entry(new_ident)
         return new_ident
+
+    def is_inside(self, x):
+        outside = False
+        for i in range(self.ndim):
+            if self.limits[i, 0] > x[i] or x[i] > self.limits[i, 1]:
+                outside = True
+                print 'New position out of limits', x, self.limits
+        return not outside
+
+    def move_random(self, imember, factor=0.2, in_place=False, kind='move'):
+
+        x = self.db[imember]['x']
+        newx = x
+        outside = True
+        while outside:
+            dx = 2*np.random.random_sample(self.ndim) - 1
+            #print 'Random movement', dx, factor
+            dx = unit_vector(dx)
+            newx = x + factor*dx
+            outside = not self.is_inside(newx)
+
+        if not in_place:
+            new_ident = self.new_identifier()
+            self.actives.append(new_ident)
+            self.members.append(new_ident)
+        else:
+            new_ident = imember
+        self.db[new_ident] = {'x': newx, 'fx': None}
+        self.evaluate_entry(new_ident)
+        return new_ident
+
+    @staticmethod
+    def new_identifier():
+        return str(uuid.uuid4())[-12:]
+
+    def random_population(self, n):
+        for i in range(n):
+            self.add_random()
+
+    def replace_failed(self):
+        pass
+
+    def recover(self):
+        pass
+
+    def save(self):
+        wf = open('population.dat', 'w')
+        for i in sorted(self.members):
+            wf.write("%15s %12.3f %12.3f\n" % (i, self.db[i]['x'][0], self.db[i]['x'][1]))
+        wf.close()
+        wf = open('members.dat', 'w')
+        for i in sorted(self.members):
+            wf.write("%15s\n" % i)
+        wf.close()
+
+    def save_info(self):
+        pass
+
+    def set_value(self, i, y):
+        self.db[i]['fx'] = y
+
+    def str_entry(self, entry_id):
+        ret = 'x = ['
+        for i in self.db[entry_id]['x']:
+            ret += '%7.2e ,' % i
+        ret = ret[:-1] + '] f(x) = %7.2e' % self.db[entry_id]['fx']
+        return ret
+
+    def value(self, imember):
+        return self.db[imember]['fx']
+
+    def write_change(self, change):
+        # print 'Write Change', change
+        if change['change'] == 'promoted':
+            self.db[change['from']]['from']=change['from']
+        else:
+            self.db[change['to']]['from']=change['from']
+
+    @property
+    def actives(self):
+        return self._actives
+
+    @property
+    def members(self):
+        return self._members
+

@@ -199,6 +199,28 @@ masses = [0.0, 1.00794, 4.002602, 6.941, 9.012182,
           243.0, 247.0, 247.0, 249.0, 254.0,
           253.0, 256.0, 254.0, 257.0, 260.0]
 
+cpk_colors = [None, (1, 1, 1),  # Hydrogen
+              (0.0, 1.0, 1.0),  # Helium
+              (0.4666666666666667, 0.0, 1.0),  # Lithium
+              (0.0, 0.4666666666666667, 0.0),  # Berilium
+              (1.0, 0.6666666666666666, 0.4666666666666667),  # Boron
+              (0.1333333333333333, 0.133333333333333, 0.1333333333333333),  # Carbon
+              (0.5294117647058824, 0.807843137254902, 0.9215686274509803),  # Nitrogen
+              (1.0, 0.13333333333333333, 0.0),   # Oxygen
+              (0.12156862745098039, 0.9411764705882353, 0.12156862745098039),  # Fluorine ]
+              (0.0, 1.0, 1.0),  # Neon
+              (0.4666666666666667, 0.0, 1.0),  # Sodium
+              (0.0, 0.4666666666666667, 0.0),  # Magnesium
+              (0.8666666666666667, 0.4666666666666667, 1.0),
+              (0.8666666666666667, 0.4666666666666667, 1.0),
+              (1.0, 0.6, 0.0),  # Phosphorus
+              (0.8666666666666667, 0.4666666666666667, 1.0),
+              (0.12156862745098039, 0.9411764705882353, 0.12156862745098039),  # Clorine ]
+              (0.0, 1.0, 1.0),  # Argon
+              (0.4666666666666667, 0.0, 1.0),  # Potasium
+              (0.0, 0.4666666666666667, 0.0),  # Calsium
+              (0.8666666666666667, 0.4666666666666667, 1.0)]
+
 
 def _get_property(table, value=None, scale_factor=1):
     """
@@ -223,7 +245,7 @@ def _get_property(table, value=None, scale_factor=1):
         ret = (scale_factor * table[value]) if value is not None else None
     elif isinstance(value, float):
         ret = (scale_factor * table[int(value)]) if value is not None else None
-    elif isinstance(value, str) and value in atomic_symbols:
+    elif isinstance(value, basestring) and value in atomic_symbols:
         ret = scale_factor * table[atomic_number(value)]
     elif _np.iterable(value):
         try:
@@ -290,7 +312,7 @@ def electronegativity(value=None):
     return _get_property(table, value)
 
 
-def covalent_radius(value=None, units='ang'):
+def covalent_radius(value=None):
     """
     Covalent radius in Bohr of an atom with a given Z atomic_number
 
@@ -356,7 +378,7 @@ def atomic_symbol(value=None):
     return ret
 
 
-def mass(value=None, units='saw'):
+def mass(value=None):
     """
     Atom Mass for a given atomic number
 
@@ -404,7 +426,7 @@ def atomic_number(value):
     """
     symbol_dict = dict(atomic_symbol())
 
-    if isinstance(value, str) and value in atomic_symbols:
+    if isinstance(value, basestring) and value in atomic_symbols:
         ret = symbol_dict[str(value)]
     elif isinstance(value, list):
         assert (all([x in atomic_symbols for x in value]))
@@ -413,4 +435,3 @@ def atomic_number(value):
         assert (all([x in atomic_symbols for x in value]))
         ret = [symbol_dict[x] for x in value]
     return ret
-

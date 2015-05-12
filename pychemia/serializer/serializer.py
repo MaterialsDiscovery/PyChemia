@@ -59,10 +59,15 @@ def generic_serializer(value):
     if value is None:
         return None
     elif isinstance(value, np.ndarray):
-        if len(value.shape) == 1:
+        if value.ndim == 1:
             return list(value)
-        elif len(value.shape) == 2:
+        elif value.ndim == 2:
             return [list(i) for i in value]
+        elif value.ndim == 3:
+            new_value = []
+            for ivalue in value:
+                new_value.append([list(i) for i in ivalue])
+            return new_value
     elif isinstance(value, basestring):
         return value
     elif isinstance(value, float):

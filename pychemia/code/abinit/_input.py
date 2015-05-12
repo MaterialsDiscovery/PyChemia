@@ -43,8 +43,6 @@ class InputVariables:
             get_atomic_structure =
     """
 
-    variables = {}
-
     def __init__(self, *args, **kwargs):
         """
         Creates a new input object, the input object
@@ -52,6 +50,7 @@ class InputVariables:
         input variables and the values are always numpy
         arrays.
         """
+        self.variables = {}
         filename = ''
         if len(args) == 1:
             x = args[0]
@@ -168,6 +167,9 @@ class InputVariables:
             wf:
                 The file object where the 'abinit.in' is been written
         """
+        if self.variables[varname].ndim != 1:
+            self.variables[varname] = self.variables[varname].flatten()
+
         ret = ''
         if len(self.variables[varname]) == 0:
             print("[ERROR] input variable: '%s' contains no elements" % varname)
@@ -260,8 +262,8 @@ class InputVariables:
             if name == '' and varname in self.variables:
                 name = varname
 
-        #print 'varname=',varname,'name=',name
-        # Get the value of the abinit variable
+        # print 'varname=',varname,'name=',name
+        #  Get the value of the abinit variable
         if name != '':
             npvalue = self.variables[name]
             if not isinstance(delta, int):
@@ -472,6 +474,9 @@ class InputVariables:
             ax[j].set_ylabel(labels[j][1])
 
         return fig, ax
+
+    def clean(self):
+        self.variables = {}
 
 
 def netcdf2dict(filename):

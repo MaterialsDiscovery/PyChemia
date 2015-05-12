@@ -8,7 +8,7 @@ import numpy as _np
 import pychemia
 
 
-def read_poscar(path):
+def read_poscar(path='POSCAR'):
     """
     Load a POSCAR file and return a pychemia structure object
     """
@@ -36,8 +36,6 @@ def read_poscar(path):
     newcell[1, :] = latconst * _np.array([float(x) for x in rf.readline().split()])
     newcell[2, :] = latconst * _np.array([float(x) for x in rf.readline().split()])
 
-    # The call to add_atom naturally will increase the
-    # internal variable crystal.natom
     line = rf.readline()
     species = None
     try:
@@ -66,7 +64,7 @@ def read_poscar(path):
 
     pos = []
     for i in range(natom):
-        pos += [float(x) for x in rf.readline().split()]
+        pos += [float(x) for x in rf.readline().split()[:3]]
     pos = _np.array(pos).reshape((-1, 3))
 
     if kmode == 'Cartesian':

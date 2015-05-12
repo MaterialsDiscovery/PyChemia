@@ -148,7 +148,7 @@ def plot_one_dos(dosobj, ax=None, horizontal=True, figwidth=16, figheight=12):
         else:
             ax.plot(yy, xx)
 
-    #fig.savefig('test.pdf')
+    # fig.savefig('test.pdf')
     return fig, ax
 
 

@@ -1,7 +1,7 @@
 __author__ = 'Guillermo Avendano-Franco'
 
 import random
-from pychemia import log
+from pychemia import pcm_log
 from _searcher import Searcher
 
 
@@ -27,15 +27,14 @@ class HarmonySearch(Searcher):
                                    Once this ratio is fulfilled the generation is considered sufficient to start a cycle
         """
         # Mandatory objects
-        self.population = population
+        Searcher.__init__(population, fraction_evaluated, generation_size, stabilization_limit)
         # Parameters
         self.hmcr = None  # harmony_memory_considering_rate
         self.par = None
         self.top = None
         self.tail = None
         self.set_params(params)
-        # Initializing objects 
-        Searcher.__init__(self, self.population, fraction_evaluated, generation_size, stabilization_limit)
+        self.delta_change = 1
 
     def set_params(self, params):
         """
@@ -44,24 +43,22 @@ class HarmonySearch(Searcher):
 
         :param params:
         """
+        self.hmcr = 0.9
+        self.par = 0.9
+        self.top = 2
+        self.tail = 2
         if params is None:
-            params = {'hmcr': 0.9, 'par': 0.9, 'top': 2, 'tail': 2}
-        if 'hmcr' not in params:
-            params['hmcr'] = 0.9
-        if 'par' not in params:
-            params['par'] = 0.9
-        if 'top' not in params:
-            params['top'] = 2
-        if 'tail' not in params:
-            params['tail'] = 2
-
-        assert (1.0 >= params['hmcr'] >= 0.0)
-        self.hmcr = params['hmcr']
-        assert (1.0 >= params['par'] >= 0.0)
-        self.par = params['par']
-
-        self.top = params['top']
-        self.tail = params['tail']
+            params = {}
+        if 'hmcr' in params:
+            self.hmcr = params['hmcr']
+        if 'par' in params:
+            self.par = params['par']
+        if 'top' in params:
+            self.top = params['top']
+        if 'tail' in params:
+            self.tail = params['tail']
+        assert (1.0 >= self.hmcr >= 0.0)
+        assert (1.0 >= self.par >= 0.0)
 
     def get_params(self):
         return {'hmcr': self.hmcr, 'par': self.par}
@@ -72,31 +69,32 @@ class HarmonySearch(Searcher):
         """
         # Get a static selection of the values in the generation that are evaluated
         selection = self.population.ids_sorted(self.population.actives_evaluated)
+        pcm_log.debug('Size of selection : %d' % len(selection))
 
         # Automatic promotion for the top ranking members
         for entry_id in selection[:self.top]:
-            log.info('[HS](%s) Top entry: promoted' % entry_id)
+            pcm_log.debug('[HS](%s) Top entry: promoted' % str(entry_id))
             self.pass_to_new_generation(entry_id, reason='Top %d' % self.top)
-        #assert(len(self.get_generation(self.current_generation+1)) >= 2)
+        # assert(len(self.get_generation(self.current_generation+1)) >= 2)
 
         # Intermediate members, their fate depends on hmcr and par
         for entry_id in selection[self.top:-self.tail]:
             rnd = random.random()
-            log.info('[HS](%s) Middle entry: rnd=%4.3f hmcr= %4.3f' % (entry_id, rnd, self.hmcr))
+            pcm_log.debug('[HS](%s) Middle entry: rnd=%4.3f hmcr= %4.3f' % (entry_id, rnd, self.hmcr))
             if rnd <= self.hmcr:
                 rnd = random.random()
                 if rnd < self.par:
-                    log.info('[HS](%s) Promoted (modified): rnd= %4.3f < par= %4.3f' % (entry_id, rnd, self.par))
+                    pcm_log.debug('[HS](%s) Promoted (modified): rnd= %4.3f < par= %4.3f' % (entry_id, rnd, self.par))
                     self.replace_by_changed(entry_id, reason='rnd= %4.3f < par= %4.3f' % (rnd, self.par))
                 else:
-                    log.info('[HS](%s) Promoted (unmodified): rnd= %4.3f >= par= %4.3f' % (entry_id, rnd, self.par))
+                    pcm_log.debug('[HS](%s) Promoted (unmodified): rnd= %4.3f >= par= %4.3f' % (entry_id, rnd, self.par))
                     self.pass_to_new_generation(entry_id, reason='rnd= %4.3f >= par= %4.3f' % (rnd, self.par))
             else:
-                log.info('[HS](%s) Discarded: rnd= %4.3f > hmcr= %4.3f ' % (entry_id, rnd, self.hmcr))
+                pcm_log.debug('[HS](%s) Discarded: rnd= %4.3f > hmcr= %4.3f ' % (entry_id, rnd, self.hmcr))
                 self.replace_by_random(entry_id, reason='rnd= %4.3f > hmcr= %4.3f' % (rnd, self.hmcr))
-        #assert(len(self.get_generation(self.current_generation+1)) <= self.generation_size-2)
+        # assert(len(self.get_generation(self.current_generation+1)) <= self.generation_size-2)
 
         for entry_id in selection[-self.tail:]:
-            log.info('[HS](%s) Tail entry: discarded' % entry_id)
+            pcm_log.debug('[HS](%s) Tail entry: discarded' % entry_id)
             self.replace_by_random(entry_id, reason='Tail %d' % self.tail)
-        #assert(len(self.get_generation(self.current_generation+1)) == self.generation_size)
+        # assert(len(self.get_generation(self.current_generation+1)) == self.generation_size)

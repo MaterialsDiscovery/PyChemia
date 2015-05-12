@@ -50,12 +50,12 @@ class AseEvaluator():
         ase_structure.set_calculator(LennardJones())
 
         dyn = QuasiNewton(ase_structure)
-        dyn.run(fmax=0.05)
+        dyn.run()
 
         ase_structure.set_constraint(FixAtoms(mask=[True for atom in ase_structure]))
         ucf = UnitCellFilter(ase_structure)
         qn = QuasiNewton(ucf)
-        qn.run(fmax=0.05)
+        qn.run()
 
         new_structure = pychemia.external.ase.ase2pychemia(ase_structure)
         energy = ase_structure.get_potential_energy()

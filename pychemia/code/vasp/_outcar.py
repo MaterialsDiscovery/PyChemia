@@ -2,10 +2,9 @@ __author__ = 'Guillermo Avendano-Franco'
 
 import re
 import os
-import logging
 import numpy as np
-
-logging.basicConfig(level=logging.INFO)
+from pychemia.serializer import generic_serializer
+from pychemia import pcm_log
 
 
 class VaspOutput():
@@ -22,39 +21,46 @@ class VaspOutput():
         self.filename = filename
         self.array_sizes = {}
         self.species = None
+        self.final_data = {}
+        self.iteration_data = []
 
         if not os.path.isfile(filename):
             raise ValueError('File not found ' + filename)
+        else:
+            self.outcar_parser()
 
     def outcar_parser(self):
+
         rf = open(self.filename, 'r')
         data = rf.read()
         rf.close()
 
         for istr in ['NKPTS', 'NBANDS', 'NEDOS', 'NIONS', 'NGX', 'NGY', 'NGZ', 'NGXF', 'NGYF', 'NGZF', 'ISPIN']:
-            self.array_sizes[istr] = int(re.findall(istr + r'\s*=\s*(\d+)', data)[0])
-        logging.info('Array sizes : ' + str(self.array_sizes))
+            redata = re.findall(istr + r'\s*=\s*(\d+)', data)
+            if len(redata) > 0:
+                self.array_sizes[istr] = int(redata[0])
+        # pcm_log.info('Array sizes : ' + str(self.array_sizes))
 
         self.species = re.findall(r'POTCAR\s*:\s*[\w_]+\s*(\w+)', data)
         self.species = self.species[:len(self.species) / 2]
-        logging.info('Number of species (= number of POTCARs):' + str(self.species))
+        # pcm_log.info('Number of species (= number of POTCARs):' + str(self.species))
 
         pos_forces = re.findall(r'TOTAL-FORCE \(eV/Angst\)\s*-*\s*([-.\d\s]+)\s+-{2}', data)
         pos_forces = np.array([x.split() for x in pos_forces], dtype=float)
         pos_forces.shape = (len(pos_forces), -1, 6)
         forces = pos_forces[:, :, 3:]
         positions = pos_forces[:, :, :3]
-        logging.debug('Positions from OUTCAR: \n' + str(positions))
-        logging.debug('Forces from OUTCAR: \n' + str(forces))
+        # pcm_log.debug('Positions from OUTCAR: \n' + str(positions))
+        # pcm_log.debug('Forces from OUTCAR: \n' + str(forces))
 
         self.forces = forces
         self.positions = positions
         self.array_sizes['NIONSTEPS'] = len(self.forces)
-        logging.info('Number of Ionic steps: ' + str(self.array_sizes['NIONSTEPS']))
+        # pcm_log.info('Number of Ionic steps: ' + str(self.array_sizes['NIONSTEPS']))
 
         fermi = re.findall(r'E-fermi\s+:\s+([-.\d]+)', data)
         fermi = np.array(fermi, dtype=float)
-        logging.debug('Fermi Level(eV): ' + str(fermi))
+        # pcm_log.debug('Fermi Level(eV): ' + str(fermi))
         self.fermi = fermi
 
         # This regex covers the entire information for each electronic iteration.
@@ -62,33 +68,42 @@ class VaspOutput():
         # The final part catch the value of the energy
         # It returns a list of tuples in the form [(ionic iter, Energy (elect. Iter), ...]
         energy = re.findall(r'Iteration\s*(\d+)[-+*/=():.\s\d\w]+>0\)\s*=\s*([-.\d]+)', data)
-        logging.debug('Energy(eV) [(ionic iter, Energy (elect. Iter)),...]: ' + str(energy))
-        self.energy = energy
+        # pcm_log.debug('Energy(eV) [(ionic iter, Energy (elect. Iter)),...]: ' + str(energy))
+
+        self.energy = []
+        index = None
+
+        for i in energy:
+            if index != i[0]:
+                if len(self.energy) == int(i[0]) - 1:
+                        self.energy.append([])
+                self.energy[int(i[0])-1].append(float(i[1]))
 
         # TODO: Check for magnetic cases
         kpoints = re.findall(r'k-point\s*\d+\s*:\s*([-.\d\s]+)band', data)
         kpoints = np.array([x.split() for x in kpoints], dtype=float)
 
-        if len(kpoints) == 2 * self.array_sizes['NKPTS'] * self.array_sizes['NIONSTEPS']:
-            assert (self.array_sizes['ISPIN'] == 2)
-        else:
-            assert (self.array_sizes['ISPIN'] == 1)
+        if False and self.array_sizes['NKPTS'] < 1000:
+            if len(kpoints) == 2 * self.array_sizes['NKPTS'] * self.array_sizes['NIONSTEPS']:
+                assert (self.array_sizes['ISPIN'] == 2)
+            else:
+                assert (self.array_sizes['ISPIN'] == 1)
 
-        kpoints.shape = (self.array_sizes['NIONSTEPS'], self.array_sizes['ISPIN'], self.array_sizes['NKPTS'], 3)
-        logging.debug('K-points:' + str(kpoints))
-        logging.debug('K-points shape;:' + str(kpoints.shape))
+            kpoints.shape = (self.array_sizes['NIONSTEPS'], self.array_sizes['ISPIN'], self.array_sizes['NKPTS'], 3)
+            # pcm_log.debug('K-points:' + str(kpoints))
+            # pcm_log.debug('K-points shape;:' + str(kpoints.shape))
 
-        if self.array_sizes['ISPIN'] == 2:
-            assert (np.all(kpoints[:, 0, :, :] == kpoints[:, 1, :, :]))
-        kpoints = kpoints[:, 0, :, :]
-        self.kpoints = kpoints
+            if self.array_sizes['ISPIN'] == 2:
+                assert (np.all(kpoints[:, 0, :, :] == kpoints[:, 1, :, :]))
+            kpoints = kpoints[:, 0, :, :]
+            self.kpoints = kpoints
 
         bands = re.findall(r'^\s*[1-9]\d*\s+([-\d]+\.[\d]+)\s+[-.\d]+\s*\n', data, re.MULTILINE)
         assert (len(bands) == self.array_sizes['NBANDS'] * self.array_sizes['ISPIN']
                 * self.array_sizes['NKPTS']
                 * self.array_sizes['NIONSTEPS'])
         bands = np.array(bands, dtype=float)
-        logging.info('Bands : ' + str(bands))
+        # pcm_log.info('Bands : ' + str(bands))
 
         stress = re.findall(r'in\s+kB ([-.\s\d]+)external', data)
         # Converted from kBar to GPa
@@ -105,7 +120,7 @@ class VaspOutput():
             self.stress[:, 1, 0] = stress[:, 3]
             self.stress[:, 2, 1] = stress[:, 4]
             self.stress[:, 2, 0] = stress[:, 5]
-            logging.info('Stress (GPa):\n ' + str(self.stress))
+            # pcm_log.info('Stress (GPa):\n ' + str(self.stress))
 
         charge = re.findall(r'total\s*charge\s*#\s*of\s*ion\s*s\s*p\s*d\s*tot\s*-+([-.\s\d]+)\s--', data)
         if charge:
@@ -118,7 +133,7 @@ class VaspOutput():
             self.charge['p'] = charge[:, 1]
             self.charge['d'] = charge[:, 2]
             self.charge['total'] = charge[:, 3]
-            logging.debug('Charge :' + str(self.charge))
+            # pcm_log.debug('Charge :' + str(self.charge))
 
         magnetization = re.findall(r'magnetization\s*\(x\)\s*#\s*of\s*ion\s*s\s*p\s*d\s*tot\s*-+([-.\s\d]+)\s--', data)
         if magnetization:
@@ -131,7 +146,57 @@ class VaspOutput():
             self.magnetization['p'] = magnetization[:, 1]
             self.magnetization['d'] = magnetization[:, 2]
             self.magnetization['total'] = magnetization[:, 3]
-            logging.debug('Magnetization :' + str(self.magnetization))
+            # pcm_log.debug('Magnetization :' + str(self.magnetization))
+
+        # Processing Final Data
+        self.free_energy(data)
+        self.iterations(data)
+
+    def free_energy(self, data):
+        subdata = re.findall('FREE ENERGIE OF THE ION-ELECTRON SYSTEM [\w\d\s\(\)\n-=>]*\n \n\n\n-', data)
+        if len(subdata) == 1:
+            data_split = subdata[0].split()
+            try:
+                float(data_split[12])
+                float(data_split[17])
+                float(data_split[20])
+            except ValueError:
+                raise ValueError('Energy values could not be parsed from: %s' % subdata)
+            self.final_data['energy'] = {'free_energy': float(data_split[12]),
+                                         'energy_without_entropy': float(data_split[17]),
+                                         'energy(sigma->0)': float(data_split[20])}
+
+    def iterations(self, data):
+        # Capture the data for each iteration. The symbol '>' is not included on purpose to close
+        # the capture close to "energy(sigma->0)..."
+        subdata = re.findall(r'-+ Iteration\s*(\d+)\(\s*(\d+)\)\s*-+\s*([\s\d\w:.,\-=()/+\*]*)energy', data)
+        for i in subdata:
+            io_iter = int(i[0])-1
+            scf_iter = int(i[1])-1
+            # print io_iter, scf_iter
+            while len(self.iteration_data) <= io_iter:
+                self.iteration_data.append([])
+            while len(self.iteration_data[io_iter]) <= scf_iter:
+                self.iteration_data[io_iter].append([])
+            self.iteration_data[io_iter][scf_iter] = {}
+            self.iteration_data[io_iter][scf_iter]['Timing'] = {}
+            for j in ['POTLOK', 'SETDIJ', 'EDDIAG', 'RMM-DIIS', 'ORTHCH', 'DOS', 'CHARGE', 'MIXING', 'LOOP']:
+                iter_block = re.findall(j+r':([\d\w:. ]*)\n', i[2])
+                if len(iter_block) > 0:
+                    iter_block_split = iter_block[0].split()
+                    try:
+                        float(iter_block_split[2][:-1])
+                        float(iter_block_split[5])
+                    except ValueError:
+                        raise ValueError('Could not retrieve data', iter_block)
+                    self.iteration_data[io_iter][scf_iter]['Timing'][j] = {'cpu': float(iter_block_split[2][:-1]),
+                                                                           'real': float(iter_block_split[5])}
+
+            self.iteration_data[io_iter][scf_iter]['Free_Energy'] = {}
+            for j in ['PSCENC', 'TEWEN', 'DENC', 'EXHF', 'XCENC', 'EENTRO', 'EBANDS', 'EATOM', 'TOTEN']:
+                iter_block=re.findall(j+r'\s*=\s*([\d\.-]*)[\s\w\d]*\n', i[2])
+                if len(iter_block) > 0:
+                    self.iteration_data[io_iter][scf_iter]['Free_Energy'][j] = float(iter_block[0])
 
     def __str__(self):
         ret = '\nForces:\n'
@@ -165,8 +230,41 @@ class VaspOutput():
             info['avg_force'] = np.average(np.abs(np.apply_along_axis(np.linalg.norm, 1, self.forces[-1])))
         return info
 
+    @property
     def to_dict(self):
         ret = {}
         for i in ['magnetization', 'charge', 'energy', 'forces', 'stress']:
             ret[i] = eval('self.' + i)
+
+        for i in ret:
+            if isinstance(ret[i], np.ndarray):
+                ret[i] = generic_serializer(ret[i])
         return ret
+
+
+def read_vasp_stdout(filename):
+    rf = open(filename)
+    data = rf.read()
+
+    re_str = r'\n([\w]{3})\:\s*([\d])+\s*([\dE+-.]+)\s*([\dE+-.]+)\s*([\dE+-.]+)\s*([\d]+)\s*([\dE+-.]+)\s*[-\ .\w+]+'
+
+    result = re.findall(re_str, data)
+
+    ret = []
+    for i in result:
+        ret.append([i[0], int(i[1]), float(i[2]), float(i[3]), float(i[4]), int(i[5]), float(i[6])])
+
+    number_of_scf_per_ionic_iter = []
+    final_energy_after_scf = []
+    index = 0
+    counter = 0
+    for i in ret:
+        if i[1] > index:
+            index = i[1]
+        else:
+            number_of_scf_per_ionic_iter.append(index)
+            final_energy_after_scf.append(ret[counter][2])
+            index = 0
+        counter += 1
+
+    return {'iterations': number_of_scf_per_ionic_iter, 'energies': final_energy_after_scf, 'data': ret}

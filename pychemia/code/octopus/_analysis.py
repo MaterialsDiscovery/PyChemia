@@ -176,9 +176,9 @@ def value_in_sphere(dirname, keys, iteration=None, radius=4.5, spin=None):
             if len(x) == 0:
                 print('ERROR File empty:', filename)
             index = (abs(x - radius)).argmin()
-            #print 'dirname',dirname
-            #print 'index=',index
-            #print 'radius (min,max)',X[0],X[-1]
+            # print 'dirname',dirname
+            # print 'index=',index
+            # print 'radius (min,max)',X[0],X[-1]
             # Polynomial fit
             extra = 100
             if index + extra > len(x):

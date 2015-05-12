@@ -18,8 +18,8 @@ Start the execution of the Evaluator using DFTB+ as relaxator
                         [--host localhost ] [--port 27017]
                         [--user None ] [--passwd None] [--ssl]
                         [--slater-path $HOME] [--workdir $HOME]
-                        [--target-forces 1E-2] [--nparal 2]
-                        [--evaluate-all]
+                        [--target-forces 1E-3] [--nparal 2]
+                        [--evaluate-all] [--waiting]
    """)
 
 
@@ -42,9 +42,10 @@ if __name__ == '__main__':
     passwd = None
     slater_path = [os.getenv('HOME')]
     workdir = os.getenv('HOME')
-    target_forces = 1E-2
+    target_forces = 1E-3
     nparal = 2
     evaluate_all = False
+    waiting = False
     ssl = False
 
     for i in range(1, len(sys.argv)):
@@ -77,6 +78,8 @@ if __name__ == '__main__':
                 target_forces = float(sys.argv[i + 1])
             elif option == 'evaluate-all':
                 evaluate_all = True
+            elif option == 'waiting':
+                waiting = True
             elif option == 'ssl':
                 ssl = True
             else:
@@ -103,11 +106,13 @@ if __name__ == '__main__':
     print 'slater-path   : %s' % str(slater_path)
     print 'target-forces : %.2E' % target_forces
     print 'evaluate_all  : %s' % str(evaluate_all)
+    print 'waiting       : %s' % str(waiting)
     print 'ssl           : %s' % str(ssl)
 
     evaluator = EvaluatorDaemon(db_settings, workdir,
                                 target_forces=target_forces,
                                 nparal=nparal,
                                 relaxator_params=relaxator_params,
-                                evaluate_all=evaluate_all)
+                                evaluate_all=evaluate_all,
+                                waiting=waiting)
     evaluator.run()

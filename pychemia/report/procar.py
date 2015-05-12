@@ -1072,7 +1072,7 @@ class ProcarSelect:
         >>> foo = ProcarParser()
         >>> foo.readFile("PROCAR")
         >>> bar = ProcarSelect(foo)
-        >>> bar.selectIspin([0]) #just the density
+        >>> bar.selectIspin([0]) # just the density
         """
         # all kpoint, all bands, VALUE spin, all the rest
         self.log.debug("selectIspin: ...")
@@ -1105,7 +1105,7 @@ class ProcarSelect:
         >>> foo.readFile("PROCAR")
         >>> bar = ProcarSelect(foo)
         >>> bar.selectIspin([...])
-        >>> bar.selectAtoms([0, 1, 2]) #atom0+atom1+atom2
+        >>> bar.selectAtoms([0, 1, 2]) # atom0+atom1+atom2
 
         Note: this method should be called after select.Ispin
         """
@@ -1167,7 +1167,7 @@ class ProcarSelect:
         self.spd = self.spd[:, :, value]
         self.log.debug("old shape =" + str(self.spd.shape))
 
-        #testing if the dimensionaluty is rigth:
+        # testing if the dimensionaluty is rigth:
         dimen = len(self.spd.shape)
         if dimen != 3:
             self.log.error("The array is " + str(dimen) + " dimensional, expecting a"
@@ -1590,7 +1590,7 @@ class ProcarSymmetry:
         angle = angle * np.pi / 180
         # defining a quaternion for rotatoin
         angle /= 2
-        rotAxis = rotAxis * np.sin(angle)
+        rotAxis *= np.sin(angle)
         qRot = np.array((np.cos(angle), rotAxis[0], rotAxis[1], rotAxis[2]))
         qRotI = np.array((np.cos(angle), -rotAxis[0], -rotAxis[1], -rotAxis[2]))
         self.log.debug("Rot. quaternion : " + str(qRot))
@@ -1826,17 +1826,17 @@ def scriptBandsplot(args):
         ticks = None
 
     # The spin argument should be a number (index of an array), or
-    #'st'. In the last case it will be handled separately (later)
+    # 'st'. In the last case it will be handled separately (later)
     args.spin = {'0': 0, '1': 1, '2': 2, '3': 3, 'st': 'st'}[args.spin]
 
     if args.verbose > 2:
         args.verbose = 2
     loglevel = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}[args.verbose]
 
-    #The second part of this function is parse/select/use the data in
-    #OUTCAR (if given) and PROCAR
+    # The second part of this function is parse/select/use the data in
+    # OUTCAR (if given) and PROCAR
 
-    #first parse the outcar if given, to get Efermi and Reciprocal lattice
+    # first parse the outcar if given, to get Efermi and Reciprocal lattice
     recLat = None
     if args.outcar:
         outcarparser = UtilsProcar(loglevel=loglevel)
@@ -1853,11 +1853,11 @@ def scriptBandsplot(args):
     # processing the data, getting an instance of the class that reduces the data
     data = ProcarSelect(procarFile, deepCopy=True, loglevel=loglevel)
 
-    #handling the spin, `args.spin='st'` is not straightforward, needs
-    #to calculate the k vector and its normal. Other `args.spin` values
-    #are trivial.
+    # handling the spin, `args.spin='st'` is not straightforward, needs
+    # to calculate the k vector and its normal. Other `args.spin` values
+    # are trivial.
     if args.spin is 'st':
-        #two `ProcarSelect` instances, to store temporal values: spin_x, spin_y
+        # two `ProcarSelect` instances, to store temporal values: spin_x, spin_y
         dataX = ProcarSelect(procarFile, deepCopy=True, loglevel=loglevel)
         dataX.selectIspin([1])
         dataX.selectAtoms(args.atoms, fortran=args.human)
@@ -1866,14 +1866,14 @@ def scriptBandsplot(args):
         dataY.selectIspin([2])
         dataY.selectAtoms(args.atoms, fortran=args.human)
         dataY.selectOrbital(args.orbitals)
-        #getting the signed angle of each K-vector
+        # getting the signed angle of each K-vector
         angle = np.arctan2(dataX.kpoints[:, 1], (dataX.kpoints[:, 0] + 0.000000001))
         sin = np.sin(angle)
         cos = np.cos(angle)
         sin.shape = (sin.shape[0], 1)
         cos.shape = (cos.shape[0], 1)
-        ##print sin, cos
-        #storing the spin projection into the original array
+        # #print sin, cos
+        # storing the spin projection into the original array
         data.spd = -sin * dataX.spd + cos * dataY.spd
     else:
         data.selectIspin([args.spin])
@@ -1884,8 +1884,7 @@ def scriptBandsplot(args):
     data.bands = (data.bands.transpose() - np.array(args.fermi)).transpose()
     plot = ProcarPlot(data.bands, data.spd, data.kpoints)
 
-    ###### start of mode dependent options #########
-
+    # start of mode dependent options
     if args.mode == "scatter":
         plot.scatterPlot(mask=args.mask, size=args.markersize,
                          cmap=args.cmap, vmin=args.vmin,
@@ -1913,7 +1912,7 @@ def scriptBandsplot(args):
         plt.ylabel(r"Energy [eV]")
         if args.elimit is not None:
             plt.ylim(args.elimit)
-    ###### end of mode dependent options ###########
+    # end of mode dependent options
 
     if args.grid:
         plt.grid()
@@ -2121,7 +2120,7 @@ def scriptVector(args):
         vect.scene.parallel_projection = True
         vect.scene.z_plus_view()
 
-        #tube= mlab.plot3d(x,y,z, tube_radius=0.0050, color=(0.5,0.5,0.5))
+        # tube= mlab.plot3d(x,y,z, tube_radius=0.0050, color=(0.5,0.5,0.5))
     mlab.show()
 
 
@@ -2150,7 +2149,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)
     subparsers = parser.add_subparsers(help='sub-command')
 
-    ############## cat #####################
+    # concatenation
     phelp = ("concatenation of PROCARs files, they should be compatible (ie: "
              "joining parts of a large bandstructure calculation).")
     parserCat = subparsers.add_parser('cat', help=phelp)
@@ -2171,7 +2170,7 @@ if __name__ == "__main__":
 
     parserCat.set_defaults(func=scriptCat)
 
-    ############## filter ###################
+    # filter
     phelp = ("Filters (manipulates) the data of the input file (PROCAR-like) and"
              " it yields a new file (PROCAR-like too) with the changes. This "
              "method can do only one manipulation at time (ie: spin, atoms, "
@@ -2230,7 +2229,7 @@ if __name__ == "__main__":
 
     parserFilter.set_defaults(func=scriptFilter)
 
-    ############## bandsplot ###################
+    # bandsplot
     phelp = ("Bandstructure plot. This kind of plot can be fairly complex, "
              "therefore its worth to explore all options. If the file is large "
              "(>100MB) you should consider use the 'procar.py filter' command "
@@ -2403,8 +2402,7 @@ if __name__ == "__main__":
 
     parserBandsplot.set_defaults(func=scriptBandsplot)
 
-    ################# Fermi ####################
-
+    # Fermi
     phelp = ("Plot the Fermi surface for a 2D Brillouin zone (layer-wise)"
              " along z and just perpendicular to z! (actually k_z)")
     parserFermi2D = subparsers.add_parser('fermi2D', help=phelp)
@@ -2512,8 +2510,7 @@ if __name__ == "__main__":
 
     parserFermi2D.set_defaults(func=scriptFermi2D)
 
-    ################## vector #################
-
+    # vector
     # only for non-collinear bandstructures
 
     phelp = "Plots the bands (some of them) as a vector field. It uses Mayavi."
@@ -2553,8 +2550,7 @@ if __name__ == "__main__":
 
     parserVector.set_defaults(func=scriptVector)
 
-    ################## repair #################
-
+    # repair
     phelp = "Attemp to repair a Procar file form some fixed format problems."
     parserRepair = subparsers.add_parser('repair', help=phelp)
 

@@ -39,6 +39,8 @@ if __name__ == '__main__':
         print structure
         print 40*'='+' structure '+40*'='
 
+        print 'Mass density:', structure.density
+
         hardness, r_cutoff = analysis.hardness(use_laplacian=True, verbose=True)
         print 'Hardness : ', hardness
         print 'Cutoff radius :', r_cutoff

@@ -14,6 +14,7 @@ import os as _os
 import math
 import numpy as _np
 from numbers import Number
+from pychemia import pcm_log
 
 
 def read_incar(path):
@@ -237,7 +238,7 @@ class InputVariables:
                 self.variables['ENCUT'] = int(math.ceil(ENCUT * maxvalue))
             else:
                 self.variables['ENCUT'] = maxvalue
-        print self.variables['ENCUT']
+        # pcm_log.debug('ENCUT: %7.3f' % self.variables['ENCUT'])
 
     def set_ion_relax(self, NSW=50, ISIF=2, IBRION=2, EDIFFG=-1E-3):
         self.variables['IBRION'] = IBRION
@@ -273,3 +274,6 @@ class InputVariables:
         self.variables['ISMEAR'] = ISMEAR
         self.variables['ISPIN'] = ISPIN
         self.variables['LORBIT'] = LORBIT
+
+    def set_density_for_restart(self):
+        self.variables['ICHARG'] = 1

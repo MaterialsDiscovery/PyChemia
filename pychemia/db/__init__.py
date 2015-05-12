@@ -10,7 +10,7 @@ except ImportError:
     USE_MONGO = False
 
 if USE_MONGO:
-    from _db import PyChemiaDB, get_database, object_id, create_user
+    from _db import PyChemiaDB, get_database, object_id, create_user, create_database
 
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

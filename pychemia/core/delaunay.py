@@ -48,7 +48,7 @@ def reduce_bases(extended_bases, tolerance):
 
 
 def get_shortest_bases_from_extented_bases(extended_bases, tolerance):
-    #print 'get_shortest_bases_from_extented_bases',tolerance
+    # print 'get_shortest_bases_from_extented_bases',tolerance
 
     def mycmp(x, y):
         return cmp(_np.vdot(x, x), _np.vdot(y, y))

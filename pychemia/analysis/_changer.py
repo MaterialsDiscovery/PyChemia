@@ -81,9 +81,9 @@ class StructureChanger():
 
         index = random.randint(0, len(self.old_structure)-1)
         radius = np.abs(np.random.normal(mu, sigma))
-        theta_x = 2 * np.pi * np.random.rand()
-        theta_y = 2 * np.pi * np.random.rand()
-        theta_z = 2 * np.pi * np.random.rand()
+        theta_x = 2 * np.pi * np.random.random_sample()
+        theta_y = 2 * np.pi * np.random.random_sample()
+        theta_z = 2 * np.pi * np.random.random_sample()
         vector = apply_rotation([1, 0, 0], theta_x, theta_y, theta_z)
 
         self.move_one_atom(index, vector * radius)

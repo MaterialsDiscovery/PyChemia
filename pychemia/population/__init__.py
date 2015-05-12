@@ -1,4 +1,4 @@
 __author__ = 'Guillermo'
 
-from _population import StructurePopulation
+from structure_relax import StructurePopulation
 from euclidean import EuclideanPopulation

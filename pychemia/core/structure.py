@@ -11,13 +11,13 @@ from math import sin, cos
 from itertools import combinations
 import itertools
 
-from pychemia import log
+from pychemia import pcm_log
 from pychemia.core.lattice import Lattice
 from pychemia.core.delaunay import get_reduced_bases
 from pychemia.core.composition import Composition
 from pychemia.utils.computing import unicode2string
 from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence, atomic_symbols
-from pychemia.utils.mathematics import matrix_from_eig, vector_set_perpendicular, unit_vector
+from pychemia.utils.mathematics import matrix_from_eig, vector_set_perpendicular
 from multiprocessing import Pool
 
 
@@ -467,7 +467,7 @@ Empty structure
                     two atoms is always greater than the sum of covalent radius.
         """
         comp = Composition(composition)
-        log.debug('Generating a random structure with composition: ' + str(comp.composition))
+        pcm_log.debug('Generating a random structure with composition: ' + str(comp.composition))
         natom = comp.natom
         symbols = comp.symbols
 
@@ -514,7 +514,7 @@ Empty structure
                 distance = best_structure.lattice.minimal_distance(rpos[i], rpos[j])
                 covalent_distance = sum(covalent_radius([symbols[i], symbols[j]]))
                 if distance < covalent_distance:
-                    log.debug('Covalent distance: %7.4f  Minimal distance: %7.4f  Difference: %7.3e' %
+                    pcm_log.debug('Covalent distance: %7.4f  Minimal distance: %7.4f  Difference: %7.3e' %
                               (covalent_distance, distance, covalent_distance - distance))
 
         best_structure.canonical_form()
@@ -651,6 +651,7 @@ Empty structure
         self.sort_axes()
         self.align_with_axis()
         self.align_with_plane()
+        self.atoms_in_box()
 
     def supercell(self, size):
         """
@@ -716,6 +717,7 @@ Empty structure
             mlab.savefig(figname)
         return figure
 
+    @property
     def to_dict(self):
 
         ret = {'name': self.name,
@@ -761,7 +763,7 @@ Empty structure
     def save_json(self, filename):
 
         filep = open(filename, 'w')
-        json.dump(self.to_dict(), filep, sort_keys=True, indent=4, separators=(',', ': '))
+        json.dump(self.to_dict, filep, sort_keys=True, indent=4, separators=(',', ': '))
         filep.close()
 
     @staticmethod
@@ -904,6 +906,34 @@ Empty structure
     def nsites(self):
         return len(self.positions)
 
+    def scale(self, tolerance=0.7):
+        assert self.is_perfect
+        assert self.is_crystal
+        lattice = self.lattice.scale(self.symbols, self.reduced, tolerance=tolerance)
+        return Structure(cell=lattice.cell, reduced=self.reduced, symbols=self.symbols)
+
+    # Not working
+    # def cut_void(self, factor=1.5):
+    #     ret = self.copy()
+    #     ret.canonical_form()
+    #     mins = [min(ret.reduced[:, i]) for i in range(3)]
+    #     ret.reduced = ret.reduced - mins
+    #     ret.reduced2positions()
+    #     max_lenght = max(ret.positions[:, 0]) + 2.0*max([covalent_radius(ret.symbols[i]) for i in range(ret.nsites)])
+    #     print factor, max_lenght, ret.cell[0,0]
+    #     if factor * max_lenght < ret.cell[0, 0]:
+    #         cell = ret.cell
+    #         cell[0, 0] = factor * max_lenght
+    #         ret.set_cell(cell)
+    #         return ret
+    #     else:
+    #         return self
+
+    def atoms_in_box(self):
+        while min(self.reduced.flatten()) < 0.0 or max(self.reduced.flatten()) > 1.0:
+            self.reduced = (self.reduced + 1.0) % 1.0
+            self.reduced2positions()
+
 
 def load_structure_json(filename):
     ret = Structure()
@@ -986,33 +1016,7 @@ def random_structure(method, composition, best_volume=1E10):
         mins = [min(rpos[:, i]) for i in range(3)]
         rpos -= mins
 
-        factor = 1.0
-        for i in range(len(rpos)):
-            covalent_dim = 2.0 * covalent_radius(symbols[i])
-
-            this_factor = covalent_dim / lattice.a
-            if this_factor > factor:
-                factor = this_factor
-            this_factor = covalent_dim / lattice.b
-            if this_factor > factor:
-                factor = this_factor
-            this_factor = covalent_dim / lattice.c
-            if this_factor > factor:
-                factor = this_factor
-
-            for j in range(i + 1, len(rpos)):
-                distance = lattice.minimal_distance(rpos[i], rpos[j])
-                covalent_dim = sum(covalent_radius([symbols[i], symbols[j]]))
-                this_factor = covalent_dim / distance
-                if this_factor > factor:
-                    factor = this_factor
-        a = lattice.a
-        b = lattice.b
-        c = lattice.c
-        alpha = lattice.alpha
-        beta = lattice.beta
-        gamma = lattice.gamma
-        lattice = Lattice().from_parameters_to_cell(factor * a, factor * b, factor * c, alpha, beta, gamma)
+        new_lattice = lattice.scale(symbols, rpos, tolerance=1.0)
 
     elif method == 'stretching':
 
@@ -1021,33 +1025,18 @@ def random_structure(method, composition, best_volume=1E10):
         rpos = np.random.rand(natom, 3)
         mins = [min(rpos[:, i]) for i in range(3)]
         rpos -= mins
-        # Dummy array that always will be overwritten
-        eigv = np.array([1, 0, 0])
 
-        for i, j in combinations(range(natom), 2):
-            ret = lattice.distance2(rpos[i], rpos[j])
-            mindist = sys.float_info.max
-            for k in ret:
-                if 0 < ret[k]['distance'] < mindist:
-                    mindist = ret[k]['distance']
-                    eigv = ret[k]['image']
+        new_lattice = lattice.stretch(symbols, rpos, tolerance=1.0, extra=0.1)
 
-            covalent_distance = sum(covalent_radius([symbols[i], symbols[j]]))
-            if mindist < covalent_distance:
-                factor = 1.1 * covalent_distance / mindist
-                v1, v2, v3 = vector_set_perpendicular(eigv)
-                matrixA = matrix_from_eig(v1, v2, v3, factor, 1, 1)
-                lattice = Lattice(np.dot(matrixA, lattice.cell))
-
-    if lattice.volume < best_volume:
+    if new_lattice.volume < best_volume:
         test = True
         for i in range(natom):
             for j in range(i + 1, natom):
-                distance = lattice.minimal_distance(rpos[i], rpos[j])
+                distance = new_lattice.minimal_distance(rpos[i], rpos[j])
                 covalent_dim = sum(covalent_radius([symbols[i], symbols[j]]))
                 if distance < covalent_dim:
                     test = False
         if test:
-            new_structure = Structure(symbols=symbols, reduced=rpos, cell=lattice.cell, periodicity=True)
+            new_structure = Structure(symbols=symbols, reduced=rpos, cell=new_lattice.cell, periodicity=True)
     return new_structure
     # End of Worker

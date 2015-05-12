@@ -2,10 +2,13 @@
 Routines used to interact between pymatgen objects and
 pymatdis objects
 """
-import pymatgen.io.cifio
 import numpy as np
-from pychemia.utils.periodic import atomic_symbol
-from pychemia import log, Structure
+
+try:
+    import pymatgen.io.cifio
+except ImportError:
+    raise ImportError
+from pychemia import Structure
 
 
 def cif2structure(filename, primitive=False):
@@ -28,8 +31,8 @@ def pymatgen2pychemia(pmg_struct):
     structure object
     """
 
-    #if not pmg_struct.is_ordered:
-    #    return None
+    # if not pmg_struct.is_ordered:
+    #     return None
 
     cell = pmg_struct.lattice_vectors()
     reduced = np.array([])

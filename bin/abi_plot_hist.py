@@ -11,10 +11,7 @@ from pychemia.utils.periodic import covalent_radius
 from pychemia.utils.constants import bohr_angstrom, angstrom_bohr
 
 
-############################################################
-### 2D Plots for ABIPYTHON (Requires MATPLOTLIB)         ###
-############################################################
-
+# 2D Plots for ABIPYTHON (Requires MATPLOTLIB)
 def plot_history_energy(etotal, ekin, fcart, labels, bonds, filep):
     """
     Create a window with 2 plots, the total energy vs iterations
@@ -24,9 +21,7 @@ def plot_history_energy(etotal, ekin, fcart, labels, bonds, filep):
     pp = PdfPages(filep)
     plt.ioff()
 
-    ### Page No 1
-    ############################################################
-
+    # Page No 1
     plt.figure(figsize=(16, 10), dpi=100)
 
     left = 0.1
@@ -50,12 +45,12 @@ def plot_history_energy(etotal, ekin, fcart, labels, bonds, filep):
         ax2.semilogy(ekin, lw=2)
         ax2.grid(True)
         plt.ylabel("Ionic Kinetic Energy")
-        #xticklabels = ax2.get_xticklabels()
+        # xticklabels = ax2.get_xticklabels()
 
     bottom += height
     ax3 = plt.axes([left, bottom, width, height], sharex=ax1)
     forces = fcart.transpose((1, 0, 2))
-    #xticklabels = xticklabels + ax3.get_xticklabels()
+    # xticklabels = xticklabels + ax3.get_xticklabels()
 
     for i in range(len(forces)):
         list2 = []
@@ -69,9 +64,7 @@ def plot_history_energy(etotal, ekin, fcart, labels, bonds, filep):
 
     pp.savefig()
 
-    ### Page No 2
-    ############################################################
-
+    # Page No 2
     plt.figure(figsize=(10, 16), dpi=100)
 
     left = 0.1
@@ -97,16 +90,14 @@ def plot_history_energy(etotal, ekin, fcart, labels, bonds, filep):
 
     pp.savefig()
 
-    ### Page No 3
-    ############################################################
-
+    # Page No 3
     plt.figure(figsize=(10, 16), dpi=100)
 
     bonds_dict = {}
     # t is time
     for t in range(len(bonds)):
-        #print "Plotting bonds for time:",t
-        #print "Number of bonds",len(bonds[t])
+        # print "Plotting bonds for time:",t
+        # print "Number of bonds",len(bonds[t])
         for b in range(len(bonds[t])):
 
             bond = bonds[t][b]
@@ -124,7 +115,7 @@ def plot_history_energy(etotal, ekin, fcart, labels, bonds, filep):
     plt.suptitle("Bonds")
 
     for i in bonds_dict:
-        #print i
+        # print i
 
         ax1 = plt.axes([left, bottom, width, height])
         array = np.array(bonds_dict[i])
@@ -158,13 +149,13 @@ def compute_bonds(typat, xcart, znucl):
         bonds1 = []
         for i in range(len(xcart[t])):
             for j in range(i + 1, len(xcart[t])):
-                #print xcart[t][j]
-                #print xcart[t][i]
+                # print xcart[t][j]
+                # print xcart[t][i]
                 # Compute bond length between atoms i and j
                 bl = math.sqrt(sum((xcart[t][j] - xcart[t][i]) ** 2))
-                #print bl
-                #print i,j
-                #print covrad[i],covrad[j]
+                # print bl
+                # print i,j
+                # print covrad[i],covrad[j]
                 if 1.35 * (covrad[i] + covrad[j]) > bl:
                     bonds1.append([i, j, bl, (xcart[t][j] - xcart[t][i]) / bl])
         bonds.append(bonds1)
@@ -196,8 +187,7 @@ def compute_angles(bonds, natom):
                 for j in range(i + 1, len(index)):
                     print('i=', i)
                     print('j=', j)
-
-                    #print nbonds
+                    # print nbonds
 
 
 def get_history(abinitfile, dataset=""):
@@ -205,8 +195,8 @@ def get_history(abinitfile, dataset=""):
         filep = abinitfile.basedir + "/" + abinitfile.files['tmpout'] + "_HIST"
     else:
         filep = abinitfile.basedir + "/" + abinitfile.files['tmpout'] + "_DS" + str(dataset) + "_HIST"
-        #print filename
-    #inp = InputVariables(abinitfile.get_input_filename())
+        # print filename
+    # inp = InputVariables(abinitfile.get_input_filename())
 
     ret = _netcdf_file(filep, 'r', mmap=False)
 
@@ -224,7 +214,7 @@ def plot_history(abinitfile, dataset=""):
 
     xcart = history.variables['xcart'][:]
     fcart = history.variables['fcart'][:]
-    #rprimd = history.variables['rprimd'][:]
+    # rprimd = history.variables['rprimd'][:]
     etotal = history.variables['etotal'][:]
     if 'ekin' in history.variables:
         ekin = history.variables['ekin'][:]
@@ -239,8 +229,8 @@ def plot_history(abinitfile, dataset=""):
     typat = av.get_value('typat', idtset=dataset, full=True)
 
     bonds = compute_bonds(typat, xcart, znucl)
-    #natom = len(xcart[0])
-    #ComputeAngles(bonds,natom)
+    # natom = len(xcart[0])
+    # ComputeAngles(bonds,natom)
 
     plot_history_energy(etotal, ekin, fcart, labels, bonds, filep)
 

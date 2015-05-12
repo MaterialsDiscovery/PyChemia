@@ -2,7 +2,7 @@ __author__ = 'Guillermo Avendano-Franco'
 
 import os
 import subprocess
-from pychemia import log
+from pychemia import pcm_log
 from pychemia.code import Codes
 from pychemia.utils.periodic import atomic_number
 
@@ -44,7 +44,7 @@ class FireBall(Codes):
     def get_outputs(self):
         pass
 
-    def run(self):
+    def run(self, use_mpi=False, omp_max_threads=0, mpi_num_procs=1):
         cwd = os.getcwd()
         os.chdir(self.workdir)
         stdout = open('fireball.log', 'w')
@@ -55,13 +55,13 @@ class FireBall(Codes):
 
     def run_status(self):
         if self.runner is None:
-            log.info('Fireball not finish')
+            pcm_log.info('Fireball not finish')
             filename = self.workdir + os.sep + 'fireball.log'
             if os.path.exists(filename):
                 results = read_fireball_stdout(filename=filename)
             return
         if self.runner.poll() == 0:
-            log.info('Fireball complete normally')
+            pcm_log.info('Fireball complete normally')
 
     def finalize(self):
         pass

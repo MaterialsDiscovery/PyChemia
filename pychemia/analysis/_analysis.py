@@ -6,7 +6,7 @@ import itertools
 import numpy as np
 import numpy.linalg
 
-from pychemia import Structure, log
+from pychemia import Structure, pcm_log
 from pychemia.utils.periodic import atomic_number, covalent_radius, valence
 from pychemia.utils.mathematics import integral_gaussian
 
@@ -33,8 +33,8 @@ class StructureAnalysis():
         self._pairs = None
         self._supercell = supercell
         self._radius = radius
-        #log.debug('Supercell : ' + str(self._supercell))
-        #log.debug('Radius    : %7.2f' % self._radius)
+        # log.debug('Supercell : ' + str(self._supercell))
+        # log.debug('Radius    : %7.2f' % self._radius)
 
     @property
     def radius(self):
@@ -60,13 +60,13 @@ class StructureAnalysis():
         :return: (tuple) Return a bond's dictionary and distance's list
         """
         if self._pairs is None or self._distances is None:
-            log.debug('Computing distances from scratch...')
+            pcm_log.debug('Computing distances from scratch...')
             pairs_dict = {}
             distances_list = []
             index = 0
             for i, j in itertools.combinations(range(self.structure.natom), 2):
                 if index % 100 == 0:
-                    log.debug('Computing distance between atoms %d and %d' % (i, j))
+                    pcm_log.debug('Computing distance between atoms %d and %d' % (i, j))
                 ret = self.structure.lattice.distance2(self.structure.reduced[i], self.structure.reduced[j],
                                                        radius=self.radius)
                 for k in ret:
@@ -118,7 +118,7 @@ class StructureAnalysis():
 
         for ipair in all_distances:
             key = tuple(sorted(symbols_indexed[np.array(ipair)]))
-            #print ipair, key
+            # print ipair, key
             if key in ret:
                 ret[key] = np.concatenate((ret[key], all_distances[ipair]['distance']))
             else:
@@ -137,7 +137,7 @@ class StructureAnalysis():
         for spec_pair in dist_spec:
             discrete_rdf[spec_pair] = np.zeros(nbins)
             positive_distances = dist_spec[spec_pair][dist_spec[spec_pair] > 0]
-            #log.debug('Pair %s' % str(spec_pair))
+            # log.debug('Pair %s' % str(spec_pair))
             for Rij in positive_distances:
                 # Integrating for bin from - 8*sigma to +8*sigma centered on Rij
                 # Values outside this range are negligible
@@ -283,12 +283,12 @@ class StructureAnalysis():
 
                 # if verbose:
                 # print laplacian
-                #evals, evecs = scipy.sparse.linalg.eigsh(laplacian)
+                # evals, evecs = scipy.sparse.linalg.eigsh(laplacian)
                 ev = numpy.linalg.eigvalsh(laplacian)
                 if verbose:
                     print 'Number of Eigenvalues close to zero :', sum(ev < tol)
                     print 'Lowest Eigenvalues :', ev
-                    #print 'Lowest Eigenvalues :', evals
+                    # print 'Lowest Eigenvalues :', evals
 
                 if sum(ev < tol) > 1 and use_jump:
                     cutoff_radius += jump
@@ -325,14 +325,14 @@ class StructureAnalysis():
         f_n = 1.0
         atomicnumbers = atomic_number(self.structure.species)
 
-        log.debug('Atomic numbers in the structure : %s' % str(atomicnumbers))
+        pcm_log.debug('Atomic numbers in the structure : %s' % str(atomicnumbers))
 
         for i in atomicnumbers:
             f_d += valence(i) / covalent_radius(i)
             f_n *= valence(i) / covalent_radius(i)
 
         if f_d == 0:
-            log.debug('Returning zero as hardness. f_d= %10.3f' % f_d)
+            pcm_log.debug('Returning zero as hardness. f_d= %10.3f' % f_d)
             return 0.0
         f = 1.0 - (self.structure.nspecies * f_n ** (1.0 / self.structure.nspecies) / f_d) ** 2
 
@@ -350,14 +350,14 @@ class StructureAnalysis():
                 xprod *= sij
 
             num_i_j_bonds = len(bonds[pair])
-            log.debug('Number of bonds for pair %s = %d' % (str(pair), num_i_j_bonds))
+            pcm_log.debug('Number of bonds for pair %s = %d' % (str(pair), num_i_j_bonds))
             tot += num_i_j_bonds
 
         vol = self.structure.volume
 
-        log.debug("Structure volume: %7.3f" % vol)
-        log.debug("Total number of bonds: %d" % tot)
-        log.debug("Bonds: %s" % str(bonds))
+        pcm_log.debug("Structure volume: %7.3f" % vol)
+        pcm_log.debug("Total number of bonds: %d" % tot)
+        pcm_log.debug("Bonds: %s" % str(bonds))
 
         hardness_value = (c_hard / vol) * tot * (xprod ** (1. / tot)) * math.exp(-sigma * f)
 

@@ -11,12 +11,15 @@ __email__ = "gtux.gaf@gmail.com"
 __status__ = "Development"
 __date__ = "March 31, 2014"
 
+import pychemia
 from pyspglib import spglib
 
-import ase.atoms
-import ase.io
-
-import pychemia
+try:
+    import ase.atoms
+    import ase.io
+except ImportError:
+    print 'The module ase could not be imported'
+    raise ImportError
 
 
 def cif2structure(filename, primitive=False, symprec=0.001):

@@ -1,15 +1,30 @@
 __author__ = 'Guillermo Avendano Franco'
 
 import os
+import time
 import shutil
-import numpy as np
 import logging.handlers
 import json
 
-import pychemia
+import numpy as np
+
 from _incar import InputVariables
+from _outcar import VaspOutput, read_vasp_stdout
+from _vasp import VaspJob, VaspAnalyser
 from _poscar import read_poscar
+from _kpoints import read_kpoints
 from pychemia.utils.mathematics import round_small
+from pychemia.dft import KPoints
+from pychemia import pcm_log
+from pychemia.code import Relaxator
+from pychemia.runner import Runner
+
+
+try:
+    from pychemia.symm import symmetrize
+except ImportError:
+    def symmetrize(structure):
+        return structure
 
 
 class RelaxPopulation():
@@ -35,17 +50,17 @@ class RelaxPopulation():
                 os.mkdir(name)
 
     def create_inputs(self, density_of_kpoints=10000, ENCUT=1.0):
-        # kpoints = pychemia.dft.KPoints(kmode='gamma', grid=[4, 4, 4])
-        kpoints = pychemia.dft.KPoints()
+        # kpoints = KPoints(kmode='gamma', grid=[4, 4, 4])
+        kpoints = KPoints()
         for entry in self.population.pcdb.entries.find():
             name = str(entry['_id'])
             workdir = self.basedir + os.sep + name
             structure = self.population.db.get_structure(entry['_id'])
             kpoints.set_optimized_grid(structure.lattice, density_of_kpoints=density_of_kpoints)
             print kpoints
-            vj = pychemia.code.vasp.VaspJob()
+            vj = VaspJob()
             vj.initialize(workdir=workdir, structure=structure, kpoints=kpoints)
-            inp = pychemia.code.vasp.InputVariables()
+            inp = InputVariables()
             inp.set_rough_relaxation()
             vj.set_input_variables(inp)
             vj.write_potcar()
@@ -102,36 +117,36 @@ class RelaxPopulation():
             else:
                 self.del_status(entry_id, 'NOOUTCAR')
                 print '-'
-                vo = pychemia.code.vasp.VaspOutput(workdir + os.sep + 'OUTCAR')
-                info = vo.relaxation_info()
-                if len(info) != 3:
+                vo = VaspOutput(workdir + os.sep + 'OUTCAR')
+                relaxation_info = vo.relaxation_info()
+                if len(relaxation_info) != 3:
                     print '[' + str(entry_id) + ']' + ' Missing some data in OUTCAR (forces or stress)'
                     self.add_status(entry_id, 'NOOUTCAR')
 
                 print '[' + str(entry_id) + ']' + 'Results:'
-                for i in info:
-                    print '[' + str(entry_id) + '] %20s %12.5e' % (i, info[i])
+                for i in relaxation_info:
+                    print '[' + str(entry_id) + '] %20s %12.5e' % (i, relaxation_info[i])
 
                 # Conditions to consider the structure relaxed
-                if info['avg_force'] < self.target_force:
-                    if info['avg_stress_diag'] < self.target_stress:
-                        if info['avg_stress_non_diag'] < self.target_stress:
+                if relaxation_info['avg_force'] < self.target_force:
+                    if relaxation_info['avg_stress_diag'] < self.target_stress:
+                        if relaxation_info['avg_stress_non_diag'] < self.target_stress:
                             wf = open(workdir + os.sep + 'RELAXED', 'w')
-                            for i in info:
-                                wf.write("%15s %12.3f" % (i, info[i]))
+                            for i in relaxation_info:
+                                wf.write("%15s %12.3f" % (i, relaxation_info[i]))
                             wf.close()
                             wf = open(workdir + os.sep + 'COMPLETE', 'w')
-                            for i in info:
-                                wf.write("%15s %12.3f" % (i, info[i]))
+                            for i in relaxation_info:
+                                wf.write("%15s %12.3f" % (i, relaxation_info[i]))
                             wf.close()
                             self.add_status(entry_id, 'RELAXED')
 
         if self.modify_input(entry_id):
 
             # How to change ISIF
-            if info['avg_force'] < 0.1:
-                if info['avg_stress_diag'] < 0.1:
-                    if info['avg_stress_non_diag'] < 0.1:
+            if relaxation_info['avg_force'] < 0.1:
+                if relaxation_info['avg_stress_diag'] < 0.1:
+                    if relaxation_info['avg_stress_non_diag'] < 0.1:
                         vj.input_variables.variables['ISIF'] = 3
                     else:
                         vj.input_variables.variables['ISIF'] = 3
@@ -141,11 +156,11 @@ class RelaxPopulation():
                 vj.input_variables.variables['ISIF'] = 2
 
             # How to change IBRION
-            #if info['avg_force'] < 0.1 and info['avg_stress_diag'] < 0.1 and info['avg_stress_non_diag'] < 0.1:
+            # if info['avg_force'] < 0.1 and info['avg_stress_diag'] < 0.1 and info['avg_stress_non_diag'] < 0.1:
             #    vj.input_variables.variables['IBRION'] = 1
-            #elif info['avg_force'] < 1 and info['avg_stress_diag'] < 1 and info['avg_stress_non_diag'] < 1:
+            # elif info['avg_force'] < 1 and info['avg_stress_diag'] < 1 and info['avg_stress_non_diag'] < 1:
             #    vj.input_variables.variables['IBRION'] = 2
-            #else:
+            # else:
             #    vj.input_variables.variables['IBRION'] = 3
 
             # How to change EDIFF
@@ -160,7 +175,7 @@ class RelaxPopulation():
             else:
                 vj.input_variables.variables['EDIFFG'] = - self.target_force
 
-            #Print new values
+            # Print new values
             print '[' + str(entry_id) + ']' + 'New Values:'
             for i in ['ISIF', 'IBRION', 'EDIFF', 'EDIFFG']:
                 print '[' + str(entry_id) + ']' + i + ' : ', vj.input_variables.variables[i]
@@ -233,7 +248,7 @@ class RelaxPopulation():
             wf = open(workdir + os.sep + 'LOCK', 'w')
             wf.write('')
             wf.close()
-            runner.run(dirpath=workdir, analyser=analyser)
+            runner.run()
             os.remove(workdir + os.sep + 'LOCK')
 
         def checker(workdir):
@@ -319,7 +334,7 @@ class Polarization():
                         save_INCAR(iv, pathname + os.sep + step + os.sep + 'INCAR')
                         save_POSCAR(structure=self.structure, filepath=pathname + os.sep + step + os.sep + 'POSCAR')
                         options = {'nproc': 4, 'code_bin': '/home/guilleaf/local/src/vasp.5.3/vasp', 'mpi': True}
-                        runner = pychemia.runner.Runner('vasp', 'local', options)
+                        runner = Runner('vasp', 'local', options)
                         p = runner.run(dirpath=pathname + os.sep + step)
                         rf = open(pathname + os.sep + step + os.sep + 'vasp.stdout')
                         if rf.readlines()[-2].strip() != 'writing wavefunctions':
@@ -335,7 +350,7 @@ class Polarization():
                         save_INCAR(iv, pathname + os.sep + step + os.sep + 'INCAR')
                         save_POSCAR(structure=self.structure, filepath=pathname + os.sep + step + os.sep + 'POSCAR')
                         options = {'nproc': 4, 'code_bin': '/home/guilleaf/local/src/vasp.5.3/vasp', 'mpi': True}
-                        runner = pychemia.runner.Runner('vasp', 'local', options)
+                        runner = Runner('vasp', 'local', options)
                         p = runner.run(dirpath=pathname + os.sep + step)
                         rf = open(pathname + os.sep + step + os.sep + 'vasp.stdout')
                         if rf.readlines()[-2].strip() != 'writing wavefunctions':
@@ -359,7 +374,7 @@ class Polarization():
                         save_INCAR(iv, pathname + os.sep + step + os.sep + 'INCAR')
                         save_POSCAR(structure=self.structure, filepath=pathname + os.sep + step + os.sep + 'POSCAR')
                         options = {'nproc': 4, 'code_bin': '/home/guilleaf/local/src/vasp.5.3/vasp', 'mpi': True}
-                        runner = pychemia.runner.Runner('vasp', 'local', options)
+                        runner = Runner('vasp', 'local', options)
                         p = runner.run(dirpath=pathname + os.sep + step)
                         rf = open(pathname + os.sep + step + os.sep + 'vasp.stdout')
                         if rf.readlines()[-2].strip() == 'writing wavefunctions':
@@ -371,3 +386,426 @@ class Polarization():
 
     def postprocess(self):
         pass
+
+
+class Convergence_ENCUT():
+
+    def __init__(self,  workdir, structure, kpoints, binary='vasp', nparal=4, energy_tolerance=1E-3, recover=False):
+
+        self.best_energy = energies[ind]
+        self.structure = structure
+        self.workdir = workdir
+        self.binary = binary
+        self.nparal = nparal
+        self.energy_tolerance = energy_tolerance
+        self.kpoints = kpoints
+
+    def run(self):
+
+        vj = VaspJob()
+        kp = KPoints()
+        vj.initialize(self.workdir, self.structure, self.kpoints, binary=self.binary)
+        energies = []
+        x=1.3
+        while True:
+            vj.clean()
+            vj.job_static()
+            vj.input_variables.set_density_for_restart()
+            vj.input_variables.set_encut(ENCUT=x, POTCAR=self.workdir+os.sep+'POTCAR')
+            vj.set_inputs()
+            vj.run(use_mpi=True, mpi_num_procs=self.nparal)
+            while True:
+                energy_str = ''
+                filename = self.workdir + os.sep + 'vasp_stdout.log'
+                if os.path.exists(filename):
+                    vasp_stdout = read_vasp_stdout(filename=filename)
+                    if len(vasp_stdout['data']) > 2:
+                        scf_energies = [i[2] for i in vasp_stdout['data']]
+                        energy_str = ' %7.3f' % scf_energies[1]
+                        for i in range(1, len(scf_energies)):
+                            if scf_energies[i] < scf_energies[i-1]:
+                                energy_str += ' >'
+                            else:
+                                energy_str += ' <'
+                        pcm_log.debug(energy_str)
+
+                if vj.runner is not None and vj.runner.poll() is not None:
+                    filename = self.workdir + os.sep + 'vasp_stdout.log'
+                    if os.path.exists(filename):
+                        vasp_stdout = read_vasp_stdout(filename=filename)
+                        if len(vasp_stdout['data']) > 2:
+                            scf_energies = [i[2] for i in vasp_stdout['data']]
+                            energy_str += ' %7.3f' % scf_energies[-1]
+                            pcm_log.debug(energy_str)
+                    break
+                time.sleep(5)
+            vj.get_outputs()
+            energies.append(vj.outcar.final_data['energy']['free_energy'])
+            if len(energies) > 3 and abs(max(energies[-3:])-min(energies[-3:])) < self.energy_tolerance:
+                break
+            x+=0.2
+
+        # Get the index of the lowest grid that fulfils the tolerance
+        ind = np.where(np.abs(np.array(energies)-energies[-1]) < self.energy_tolerance)[0][0]
+
+        return self.best_energy
+
+
+class Convergence_Kpoints():
+
+    def __init__(self,  workdir, structure, binary='vasp', nparal=4, energy_tolerance=1E-3, recover=False):
+
+        self.structure = structure
+        self.workdir = workdir
+        self.binary = binary
+        self.nparal = nparal
+        self.energy_tolerance = energy_tolerance
+        self.best_density = None
+        self.best_grid = None
+        self.best_energy = None
+        self.initial_number = 10
+        if recover:
+            self.recover()
+
+    def recover(self):
+        kpoints_file = self.workdir+os.sep+'KPOINTS'
+        poscar_file = self.workdir+os.sep+'POSCAR'
+        if os.path.isfile(kpoints_file) and os.path.isfile(poscar_file):
+            structure = read_poscar(poscar_file)
+            kpoints = read_kpoints(kpoints_file)
+            density = kpoints.get_density_of_kpoints(structure.lattice)
+            self.initial_number = int(density ** (1.0/3.0)) - 1
+
+    def run(self):
+
+        vj = VaspJob()
+        kp = KPoints()
+        vj.initialize(self.workdir, self.structure, kp, binary=self.binary)
+        n = self.initial_number
+        grid = None
+        grids = []
+        energies = []
+        densities = []
+        while True:
+            density = n**3
+            kp.set_optimized_grid(self.structure.lattice, density_of_kpoints=density, force_odd=True)
+            pcm_log.debug('Trial density: %d  Grid: %s' % (density, kp.grid))
+            if np.sum(grid) != np.sum(kp.grid):
+                grid = kp.grid
+                vj.set_kpoints(kp)
+                vj.clean()
+                vj.job_static()
+                vj.input_variables.set_density_for_restart()
+                vj.set_inputs()
+                vj.run(use_mpi=True, mpi_num_procs=self.nparal)
+                while True:
+                    energy_str = ''
+                    filename = self.workdir + os.sep + 'vasp_stdout.log'
+                    if os.path.exists(filename):
+                        vasp_stdout = read_vasp_stdout(filename=filename)
+                        if len(vasp_stdout['data']) > 2:
+                            scf_energies = [i[2] for i in vasp_stdout['data']]
+                            energy_str = ' %7.3f' % scf_energies[1]
+                            for i in range(1, len(scf_energies)):
+                                if scf_energies[i] < scf_energies[i-1]:
+                                    energy_str += ' >'
+                                else:
+                                    energy_str += ' <'
+                            pcm_log.debug(energy_str)
+
+                    if vj.runner is not None and vj.runner.poll() is not None:
+                        filename = self.workdir + os.sep + 'vasp_stdout.log'
+                        if os.path.exists(filename):
+                            vasp_stdout = read_vasp_stdout(filename=filename)
+                            if len(vasp_stdout['data']) > 2:
+                                scf_energies = [i[2] for i in vasp_stdout['data']]
+                                energy_str += ' %7.3f' % scf_energies[-1]
+                                pcm_log.debug(energy_str)
+                        break
+                    time.sleep(5)
+                vj.get_outputs()
+                energies.append(vj.outcar.final_data['energy']['free_energy'])
+                grids.append(grid)
+                densities.append(density)
+                print density, grid, energies
+                if len(energies) > 3 and abs(max(energies[-3:])-min(energies[-3:])) < self.energy_tolerance:
+                    break
+            n += 2
+
+        # Get the index of the lowest grid that fulfils the tolerance
+        ind = np.where(np.abs(np.array(energies)-energies[-1]) < self.energy_tolerance)[0][0]
+        self.best_density = densities[ind]
+        self.best_grid = grids[ind]
+        self.best_energy = energies[ind]
+        pcm_log.debug('Best Grid: %s   Energy: %7.3e   Density: %d' % (str(grids[ind]), energies[ind], densities[ind]))
+
+        return grids[ind], energies[ind], densities[ind]
+
+    def best_kpoints(self):
+        kp = KPoints()
+        kp.set_optimized_grid(self.structure.lattice, density_of_kpoints=self.best_density, force_odd=True)
+        return kp
+
+
+class VaspRelaxator(Relaxator):
+
+    def __init__(self, workdir, structure, relaxator_params, target_forces=1E-3, waiting=False, binary='vasp'):
+
+        Relaxator.__init__(self, target_forces)
+        self.encut = 1.3
+        self.workdir = workdir
+        self.initial_structure = symmetrize(structure)
+        self.structure = self.initial_structure.copy()
+        self.kpoints = None
+        self.target_forces = target_forces
+        self.waiting = waiting
+        self.vaspjob = VaspJob()
+        self.relaxed = False
+        self.binary = binary
+        self.nparal = None
+        self.set_params(relaxator_params)
+        self.vaspjob.initialize(workdir=self.workdir, structure=self.structure, kpoints=self.kpoints, binary=self.binary)
+
+    def create_dirs(self, clean=False):
+        if not os.path.isdir(self.workdir):
+            os.makedirs(self.workdir)
+        elif clean:
+            for i in os.listdir(self.workdir):
+                shutil.rmtree(self.workdir + os.sep + i)
+
+    def set_params(self, params):
+        if 'kpoints_grid' in params:
+            self.kpoints = KPoints(kmode='gamma', grid=params['kpoints_grid'])
+        elif 'kpoints_density' in params:
+            self.kpoints = KPoints()
+            self.kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=params['kpoints_density'])
+        else:
+            self.kpoints = KPoints()
+            self.kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=10000)
+        if 'encut' in params:
+            self.encut = params['encut']
+        else:
+            pass
+        if 'nparal' in params:
+            self.nparal = params['nparal']
+        else:
+            self.nparal = 4
+
+    def add_status(self, status):
+        pass
+
+    def del_status(self, status):
+        pass
+
+    def update(self):
+        """
+        This routine determines how to proceed with the relaxation
+        for one specific work directory
+
+        :param workdir: (str) String representation of the id in the mongodb
+        :return:
+        """
+        vj = self.vaspjob
+
+        if os.path.isfile(self.workdir + os.sep + 'OUTCAR'):
+            vj.get_outputs()
+        #self.update_history()
+
+        max_force, max_stress = self.get_max_force_stress()
+        pcm_log.debug('Max Force: %9.3E Stress: %9.3E' % (max_force, max_stress))
+        vo = VaspOutput(self.workdir + os.sep + 'OUTCAR')
+        info = vo.relaxation_info()
+        pcm_log.debug('Avg Force: %9.3E Stress: %9.3E %9.3E' % (info['avg_force'],
+                                                              info['avg_stress_diag'],
+                                                              info['avg_stress_non_diag']))
+
+        if os.path.isfile(self.workdir + os.sep + 'RELAXED'):
+            self.add_status('RELAXED')
+        elif not os.path.isfile(self.workdir + os.sep + 'PROCAR'):
+            self.add_status('NOPROCAR')
+        else:
+            self.del_status('NOPROCAR')
+            if not os.path.isfile(self.workdir + os.sep + 'OUTCAR'):
+                self.add_status('NOOUTCAR')
+            else:
+                self.del_status('NOOUTCAR')
+                print '-'
+                vo = VaspOutput(self.workdir + os.sep + 'OUTCAR')
+                info = vo.relaxation_info()
+                if len(info) != 3:
+                    print ' Missing some data in OUTCAR (forces or stress)'
+                    self.add_status('NOOUTCAR')
+
+                # Conditions to consider the structure relaxed
+                if info['avg_force'] < self.target_forces:
+                    if info['avg_stress_diag'] < self.target_forces:
+                        if info['avg_stress_non_diag'] < self.target_forces:
+                            wf = open(self.workdir + os.sep + 'RELAXED', 'w')
+                            for i in info:
+                                wf.write("%15s %12.3f" % (i, info[i]))
+                            wf.close()
+                            wf = open(self.workdir + os.sep + 'COMPLETE', 'w')
+                            for i in info:
+                                wf.write("%15s %12.3f" % (i, info[i]))
+                            wf.close()
+                            self.add_status('RELAXED')
+
+        # How to change ISIF
+        if info['avg_force'] < 0.1:
+            if info['avg_stress_diag'] < 0.1:
+                if info['avg_stress_non_diag'] < 0.1:
+                    vj.input_variables.variables['ISIF'] = 3
+                else:
+                    vj.input_variables.variables['ISIF'] = 3
+            else:
+                vj.input_variables.variables['ISIF'] = 3
+        else:
+            vj.input_variables.variables['ISIF'] = 2
+
+        # How to change IBRION
+        # if info['avg_force'] < 0.1 and info['avg_stress_diag'] < 0.1 and info['avg_stress_non_diag'] < 0.1:
+        #    vj.input_variables.variables['IBRION'] = 1
+        # elif info['avg_force'] < 1 and info['avg_stress_diag'] < 1 and info['avg_stress_non_diag'] < 1:
+        #    vj.input_variables.variables['IBRION'] = 2
+        # else:
+        #    vj.input_variables.variables['IBRION'] = 3
+
+        # if vj.input_variables.variables['EDIFFG'] < - 2 * self.target_forces:
+        #     vj.input_variables.variables['EDIFFG'] = round_small(vj.input_variables.variables['EDIFFG'] / 2)
+        # else:
+        #     vj.input_variables.variables['EDIFFG'] = - self.target_forces
+        #
+
+        # How to change EDIFFG
+        if max_force > self.target_forces or max_stress > self.target_forces:
+            #vj.input_variables.variables['EDIFFG'] = round_small(0.5*vj.input_variables.variables['EDIFFG'])
+            vj.input_variables.variables['EDIFFG'] = round_small(-0.01*max(max_force, max_stress))
+
+        # How to change EDIFF
+        if vj.input_variables.variables['EDIFF'] < -0.1 * vj.input_variables.variables['EDIFFG']:
+            vj.input_variables.variables['EDIFF'] = round_small(-0.1*vj.input_variables.variables['EDIFFG'])
+        else:
+            vj.input_variables.variables['EDIFF'] = 1E-4
+
+        #Print new values
+        pcm_log.debug('New Values: ISIF: %2d   IBRION: %2d   EDIFF: %7.1E \tEDIFFG: %7.1E' %
+                      (vj.input_variables.variables['ISIF'],
+                       vj.input_variables.variables['IBRION'],
+                       vj.input_variables.variables['EDIFF'],
+                       vj.input_variables.variables['EDIFFG']))
+
+        for i in ['OUTCAR']:
+            if not os.path.exists(self.workdir + os.sep + i):
+                wf = open(self.workdir + os.sep + i, 'w')
+                wf.write('')
+                wf.close()
+            log = logging.handlers.RotatingFileHandler(self.workdir + os.sep + i, maxBytes=1, backupCount=1000)
+            log.doRollover()
+
+        vj.structure = self.get_final_geometry()
+
+        vj.set_inputs()
+        vj.save_json(self.workdir + os.sep + 'vaspjob.json')
+        return True
+
+    def update_history(self):
+        filename = 'pychemia_relaxation.json'
+        filepath = self.workdir + os.sep + filename
+        if not os.path.exists(filepath):
+            wf = open(filepath, 'w')
+            data = [self.vaspjob.to_dict]
+            json.dump(data, wf, sort_keys=True, indent=4, separators=(',', ': '))
+            wf.close()
+        else:
+            rf = open(filepath, 'r')
+            data = json.load(rf)
+            rf.close()
+            data.append(self.vaspjob.to_dict)
+            wf = open(filepath, 'w')
+            json.dump(data, wf, sort_keys=True, indent=4, separators=(',', ': '))
+            wf.close()
+
+    def first_run(self):
+
+        vj = self.vaspjob
+        vj.clean()
+        inp = InputVariables()
+        inp.set_rough_relaxation()
+        vj.set_input_variables(inp)
+        vj.write_potcar()
+        vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir + os.sep + 'POTCAR')
+        vj.input_variables.set_density_for_restart()
+        vj.set_inputs()
+
+        vj.run(use_mpi=True, mpi_num_procs=self.nparal)
+        if self.waiting:
+            vj.runner.wait()
+
+    def run(self):
+
+        vj = self.vaspjob
+        self.first_run()
+
+        while True:
+            if vj.runner is not None and vj.runner.poll() is not None:
+                pcm_log.info('Execution completed. Return code %d' % vj.runner.returncode)
+
+                filename = self.workdir + os.sep + 'vasp_stdout.log'
+                if os.path.exists(filename):
+                    read_vasp_stdout(filename=filename)
+
+                va = VaspAnalyser(self.workdir)
+                va.run()
+
+                max_force, max_stress = self.get_max_force_stress()
+                if max_force < self.target_forces and max_stress < self.target_forces:
+                    pcm_log.debug('Max Force: %9.3E Stress: %9.3E' % (max_force, max_stress))
+                    break
+
+                self.update()
+
+                vj.run(use_mpi=True, mpi_num_procs=self.nparal)
+                if self.waiting:
+                    vj.runner.wait()
+            else:
+                filename = self.workdir + os.sep + 'vasp_stdout.log'
+                if os.path.exists(filename):
+                    vasp_stdout = read_vasp_stdout(filename=filename)
+                    if len(vasp_stdout['iterations']) > 0:
+                        pcm_log.debug('[%s] SCF: %s' % (os.path.basename(self.workdir), str(vasp_stdout['iterations'])))
+                    # if len(vasp_stdout['energies']) > 2:
+                    #     energy_str = ' %9.3E' % vasp_stdout['energies'][0]
+                    #     for i in range(1, len(vasp_stdout['energies'])):
+                    #         if vasp_stdout['energies'][i] < vasp_stdout['energies'][i-1]:
+                    #             energy_str += ' >'
+                    #         else:
+                    #             energy_str += ' <'
+                    #     pcm_log.debug(energy_str)
+
+                time.sleep(10)
+
+    def get_forces_stress_energy(self):
+
+        filename = self.workdir + os.sep + 'OUTCAR'
+        if os.path.isfile(filename):
+            self.vaspjob.get_outputs()
+            forces = self.vaspjob.outcar.forces[-1]
+            stress = self.vaspjob.outcar.stress[-1]
+            total_energy = self.vaspjob.outcar.final_data['energy']['free_energy']
+        else:
+            forces = None
+            stress = None
+            total_energy = None
+        return forces, stress, total_energy
+
+    def get_final_geometry(self):
+
+        filename = self.workdir + os.sep + 'CONTCAR'
+        structure = None
+        if os.path.isfile(filename):
+            try:
+                structure = read_poscar(filename)
+            except ValueError:
+                print 'Error reading CONTCAR'
+        return structure
+

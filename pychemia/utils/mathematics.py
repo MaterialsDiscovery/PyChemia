@@ -268,7 +268,7 @@ def vector_set_perpendicular(vector3):
     v2 = None
     v3 = None
     while True:
-        other = unit_vector(np.random.rand(3))
+        other = unit_vector(np.random.random_sample(3))
         if np.abs(np.dot(v1, other)) > 0.05:
             v2 = unit_vector(np.cross(v1, other))
             v3 = unit_vector(np.cross(v1, v2))

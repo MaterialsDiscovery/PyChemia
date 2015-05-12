@@ -1,55 +1,57 @@
 __author__ = 'Guillermo Avendano-Franco'
 
-import math
-from pychemia import log
+from pychemia import pcm_log
 from _searcher import Searcher
 
 
 class ParticleSwarm(Searcher):
 
-    def __init__(self, population, params=None, fraction_evaluated=0.95, generation_size=32, stabilization_limit=10):
+    def __init__(self, population, params=None, fraction_evaluated=0.90, generation_size=32, stabilization_limit=10):
         """
-        Implementation fo the Firefly algorithm for global minimization
-        This searcher uses a metric to compute the attractiveness and the vector displacement
-        to move one firefly in the direction of another one
+        Implementation fo the Particle Swarm Optimization algorithm for global minimization
 
         :param population:
-        :param params: (dict) Parameters to setup the Searcher
+        :param params: (dict) Parameters to setup the Searcher. For PSO the parameters are:
+            'beta0': A value in the range (0,1) that defines how close the mobile structure will be from to
+             the target structure
+            'alpha0': Factor of scale for the random movement
+            'delta': How the random change decreases with time
         :param fraction_evaluated: (float)
         :param generation_size: (int)
         :param stabilization_limit: (int)
         :return:
         """
-        # Mandatory objects
-        self.population = population
-        # Parameters
-        self.gamma = None
-        self.elites = None
-        self.set_params(params)
-        # Constrains
-        self.fraction_evaluated = fraction_evaluated
-        self.generation_size = generation_size
-        self.stabilization_limit = stabilization_limit
         # Initializing objects
-        Searcher.__init__(self, self.population, fraction_evaluated, generation_size, stabilization_limit)
+        Searcher.__init__(self, population, fraction_evaluated, generation_size, stabilization_limit)
+        # Parameters
+        self.beta0 = None
+        self.alpha0 = None
+        self.delta = None
+        self.set_params(params)
 
     def set_params(self, params):
+        # Default parameters
+        self.beta0 = 0.9
+        self.alpha0 = 0.3
+        self.delta = 0.9
         if params is None:
-            self.gamma = 0.1
-            self.elites = 3
-        else:
-            assert('gamma' in params)
-            assert(params['gamma'] >= 0.0)
-            self.gamma = params['gamma']
-            if 'elites' in params:
-                self.elites = params['elites']
+            params = {}
+        if 'beta0' in params:
+            self.beta0 = params['beta0']
+        if 'alpha0' in params:
+            self.alpha0 = params['alpha0']
+        if 'delta' in params:
+            self.delta = params['delta']
 
     def get_params(self):
-        return {'gamma': self.gamma, 'elites': self.elites}
+        return {'beta0': self.beta0,
+                'alpha0': self.alpha0,
+                'delta': self.delta}
 
     def run_one(self):
         # Get a static selection of the values in the generation that are relaxed
         selection = self.population.ids_sorted(self.population.actives_evaluated)
+        pcm_log.info('Size of selection : %d' % len(selection))
 
         # Minus sign because we are searching for minima
         intensity = self.population.get_values(selection)
@@ -60,35 +62,25 @@ class ParticleSwarm(Searcher):
         new_selection = {}
         for entry_id in selection:
             new_selection[entry_id] = None
+            moves[entry_id] = 0
 
-        # Move all the fireflies (Except the most brightness)
+        # Move all the particles (Except the elite)
         # as the selection is sorted it means that the first one will no move
-        log.debug('No Moving %d %s. Intensity: %7.3f' % (0, str(selection[0]), intensity[selection[0]]))
-
-        # The best
-        elites = selection[:self.elites]
-
-        for i in range(self.elites, len(selection)):
+        pcm_log.debug('No Moving %d %s. Intensity: %7.3f' % (0, str(selection[0]), intensity[selection[0]]))
+        for i in range(1, len(selection)):
             entry_id = selection[i]
-            log.debug('Moving %d %s. Intensity: %7.3f' % (i, str(entry_id), intensity[entry_id]))
+            pcm_log.debug('Moving %d %s. Intensity: %7.3f' % (i, str(entry_id), intensity[entry_id]))
 
-            distances = [self.population.distance(entry_id, entry_jd) for entry_jd in elites]
-            target = elites[distances.index(min(distances))]
-            distance=min(distances)
-            atractiveness = math.exp(-self.gamma * distance) * intensity[target]
-
-            log.debug('[%s] Distance: %7.3f. Intensity: %7.3f. Atractiveness: %7.3f' %
-                      (str(target), distance, intensity[target], atractiveness))
-
-            if intensity[entry_id] < atractiveness:
-                new_selection[entry_id] = self.population.move(entry_id, target, in_place=False)
+            new_selection[entry_id] = self.population.move(entry_id, selection[0], factor=self.beta0, in_place=False)
+            factor = self.alpha0*(self.delta**self.current_generation)
+            self.population.move_random(new_selection[entry_id], factor=factor, in_place=True)
 
         for entry_id in selection:
-            log.debug('Deciding fate for firefly: %s' % str(entry_id))
             if new_selection[entry_id] is not None:
-                log.debug('Moved to a new location %s ' % str(entry_id))
-                self.replace_by_other(entry_id, new_selection[entry_id], reason=None)
+                pcm_log.debug('[%s] Moved to: %s (%d moves)' % (str(entry_id), new_selection[entry_id], moves[entry_id]))
+                self.replace_by_other(entry_id, new_selection[entry_id],
+                                      reason='Moved %d times' % moves[entry_id])
+                self.population.enable(new_selection[entry_id])
             else:
-                log.debug('Promoted to new generation ')
-                self.pass_to_new_generation(entry_id, reason='No other firefly is more attractive')
-
+                pcm_log.debug('[%s] Promoted to new generation' % str(entry_id))
+                self.pass_to_new_generation(entry_id, reason='The best')

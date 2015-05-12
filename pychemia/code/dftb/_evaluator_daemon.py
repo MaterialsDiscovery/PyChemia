@@ -6,7 +6,7 @@ import socket
 import time
 import numpy as np
 from multiprocessing import Process
-from pychemia import log
+from pychemia import pcm_log
 from pychemia.analysis import StructureAnalysis
 from pychemia.code.dftb import DFTBplusRelaxator
 from pychemia.serializer import generic_serializer
@@ -35,33 +35,34 @@ class EvaluatorDaemon():
 
             pcdb = get_database(db_settings)
 
-            log.info('[%s]: Starting relaxation. Target forces: %7.3e' % (str(entry_id), target_forces))
+            pcm_log.info('[%s]: Starting relaxation. Target forces: %7.3e' % (str(entry_id), target_forces))
 
             if pcdb.is_locked(entry_id):
                 return
             else:
                 pcdb.lock(entry_id)
             structure = pcdb.get_structure(entry_id)
+            structure = structure.scale()
 
             relaxer = DFTBplusRelaxator(workdir, structure, relaxator_params=relaxator_params,
                                         target_forces=target_forces, waiting=True)
             relaxer.run()
-            log.info('[%s]: Finished relaxation. Target forces: %7.3e' % (str(entry_id), target_forces))
+            pcm_log.info('[%s]: Finished relaxation. Target forces: %7.3e' % (str(entry_id), target_forces))
 
             filename = workdir + os.sep + 'detailed.out'
             if os.path.isfile(filename):
                 forces, stress, total_energy = relaxer.get_forces_stress_energy()
                 if forces is None:
-                    log.error('No forces found on %s' % filename)
+                    pcm_log.error('No forces found on %s' % filename)
                 if stress is None:
-                    log.error('No stress found on %s' % filename)
+                    pcm_log.error('No stress found on %s' % filename)
                 if total_energy is None:
-                    log.error('No total_energy found on %s' % filename)
+                    pcm_log.error('No total_energy found on %s' % filename)
 
                 new_structure = relaxer.get_final_geometry()
 
                 if forces is not None and stress is not None and total_energy is not None and new_structure is not None:
-                    log.info('[%s]: Updating properties' % str(entry_id))
+                    pcm_log.info('[%s]: Updating properties' % str(entry_id))
                     symmetry = StructureSymmetry(new_structure)
                     pcdb.update(entry_id, structure=new_structure)
                     pcdb.entries.update({'_id': entry_id},
@@ -76,8 +77,7 @@ class EvaluatorDaemon():
 
                     # Fingerprint
                     # Update the fingerprints only if the two structures are really different
-                    if structure.natom != new_structure.natom or \
-                                    np.max(np.abs((structure.cell - new_structure.cell).flatten())) > 1E-7 or \
+                    if structure.natom != new_structure.natom or np.max(np.abs((structure.cell - new_structure.cell).flatten())) > 1E-7 or \
                                     np.max(np.abs((structure.reduced - new_structure.reduced).flatten())) > 1E-7:
 
                         analysis = StructureAnalysis(new_structure, radius=50)
@@ -95,19 +95,19 @@ class EvaluatorDaemon():
                         else:
                             pcdb.db.fingerprints.update({'_id': entry_id}, fingerprint)
                     else:
-                        log.debug('Original and new structures are very similar.')
-                        log.debug('Max diff cell: %10.3e' %
+                        pcm_log.debug('Original and new structures are very similar.')
+                        pcm_log.debug('Max diff cell: %10.3e' %
                                   np.max(np.absolute((structure.cell - new_structure.cell).flatten())))
                         if structure.natom == new_structure.natom:
-                            log.debug('Max diff reduced coordinates: %10.3e' %
+                            pcm_log.debug('Max diff reduced coordinates: %10.3e' %
                                       np.max(np.absolute((structure.reduced - new_structure.reduced).flatten())))
 
                 else:
                     pcdb.entries.update({'_id': entry_id}, {'$set': {'status.relaxation': 'failed'}})
-                    log.error('Bad data after relaxation. Tagging relaxation as failed')
+                    pcm_log.error('Bad data after relaxation. Tagging relaxation as failed')
             else:
-                log.error('ERROR: File not found %s' % filename)
-            log.info('[%s]: Unlocking the entry' % str(entry_id))
+                pcm_log.error('ERROR: File not found %s' % filename)
+            pcm_log.info('[%s]: Unlocking the entry' % str(entry_id))
             pcdb.unlock(entry_id)
 
         procs = []
@@ -127,16 +127,16 @@ class EvaluatorDaemon():
 
             for entry in pcdb.entries.find({}):
                 if self.is_evaluable(entry):
-                    log.debug('Adding entry %s from db %s' % (str(entry['_id']), pcdb.name))
+                    pcm_log.debug('Adding entry %s from db %s' % (str(entry['_id']), pcdb.name))
                     to_relax.append(entry['_id'])
 
             if len(to_relax) == 0:
-                log.debug('No more entries to evaluate, sleeping %d seconds' % self.sleeping_time)
+                pcm_log.debug('No more entries to evaluate, sleeping %d seconds' % self.sleeping_time)
                 time.sleep(self.sleeping_time)
             else:
                 sortlist = np.array([pcdb.get_structure(i).natom for i in to_relax]).argsort()[::-1]
                 to_relax = list(np.array(to_relax)[sortlist])
-                log.debug('Number of entries to evaluate: %d' % len(to_relax))
+                pcm_log.debug('Number of entries to evaluate: %d' % len(to_relax))
 
             index = 0
             relaxing = np.array([True for j in range(self.nparal) if procs[j] is not None and procs[j].is_alive()])
@@ -150,28 +150,29 @@ class EvaluatorDaemon():
                 for j in range(self.nparal):
                     if procs[j] is None or not procs[j].is_alive():
                         if ids_running[j] is not None:
-                            log.debug('%s is not alive. Exit code: %2d. Locked: %s' %
+                            pcm_log.debug('%s is not alive. Exit code: %2d. Locked: %s' %
                                       (str(ids_running[j]), procs[j].exitcode, str(pcdb.is_locked(ids_running[j]))))
                         if self.is_evaluable(pcdb.entries.find_one({'_id': entry_id})):
-                            log.debug('Evaluable: %s. Relaxing entry %d of %d' % (str(entry_id), index, len(to_relax)))
+                            pcm_log.debug('Evaluable: %s. Relaxing entry %d of %d' %
+                                          (str(entry_id), index, len(to_relax)))
                             ids_running[j] = entry_id
                             workdir = self.basedir + os.sep + pcdb.name + os.sep + str(entry_id)
                             if not os.path.exists(workdir):
                                 os.mkdir(workdir)
                             db_settings = self.database_settings.copy()
-                            log.debug('Launching for %s id: %s' % (pcdb.name, str(entry_id)))
+                            pcm_log.debug('Launching for %s id: %s' % (pcdb.name, str(entry_id)))
 
                             # Relax lowering the target forces by one order of magnitude each time
                             current_status = self.get_current_status(entry)
-                            log.debug('Current max forces-stress: %7.3e' % current_status)
+                            pcm_log.debug('Current max forces-stress: %7.3e' % current_status)
                             step_target = max([10 ** math.floor(math.log10(current_status / 2.0)), self.target_forces])
-                            log.debug('New target  forces-stress: %7.3e' % step_target)
+                            pcm_log.debug('New target  forces-stress: %7.3e' % step_target)
 
                             procs[j] = Process(target=worker, args=(db_settings, entry_id, workdir, step_target,
                                                                     self.relaxator_params))
                             procs[j].start()
                         else:
-                            log.debug('Not evaluable: %s' % str(entry_id))
+                            pcm_log.debug('Not evaluable: %s' % str(entry_id))
 
                         index += 1
                         break
@@ -186,15 +187,15 @@ class EvaluatorDaemon():
             if 'forces' in entry['properties'] and entry['properties']['forces'] is not None:
                 forces = np.max(np.abs(np.array(entry['properties']['forces'], dtype=float).flatten()))
             else:
-                log.debug('No forces')
+                pcm_log.debug('No forces')
                 forces = 10
             if 'stress' in entry['properties'] and entry['properties']['stress'] is not None:
                 stress = np.max(np.abs(np.array(entry['properties']['stress'], dtype=float).flatten()))
             else:
-                log.debug('No stress')
+                pcm_log.debug('No stress')
                 stress = 10
         else:
-            log.debug('Bad entry')
+            pcm_log.debug('Bad entry')
             print entry
             forces = 10
             stress = 10
@@ -210,8 +211,11 @@ class EvaluatorDaemon():
         elif 'relaxation' not in entry['status']:
             return True
         if 'relaxation' in entry['status']:
-            if entry['status']['relaxation'] == 'failed' and self.evaluate_failed:
-                return True
+            if entry['status']['relaxation'] == 'failed':
+                if self.evaluate_failed:
+                    return True
+                else:
+                    return False
         if self.get_current_status(entry) > self.target_forces:
             return True
         else:

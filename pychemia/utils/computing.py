@@ -28,3 +28,6 @@ def unicode2string(value):
     else:
         return value
 
+
+def convert_color(s):
+    return float(int(s[:2], 16))/255, float(int(s[2:4], 16))/255, float(int(s[4:6], 16))/255

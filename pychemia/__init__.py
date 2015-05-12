@@ -5,8 +5,8 @@ Dynamical such as minima hoping method (MHM)
 """
 
 import logging
-log = logging.getLogger(__name__)
-log.addHandler(logging.NullHandler())
+pcm_log = logging.getLogger(__name__)
+pcm_log.addHandler(logging.NullHandler())
 
 from core import Structure, Composition, Lattice
 import analysis
@@ -21,7 +21,6 @@ import report
 import runner
 import searcher
 import symm
-import task
 import utils
 import web
 import population

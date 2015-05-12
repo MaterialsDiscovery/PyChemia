@@ -89,7 +89,7 @@ def load(filep):
     if "reduced" in keywords:
         struct = Structure(cell=cell, reduced=positions, symbols=symbols, name=comment)
     else:
-        struct = Structure(cell=cell, reduced=positions, symbols=symbols, name=comment)
+        struct = Structure(cell=cell, positions=positions, symbols=symbols, name=comment)
 
     return struct
 

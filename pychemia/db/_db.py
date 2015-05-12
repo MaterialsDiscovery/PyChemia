@@ -55,7 +55,7 @@ class PyChemiaDB():
             status = {}
         if properties is None:
             properties = {}
-        entry = {'structure': structure.to_dict(), 'properties': properties, 'status': status}
+        entry = {'structure': structure.to_dict, 'properties': properties, 'status': status}
         entry_id = self.entries.insert(entry)
         return entry_id
 
@@ -75,7 +75,7 @@ class PyChemiaDB():
         entry = self.entries.find_one({'_id': entry_id})
         if structure is not None:
             if isinstance(structure, Structure):
-                entry['structure'] = structure.to_dict()
+                entry['structure'] = structure.to_dict
             elif isinstance(structure, dict):
                 entry['structure'] = structure
             else:
@@ -236,6 +236,18 @@ class PyChemiaDB():
         cursor.close()
         return ret
 
+    def replace_failed(self):
+        for entry in self.entries.find({'status.relaxation': 'failed'}):
+            st = self.get_structure(entry['_id'])
+            comp = st.composition
+            new_structure = Structure.random_cell(comp)
+            self.entries.update({'_id': entry['_id']}, {'$unset': {'status.relaxation': 1,
+                                                                   'status.target_forces': 1,
+                                                                   'properties.energy': 1,
+                                                                   'properties.forces': 1,
+                                                                   'properties.stress': 1}})
+            self.update(entry['_id'], structure=new_structure)
+
 
 def get_database(db_settings):
 
@@ -277,3 +289,7 @@ def create_user(name, admin_name, admin_passwd, user_name, user_passwd, host='lo
     mc = MongoClient(host=host, port=port, ssl=ssl)
     mc.admin.authenticate(admin_name, admin_passwd)
     mc[name].add_user(user_name, user_passwd)
+    return PyChemiaDB(name=name, user=user_name, passwd=user_passwd, host=host, port=port, ssl=ssl)
+
+def create_database(name, admin_name, admin_passwd, user_name, user_passwd, host='localhost', port=27017, ssl=False):
+    return create_user(name, admin_name, admin_passwd, user_name, user_passwd, host, port, ssl)

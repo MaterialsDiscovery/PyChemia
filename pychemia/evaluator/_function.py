@@ -61,7 +61,7 @@ class FunctionEvaluator():
                     return
 
         # self.process = Process(target=worker, args=(self.population,))
-        #self.process.start()
+        # self.process.start()
         self.thread = Thread(target=worker, args=(self, self.population,))
         self.thread.daemon = True
         self.thread.start()

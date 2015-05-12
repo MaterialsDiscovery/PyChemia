@@ -5,7 +5,11 @@ import itertools
 from multiprocessing import Pool
 import pychemia
 from pychemia.utils.periodic import atomic_symbol
-from qmpy import Entry
+try:
+    from qmpy import Entry
+except ImportError:
+    print "Could not import 'qmpy' as needed to interface with the OQMD database"
+    exit(1)
 
 version = 0.1
 jump = 10000
@@ -57,7 +61,7 @@ def run_one(a):
     settings = best_calculation.settings
     try:
         spacegroup_number = best_calculation.output.spacegroup.number
-    except:
+    except ValueError:
         spacegroup_number = None
 
     symm = pychemia.symm.StructureSymmetry(structure)
@@ -71,7 +75,7 @@ def run_one(a):
                            'band_gap': band_gap,
                            'settings': settings,
                            'spacegroup_number': spacegroup_number},
-                           'spacegroup_number': {'value': sym2, 'symprec': 1E-2}}
+                  'spacegroup_number': {'value': sym2, 'symprec': 1E-2}}
 
     return structure, properties
 
@@ -204,7 +208,7 @@ if __name__ == '__main__':
                                                itertools.repeat(db_settings),
                                                itertools.repeat(current), a_args))
 
-    to_insert=[]
+    to_insert = []
     for i in ret:
         for j in i:
             to_insert.append(j)

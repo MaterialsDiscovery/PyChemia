@@ -1,33 +1,32 @@
 __author__ = 'Guillermo Avendano-Franco'
 
 from _searcher import Searcher
+from pychemia import pcm_log
 
 
 class GreyWolf(Searcher):
-    def __init__(self, population, params=None, fraction_evaluated=0.8, generation_size=32, stabilization_limit=10):
-        self.population = population
+    def __init__(self, population, params=None, fraction_evaluated=0.95, generation_size=32, stabilization_limit=10):
 
-        Searcher.__init__(self, self.population, fraction_evaluated, generation_size, stabilization_limit)
+        Searcher.__init__(self, population, fraction_evaluated, generation_size, stabilization_limit)
         self.a = None
         self.c = None
         self.set_params(params)
 
     def set_params(self, params):
+        self.a = 1
+        self.c = 1
         if params is None:
-            self.a = 1
-            self.c = 1
-            return
-        if 'a' not in params:
-            self.a = 1
-        else:
+            params = {}
+        if 'a' in params:
             self.a = params['a']
-        if 'c' not in params:
-            self.c = 1
-        else:
+        if 'c' in params:
             self.c = params['c']
 
-    def run_one(self):
-        pass
-
     def get_params(self):
-        pass
+        return {'a': self.a, 'c': self.c}
+
+    def run_one(self):
+        # Get a static selection of the values in the generation that are relaxed
+        selection = self.population.ids_sorted(self.population.actives_evaluated)
+        pcm_log.info('Size of selection : %d' % len(selection))
+

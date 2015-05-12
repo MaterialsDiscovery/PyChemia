@@ -1,10 +1,10 @@
-__author__ = 'Guillermo Avendano Franco'
+__author__ = 'Guillermo Avendano-Franco'
 
 import os
 import time
-from _dftb import DFTBplus, read_detailed_out, read_dftb_stdout, read_geometry_gen
+import numpy as np
 from pychemia import pcm_log
-from pychemia.dft import KPoints
+import pychemia
 
 try:
     from pychemia.symm import symmetrize
@@ -14,68 +14,68 @@ except ImportError:
 from pychemia.code import Relaxator
 
 
-class DFTBplusRelaxator(Relaxator):
+class VaspRelaxator(Relaxator):
+
+    def get_final_geometry(self):
+        struct = pychemia.code.vasp.read_poscar(self.workdir+os.sep+'CONTCAR')
+        return struct
 
     def __init__(self, workdir, structure, relaxator_params, target_forces=1E-3, waiting=False):
 
         self.workdir = workdir
         self.initial_structure = symmetrize(structure)
         self.structure = self.initial_structure.copy()
-        self.slater_path = None
         self.set_params(relaxator_params)
         self.waiting = waiting
         Relaxator.__init__(self, target_forces)
 
     def set_params(self, params):
-        assert(isinstance(params, dict))
-        if 'slater_path' not in params:
-            raise ValueError('A least one path must to be present to search for Slater-Koster files')
-        else:
-            if isinstance(params['slater_path'], basestring):
-                assert os.path.exists(params['slater_path'])
-                self.slater_path = [params['slater_path']]
-            else:
-                self.slater_path = params['slater_path']
-                try:
-                    for x in self.slater_path:
-                        assert os.path.exists(x)
-                except TypeError:
-                    raise ValueError('Missing a valid slater_path or list of slater_paths')
+        pass
+
+    def create_inputs(self, density_of_kpoints=10000, ENCUT=1.0):
+        # kpoints = pychemia.dft.KPoints(kmode='gamma', grid=[4, 4, 4])
+        kpoints = pychemia.dft.KPoints()
+        kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=density_of_kpoints)
+        print kpoints
+        vj = pychemia.code.vasp.VaspJob()
+        vj.initialize(workdir=self.workdir, structure=self.structure, kpoints=kpoints)
+        inp = pychemia.code.vasp.InputVariables()
+        inp.set_rough_relaxation()
+        vj.set_input_variables(inp)
+        vj.write_potcar()
+        vj.input_variables.set_encut(ENCUT=ENCUT, POTCAR=self.workdir + os.sep + 'POTCAR')
+        vj.set_inputs()
+        return vj
 
     def run(self):
-
-        irun = 0
-        score = 0
-        dftb = DFTBplus()
-        kpoints = KPoints(kmode='gamma', grid=[7, 7, 7])
-        dftb.initialize(workdir=self.workdir, structure=self.structure, kpoints=kpoints)
-        dftb.set_slater_koster(search_paths=self.slater_path)
-        dftb.basic_input()
-        dftb.driver['LatticeOpt'] = False
-        # Decreasing the target_forces to avoid the final static
-        # calculation of raising too much the forces after symmetrization
-        dftb.driver['MaxForceComponent'] = 0.5 * self.target_forces
-        dftb.driver['ConvergentForcesOnly'] = True
-        dftb.driver['MaxSteps'] = 50
-        dftb.hamiltonian['MaxSCCIterations'] = 50
-        dftb.set_inputs()
-        dftb.run()
+        vj = self.create_inputs(density_of_kpoints=10000, ENCUT=1.0)
+        vj.run()
         if self.waiting:
-            dftb.runner.wait()
+            vj.runner.wait()
         while True:
-            if dftb.runner is not None and dftb.runner.poll() is not None:
-                pcm_log.info('Execution completed. Return code %d' % dftb.runner.returncode)
-                filename = dftb.workdir + os.sep + 'detailed.out'
+            if vj.runner is not None and vj.runner.poll() is not None:
+                pcm_log.info('Execution completed. Return code %d' % vj.runner.returncode)
+                filename = self.workdir + os.sep + 'OUTCAR'
                 if not os.path.exists(filename):
                     pcm_log.error('Could not find ' + filename)
                     break
-                good_forces, good_stress, good_data = self.relaxation_status()
+                forces, stress, total_energy = self.get_forces_stress_energy()
 
-                if not good_data:
-                    # This happens when all the SCC are completed without convergence
-                    dftb.driver['ConvergentForcesOnly'] = False
+                # Forces are good if we are at least one order of magnitude higher than target
+                if forces is not None and np.max(np.abs(forces.flatten())) < 10 * self.target_forces:
+                    good_forces = True
                 else:
-                    dftb.driver['ConvergentForcesOnly'] = True
+                    if forces is not None:
+                        pcm_log.info('Forces: ' + str(np.max(np.abs(forces.flatten()), 10 * self.target_forces)))
+                    good_forces = False
+
+                # Stress is good if we are at least one order of magnitude higher than target
+                if stress is not None and np.max(np.abs(stress.flatten())) < 10 * self.target_forces:
+                    good_stress = True
+                else:
+                    if stress is not None:
+                        pcm_log.info('Stress: ' + str(np.max(np.abs(stress.flatten()), 10 * self.target_forces)))
+                    good_stress = False
 
                 score = self.quality(dftb, score)
                 pcm_log.debug('Present score : ' + str(score))
@@ -153,68 +153,17 @@ class DFTBplusRelaxator(Relaxator):
                 # log.debug('Files: ' + str(os.listdir(dftb.workdir)))
                 #    break
 
-    def quality(self, dftb, score):
-
-        booleans, geom_optimization, stats = read_dftb_stdout(filename=dftb.workdir + os.sep + 'dftb_stdout.log')
-
-        # Increase the score on each iteration
-        score += 1
-
-        if stats['ion_convergence']:
-            score += 0
-
-        if 'max_force' in geom_optimization:
-            max_force = geom_optimization['max_force'][-1]
-        else:
-            return score
-
-        if 'max_lattice_force' in geom_optimization:
-            max_lattice_force = geom_optimization['max_lattice_force'][-1]
-        else:
-            max_lattice_force = None
-
-        if max_lattice_force is not None and max_force < self.target_forces and max_lattice_force < self.target_forces:
-            pcm_log.debug('Target forces and stress achieved (score +100)')
-            # Increase for a high value to exit
-            score += 100
-
-        if 'max_force' in geom_optimization and geom_optimization['max_force'][-1] > self.target_forces:
-            # log.debug('Target forces not achieved (score +1)')
-            score += 0
-
-        if 'max_force' in geom_optimization and geom_optimization['max_force'][-1] < geom_optimization['max_force'][0]:
-            # log.debug('Forces are decreasing (score +1)')
-            score += 0
-
-        # Only for Lattice Optimization
-        if 'max_lattice_force' in geom_optimization:
-            if geom_optimization['max_lattice_force'][-1] > self.target_forces:
-                # log.debug('Target stress not achieved (score +1)')
-                score += 0
-
-            if geom_optimization['max_lattice_force'][-1] < geom_optimization['max_lattice_force'][0]:
-                # log.debug('Stress is decreasing (score +1)')
-                score += 0
-
-        return score
-
     def get_forces_stress_energy(self):
 
-        filename = self.workdir + os.sep + 'detailed.out'
+        filename = self.workdir + os.sep + 'OUTCAR'
         if os.path.isfile(filename):
-            forces, stress, total_energy = read_detailed_out(filename=filename)
+            vo=VaspOutput(filename)
+            vo.outcar_parser()
+            forces = vo.forces[-1]
+            stress = vo.stress[-1]
+            total_energy = vo.energy[-1]
         else:
             forces = None
             stress = None
             total_energy = None
         return forces, stress, total_energy
-
-    def get_final_geometry(self):
-        geometry = self.workdir + os.sep + 'geo_end.gen'
-        if os.path.isfile(geometry):
-            return read_geometry_gen(geometry)
-        else:
-            # For static calculations the 'geo_end.gen' is not generated
-            # returning the internal structure
-            return self.structure
-

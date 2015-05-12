@@ -155,16 +155,18 @@ class KPoints(PyChemiaJsonable):
         assert (self.kmode in ['gamma', 'monkhorst-pack'])
         if grid is None:
             self.grid = np.ones(3)
-        elif np.array(grid).shape == (3,):
+        elif len(np.array(grid)) == 3:
             self.grid = np.array(grid)
         else:
-            raise ValueError("Wrong value for grid, should be an array with shape (3,)")
+            raise ValueError("Wrong value for grid, should be an array with shape (-1,3)")
         if shifts is None:
             self.shifts = np.zeros(3)
-        elif np.array(shifts).shape == (3,):
-            self.shifts = np.array(shifts)
         else:
-            raise ValueError("Wrong value for shifts, should be an array with shape (3,)")
+            self.shifts = np.array(shifts).reshape((-1, 3))
+
+    @property
+    def number_of_kpoints(self):
+        return self.nkpt
 
     @property
     def nkpt(self):
@@ -233,7 +235,7 @@ class KPoints(PyChemiaJsonable):
         num_div = [i if i > 0 else 1 for i in num_div]
         return num_div[0], num_div[1], num_div[2]
 
-    def set_optimized_grid(self, lattice, density_of_kpoints=None, number_of_kpoints=None):
+    def set_optimized_grid(self, lattice, density_of_kpoints=None, number_of_kpoints=None, force_odd=False):
         """
         Returns a grid optimized for the given structure
 
@@ -251,7 +253,7 @@ class KPoints(PyChemiaJsonable):
 
         if number_of_kpoints is not None:
             vol = 1.0 / lattice.volume
-            density_of_kpoints = nkpt / vol
+            density_of_kpoints = number_of_kpoints / vol
 
         # lets get the cell ratios
         a1 = sqrt(rcell[0][0] ** 2 + rcell[0][1] ** 2 + rcell[0][2] ** 2)
@@ -262,3 +264,13 @@ class KPoints(PyChemiaJsonable):
         self.grid = np.array([int(max(ceil(factor * a1), 1)),
                               int(max(ceil(factor * a2), 1)),
                               int(max(ceil(factor * a3), 1))])
+        if force_odd:
+            for i in range(3):
+                if self.grid[i] % 2 == 0:
+                    self.grid[i] += 1
+
+    def get_density_of_kpoints(self, lattice):
+
+        assert(self.kmode in ['gamma', 'monkhorst-pack'])
+        vol = 1.0 / lattice.volume
+        return self.number_of_kpoints / vol

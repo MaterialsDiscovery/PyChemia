@@ -5,6 +5,7 @@ import sys
 import logging
 import pychemia
 from pychemia.external.pymatgen import *
+from pychemia import pcm_log
 
 
 def help_info():
@@ -83,13 +84,13 @@ if __name__ == '__main__':
     cifs = [x for x in os.listdir(path) if x[-3:] == 'cif']
 
     for i in cifs:
-        log.info('Reading CIF         : %s' % i)
+        pcm_log.info('Reading CIF         : %s' % i)
         structs = cif2structure(path+os.sep+i)
-        log.info('Number of structures: %d' % len(structs))
+        pcm_log.info('Number of structures: %d' % len(structs))
         for j in structs:
             if j.is_perfect:
-                log.info('Composition         : %s' % str(j.composition))
+                pcm_log.info('Composition         : %s' % str(j.composition))
                 pcdb.insert(structure=j)
             else:
-                log.info('DISCARDED: Structure is not perfect')
+                pcm_log.info('DISCARDED: Structure is not perfect')
 

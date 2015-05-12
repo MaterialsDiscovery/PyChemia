@@ -14,9 +14,7 @@ setup(
     long_description=open('README.md').read(),
     install_requires=["numpy >= 1.5",
                       "scipy >= 0.9",
-                      "pymatgen >= 2.9",
                       "matplotlib >= 1.2",
-                      "mayavi >= 4.1",
                       "ScientificPython >2.6",
-                      "python-ase", 'pymongo', 'spglib', 'bson', 'ase', 'pyspglib', 'qmpy'],
+                      'spglib', 'pyspglib', 'qmpy'],
 )
