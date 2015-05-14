@@ -291,5 +291,6 @@ def create_user(name, admin_name, admin_passwd, user_name, user_passwd, host='lo
     mc[name].add_user(user_name, user_passwd)
     return PyChemiaDB(name=name, user=user_name, passwd=user_passwd, host=host, port=port, ssl=ssl)
 
+
 def create_database(name, admin_name, admin_passwd, user_name, user_passwd, host='localhost', port=27017, ssl=False):
     return create_user(name, admin_name, admin_passwd, user_name, user_passwd, host, port, ssl)

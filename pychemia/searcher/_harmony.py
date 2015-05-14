@@ -87,7 +87,8 @@ class HarmonySearch(Searcher):
                     pcm_log.debug('[HS](%s) Promoted (modified): rnd= %4.3f < par= %4.3f' % (entry_id, rnd, self.par))
                     self.replace_by_changed(entry_id, reason='rnd= %4.3f < par= %4.3f' % (rnd, self.par))
                 else:
-                    pcm_log.debug('[HS](%s) Promoted (unmodified): rnd= %4.3f >= par= %4.3f' % (entry_id, rnd, self.par))
+                    pcm_log.debug('[HS](%s) Promoted (unmodified): rnd= %4.3f >= par= %4.3f' %
+                                  (entry_id, rnd, self.par))
                     self.pass_to_new_generation(entry_id, reason='rnd= %4.3f >= par= %4.3f' % (rnd, self.par))
             else:
                 pcm_log.debug('[HS](%s) Discarded: rnd= %4.3f > hmcr= %4.3f ' % (entry_id, rnd, self.hmcr))

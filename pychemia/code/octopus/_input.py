@@ -18,7 +18,7 @@ def execute(basedir, num_threads=1, num_procs=2):
     wfile.write('export OMP_NUM_THREADS=' + str(num_threads) + '\n')
     wfile.write('mpirun -np ' + str(num_procs) + ' octopus_mpi')
     wfile.close()
-    pychemia.execution.execute(basedir, 'bash', 'script.sh')
+    pychemia.runner.execute(basedir, 'bash', 'script.sh')
 
 
 def get_vars():

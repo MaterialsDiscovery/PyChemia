@@ -8,43 +8,51 @@ class PBSRunner():
 
     def __init__(self, workdir, filename='batch.pbs'):
 
-        self.template = template
-        self.walltime = walltime
         self.template = None
-        self.queue = queue
-        self.mail = mail
-        self.message = message
         self.walltime = None
-        self.ppn = ppn
-        self.nodes = nodes
-        self.name = os.path.basename(self.workdir)
+        self.template = None
+        self.queue = None
+        self.mail = None
+        self.message = None
+        self.walltime = None
+        self.ppn = None
+        self.nodes = None
         self.workdir = workdir
         self.filename = filename
         if self.workdir[-1] == os.sep:
             self.workdir = self.workdir[:-1]
+        self.name = os.path.basename(self.workdir)
 
-    def initialize(self, name=None, nodes=1, ppn=2, walltime=None, message='ae', mail=None, queue=None):
+    def initialize(self, nodes=1, ppn=2, walltime=None, message='ae', mail=None, queue=None):
 
-        if name is None:
+        if walltime is None:
             walltime=[12, 0, 0]
         self.set_walltime(walltime)
+        self.nodes = nodes
+        self.ppn = ppn
+        self.message = message
+        self.mail = mail
+        self.queue = queue
 
     def set_walltime(self, walltime):
 
         if len(walltime) == 1:
-            self.walltime = [0] + walltime
+            walltime = [0] + walltime
         if len(walltime) == 2:
-            self.walltime = [0] + walltime
+            walltime = [0] + walltime
         if len(walltime) == 3:
-            self.walltime = [0] + walltime
+            walltime = [0] + walltime
+
+        self.walltime = walltime
 
     def set_template(self, template):
-        pass
+        self.template = template
 
     def write_pbs(self):
 
         wf = open(self.workdir+os.sep+self.filename, 'w')
         wt = self.walltime
+        print wt
         wf.write("""#!/bin/sh
 
 #PBS -N %s

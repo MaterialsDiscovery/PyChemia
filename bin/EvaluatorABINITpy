@@ -1,0 +1,138 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import shutil
+import logging
+from pychemia.db import get_database
+from pychemia.code.abinit import InputVariables
+import time
+
+version = 0.1
+
+
+def help_info():
+    print(""" Remote Evaluator for ABINIT
+Start the execution of the Evaluator using ABINIT
+
+   Use:
+
+       EvaluatorABINIT.py --dbname 'MongoDB Database name'
+                        [--host localhost ] [--port 27017]
+                        [--user None ] [--passwd None] [--ssl]
+                        [--psp PATH] [--input_workdir $HOME]
+                        [--output_workdir $HOME]
+                        [--base_input abinit.in]
+   """)
+
+
+if __name__ == '__main__':
+
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger('pychemia')
+    logger.addHandler(logging.NullHandler())
+    logger.setLevel(logging.DEBUG)
+
+    # Script starts from here
+    if len(sys.argv) < 2:
+        help_info()
+        sys.exit(1)
+
+    dbname = None
+    host = 'localhost'
+    port = 27017
+    user = None
+    passwd = None
+    psps = []
+    input_workdir = os.getenv('HOME')
+    output_workdir = os.getenv('HOME')
+    base_input = None
+    ssl = False
+
+    for i in range(1, len(sys.argv)):
+        if sys.argv[i].startswith('--'):
+            option = sys.argv[i][2:]
+            # fetch sys.argv[1] but without the first two characters
+            if option == 'version':
+                print(version)
+                sys.exit()
+            elif option == 'help':
+                help_info()
+                sys.exit()
+            elif option == 'dbname':
+                dbname = sys.argv[i + 1]
+            elif option == 'host':
+                host = sys.argv[i + 1]
+            elif option == 'port':
+                dbname = int(sys.argv[i + 1])
+            elif option == 'user':
+                user = sys.argv[i + 1]
+            elif option == 'passwd':
+                passwd = sys.argv[i + 1]
+            elif option == 'input_workdir':
+                input_workdir = sys.argv[i + 1]
+                if not os.path.isdir(input_workdir):
+                    os.mkdir(input_workdir)
+            elif option == 'output_workdir':
+                output_workdir = sys.argv[i + 1]
+                if not os.path.isdir(output_workdir):
+                    os.mkdir(output_workdir)
+            elif option == 'base_input':
+                base_input = sys.argv[i + 1]
+                if not os.path.isfile(base_input):
+                    print 'ERROR: Invalid base input'
+                    help_info()
+                    exit(1)
+            elif option == 'psp':
+                if not os.path.isfile(sys.argv[i + 1]):
+                    print 'ERROR: PSP could not be found'
+                    help_info()
+                    exit(1)
+                psps.append(sys.argv[i + 1])
+            elif option == 'ssl':
+                ssl = True
+            else:
+                print('Unknown option. --' + option)
+
+    if dbname is None:
+        help_info()
+        sys.exit(1)
+
+    db_settings = {'name': dbname, 'host': host, 'port': port, 'ssl': ssl}
+    if user is not None:
+        if passwd is None:
+            raise ValueError('Password is mandatory if user is entered')
+        db_settings['user'] = user
+        db_settings['passwd'] = passwd
+
+    print 'pyChemia Remote Evaluator using ABINIT'
+    print 'dbname         : %s' % dbname
+    print 'host           : %s' % host
+    print 'port           : %d' % port
+    print 'user           : %s' % user
+    print 'input workdir  : %s' % input_workdir
+    print 'output workdir : %s' % output_workdir
+    print 'base input     : %s' % base_input
+    print 'psps           : %s' % str(psps)
+    print 'ssl            : %s' % str(ssl)
+
+    pcdb = get_database(db_settings)
+    print 'Number of entries: ', pcdb.entries.count()
+
+    while True:
+        # Setting New Inputs
+        for entry in pcdb.entries.find({}):
+            path = input_workdir + os.sep + str(entry['_id'])
+            if not os.path.isdir(path):
+                os.mkdir(path)
+                inputvar = InputVariables(base_input)
+                inputvar.set_value('dmatpawu', entry['properties']['dmatpawu'])
+                inputvar.write(path+os.sep+'abinit.in')
+                wf=open(path+os.sep+'abinit.files', 'w')
+                wf.write('abinit.in\nabinit.out\nabiniti\nabinito\nabinit\n')
+                for i in psps:
+                    shutil.copy(i, path)
+                    wf.write(os.path.basename(i)+'\n')
+                wf.close()
+        print 'Sleeping...'
+        time.sleep(30)

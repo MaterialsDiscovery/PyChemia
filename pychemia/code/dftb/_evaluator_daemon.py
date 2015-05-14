@@ -77,9 +77,10 @@ class EvaluatorDaemon():
 
                     # Fingerprint
                     # Update the fingerprints only if the two structures are really different
-                    if structure.natom != new_structure.natom or np.max(np.abs((structure.cell - new_structure.cell).flatten())) > 1E-7 or \
-                                    np.max(np.abs((structure.reduced - new_structure.reduced).flatten())) > 1E-7:
-
+                    diffnatom = structure.natom != new_structure.natom
+                    diffcell = np.max(np.abs((structure.cell - new_structure.cell).flatten()))
+                    diffreduced = np.max(np.abs((structure.reduced - new_structure.reduced).flatten()))
+                    if diffnatom != 0 or diffcell > 1E-7 or diffreduced > 1E-7:
                         analysis = StructureAnalysis(new_structure, radius=50)
                         x, ys = analysis.fp_oganov(delta=0.01, sigma=0.01)
                         fingerprint = {'_id': entry_id}

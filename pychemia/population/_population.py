@@ -15,15 +15,18 @@ class Population():
     Generations
     """
 
-    def __init__(self, name, tag):
+    def __init__(self, name, tag, use_mongo=True):
 
         self.tag = tag
+        self.pcdb = None
         if isinstance(name, basestring):
             self.name = name
-            self.pcdb = PyChemiaDB(name)
+            if use_mongo:
+                self.pcdb = PyChemiaDB(name)
         else:
             self.name = name.name
-            self.pcdb = name
+            if use_mongo:
+                self.pcdb = name
 
     def __iter__(self):
         return self.pcdb.entries.find()

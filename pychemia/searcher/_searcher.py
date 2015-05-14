@@ -230,6 +230,8 @@ class Searcher():
             self.old_actives = self.population.actives
             self.old_nextgen = self.get_generation(self.current_generation+1)
 
+            self.print_status()
+
             number_evaluated = len(self.population.actives_evaluated)
             while len(self.population.actives_evaluated) < self.fraction_evaluated * self.generation_size:
                 if len(self.population.actives_evaluated) != number_evaluated:

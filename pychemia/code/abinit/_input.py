@@ -282,6 +282,7 @@ class InputVariables:
         else:
             value = None
         # Return the value
+        #print 'Varname:',varname, value
         return value
 
     def set_value(self, varname, value, idtset=''):
@@ -301,7 +302,7 @@ class InputVariables:
         else:
             self.variables[varname + str(idtset)] = npvalue
 
-    def get_crystal(self, idtset='', units='bohr'):
+    def get_structure(self, idtset=None, units='bohr'):
         """
         Return the atomic structure from the input object
         for a given dataset (no dataset by default)
@@ -311,19 +312,21 @@ class InputVariables:
         # SYMBOLS
         ntypat = self.get_value('ntypat', idtset)
         symbols = []
+        znucl = self.get_value('znucl', idtset)
+        typat = self.get_value('typat', idtset)
         for i in range(natom):
             # NOTE: znucl is a real number in OUT.nc
             # Alchemic mixing is not allow here
-            znucl = self.get_value('znucl', idtset)
-            typat = self.get_value('typat', idtset)
             if ntypat == 1:
                 symbols.append(atomic_symbol(int(znucl)))
             else:
                 symbols.append(atomic_symbol(int(znucl[typat[i] - 1])))
+
         # POSITIONS
-        xangst = np.array(self.get_value('xangst', idtset))
-        xcart = np.array(self.get_value('xcart', idtset))
-        xred = np.array(self.get_value('xred', idtset))
+        xangst = self.get_value('xangst', idtset)
+        xcart = self.get_value('xcart', idtset)
+        xred = self.get_value('xred', idtset)
+
         rprim = self.get_value('rprim', idtset)
         acell = np.array(self.get_value('acell', idtset))
 
@@ -342,19 +345,25 @@ class InputVariables:
         rprimd[2] = rprim[2] * acell
 
         if xangst is not None:
+            xangst = np.array(xangst)
             positions = xangst.reshape((natom, 3))
             if units == 'bohr':
                 positions = positions * angstrom_bohr
         elif xcart is not None:
+            xcart = np.array(xcart)
             positions = xcart.reshape((natom, 3))
             if units == 'angstrom':
                 positions = positions * bohr_angstrom
         elif xred is not None:
-            xred = xred.reshape(3, natom)
-            xcart = np.zeros(3, natom)
+            xred = np.array(xred)
+            xred = xred.reshape((natom, 3))
+            xcart = np.zeros((natom, 3))
+
+            #print rprimd
+            #print xred
 
             for i in range(natom):
-                xcart[i] = xred[0, i] * rprimd[0] + xred[1, i] * rprimd[1] + xred[2, i] * rprimd[2]
+                xcart[i] = xred[i, 0] * rprimd[0] + xred[i, 1] * rprimd[1] + xred[i, 2] * rprimd[2]
 
             positions = xcart
             if units == 'angstrom':
@@ -367,9 +376,9 @@ class InputVariables:
             rprimd = rprimd * bohr_angstrom
 
         # Create an object atomic_structure
-        crystal = Structure(natom=natom, symbols=symbols, positions=positions, cell=rprimd)
+        structure = Structure(natom=natom, symbols=symbols, positions=positions, cell=rprimd)
 
-        return crystal
+        return structure
 
     def from_structure(self, structure):
         """

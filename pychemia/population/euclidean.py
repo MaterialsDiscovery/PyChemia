@@ -22,6 +22,7 @@ class EuclideanPopulation(Population):
         :param limits:
         :return:
         """
+        Population.__init__(self, 'Euclidean', 'global', use_mongo=False)
         self.tag = 'global'
         self.name = 'Euclidean'
         self.function = function

@@ -77,8 +77,10 @@ class ParticleSwarm(Searcher):
             distance=min(distances)
             atractiveness = math.exp(-self.gamma * distance) * intensity[target]
 
-            pcm_log.debug('[%s] Distance: %7.3f. Intensity: %7.3f. Atractiveness: %7.3f' %
-                      (str(target), distance, intensity[target], atractiveness))
+            pcm_log.debug('[%s] Distance: %7.3f. Intensity: %7.3f. Atractiveness: %7.3f' % (str(target),
+                                                                                            distance,
+                                                                                            intensity[target],
+                                                                                            atractiveness))
 
             if intensity[entry_id] < atractiveness:
                 new_selection[entry_id] = self.population.move(entry_id, target, in_place=False)
