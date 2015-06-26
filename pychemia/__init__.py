@@ -25,6 +25,6 @@ import utils
 import web
 import population
 
-from pychemia.info import __author__, __copyright__, __version__, __email__, __status__, __date__
+from pychemia.info import __author__, __copyright__, __version__, __email__, __status__, __date__, version
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())
