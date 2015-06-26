@@ -60,7 +60,7 @@ def energy(dirname):
     """
     Reads the 'energy' file and extracts its
     data as the numpy arrays 'Total','Kinetic', etc.
-    
+
     Args:
        dirname:
           The directory where the octopus data was produced
@@ -73,7 +73,7 @@ def energy(dirname):
        energy_dict:
           dictionary of numpy arrays with values of
           Total, Kinetic (ions), Ion-Ion, Electronic,
-          Eigenvalues, Hartree, Int[n v_xc], Exchange 
+          Eigenvalues, Hartree, Int[n v_xc], Exchange
           and Correlation
 
     """

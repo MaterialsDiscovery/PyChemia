@@ -14,7 +14,7 @@ import pychemia.external.ase
 from pychemia.serializer import generic_serializer
 
 
-class AseObjectiveFunction():
+class AseObjectiveFunction:
     def __init__(self):
         self.population = None
 
@@ -33,7 +33,7 @@ class AseObjectiveFunction():
         return ret
 
 
-class AseEvaluator():
+class AseEvaluator:
     def __init__(self):
         self.process = None
         self.thread = None

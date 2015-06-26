@@ -5,7 +5,7 @@ import os
 import numpy as np
 
 
-class DensityOfStates():
+class DensityOfStates:
     """
     Stores the density of states
     It its basically a numpy array with the first column representing energies

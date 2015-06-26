@@ -33,11 +33,11 @@ def __isnumber(word):
               '1/2'       =>     0.5
               'sqrt(3.0)' =>     1.732050
     Args:
-        word: 
+        word:
            An string that should be converted into a number
 
     Returns:
-        number: 
+        number:
            The value extracted
         kind:
            The kind of value
@@ -86,11 +86,11 @@ def __parse_word(word):
 
     Args:
         word: An string that should be parsed
-        
+
     Returns:
-       result: 
+       result:
           Value extracted (word, number or list)
-        
+
        kind:
           'word' such as 'ntime', 'eV', '*1', 'angstrom', etc
           'int' such as 1, 2, 3
@@ -194,16 +194,16 @@ def parser(filename):
     that it found other variables (eV, angstrom, etc)
     Repetitions are expanded (3*1.5 => [1.5 1.5 1.5])
 
-    Args: 
+    Args:
        filename:
           Path for an ABINIT input file
-    
+
     Returns:
        inputvars:
           Dictionary, the keys are names
           of variables and the values are
           list of numbers.
-          
+
     """
     cleanlist = __clean_input(filename)
 

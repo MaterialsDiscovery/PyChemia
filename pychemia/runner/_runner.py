@@ -6,7 +6,7 @@ from multiprocessing import Process
 import time
 
 
-class Runner():
+class Runner:
     def __init__(self, code, code_bin, environment, use_mpi=True, nmpiproc=2, nconcurrent=1, runtime=3600):
 
         if code.lower() not in ['abinit', 'vasp', 'octopus', 'dftb', 'fireball']:
@@ -156,3 +156,4 @@ class Runner():
 
         proc = Process(target=superworker, args=(workdirs, worker, checker))
         proc.start()
+

@@ -6,6 +6,6 @@ from _poscar import read_poscar, write_poscar, write_potcar
 from _incar import read_incar, write_incar, InputVariables
 from _outcar import VaspOutput, read_vasp_stdout
 from _vasp import VaspJob, VaspAnalyser
-from _tasks import Polarization, RelaxPopulation, Convergence_Kpoints, VaspRelaxator
+from _tasks import Polarization, RelaxPopulation, ConvergenceKPointGrid, VaspRelaxator, ConvergenceCutOffEnergy
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

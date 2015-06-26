@@ -6,7 +6,7 @@ from pychemia import Structure
 import itertools
 
 
-class StructureMatch():
+class StructureMatch:
 
     def __init__(self, structure1, structure2):
         """
@@ -38,7 +38,7 @@ class StructureMatch():
         sts = np.array(shortest_triple_set(lcm(gcd1, gcd2)/gcd1))
         supercell_multiples = sts[self.structure1.lattice.lengths.argsort()[::-1]]
         self.structure1 = self.structure1.supercell(supercell_multiples)
-    
+
         sts = np.array(shortest_triple_set(lcm(gcd1, gcd2)/gcd2))
         supercell_multiples = sts[self.structure2.lattice.lengths.argsort()[::-1]]
         self.structure2 = self.structure2.supercell(supercell_multiples)
@@ -119,9 +119,9 @@ class StructureMatch():
     def cell_displacement(self):
 
         return np.dot(self.structure1.cell, np.linalg.inv(self.structure2.cell))
-    
+
     def cartesian_distances(self):
-        
+
         rd = self.reduced_displacement()
         ret = np.zeros(self.structure1.nsites)
         for i in range(self.structure1.nsites):

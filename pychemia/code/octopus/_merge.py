@@ -4,7 +4,7 @@ import shutil as _shutil
 import numpy as _np
 
 
-class OctopusStates():
+class OctopusStates:
     def __init__(self, basedir):
         rf = open(basedir + '/restart/gs/states')
 
@@ -25,7 +25,7 @@ class OctopusStates():
         wf.close()
 
 
-class OctopusOccupancies():
+class OctopusOccupancies:
     def __init__(self, basedir):
         rf = open(basedir + '/restart/gs/occs')
 
@@ -54,7 +54,7 @@ class OctopusOccupancies():
         wf.close()
 
 
-class OctopusWavefunctions():
+class OctopusWavefunctions:
     def __init__(self, basedir):
 
         rf = open(basedir + '/restart/gs/wfns')
@@ -91,7 +91,7 @@ class OctopusWavefunctions():
         wf.close()
 
 
-class OctopusStatesFile():
+class OctopusStatesFile:
     def __init__(self, basedir):
         self.basedir = basedir
         self.obfs = sorted([x for x in _os.listdir(basedir + '/restart/gs')
@@ -101,7 +101,7 @@ class OctopusStatesFile():
         return "states_obf('%s')" % self.basedir
 
 
-class OctopusRestart():
+class OctopusRestart:
     def __init__(self, basedir):
         self.states = OctopusStates(basedir)
         self.occs = OctopusOccupancies(basedir)

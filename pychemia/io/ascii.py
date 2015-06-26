@@ -128,17 +128,17 @@ def save(struct, filep, cartesian=True, long_format=True, angdeg=False):
 
     # Write atom positions in scaled or cartesian coordinates
     if cartesian:
-        coord = atoms.get_positions()
+        coord = struct.positions
     else:
         f.write("#keyword: reduced\n")
-        coord = atoms.get_scaled_positions()
+        coord = struct.reduced
 
     if long_format:
         cform = ' %19.16f'
     else:
         cform = ' %9.6f'
 
-    symbols = atoms.get_chemical_symbols()
+    symbols = struct.symbols
     for iatom, atom in enumerate(coord):
         f.write(' ')
         for dcoord in atom:

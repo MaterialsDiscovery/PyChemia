@@ -18,7 +18,7 @@ import pychemia.code.abinit
 
 def test_example2():
     """
-    Example of a multiple calc     :
+    Example of a multiple calc          :
     """
     path = 'pychemia/test/data'
     assert(os.path.isdir(path))

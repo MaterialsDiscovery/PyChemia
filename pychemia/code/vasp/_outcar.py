@@ -7,7 +7,7 @@ from pychemia.serializer import generic_serializer
 from pychemia import pcm_log
 
 
-class VaspOutput():
+class VaspOutput:
     def __init__(self, filename='OUTCAR'):
 
         self.magnetization = {}
@@ -47,16 +47,20 @@ class VaspOutput():
 
         pos_forces = re.findall(r'TOTAL-FORCE \(eV/Angst\)\s*-*\s*([-.\d\s]+)\s+-{2}', data)
         pos_forces = np.array([x.split() for x in pos_forces], dtype=float)
-        pos_forces.shape = (len(pos_forces), -1, 6)
-        forces = pos_forces[:, :, 3:]
-        positions = pos_forces[:, :, :3]
-        # pcm_log.debug('Positions from OUTCAR: \n' + str(positions))
-        # pcm_log.debug('Forces from OUTCAR: \n' + str(forces))
 
-        self.forces = forces
-        self.positions = positions
-        self.array_sizes['NIONSTEPS'] = len(self.forces)
-        # pcm_log.info('Number of Ionic steps: ' + str(self.array_sizes['NIONSTEPS']))
+        if len(pos_forces) >0 and len(pos_forces[-1]) % 6 == 0:
+            pos_forces.shape = (len(pos_forces), -1, 6)
+            forces = pos_forces[:, :, 3:]
+            positions = pos_forces[:, :, :3]
+            # pcm_log.debug('Positions from OUTCAR: \n' + str(positions))
+            # pcm_log.debug('Forces from OUTCAR: \n' + str(forces))
+
+            self.forces = forces
+            self.positions = positions
+            self.array_sizes['NIONSTEPS'] = len(self.forces)
+            # pcm_log.info('Number of Ionic steps: ' + str(self.array_sizes['NIONSTEPS']))
+        else:
+            print 'Forces and Positions could not be parsed : ', pos_forces.shape
 
         fermi = re.findall(r'E-fermi\s+:\s+([-.\d]+)', data)
         fermi = np.array(fermi, dtype=float)
@@ -99,9 +103,11 @@ class VaspOutput():
             self.kpoints = kpoints
 
         bands = re.findall(r'^\s*[1-9]\d*\s+([-\d]+\.[\d]+)\s+[-.\d]+\s*\n', data, re.MULTILINE)
-        assert (len(bands) == self.array_sizes['NBANDS'] * self.array_sizes['ISPIN']
-                * self.array_sizes['NKPTS']
-                * self.array_sizes['NIONSTEPS'])
+
+        if 'NIONSTEPS' in self.array_sizes:
+            if len(bands) != self.array_sizes['NBANDS'] * self.array_sizes['ISPIN'] * self.array_sizes['NKPTS'] \
+                    * self.array_sizes['NIONSTEPS']:
+                pcm_log.error('Bad number of bands')
         bands = np.array(bands, dtype=float)
         # pcm_log.info('Bands : ' + str(bands))
 
@@ -127,7 +133,8 @@ class VaspOutput():
             charge = np.array([x.split() for x in charge], dtype=float)
             charge.shape = (len(charge), -1, 5)
             if len(charge) == 2:
-                assert np.all(charge[0] == charge[1])
+                if np.all(charge[0] != charge[1]):
+                    pcm_log.error('Bad Charge')
             charge = charge[0, :, 1:]
             self.charge['s'] = charge[:, 0]
             self.charge['p'] = charge[:, 1]
@@ -197,6 +204,9 @@ class VaspOutput():
                 iter_block=re.findall(j+r'\s*=\s*([\d\.-]*)[\s\w\d]*\n', i[2])
                 if len(iter_block) > 0:
                     self.iteration_data[io_iter][scf_iter]['Free_Energy'][j] = float(iter_block[0])
+
+    def has_forces_stress_energy(self):
+        return self.forces is not None and self.stress is not None and self.energy is not None
 
     def __str__(self):
         ret = '\nForces:\n'

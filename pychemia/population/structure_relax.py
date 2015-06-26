@@ -186,31 +186,42 @@ class StructurePopulation(Population):
             pcm_log.debug('Number of duplicates %d' % len(ret))
         return ret
 
+    def get_duplicates(self, ids, fast=False):
+        dupes_dict = {}
+        dupes_list = []
+        selection = self.ids_sorted(ids)
+        print 'Searching duplicates in %d structures' % len(selection)
+        for i in range(len(selection)-1):
+            print i, 'of', len(selection)
+            entry_id = selection[i]
+            value_i = self.value(entry_id)
+            for j in range(i+1, len(selection)):
+                entry_jd = selection[j]
+                if fast and entry_jd in dupes_list:
+                    continue
+                value_j = self.value(entry_jd)
+                if abs(value_i-value_j) < self.value_tol:
+                    distance = self.distance(entry_id, entry_jd)
+                    if distance < self.distance_tol:
+                        if entry_id in dupes_dict:
+                            dupes_dict[entry_id].append(entry_jd)
+                        else:
+                            dupes_dict[entry_id] = [entry_jd]
+                        dupes_list.append(entry_jd)
+        return dupes_dict, [x for x in selection if x in dupes_list]
+
     def cleaned_from_duplicates(self, ids):
         selection = self.ids_sorted(ids)
         duplicates_dict = self.check_duplicates(selection)
         return [x for x in selection if x not in duplicates_dict.keys()]
 
-    def distance_matrix(self, ids, radius=20):
+    def distance_matrix(self, ids):
 
-        analysis = {}
         ret = np.zeros((len(ids), len(ids)))
-        for i in ids:
-            analysis[i] = StructureAnalysis(self.get_structure(i), radius=radius)
 
-        for i in range(len(ids)):
-            pcm_log.debug('Fingerprint for %s' % str(ids[i]))
-            x1, y1_dict = analysis[ids[i]].fp_oganov()
+        for i in range(len(ids)-1):
             for j in range(i, len(ids)):
-                pcm_log.debug('Fingerprint for %s' % str(ids[j]))
-                x2, y2_dict = analysis[ids[j]].fp_oganov()
-
-                dij = []
-                for x in y1_dict:
-                    uvect1 = unit_vector(y1_dict[x])
-                    uvect2 = unit_vector(y2_dict[x])
-                    dij.append(0.5 * (1.0 - np.dot(uvect1, uvect2)))
-                ret[i, j] = np.mean(dij)
+                ret[i, j] = self.distance(ids[i], ids[j])
                 ret[j, i] = ret[i, j]
         return ret
 
@@ -231,37 +242,46 @@ class StructurePopulation(Population):
 
     def distance(self, entry_id, entry_jd, rcut=50):
 
-        fingerprints = {}
-        for entry_ijd in [entry_id, entry_jd]:
+        ids_pair = [entry_id, entry_jd]
+        ids_pair.sort()
+        distance_entry = self.pcdb.db.distances.find_one({'pair': ids_pair})
 
-            if self.pcdb.db.fingerprints.find_one({'_id': entry_ijd}) is None:
-                structure = self.get_structure(entry_ijd)
-                analysis = StructureAnalysis(structure, radius=rcut)
-                x, ys = analysis.fp_oganov()
-                fingerprint = {'_id': entry_ijd}
-                for k in ys:
-                    atomic_number1 = atomic_number(structure.species[k[0]])
-                    atomic_number2 = atomic_number(structure.species[k[1]])
-                    pair = '%06d' % min(atomic_number1 * 1000 + atomic_number2,
-                                        atomic_number2 * 1000 + atomic_number1)
-                    fingerprint[pair] = list(ys[k])
+        if distance_entry is None:
+            fingerprints = {}
+            for entry_ijd in [entry_id, entry_jd]:
 
                 if self.pcdb.db.fingerprints.find_one({'_id': entry_ijd}) is None:
-                    self.pcdb.db.fingerprints.insert(fingerprint)
+                    structure = self.get_structure(entry_ijd)
+                    analysis = StructureAnalysis(structure, radius=rcut)
+                    x, ys = analysis.fp_oganov()
+                    fingerprint = {'_id': entry_ijd}
+                    for k in ys:
+                        atomic_number1 = atomic_number(structure.species[k[0]])
+                        atomic_number2 = atomic_number(structure.species[k[1]])
+                        pair = '%06d' % min(atomic_number1 * 1000 + atomic_number2,
+                                            atomic_number2 * 1000 + atomic_number1)
+                        fingerprint[pair] = list(ys[k])
+
+                    if self.pcdb.db.fingerprints.find_one({'_id': entry_ijd}) is None:
+                        self.pcdb.db.fingerprints.insert(fingerprint)
+                    else:
+                        self.pcdb.db.fingerprints.update({'_id': entry_ijd}, fingerprint)
+                    fingerprints[entry_ijd] = fingerprint
                 else:
-                    self.pcdb.db.fingerprints.update({'_id': entry_ijd}, fingerprint)
-                fingerprints[entry_ijd] = fingerprint
-            else:
-                fingerprints[entry_ijd] = self.pcdb.db.fingerprints.find_one({'_id': entry_ijd})
+                    fingerprints[entry_ijd] = self.pcdb.db.fingerprints.find_one({'_id': entry_ijd})
 
-        dij = []
-
-        for pair in fingerprints[entry_id]:
-            if pair in fingerprints[entry_jd] and pair != '_id':
-                uvect1 = unit_vector(fingerprints[entry_id][pair])
-                uvect2 = unit_vector(fingerprints[entry_jd][pair])
-                dij.append(0.5 * (1.0 - np.dot(uvect1, uvect2)))
-        return float(np.mean(dij))
+        if distance_entry is None:
+            dij = []
+            for pair in fingerprints[entry_id]:
+                if pair in fingerprints[entry_jd] and pair != '_id':
+                    uvect1 = unit_vector(fingerprints[entry_id][pair])
+                    uvect2 = unit_vector(fingerprints[entry_jd][pair])
+                    dij.append(0.5 * (1.0 - np.dot(uvect1, uvect2)))
+            distance = float(np.mean(dij))
+            self.pcdb.db.distances.insert({'pair': ids_pair, 'distance': distance})
+        else:
+            distance = distance_entry['distance']
+        return distance
 
     def add_from_db(self, db_settings, sizemax=1):
         if self.composition is None:

@@ -7,7 +7,7 @@ import numpy as np
 from pychemia.utils.mathematics import apply_rotation
 
 
-class StructureChanger():
+class StructureChanger:
 
     def __init__(self, structure):
 
@@ -113,4 +113,4 @@ class StructureChanger():
         elif rnd < 0.75 and self.old_structure.nspecies > 1:
             self.random_permutator()
         else:
-            self.random_move_one_atom(epsilon=epsilon)
+            self.random_move_one_atom(mu=epsilon, sigma=0.01)

@@ -11,7 +11,7 @@ from pychemia.utils.periodic import atomic_symbols
 from pychemia import Structure
 
 
-class PyChemiaDB():
+class PyChemiaDB:
 
     def __init__(self, name='pychemiadb', host='localhost', port=27017, user=None, passwd=None, ssl=False):
         """
@@ -248,6 +248,14 @@ class PyChemiaDB():
                                                                    'properties.stress': 1}})
             self.update(entry['_id'], structure=new_structure)
 
+    def get_tags(self):
+        entries = [x['status'].keys() for x in self.entries.find({}, {'status': 1})]
+        ret = []
+        for i in entries:
+            for j in i:
+                if j not in [u'target_forces', u'relaxation', u'lock'] and j not in ret:
+                    ret.append(j)
+        return ret
 
 def get_database(db_settings):
 

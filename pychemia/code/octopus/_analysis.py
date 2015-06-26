@@ -26,13 +26,13 @@ def hirshfeld(dirname, iteration=None, spin=None):
         dirname:
            The directory where the octopus data was produced
 
-        iteration: 
+        iteration:
            Iteration to make the difference, if absent the last iteration
            will be taken
         spin:
            Integer with the spin for which the data will be taken, if absent
            the addition of both spins will be returned
-    
+
     Returns:
         A numpy array for the number of atoms with the Hirsfeld charges
 
@@ -63,17 +63,17 @@ def hirshfeld(dirname, iteration=None, spin=None):
 
 def deflection(dirname, iteration=None):
     """
-    Get the deflection angle respect to the initial velocity 
+    Get the deflection angle respect to the initial velocity
     for all the atoms and for a given iteration and spin.
 
     Args:
         dirname:
            The directory where the octopus data was produced
 
-        iteration: 
+        iteration:
            Iteration to make the difference, if absent the last iteration
            will be taken
-    
+
     Returns:
         A numpy array for the number of atoms with the Hirsfeld charges
 

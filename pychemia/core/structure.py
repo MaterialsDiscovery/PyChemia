@@ -30,7 +30,7 @@ __status__ = "Development"
 __date__ = "June 10, 2014"
 
 
-class Structure():
+class Structure:
     """
     Define an object that contains information about atomic positions,
     cell parameters and periodicity and provides methods to manipulate
@@ -372,8 +372,8 @@ Empty structure
         """
         Computes the composition of the Structure
         as the count of each species in the cell
-        If gcd is True the values are divided by the 
-        greatest common divisor 
+        If gcd is True the values are divided by the
+        greatest common divisor
 
         :param gcd: bool
 
@@ -941,7 +941,7 @@ def load_structure_json(filename):
     return ret
 
 
-class SiteSet():
+class SiteSet:
     def __init__(self, structure):
 
         self.structure = structure
@@ -968,7 +968,7 @@ class SiteSet():
         return iter(self.sitelist)
 
 
-class Site():
+class Site:
     def __init__(self, symbols, occupancies, position, reduced):
 
         if isinstance(symbols, list):

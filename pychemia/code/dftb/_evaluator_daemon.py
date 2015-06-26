@@ -15,7 +15,7 @@ from pychemia.utils.periodic import atomic_number
 from pychemia.symm import StructureSymmetry
 
 
-class EvaluatorDaemon():
+class EvaluatorDaemon:
     def __init__(self, database_settings, basedir, target_forces, nparal, relaxator_params,
                  evaluate_failed=False, evaluate_all=False, waiting=False):
 

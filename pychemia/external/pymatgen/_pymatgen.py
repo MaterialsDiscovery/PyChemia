@@ -8,7 +8,7 @@ try:
     import pymatgen.io.cifio
 except ImportError:
     raise ImportError
-from pychemia import Structure
+from pychemia import Structure as PMG_Structure
 
 
 def cif2structure(filename, primitive=False):
@@ -42,7 +42,7 @@ def pymatgen2pychemia(pmg_struct):
     index = 0
     for i in pmg_struct:
         for j in i.species_and_occu:
-            symbols.append(j.element.symbol)
+            symbols.append(j.symbol)
             occupancies.append(i.species_and_occu[j])
             sites.append(index)
         reduced = np.concatenate((reduced, i.frac_coords))
@@ -59,4 +59,4 @@ def pychemia2pymatgen(structure):
     lattice = structure.cell
     coords = structure.reduced
     species = structure.symbols
-    return Structure(lattice, species, coords)
+    return PMG_Structure(lattice, species, coords)

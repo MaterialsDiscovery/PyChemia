@@ -21,7 +21,7 @@ from pychemia.core.structure import load_structure_json
 from pychemia.utils.computing import unicode2string
 
 
-class StructureEntry():
+class StructureEntry:
     """
     Defines one entry in the repository of Structures
     """
@@ -237,7 +237,7 @@ class StructureEntry():
         return ret
 
 
-class PropertiesEntry():
+class PropertiesEntry:
     """
     Defines one calc in the Execution Repository
     """
@@ -269,7 +269,7 @@ class PropertiesEntry():
         rf.close()
 
 
-class StructureRepository():
+class StructureRepository:
     """
     Defines the location of the executions repository
     and structure repository and methods to add, remove
@@ -482,7 +482,7 @@ class StructureRepository():
         return StructureEntry(repository=self, identifier=ident)
 
 
-class ExecutionRepository():
+class ExecutionRepository:
     """
     Defines the location and properties of the Repository
     where all the executions will be stored

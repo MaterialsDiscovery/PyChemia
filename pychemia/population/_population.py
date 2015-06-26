@@ -4,11 +4,13 @@ import json
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
+from pychemia.db import USE_MONGO
 
-from pychemia.db import PyChemiaDB
+if USE_MONGO:
+    from pychemia.db import PyChemiaDB
 
 
-class Population():
+class Population:
     __metaclass__ = ABCMeta
     """
     General class for all optimization algorithms that uses fixed and blocked
@@ -121,6 +123,10 @@ class Population():
 
     @abstractmethod
     def distance(self, entry_id, entry_jd):
+        pass
+
+    @abstractmethod
+    def get_duplicates(self, ids):
         pass
 
     @abstractmethod

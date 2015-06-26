@@ -5,7 +5,6 @@ import time
 import shutil
 import logging.handlers
 import json
-
 import numpy as np
 
 from _incar import InputVariables
@@ -20,14 +19,7 @@ from pychemia.code import Relaxator
 from pychemia.runner import Runner
 
 
-try:
-    from pychemia.symm import symmetrize
-except ImportError:
-    def symmetrize(structure):
-        return structure
-
-
-class RelaxPopulation():
+class RelaxPopulation:
     def __init__(self, population, basedir, target_force=1E-2, target_stress=1E-2):
         self.population = population
         self.basedir = basedir
@@ -49,7 +41,7 @@ class RelaxPopulation():
             if not os.path.isdir(name):
                 os.mkdir(name)
 
-    def create_inputs(self, density_of_kpoints=10000, ENCUT=1.0):
+    def create_inputs(self, density_of_kpoints=10000, encut=1.0):
         # kpoints = KPoints(kmode='gamma', grid=[4, 4, 4])
         kpoints = KPoints()
         for entry in self.population.pcdb.entries.find():
@@ -64,7 +56,7 @@ class RelaxPopulation():
             inp.set_rough_relaxation()
             vj.set_input_variables(inp)
             vj.write_potcar()
-            vj.input_variables.set_encut(ENCUT=ENCUT, POTCAR=workdir + os.sep + 'POTCAR')
+            vj.input_variables.set_encut(ENCUT=encut, POTCAR=workdir + os.sep + 'POTCAR')
             vj.set_inputs()
             self.vasp_jobs[name] = vj
             self.runs[name] = 0
@@ -262,15 +254,15 @@ class RelaxPopulation():
         if not self.is_running:
             self.run(runner)
 
-    def set_run(self, code, runner, basedir, density_of_kpoints=10000, ENCUT=1.1):
+    def set_run(self, code, runner, basedir, density_of_kpoints=10000, encut=1.1):
 
         self.runner = runner
 
         self.create_dirs(clean=True)
-        self.create_inputs(density_of_kpoints=density_of_kpoints, ENCUT=ENCUT)
+        self.create_inputs(density_of_kpoints=density_of_kpoints, encut=encut)
 
 
-class Polarization():
+class Polarization:
     def __init__(self, structure, path, potcar_filepath, external=None, maxfield=0, stepfield=0):
 
         self.structure = structure
@@ -388,32 +380,120 @@ class Polarization():
         pass
 
 
-class Convergence_ENCUT():
+class Convergence:
 
-    def __init__(self,  workdir, structure, kpoints, binary='vasp', nparal=4, energy_tolerance=1E-3, recover=False):
+    def __init__(self, energy_tolerance):
 
-        self.best_energy = energies[ind]
+        self.convergence_info = None
+        self.energy_tolerance = energy_tolerance
+
+    def _best_value(self, variable):
+        if not self.is_converge:
+            print 'Convergence not completed'
+            return None
+        else:
+            return self.convergence_info[-3][variable]
+
+    @property
+    def is_converge(self):
+        if self.convergence_info is None or len(self.convergence_info) < 3:
+            return False
+
+        energies = [x['free_energy'] for x in self.convergence_info]
+        if len(energies) > 2 and abs(max(energies[-3:])-min(energies[-3:])) >= self.energy_tolerance:
+            return False
+        else:
+            return True
+
+    def _convergence_plot(self, variable, xlabel, title, figname, annotate):
+
+        if not self.is_converge:
+            print 'Convergence not executed'
+            return
+
+        import matplotlib
+        matplotlib.use('agg')
+        import matplotlib.pyplot as plt
+        x = [idata[variable] for idata in self.convergence_info]
+        y = [idata['free_energy'] for idata in self.convergence_info]
+        plt.clf()
+        plt.plot(x, y, 'rd-')
+        dy = self.energy_tolerance
+        sup_dy = min(y[-3:])+dy
+        low_dy = max(y[-3:])-dy
+        xlims = plt.xlim()
+        plt.plot(xlims, [sup_dy, sup_dy], '0.5')
+        plt.plot(xlims, [low_dy, low_dy], '0.5')
+        plt.fill_between(xlims, [low_dy, low_dy], [sup_dy, sup_dy], color='0.9', alpha=0.5)
+        for idata in self.convergence_info:
+            plt.annotate(s=str(idata[annotate]), xy=(idata[variable], idata['free_energy']), size=10)
+
+        plt.xlim(*xlims)
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel('Free Energy [eV]')
+        plt.savefig(figname)
+        return plt.gca()
+
+    def _convergence_save(self, filename):
+
+        if not self.is_converge:
+            print 'Convergence not executed'
+            return
+
+        wf = open(filename, 'w')
+        json.dump(self.convergence_info, wf, sort_keys=True, indent=4, separators=(',', ': '))
+        wf.close()
+
+    def _convergence_load(self, filename):
+
+        if not os.path.isfile(filename):
+            raise ValueError('File not found: %s', filename)
+
+        rf = open(filename, 'r')
+        self.convergence_info = json.load(rf)
+        rf.close()
+
+
+class ConvergenceCutOffEnergy(Convergence):
+
+    def __init__(self, structure, workdir='.', kpoints=None, binary='vasp', nparal=4, energy_tolerance=1E-3,
+                 increment_factor=0.2, initial_encut=1.3):
+
         self.structure = structure
         self.workdir = workdir
         self.binary = binary
         self.nparal = nparal
-        self.energy_tolerance = energy_tolerance
-        self.kpoints = kpoints
+        self.increment_factor = increment_factor
+        self.initial_encut = initial_encut
+        if kpoints is None:
+            kp = KPoints()
+            kp.set_optimized_grid(self.structure.lattice, density_of_kpoints=1000, force_odd=True)
+            self.kpoints = kp
+        else:
+            self.kpoints = kpoints
+        Convergence.__init__(self, energy_tolerance)
 
     def run(self):
 
         vj = VaspJob()
-        kp = KPoints()
         vj.initialize(self.workdir, self.structure, self.kpoints, binary=self.binary)
         energies = []
-        x=1.3
+        if not self.is_converge:
+            x = self.initial_encut
+        else:
+            x = self.convergence_info[-3]['factor']
+        self.convergence_info = []
         while True:
             vj.clean()
             vj.job_static()
             vj.input_variables.set_density_for_restart()
             vj.input_variables.set_encut(ENCUT=x, POTCAR=self.workdir+os.sep+'POTCAR')
             vj.set_inputs()
+            encut = vj.input_variables.variables['ENCUT']
+            pcm_log.debug('Testing ENCUT = %7.3f' % encut)
             vj.run(use_mpi=True, mpi_num_procs=self.nparal)
+            pcm_log.debug('Starting VASP')
             while True:
                 energy_str = ''
                 filename = self.workdir + os.sep + 'vasp_stdout.log'
@@ -437,33 +517,46 @@ class Convergence_ENCUT():
                             scf_energies = [i[2] for i in vasp_stdout['data']]
                             energy_str += ' %7.3f' % scf_energies[-1]
                             pcm_log.debug(energy_str)
+                    pcm_log.debug('Execution complete')
                     break
                 time.sleep(5)
             vj.get_outputs()
-            energies.append(vj.outcar.final_data['energy']['free_energy'])
-            if len(energies) > 3 and abs(max(energies[-3:])-min(energies[-3:])) < self.energy_tolerance:
+            free_energy = vj.outcar.final_data['energy']['free_energy']
+            print 'encut= %7.3f  free_energy: %9.6f' % (encut, free_energy)
+            self.convergence_info.append({'free_energy': free_energy, 'encut': encut, 'factor': x})
+            energies.append(free_energy)
+            if len(energies) > 2 and abs(max(energies[-3:])-min(energies[-3:])) < self.energy_tolerance:
                 break
-            x+=0.2
+            x = round(x + x*self.increment_factor, 2)
 
-        # Get the index of the lowest grid that fulfils the tolerance
-        ind = np.where(np.abs(np.array(energies)-energies[-1]) < self.energy_tolerance)[0][0]
+    @property
+    def best_encut(self):
+        return self._best_value('encut')
 
-        return self.best_energy
+    def plot(self, figname='convergence_encut.pdf'):
+        return self._convergence_plot(variable='encut', xlabel='ENCUT', title='ENCUT Convergence', figname=figname,
+                                      annotate='encut')
+
+    def save(self, filename='convergence_encut.json'):
+        self._convergence_save(filename=filename)
+
+    def load(self, filename='convergence_encut.json'):
+        self._convergence_load(filename=filename)
 
 
-class Convergence_Kpoints():
+class ConvergenceKPointGrid(Convergence):
 
-    def __init__(self,  workdir, structure, binary='vasp', nparal=4, energy_tolerance=1E-3, recover=False):
+    def __init__(self, structure, workdir='.', binary='vasp', nparal=4, energy_tolerance=1E-3, recover=False,
+                 encut=1.3):
 
         self.structure = structure
         self.workdir = workdir
         self.binary = binary
         self.nparal = nparal
-        self.energy_tolerance = energy_tolerance
-        self.best_density = None
-        self.best_grid = None
-        self.best_energy = None
-        self.initial_number = 10
+        self.initial_number = 12
+        self.convergence_info = None
+        self.encut = encut
+        Convergence.__init__(self, energy_tolerance)
         if recover:
             self.recover()
 
@@ -481,11 +574,13 @@ class Convergence_Kpoints():
         vj = VaspJob()
         kp = KPoints()
         vj.initialize(self.workdir, self.structure, kp, binary=self.binary)
-        n = self.initial_number
         grid = None
-        grids = []
         energies = []
-        densities = []
+        if not self.is_converge:
+            n = self.initial_number
+        else:
+            n = self.convergence_info[-3]['kp_n']
+        self.convergence_info = []
         while True:
             density = n**3
             kp.set_optimized_grid(self.structure.lattice, density_of_kpoints=density, force_odd=True)
@@ -496,6 +591,7 @@ class Convergence_Kpoints():
                 vj.clean()
                 vj.job_static()
                 vj.input_variables.set_density_for_restart()
+                vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir+os.sep+'POTCAR')
                 vj.set_inputs()
                 vj.run(use_mpi=True, mpi_num_procs=self.nparal)
                 while True:
@@ -524,27 +620,38 @@ class Convergence_Kpoints():
                         break
                     time.sleep(5)
                 vj.get_outputs()
-                energies.append(vj.outcar.final_data['energy']['free_energy'])
-                grids.append(grid)
-                densities.append(density)
-                print density, grid, energies
-                if len(energies) > 3 and abs(max(energies[-3:])-min(energies[-3:])) < self.energy_tolerance:
+                energy = vj.outcar.final_data['energy']['free_energy']
+                energies.append(energy)
+                print 'kp_density= %10d kp_grid= %15s free_energy= %9.6f' % (density, grid, energy)
+                self.convergence_info.append({'free_energy': vj.outcar.final_data['energy']['free_energy'],
+                                              'kp_grid': list(grid),
+                                              'kp_density': density,
+                                              'kp_n': n})
+                if len(energies) > 2 and abs(max(energies[-3:])-min(energies[-3:])) < self.energy_tolerance:
                     break
             n += 2
 
-        # Get the index of the lowest grid that fulfils the tolerance
-        ind = np.where(np.abs(np.array(energies)-energies[-1]) < self.energy_tolerance)[0][0]
-        self.best_density = densities[ind]
-        self.best_grid = grids[ind]
-        self.best_energy = energies[ind]
-        pcm_log.debug('Best Grid: %s   Energy: %7.3e   Density: %d' % (str(grids[ind]), energies[ind], densities[ind]))
+    def plot(self, figname='convergence_kpoints.pdf'):
+        return self._convergence_plot(variable='kp_density', xlabel='K-points density', title='KPOINTS Convergence',
+                                      figname=figname, annotate='kp_grid')
 
-        return grids[ind], energies[ind], densities[ind]
+    def save(self, filename='convergence_kpoints.json'):
+        self._convergence_save(filename=filename)
 
+    def load(self, filename='convergence_kpoints.json'):
+        self._convergence_load(filename=filename)
+
+    @property
     def best_kpoints(self):
-        kp = KPoints()
-        kp.set_optimized_grid(self.structure.lattice, density_of_kpoints=self.best_density, force_odd=True)
-        return kp
+
+        if not self.is_converge:
+            print 'Convergence not completed'
+            return None
+        else:
+            kp = KPoints()
+            kp.set_optimized_grid(self.structure.lattice, density_of_kpoints=self.convergence_info[-3]['kp_density'],
+                                  force_odd=True)
+            return kp
 
 
 class VaspRelaxator(Relaxator):
@@ -554,7 +661,7 @@ class VaspRelaxator(Relaxator):
         Relaxator.__init__(self, target_forces)
         self.encut = 1.3
         self.workdir = workdir
-        self.initial_structure = symmetrize(structure)
+        self.initial_structure = structure
         self.structure = self.initial_structure.copy()
         self.kpoints = None
         self.target_forces = target_forces
@@ -564,7 +671,8 @@ class VaspRelaxator(Relaxator):
         self.binary = binary
         self.nparal = None
         self.set_params(relaxator_params)
-        self.vaspjob.initialize(workdir=self.workdir, structure=self.structure, kpoints=self.kpoints, binary=self.binary)
+        self.vaspjob.initialize(workdir=self.workdir, structure=self.structure, kpoints=self.kpoints,
+                                binary=self.binary)
 
     def create_dirs(self, clean=False):
         if not os.path.isdir(self.workdir):
@@ -574,11 +682,11 @@ class VaspRelaxator(Relaxator):
                 shutil.rmtree(self.workdir + os.sep + i)
 
     def set_params(self, params):
-        if 'kpoints_grid' in params:
-            self.kpoints = KPoints(kmode='gamma', grid=params['kpoints_grid'])
-        elif 'kpoints_density' in params:
+        if 'kp_grid' in params:
+            self.kpoints = KPoints(kmode='gamma', grid=params['kp_grid'])
+        elif 'kp_density' in params:
             self.kpoints = KPoints()
-            self.kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=params['kpoints_density'])
+            self.kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=params['kp_density'])
         else:
             self.kpoints = KPoints()
             self.kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=10000)
@@ -602,22 +710,24 @@ class VaspRelaxator(Relaxator):
         This routine determines how to proceed with the relaxation
         for one specific work directory
 
-        :param workdir: (str) String representation of the id in the mongodb
         :return:
         """
         vj = self.vaspjob
 
         if os.path.isfile(self.workdir + os.sep + 'OUTCAR'):
             vj.get_outputs()
-        #self.update_history()
 
         max_force, max_stress = self.get_max_force_stress()
-        pcm_log.debug('Max Force: %9.3E Stress: %9.3E' % (max_force, max_stress))
-        vo = VaspOutput(self.workdir + os.sep + 'OUTCAR')
-        info = vo.relaxation_info()
-        pcm_log.debug('Avg Force: %9.3E Stress: %9.3E %9.3E' % (info['avg_force'],
-                                                              info['avg_stress_diag'],
-                                                              info['avg_stress_non_diag']))
+        if max_force is not None and max_stress is not None:
+            pcm_log.debug('Max Force: %9.3E Stress: %9.3E' % (max_force, max_stress))
+            vo = VaspOutput(self.workdir + os.sep + 'OUTCAR')
+            info = vo.relaxation_info()
+            pcm_log.debug('Avg Force: %9.3E Stress: %9.3E %9.3E' % (info['avg_force'],
+                                                                    info['avg_stress_diag'],
+                                                                    info['avg_stress_non_diag']))
+        else:
+            print 'Failure to get forces and stress'
+            return False
 
         if os.path.isfile(self.workdir + os.sep + 'RELAXED'):
             self.add_status('RELAXED')
@@ -629,7 +739,6 @@ class VaspRelaxator(Relaxator):
                 self.add_status('NOOUTCAR')
             else:
                 self.del_status('NOOUTCAR')
-                print '-'
                 vo = VaspOutput(self.workdir + os.sep + 'OUTCAR')
                 info = vo.relaxation_info()
                 if len(info) != 3:
@@ -678,23 +787,28 @@ class VaspRelaxator(Relaxator):
 
         # How to change EDIFFG
         if max_force > self.target_forces or max_stress > self.target_forces:
-            #vj.input_variables.variables['EDIFFG'] = round_small(0.5*vj.input_variables.variables['EDIFFG'])
             vj.input_variables.variables['EDIFFG'] = round_small(-0.01*max(max_force, max_stress))
 
+        pcm_log.debug('Current Values: ISIF: %2d   IBRION: %2d   EDIFF: %7.1E \tEDIFFG: %7.1E' %
+                      (vj.input_variables.variables['ISIF'],
+                       vj.input_variables.variables['IBRION'],
+                       vj.input_variables.variables['EDIFF'],
+                       vj.input_variables.variables['EDIFFG']))
+
         # How to change EDIFF
-        if vj.input_variables.variables['EDIFF'] < -0.1 * vj.input_variables.variables['EDIFFG']:
-            vj.input_variables.variables['EDIFF'] = round_small(-0.1*vj.input_variables.variables['EDIFFG'])
+        if vj.input_variables.variables['EDIFF'] > -0.01 * vj.input_variables.variables['EDIFFG']:
+            vj.input_variables.variables['EDIFF'] = round_small(-0.01*vj.input_variables.variables['EDIFFG'])
         else:
             vj.input_variables.variables['EDIFF'] = 1E-4
 
-        #Print new values
+        # Print new values
         pcm_log.debug('New Values: ISIF: %2d   IBRION: %2d   EDIFF: %7.1E \tEDIFFG: %7.1E' %
                       (vj.input_variables.variables['ISIF'],
                        vj.input_variables.variables['IBRION'],
                        vj.input_variables.variables['EDIFF'],
                        vj.input_variables.variables['EDIFFG']))
 
-        for i in ['OUTCAR']:
+        for i in ['POSCAR', 'INCAR', 'OUTCAR', 'vasprun.xml']:
             if not os.path.exists(self.workdir + os.sep + i):
                 wf = open(self.workdir + os.sep + i, 'w')
                 wf.write('')
@@ -708,23 +822,6 @@ class VaspRelaxator(Relaxator):
         vj.save_json(self.workdir + os.sep + 'vaspjob.json')
         return True
 
-    def update_history(self):
-        filename = 'pychemia_relaxation.json'
-        filepath = self.workdir + os.sep + filename
-        if not os.path.exists(filepath):
-            wf = open(filepath, 'w')
-            data = [self.vaspjob.to_dict]
-            json.dump(data, wf, sort_keys=True, indent=4, separators=(',', ': '))
-            wf.close()
-        else:
-            rf = open(filepath, 'r')
-            data = json.load(rf)
-            rf.close()
-            data.append(self.vaspjob.to_dict)
-            wf = open(filepath, 'w')
-            json.dump(data, wf, sort_keys=True, indent=4, separators=(',', ': '))
-            wf.close()
-
     def first_run(self):
 
         vj = self.vaspjob
@@ -735,6 +832,7 @@ class VaspRelaxator(Relaxator):
         vj.write_potcar()
         vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir + os.sep + 'POTCAR')
         vj.input_variables.set_density_for_restart()
+        vj.set_kpoints(self.kpoints)
         vj.set_inputs()
 
         vj.run(use_mpi=True, mpi_num_procs=self.nparal)
@@ -758,8 +856,8 @@ class VaspRelaxator(Relaxator):
                 va.run()
 
                 max_force, max_stress = self.get_max_force_stress()
-                if max_force < self.target_forces and max_stress < self.target_forces:
-                    pcm_log.debug('Max Force: %9.3E Stress: %9.3E' % (max_force, max_stress))
+                if max_force is not None and max_force < self.target_forces and max_stress < self.target_forces:
+                    print 'Max Force: %9.3E Stress: %9.3E' % (max_force, max_stress)
                     break
 
                 self.update()
@@ -789,9 +887,14 @@ class VaspRelaxator(Relaxator):
         filename = self.workdir + os.sep + 'OUTCAR'
         if os.path.isfile(filename):
             self.vaspjob.get_outputs()
-            forces = self.vaspjob.outcar.forces[-1]
-            stress = self.vaspjob.outcar.stress[-1]
-            total_energy = self.vaspjob.outcar.final_data['energy']['free_energy']
+            if self.vaspjob.outcar.has_forces_stress_energy():
+                forces = self.vaspjob.outcar.forces[-1]
+                stress = self.vaspjob.outcar.stress[-1]
+                total_energy = self.vaspjob.outcar.final_data['energy']['free_energy']
+            else:
+                forces = None
+                stress = None
+                total_energy = None
         else:
             forces = None
             stress = None
@@ -808,4 +911,3 @@ class VaspRelaxator(Relaxator):
             except ValueError:
                 print 'Error reading CONTCAR'
         return structure
-

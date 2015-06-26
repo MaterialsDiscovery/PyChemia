@@ -20,7 +20,7 @@ path = 'pychemia/test/data'
 
 def test_example1():
     """
-    Example of a simple calc       :
+    Example of a simple calc            :
     """
     assert(os.path.isdir(path))
     workdir = get_path()

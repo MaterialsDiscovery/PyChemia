@@ -5,7 +5,7 @@ from pychemia import pcm_log
 import time
 
 
-class Searcher():
+class Searcher:
     __metaclass__ = ABCMeta
     """
     General class for all optimization algorithms that uses fixed and blocked
@@ -37,7 +37,7 @@ class Searcher():
                 self.generation = {}
                 self.current_generation = 0
 
-            for entry in self.population.get_all_generations():
+            for entry in self.get_all_generations():
                 if self.population.tag in entry:
                     self.generation[entry['_id']] = entry[self.population.tag]
                     if max(self.generation[entry['_id']]) > self.current_generation:

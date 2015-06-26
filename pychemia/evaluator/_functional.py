@@ -6,7 +6,7 @@ import numpy as np
 from threading import Thread
 
 
-class ObjectiveFunction():
+class ObjectiveFunction:
     def __init__(self):
         self.population = None
 
@@ -25,7 +25,7 @@ class ObjectiveFunction():
         return ret
 
 
-class Evaluator():
+class Evaluator:
     def __init__(self):
         self.process = None
         self.thread = None

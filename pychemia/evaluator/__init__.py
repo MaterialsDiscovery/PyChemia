@@ -6,7 +6,7 @@ from _function import FunctionEvaluator, FunctionObjectiveFunction
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 
-class Evaluator():
+class Evaluator:
     __metaclass__ = ABCMeta
 
     def __init__(self):

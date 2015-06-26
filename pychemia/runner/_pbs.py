@@ -2,9 +2,11 @@ __author__ = 'macbook'
 
 import os
 import subprocess
+import socket
+import datetime
 
 
-class PBSRunner():
+class PBSRunner:
 
     def __init__(self, workdir, filename='batch.pbs'):
 
@@ -52,13 +54,13 @@ class PBSRunner():
 
         wf = open(self.workdir+os.sep+self.filename, 'w')
         wt = self.walltime
-        print wt
         wf.write("""#!/bin/sh
 
 #PBS -N %s
 #PBS -l nodes=%d:ppn=%d
 #PBS -l walltime=%d:%02d:%02d
 #PBS -m %s
+#PBS -k n
 """ % (self.name, self.nodes, self.ppn, wt[0]*24+wt[1], wt[2], wt[3], self.message))
 
         if self.mail is not None:
@@ -68,7 +70,7 @@ class PBSRunner():
         wf.write('\ncd %s\n' % os.path.abspath(self.workdir))
 
         if self.template is not None:
-            wf.write("\n%s\n" % self.template)
+            wf.write("%s\n" % self.template)
         wf.close()
 
     def submit(self):
@@ -78,3 +80,23 @@ class PBSRunner():
         if returncode != 0:
             print 'Some error happended:', returncode
         os.chdir(cwd)
+
+
+def report_cover():
+
+    ret = 'PyChemia Execution Report\n'
+    ret += '=========================\n\n'
+    ret += 'Hostname\n'
+    ret += '--------\n\n'
+    ret += socket.gethostname()+'\n\n'
+    ret += 'Date\n'
+    ret += '----\n'
+    dt=datetime.datetime.now()
+    ret += dt.strftime("%A, %d. %B %Y %I:%M%p")+'\n\n'
+
+    ret += 'PBS VARIABLES\n'
+    ret += '-------------\n\n'
+    for x in ['PBS_O_HOST', 'PBS_SERVER', 'PBS_O_QUEUE', 'PBS_O_WORKDIR', 'PBS_ARRAYID', 'PBS_ENVIRONMENT', 'PBS_JOBID', 'PBS_JOBNAME', 'PBS_NODEFILE', 'PBS_QUEUE']:
+        if os.getenv(x) is not None:
+            ret += x + ' = ' + os.getenv(x) +'\n'
+    return ret

@@ -11,7 +11,7 @@ from pychemia.utils.periodic import atomic_number, covalent_radius, valence
 from pychemia.utils.mathematics import integral_gaussian
 
 
-class StructureAnalysis():
+class StructureAnalysis:
     """
     This class provides Structure Analysis.
     The set of analysis provided by this class uses only structural information of one

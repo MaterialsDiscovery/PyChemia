@@ -29,14 +29,24 @@ Search for suitable directories for relaxation
    """)
 
 
-def find_structures(basedir):
-    
+def find_structures(basedir, filename='to_relax'):
+
     ret = []
-    if 'structure.json' in os.listdir(basedir):
+    if filename in os.listdir(basedir):
         ret.append(basedir)
     for i in [x for x in os.listdir(basedir) if os.path.isdir(basedir+os.sep+x)]:
         ret += find_structures(basedir+os.sep+i)
     return ret
+
+
+def get_structure_file(basedir):
+
+    files = os.listdir(basedir)
+    for ifile in ['structure_phase2.json', 'structure_phase1.json', 'structure2.json',
+                  'structure1.json', 'structure.json', 'POSCAR']:
+        if ifile in files:
+            return ifile
+    return None
 
 if __name__ == '__main__':
 
@@ -50,6 +60,8 @@ if __name__ == '__main__':
     queue = None
     path = None
     binary = 'vasp'
+    nparal = 4
+    nhours = 24
 
     for i in range(1, len(sys.argv)):
         if sys.argv[i].startswith('--'):
@@ -71,6 +83,10 @@ if __name__ == '__main__':
                 path = sys.argv[i + 1]
             elif option == 'binary':
                 binary = sys.argv[i + 1]
+            elif option == 'nparal':
+                nparal = int(sys.argv[i + 1])
+            elif option == 'nhours':
+                nhours = int(sys.argv[i + 1])
             else:
                 print('Unknown option. --' + option)
 
@@ -86,14 +102,16 @@ if __name__ == '__main__':
     for i in ret:
         if os.path.isfile(i+os.sep+'lock'):
             print "Locked:    %s" % i
-        elif os.path.isfile(i+os.sep+'structure2.json'):
-            print "Complete:  %s" % i
         elif os.path.basename(i) in jobs:
             print 'Submitted: %s' % i
         else:
             print 'To submit: %s' % i
             rr = pychemia.runner.PBSRunner(i)
-            rr.initialize(mail=mail, queue=queue, walltime=[4, 0, 0, 0])
-            rr.set_template('relaxator.py --binary=%s' % binary)
+            rr.initialize(nodes=1, ppn=nparal, mail=mail, queue=queue, walltime=[0, nhours, 0, 0])
+            structure_file = get_structure_file(i)
+            if structure_file is None:
+                print 'No suitable structure was found on: ', i
+            rr.set_template('relaxator.py --binary %s --nparal %d --structure_file %s'
+                            % (binary, nparal, structure_file))
             rr.write_pbs()
             rr.submit()

@@ -9,7 +9,7 @@ import pychemia
 import pychemia.io.xyz
 
 
-class OctopusVisualization():
+class OctopusVisualization:
     def __init__(self, fig, fs, gs, bs):
         """
         Creates a container for the

@@ -19,10 +19,14 @@ class DFTBplusRelaxator(Relaxator):
     def __init__(self, workdir, structure, relaxator_params, target_forces=1E-3, waiting=False):
 
         self.workdir = workdir
-        self.initial_structure = symmetrize(structure)
-        self.structure = self.initial_structure.copy()
+        self.initial_structure = structure
         self.slater_path = None
+        self.symmetrize = False
         self.set_params(relaxator_params)
+
+        if self.symmetrize:
+            self.initial_structure = symmetrize(structure)
+        self.structure = self.initial_structure.copy()
         self.waiting = waiting
         Relaxator.__init__(self, target_forces)
 
@@ -41,6 +45,8 @@ class DFTBplusRelaxator(Relaxator):
                         assert os.path.exists(x)
                 except TypeError:
                     raise ValueError('Missing a valid slater_path or list of slater_paths')
+        if 'symmetrize' in params and params['symmetrize'] is True:
+            self.symetrize = True
 
     def run(self):
 
@@ -95,7 +101,9 @@ class DFTBplusRelaxator(Relaxator):
                         dftb.driver['MovedAtoms'] = '1:-1'
 
                     dftb.structure = read_geometry_gen(dftb.workdir + os.sep + 'geo_end.gen')
-                    dftb.structure = symmetrize(dftb.structure)
+                    dftb.structure.save_json(dftb.workdir + os.sep + 'structure_current.json')
+                    if self.symmetrize:
+                        dftb.structure = symmetrize(dftb.structure)
                     self.structure = dftb.structure
 
                     dftb.get_geometry()
@@ -108,7 +116,9 @@ class DFTBplusRelaxator(Relaxator):
                 else:
                     pcm_log.debug('Final static calculation')
                     dftb.structure = self.get_final_geometry()
-                    dftb.structure = symmetrize(dftb.structure)
+                    dftb.structure.save_json(dftb.workdir + os.sep + 'structure_final.json')
+                    if self.symmetrize:
+                        dftb.structure = symmetrize(dftb.structure)
                     self.structure = dftb.structure
                     dftb.get_geometry()
                     dftb.roll_outputs(irun)
@@ -217,4 +227,3 @@ class DFTBplusRelaxator(Relaxator):
             # For static calculations the 'geo_end.gen' is not generated
             # returning the internal structure
             return self.structure
-

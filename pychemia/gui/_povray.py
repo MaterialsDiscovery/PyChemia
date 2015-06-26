@@ -3,7 +3,7 @@ import numpy as np
 from pychemia.utils.periodic import atomic_number, covalent_radius, cpk_colors
 
 
-class StructurePovray():
+class StructurePovray:
 
     def __init__(self, structure):
 

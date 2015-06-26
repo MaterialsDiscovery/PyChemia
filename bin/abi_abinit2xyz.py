@@ -16,7 +16,7 @@ def input2xyz(abivar, basename, datasets):
     """
 
     for idts in datasets:
-        struct = abivar.get_crystal(idts)
+        struct = abivar.get_structure(idts)
         natom = struct.natom
         if idts == '':
             filep = basename + '.xyz'

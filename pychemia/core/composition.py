@@ -11,7 +11,7 @@ from math import pi
 from pychemia.utils.periodic import atomic_symbols, electronegativity, atomic_number, covalent_radius
 
 
-class Composition():
+class Composition:
     """
     The class Composition is basically a dictionary with species as keys and
     number of atoms of that specie as values. The methods provided for Composition objects should
@@ -116,7 +116,7 @@ class Composition():
         return ret
 
     @staticmethod
-    def explode_composition(formula, units=1):
+    def _explode_composition(formula, units=1):
         import re
 
         # decompose composition

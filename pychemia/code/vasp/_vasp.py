@@ -169,7 +169,7 @@ class VaspJob(Codes):
                 os.remove(self.workdir+os.sep+i)
 
 
-class VaspAnalyser():
+class VaspAnalyser:
 
     def __init__(self, workdir):
         self.workdir = workdir
@@ -186,4 +186,3 @@ class VaspAnalyser():
         for i in ['OUTCAR', 'CONTCAR', 'WAVECAR', 'CHGCAR']:
             if not os.path.isfile(self.workdir + os.sep + i):
                 pcm_log.warning(' File: %s not found' % i)
-

@@ -183,9 +183,9 @@ def merge(abi_into, abi_from, filename=None):
     The new variables will be save in the given filename
     If filename==None the new values will overwrite
     abi_into
-    
+
     Example:
-    
+
        merge('abinit.in','abinit_xo_OUT.nc')
 
     It will update the abinit input with the values of the output

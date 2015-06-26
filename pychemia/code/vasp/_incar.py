@@ -274,6 +274,7 @@ class InputVariables:
         self.variables['ISMEAR'] = ISMEAR
         self.variables['ISPIN'] = ISPIN
         self.variables['LORBIT'] = LORBIT
+        self.variables['NPAR'] = 2
 
     def set_density_for_restart(self):
         self.variables['ICHARG'] = 1

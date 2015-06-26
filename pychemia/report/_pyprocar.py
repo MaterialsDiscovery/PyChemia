@@ -4,7 +4,7 @@ import procar
 import numpy as np
 
 
-class BandStructure():
+class BandStructure:
 
     def __init__(self, structure, filename='PROCAR'):
         self.structure = structure

@@ -93,4 +93,3 @@ if __name__ == '__main__':
                 pcdb.insert(structure=j)
             else:
                 pcm_log.info('DISCARDED: Structure is not perfect')
-

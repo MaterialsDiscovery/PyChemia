@@ -1072,7 +1072,7 @@ class ProcarSelect:
         >>> foo = ProcarParser()
         >>> foo.readFile("PROCAR")
         >>> bar = ProcarSelect(foo)
-        >>> bar.selectIspin([0]) # just the density
+        >>> bar.selectIspin([0])  # just the density
         """
         # all kpoint, all bands, VALUE spin, all the rest
         self.log.debug("selectIspin: ...")
@@ -1584,7 +1584,7 @@ class ProcarSymmetry:
             rotAxis = [0, 0, 1]
         rotAxis = np.array(rotAxis, dtype=float)
         self.log.debug("rotAxis : " + str(rotAxis))
-        rotAxis = rotAxis / np.linalg.norm(rotAxis)
+        rotAxis /= np.linalg.norm(rotAxis)
         self.log.debug("rotAxis Normalized : " + str(rotAxis))
         self.log.debug("Angle : " + str(angle))
         angle = angle * np.pi / 180
@@ -2568,5 +2568,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     args.func(args)
-  
+
 

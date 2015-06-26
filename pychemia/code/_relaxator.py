@@ -5,7 +5,7 @@ import numpy as np
 from pychemia import pcm_log
 
 
-class Relaxator():
+class Relaxator:
     __metaclass__ = ABCMeta
 
     def __init__(self, target_forces):

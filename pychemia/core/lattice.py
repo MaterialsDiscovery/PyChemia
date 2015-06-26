@@ -15,7 +15,7 @@ from pychemia.utils.mathematics import matrix_from_eig, vector_set_perpendicular
 __author__ = 'Guillermo Avendano-Franco'
 
 
-class Lattice():
+class Lattice:
     """
     Routines to create and manipulate the lattice
     The lattice is sufficiently general to account for periodicity in 1, 2 or 3 directions.

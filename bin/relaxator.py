@@ -1,26 +1,40 @@
 #!/usr/bin/env python
-
-import os
-import sys
 import logging
 logging.basicConfig(level=logging.DEBUG)
-import pychemia
-from pychemia.code.vasp import Convergence_Kpoints, VaspRelaxator, VaspJob
+import os
+import sys
+from pychemia import Structure
+from pychemia.code.vasp import ConvergenceKPointGrid, VaspRelaxator, read_poscar, ConvergenceCutOffEnergy
+from pychemia.runner import report_cover
+
+try:
+    from pychemia.symm import symmetrize
+except ImportError:
+    def symmetrize(x):
+        return x
+
+version = 0.1
 
 
 def help_info():
-    print 'Vasp relaxator'
+    print """
+Vasp relaxator with convergence in K-Point Grid and Cut-Off Energy (ENCUT)'
+Use:
+    relaxator.py [--binary vasp] [ --nparal 8] [--structure_file POSCAR, filename.cif, structure.json]
+"""
 
-workdir = '.'
 
-if os.path.isfile(workdir+os.sep+'structure1.json'):
-    structure = pychemia.Structure.load_json(workdir+os.sep+'structure1.json')
-else:
-    structure = pychemia.Structure.load_json(workdir+os.sep+'structure.json')
+def cleaner():
+    for ifile in ['DOSCAR', 'EIGENVAL', 'IBZKPT', 'OSZICAR', 'PCDAT', 'PROCAR', 'WAVECAR', 'XDATCAR']:
+        if os.path.exists(ifile):
+            os.remove(ifile)
 
 binary = 'vasp'
-nparal = 2
-version = 0.1
+workdir = '.'
+nparal = 8
+structure_file = None
+target_forces = 1E-4
+energy_tolerance = 5E-3
 
 for i in range(1, len(sys.argv)):
     if sys.argv[i].startswith('--'):
@@ -36,39 +50,112 @@ for i in range(1, len(sys.argv)):
             binary = sys.argv[i + 1]
         elif option == 'nparal':
             nparal = int(sys.argv[i + 1])
+        elif option == 'energy_tolerance':
+            energy_tolerance = float(sys.argv[i + 1])
+        elif option == 'target_forces':
+            target_forces = float(sys.argv[i + 1])
+        elif option == 'structure_file':
+            structure_file = sys.argv[i + 1]
 
-# FIRST ROUND
+if structure_file is None:
+    help_info()
+    exit(1)
 
-ck = Convergence_Kpoints(workdir, structure, binary=binary, nparal=nparal, energy_tolerance=1E-2, recover=False)
+st = None
+if not os.path.isfile(structure_file):
+    print 'Could not find %s' % structure_file
+    exit(1)
+if structure_file[-4:].lower() == 'json':
+    st = Structure.load_json(structure_file)
+elif structure_file[-3:].lower() == 'cif':
+    import pychemia.external.pymatgen
+    st = pychemia.external.pymatgen.cif2structure(structure_file)[0]
+elif structure_file[-6:].lower() == 'poscar':
+    st = read_poscar(structure_file)
+else:
+    print "Filename to relax not recognized as ('.cif', '.json' or POSCAR) %s" % structure_file
+    exit(1)
+
+print report_cover()
+
+# First Round (Relaxing the original structure)
+print '\nFirst Round'
+print '===========\n'
+
+cleaner()
+print '\nConvergence of K-Point Grid'
+print '---------------------------\n'
+ck = ConvergenceKPointGrid(st, encut=1.3, nparal=nparal, energy_tolerance=energy_tolerance)
 ck.run()
+ck.save()
+ck.plot()
+kp = ck.best_kpoints
 
-grid = ck.best_grid
+cleaner()
+print '\nConvergence of Cut-off Energy'
+print '-----------------------------\n'
+ce = ConvergenceCutOffEnergy(st, energy_tolerance=energy_tolerance, nparal=nparal, kpoints=kp)
+ce.run()
+ce.save()
+ce.plot()
+encut = ce.best_encut
 
-kp = ck.best_kpoints()
+os.rename('convergence_encut.json', 'convergence_encut_phase1.json')
+os.rename('convergence_encut.pdf', 'convergence_encut_phase1.pdf')
+os.rename('convergence_kpoints.json', 'convergence_kpoints_phase1.json')
+os.rename('convergence_kpoints.pdf', 'convergence_kpoints_phase1.pdf')
 
-vj = VaspJob()
-vj.initialize(workdir, structure, kp, binary=binary)
+cleaner()
+print '\nIonic Relaxation'
+print '----------------\n'
+vr = VaspRelaxator(workdir=workdir, structure=st,
+                   relaxator_params={'encut': encut, 'kp_grid': kp.grid, 'nparal': nparal},
+                   target_forces=10*target_forces)
+vr.run()
 
-rel = VaspRelaxator(workdir, structure, {'kpoints_grid': grid, 'nparal': nparal}, binary=binary)
-rel.run()
+structure = vr.get_final_geometry()
+structure.save_json(workdir+os.sep+'structure_phase1.json')
 
-structure = rel.get_final_geometry()
-structure.save_json(workdir+os.sep+'structure1.json')
+# Second Round (Symetrize structure and redo convergences)
+st = symmetrize(structure)
 
-# SECOND ROUND
+print '\nSecond Round'
+print '============'
 
-ck = Convergence_Kpoints(workdir, structure, binary=binary, nparal=nparal, energy_tolerance=1E-3, recover=True)
+cleaner()
+print '\nConvergence of K-Point Grid'
+print '---------------------------\n'
+ck = ConvergenceKPointGrid(st, encut=encut, nparal=nparal, energy_tolerance=energy_tolerance)
 ck.run()
+ck.save()
+ck.plot()
+kp = ck.best_kpoints
 
-grid = ck.best_grid
+cleaner()
+print '\nConvergence of Cut-off Energy'
+print '-----------------------------\n'
+ce = ConvergenceCutOffEnergy(st, energy_tolerance=energy_tolerance, nparal=nparal, kpoints=kp)
+ce.run()
+ce.save()
+ce.plot()
+encut = ce.best_encut
 
-kp = ck.best_kpoints()
+os.rename('convergence_encut.json', 'convergence_encut_phase2.json')
+os.rename('convergence_encut.pdf', 'convergence_encut_phase2.pdf')
+os.rename('convergence_kpoints.json', 'convergence_kpoints_phase2.json')
+os.rename('convergence_kpoints.pdf', 'convergence_kpoints_phase2.pdf')
 
-vj = VaspJob()
-vj.initialize(workdir, structure, kp, binary=binary)
+cleaner()
+print '\nIonic Relaxation'
+print '----------------\n'
+vr = VaspRelaxator(workdir=workdir, structure=st,
+                   relaxator_params={'encut': encut, 'kp_grid': kp.grid, 'nparal': nparal},
+                   target_forces=target_forces)
+vr.run()
 
-rel = VaspRelaxator(workdir, structure, {'kpoints_grid': grid, 'nparal': nparal}, binary=binary)
-rel.run()
+structure = vr.get_final_geometry()
+structure.save_json(workdir+os.sep+'structure_phase2.json')
 
-structure = rel.get_final_geometry()
-structure.save_json(workdir+os.sep+'structure2.json')
+cleaner()
+
+os.remove('to_relax')

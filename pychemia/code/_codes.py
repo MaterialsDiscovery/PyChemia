@@ -5,7 +5,7 @@ import os
 import subprocess
 
 
-class Codes():
+class Codes:
     __metaclass__ = ABCMeta
 
     def __init__(self):

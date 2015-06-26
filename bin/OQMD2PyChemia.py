@@ -8,6 +8,7 @@ from pychemia.utils.periodic import atomic_symbol
 try:
     from qmpy import Entry
 except ImportError:
+    Entry = None
     print "Could not import 'qmpy' as needed to interface with the OQMD database"
     exit(1)
 
@@ -50,7 +51,7 @@ def run_one(a):
     cell = best_calculation.output.cell.T
     symbols = atomic_symbol(best_calculation.output.atomic_numbers)
     reduced = best_calculation.output.coords
-    
+
     structure = pychemia.Structure(cell=cell, symbols=symbols, reduced=reduced)
     structure_id = best_calculation.output_id
     entry_id = a.id
