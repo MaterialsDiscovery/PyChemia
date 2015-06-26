@@ -1,5 +1,5 @@
 __author__ = "Guillermo Avendano-Franco"
-__copyright__ = "Copyright 2012"
+__copyright__ = "Copyright 2015"
 __version__ = "0.1.1"
 __email__ = "gtux.gaf@gmail.com"
 __status__ = "Development"
