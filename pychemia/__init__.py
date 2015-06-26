@@ -33,7 +33,7 @@ def info():
 
     print 'Pychemia\n--------\n'
     print 'Version: '+__version__
-    print 'Path:    '+__package__
+    print 'Path:    '+__path__[0]
     print 'Date:    '+__date__
     print
 
