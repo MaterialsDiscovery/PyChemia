@@ -53,6 +53,18 @@ try:
 except ImportError:
     HAS_SPGLIB = False
 
+try:
+    import ase
+    HAS_ASE = True
+except ImportError:
+    HAS_ASE = False
+
+try:
+    import pymatgen
+    HAS_PYMATGEN = True
+except ImportError:
+    HAS_PYMATGEN = False
+
 
 def info():
 
