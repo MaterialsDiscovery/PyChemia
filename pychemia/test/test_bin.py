@@ -11,6 +11,8 @@ def test_abinit2xyz():
     """
     Test command abinit2xyz             :
     """
+    if not (pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC)
+        return
     script = 'bin/abi_abinit2xyz.py'
     args = path + '/abinit_03/abinit.in'
     subprocess.call(['python', script, args])
@@ -27,6 +29,8 @@ def test_xyz2abinit():
     """
     Test command xyz2abinit             :
     """
+    if not (pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC)
+        return
     script = 'bin/abi_xyz2abinit.py'
     args = path + '/xyz/chlorophyll.xyz'
     subprocess.call(['python', script, args])
@@ -40,6 +44,8 @@ def test_plot_bonds():
     """
     Test command plot_bonds             :
     """
+    if not (pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC)
+        return
     script = 'bin/abi_plot_bonds.py'
     arg1 = path + '/abinit_01/abinit.files:11'
     arg2 = path + '/abinit_01/abinit.files:21'
@@ -52,6 +58,8 @@ def test_plot_hist():
     """
     Test command plot_hist              :
     """
+    if not (pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC)
+        return
     script = 'bin/abi_plot_hist.py'
     arg1 = path + '/abinit_01/abinit.files'
     arg2 = '11'

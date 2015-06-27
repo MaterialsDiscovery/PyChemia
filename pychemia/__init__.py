@@ -29,6 +29,31 @@ from _info import __author__, __copyright__, __version__, __email__, __status__,
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())
 
+try:
+    import pymongo
+    HAS_PYMONGO = True
+except ImportError:
+    HAS_PYMONGO = False
+
+try:
+    import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+
+try:
+    import Scientific
+    HAS_SCIENTIFIC = True
+except ImportError:
+    HAS_SCIENTIFIC = False
+
+try:
+    import pyspglib
+    HAS_SPGLIB = True
+except ImportError:
+    HAS_SPGLIB = False
+
+
 def info():
 
     print 'PyChemia\n--------\n'
@@ -59,3 +84,4 @@ def info():
         print '%10s %10s   %s' % ('ase', ase_version.version_base, ase.__path__[0])
     except ImportError:
         print 'ase Not Found'
+
