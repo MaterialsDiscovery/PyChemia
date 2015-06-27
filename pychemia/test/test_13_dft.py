@@ -95,6 +95,7 @@ def test_abinit():
     """
     Test abinit module                  :
     """
+    import pychemia
     if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
         import pychemia.code.abinit
 
