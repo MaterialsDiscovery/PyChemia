@@ -12,14 +12,18 @@ import os
 import shutil
 import subprocess
 
-import pychemia.code.abinit as pa
-import pychemia.code.abinit
+if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
+    import pychemia.code.abinit as pa
+    import pychemia.code.abinit
 
 
 def test_example2():
     """
     Example of a multiple calc          :
     """
+    if not (pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC):
+        exit(1)
+
     path = 'pychemia/test/data'
     assert(os.path.isdir(path))
     path = get_path()

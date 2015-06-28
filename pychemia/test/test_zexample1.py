@@ -12,7 +12,9 @@ import os
 import sys
 import subprocess
 
-import pychemia.code.abinit as pa
+import pychemia
+if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
+    import pychemia.code.abinit as pa
 
 
 path = 'pychemia/test/data'
@@ -22,16 +24,17 @@ def test_example1():
     """
     Example of a simple calc            :
     """
-    assert(os.path.isdir(path))
-    workdir = get_path()
-    print(workdir)
-    creation(workdir)
-    execution(workdir)
-    ecut, etotal = datamining(workdir)
-    print('ecut=', ecut)
-    print('etotal=', etotal)
-    assert ecut == 15.0
-    assert abs(etotal + 4.19934820332) < 0.001
+    if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
+        assert(os.path.isdir(path))
+        workdir = get_path()
+        print(workdir)
+        creation(workdir)
+        execution(workdir)
+        ecut, etotal = datamining(workdir)
+        print('ecut=', ecut)
+        print('etotal=', etotal)
+        assert ecut == 15.0
+        assert abs(etotal + 4.19934820332) < 0.001
 
 
 def get_path():
