@@ -12,6 +12,7 @@ import os
 import shutil
 import subprocess
 
+import pychemia
 if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
     import pychemia.code.abinit as pa
     import pychemia.code.abinit
