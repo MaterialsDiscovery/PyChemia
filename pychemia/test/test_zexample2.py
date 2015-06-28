@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 This example shows how to automatize the execution
 of ABINIT starting with just the input file "t44.in"
@@ -14,7 +15,6 @@ import subprocess
 
 import pychemia
 if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
-    import pychemia.code.abinit as pa
     import pychemia.code.abinit
 
 
@@ -23,15 +23,15 @@ def test_example2():
     Example of a multiple calc          :
     """
     if not (pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC):
-        exit(1)
+        return
 
     path = 'pychemia/test/data'
     assert(os.path.isdir(path))
     path = get_path()
     print(path)
     assert(os.path.isfile(path + '/t44.in'))
-    var = pa.InputVariables(path + '/t44.in')
-    abifiles = pa.AbiFiles(path)
+    var = pychemia.code.abinit.InputVariables(path + '/t44.in')
+    abifiles = pychemia.code.abinit.AbiFiles(path)
     abifiles.set_input(var)
     abifiles.set_psps('LDA', 'FHI')
     abifiles.create()

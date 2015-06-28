@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 This example shows how to automatize the execution
 of ABINIT starting with just the input file "t44.in"
