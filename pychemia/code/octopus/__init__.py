@@ -5,9 +5,14 @@ OCTOPUS 'inp' input files
 
 """
 
-from _input import *
-from _analysis import *
 import numpy as np
+
+from _input import *
+try:
+    import scipy
+    from _analysis import *
+except ImportError:
+    print 'SCIPY Not found'
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())
 

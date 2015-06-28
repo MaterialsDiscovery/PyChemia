@@ -18,7 +18,7 @@ try:
     from _tasks import RelaxPopulation
     from _abinit import AbinitJob
 
-except InportError:
+except ImportError:
     print 'SCIPY not present'
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())
