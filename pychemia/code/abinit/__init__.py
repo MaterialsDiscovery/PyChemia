@@ -6,10 +6,14 @@ ABINIT '.files' files
 ABINIT '_OUT.nc' output files
 
 """
+USE_SCIPY = True
 try:
     import scipy
+except ImportError:
+    USE_SCIPY = False
+    print 'SCIPY not present'
 
-
+if USE_SCIPY:
     from _abifiles import AbiFiles
     from _input import InputVariables, netcdf2dict
     from _utils import get_all_psps, psp_name, xyz2input, plot_simple, abihelp
@@ -18,7 +22,5 @@ try:
     from _tasks import RelaxPopulation
     from _abinit import AbinitJob
 
-except ImportError:
-    print 'SCIPY not present'
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

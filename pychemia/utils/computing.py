@@ -13,8 +13,7 @@ def unicode2string(value):
              are converted into strings
     :rtype : (str, list, dict)
 
-    Examples
-
+    Examples:
     >>> unicode2string(u'abc')
     'abc'
     >>> unicode2string([u'abc'])

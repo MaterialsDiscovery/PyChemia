@@ -28,4 +28,3 @@ for i in sorted(Sections.keys()):
     for j in sorted(Sections[i]):
         variables.write(j + '\n')
 variables.close()
-

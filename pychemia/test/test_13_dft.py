@@ -1,5 +1,6 @@
 import pychemia
 
+
 def test_abinit_parser():
     """
     Test abinit parser module           :

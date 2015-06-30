@@ -2,6 +2,7 @@ __author__ = 'Guillermo Avendano-Franco'
 
 import doctest
 
+
 def test_periodic():
     """
     Tests from doctests for periodic    :
@@ -9,6 +10,7 @@ def test_periodic():
     import pychemia.utils.periodic
     dt = doctest.testmod(pychemia.utils.periodic, verbose=True)
     assert dt.failed == 0
+
 
 def test_mathematics():
     """

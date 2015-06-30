@@ -8,7 +8,8 @@ try:
     import pymatgen.io.cifio
 except ImportError:
     raise ImportError
-from pychemia import Structure as PMG_Structure
+from pychemia import Structure
+from pymatgen import Structure as PMG_Structure
 
 
 def cif2structure(filename, primitive=False):

@@ -9,7 +9,8 @@ import gridfs
 
 class PyChemiaQueue:
 
-    def __init__(self, name='pychemiadb', host='localhost', port=27017, user=None, passwd=None, ssl=False, replicaset=None):
+    def __init__(self, name='pychemiadb', host='localhost', port=27017, user=None, passwd=None, ssl=False,
+                 replicaset=None):
         """
         Creates a MongoDB client to 'host' with 'port' and connect it to the database 'name'.
         Authentication can be used with 'user' and 'password'
@@ -41,9 +42,9 @@ class PyChemiaQueue:
     def add_file(self, entry_id, location, filename):
 
         assert(os.path.isfile(filename))
-        hash = hashfile(filename)
+        hashcode = hashfile(filename)
         rf = open(filename, 'rb')
-        file_id = self.fs.put(rf, filename=os.path.basename(filename), hash=hash)
+        file_id = self.fs.put(rf, filename=os.path.basename(filename), hash=hashcode)
         self.db.pychemia_entries.update({'_id': entry_id}, {'$addToSet': {location+'files': file_id}})
 
     def set_minimal_schema(self):

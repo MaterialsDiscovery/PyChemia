@@ -74,7 +74,7 @@ class ParticleSwarm(Searcher):
 
             distances = [self.population.distance(entry_id, entry_jd) for entry_jd in elites]
             target = elites[distances.index(min(distances))]
-            distance=min(distances)
+            distance = min(distances)
             atractiveness = math.exp(-self.gamma * distance) * intensity[target]
 
             pcm_log.debug('[%s] Distance: %7.3f. Intensity: %7.3f. Atractiveness: %7.3f' % (str(target),

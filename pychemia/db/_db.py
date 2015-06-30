@@ -257,6 +257,7 @@ class PyChemiaDB:
                     ret.append(j)
         return ret
 
+
 def get_database(db_settings):
 
     if 'host' not in db_settings:

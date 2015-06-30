@@ -427,7 +427,7 @@ def shortest_triple_set(n):
     else:
         factors = np.array(prime_factors)
         while len(factors) > 3:
-            print factors
+            # print factors
             # Complete a multiple of 6 and sum folding lowest with highest
             while len(factors) % 6 != 0:
                 factors = np.concatenate(([1], factors))

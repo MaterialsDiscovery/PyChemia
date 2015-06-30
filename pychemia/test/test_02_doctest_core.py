@@ -2,6 +2,7 @@ __author__ = 'Guillermo'
 
 import doctest
 
+
 def test_structure():
     """
     Tests from doctests for structure   :
@@ -10,6 +11,7 @@ def test_structure():
     dt = doctest.testmod(pychemia.core.structure, verbose=True)
     assert dt.failed == 0
 
+
 def test_lattice():
     """
     Tests from doctests for lattice     :
@@ -17,6 +19,7 @@ def test_lattice():
     import pychemia.core.lattice
     dt = doctest.testmod(pychemia.core.lattice, verbose=True)
     assert dt.failed == 0
+
 
 def test_composition():
     """

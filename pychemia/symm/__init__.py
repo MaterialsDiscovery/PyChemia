@@ -5,15 +5,23 @@ The routines and classes heavily rely on spglib
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())
 
+from pychemia import Structure
+
 try:
     import pyspglib
     try:
         import pyspglib.spglib
-        if 'primitive' not in pyspglib.spglib.__dict__ and 'primitive' in pyspglib.spglib.spg.__dict__:
-            USE_SPGLIB = True
-        else:
-            print 'SPGLIB is present but outdated, please install spglib > 1.7'
+        from pychemia.symm.symmetry import StructureSymmetry
+
+        # Testing version of spglib
+        st = Structure(symbols=['H'])
+        symm = StructureSymmetry(st)
+        ret = pyspglib.spglib.spg.dataset(symm._transposed_cell, symm._reduced, symm._numbers, 1e-5, -1.0)
+        if type(ret[3]) is list:
             USE_SPGLIB = False
+            print 'SPGLIB is present but outdated, please install spglib > 1.7'
+        else:
+            USE_SPGLIB = True
     except ImportError:
         print 'SPGLIB not found, symmetry module disabled'
         USE_SPGLIB = False
@@ -24,4 +32,4 @@ except ImportError:
 
 
 if USE_SPGLIB:
-    from symmetry import StructureSymmetry, symmetrize
+    from .symmetry import StructureSymmetry, symmetrize

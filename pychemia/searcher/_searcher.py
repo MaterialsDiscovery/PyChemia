@@ -156,7 +156,8 @@ class Searcher:
         self.old_nextgen = self.get_generation(self.current_generation+1)
 
     def replace_by_changed(self, entry_id_old, reason=None):
-        entry_id_new = self.population.move_random(entry_id_old, factor=self.delta_change, in_place=False, kind='change')
+        entry_id_new = self.population.move_random(entry_id_old, factor=self.delta_change, in_place=False,
+                                                   kind='change')
         change = {'change': 'modified', 'to': entry_id_new, 'reason': reason}
         pcm_log.debug('Modified  %s -> %s' % (str(entry_id_old), str(entry_id_new)))
         self.population.disable(entry_id_old)

@@ -17,7 +17,6 @@ from pychemia.core.delaunay import get_reduced_bases
 from pychemia.core.composition import Composition
 from pychemia.utils.computing import unicode2string
 from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence, atomic_symbols
-from pychemia.utils.mathematics import matrix_from_eig, vector_set_perpendicular
 from multiprocessing import Pool
 
 

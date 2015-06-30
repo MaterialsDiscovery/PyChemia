@@ -25,7 +25,7 @@ background{rgb 0}
         else:
             self.distance = 10
 
-        ret += "#declare r=%7.3f;\n #declare s=%7.3f;" %(self.distance, self.distance)
+        ret += "#declare r=%7.3f;\n #declare s=%7.3f;" % (self.distance, self.distance)
 
         ret += "camera {\n"
         ret += "\tlocation <%7.3f, %7.3f, %7.3f>\n" % (1.3*self.distance, 1.3*self.distance, -1.3*self.distance)

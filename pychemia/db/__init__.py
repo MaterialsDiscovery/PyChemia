@@ -6,6 +6,7 @@ try:
     import pymongo
     USE_MONGO = True
 except ImportError:
+    pymongo = None
     print 'Could no import pymongo, mongo database functionality disabled'
     USE_MONGO = False
 

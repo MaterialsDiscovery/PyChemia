@@ -5,7 +5,6 @@ Includes StructurePopulation
 __author__ = 'Guillermo Avendano-Franco'
 
 import uuid
-import json
 import random
 import numpy as np
 from fractions import gcd
@@ -14,7 +13,7 @@ from pychemia import Composition, Structure, pcm_log
 from pychemia.db import USE_MONGO
 
 if USE_MONGO:
-    from pychemia.db import PyChemiaDB, get_database
+    from pychemia.db import get_database
 from pychemia.analysis import StructureAnalysis, StructureChanger, StructureMatch
 from pychemia.utils.mathematics import unit_vector
 from pychemia.utils.periodic import atomic_number, covalent_radius

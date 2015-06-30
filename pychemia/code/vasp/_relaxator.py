@@ -157,7 +157,7 @@ class VaspRelaxator(Relaxator):
 
         filename = self.workdir + os.sep + 'OUTCAR'
         if os.path.isfile(filename):
-            vo=VaspOutput(filename)
+            vo = VaspOutput(filename)
             vo.outcar_parser()
             forces = vo.forces[-1]
             stress = vo.stress[-1]

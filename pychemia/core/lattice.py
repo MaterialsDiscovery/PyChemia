@@ -8,7 +8,7 @@ from math import ceil, sqrt, cos, sin, radians, acos
 
 from pychemia.utils.mathematics import length_vectors, angle_vectors, wrap2_pmhalf, \
     unit_vector, rotation_matrix_axis_angle, angle_vector
-from composition import Composition
+from .composition import Composition
 from itertools import combinations
 from pychemia import pcm_log
 from pychemia.utils.periodic import covalent_radius
@@ -29,11 +29,9 @@ class Lattice:
         The Lattice class provides methods to compute the reciprocal lattice (That is another Lattice object)
         and  basic routines related to the cell
 
-        Examples
-
+        Examples:
         >>> import pychemia
-
-        >>> cubic=pychemia.Lattice()
+        >>> cubic = pychemia.Lattice()
         >>> cubic.lengths
         array([ 1.,  1.,  1.])
         >>> cubic.angles

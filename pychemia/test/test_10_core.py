@@ -3,6 +3,7 @@ __author__ = 'Guillermo Avendano-Franco'
 import pychemia
 import numpy as np
 
+
 def test_composition():
     """
     Test class pychemia.Composition     :
@@ -34,5 +35,5 @@ def test_structure():
     fcc_copy.canonical_form()
     assert(abs(fcc.volume - fcc_copy.volume) < 1E-13)
     assert(np.linalg.norm(fcc_copy.lattice.angles - fcc.lattice.angles) < 1E-10)
-    spc=fcc.supercell((3,3,3))
+    spc = fcc.supercell((3, 3, 3))
     assert(spc.natom == 27)

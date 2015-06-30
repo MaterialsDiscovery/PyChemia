@@ -28,7 +28,7 @@ class PBSRunner:
     def initialize(self, nodes=1, ppn=2, walltime=None, message='ae', mail=None, queue=None):
 
         if walltime is None:
-            walltime=[12, 0, 0]
+            walltime = [12, 0, 0]
         self.set_walltime(walltime)
         self.nodes = nodes
         self.ppn = ppn

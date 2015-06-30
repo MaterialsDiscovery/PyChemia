@@ -29,4 +29,3 @@ class GreyWolf(Searcher):
         # Get a static selection of the values in the generation that are relaxed
         selection = self.population.ids_sorted(self.population.actives_evaluated)
         pcm_log.info('Size of selection : %d' % len(selection))
-

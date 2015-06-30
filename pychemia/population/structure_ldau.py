@@ -123,8 +123,10 @@ class PopulationLDAU(Population):
     def get_duplicates(self, ids):
         return None
 
+
 def get_dmatpawu(d, P):
     return np.dot(P, np.dot(np.diag(d), np.linalg.inv(P)))
+
 
 def get_P_and_d(dmatpawu):
 

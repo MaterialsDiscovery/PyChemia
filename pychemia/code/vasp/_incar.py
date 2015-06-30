@@ -14,7 +14,6 @@ import os as _os
 import math
 import numpy as _np
 from numbers import Number
-from pychemia import pcm_log
 
 
 def read_incar(path):
