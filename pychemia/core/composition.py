@@ -31,6 +31,22 @@ class Composition:
         of species and values
 
         :rtype: Composition
+        Examples:
+        >>> import pychemia
+        >>> comp = pychemia.Composition({'Ba': 2, 'Cu': 3, 'O': 7, 'Y': 1})
+        >>> comp.formula
+        'Ba2Cu3O7Y'
+        >>> comp = pychemia.Composition('Ba2Cu3O7Y')
+        >>> comp2 = pychemia.Composition(comp)
+        >>> len(comp2)
+        4
+        >>> comp.nspecies
+        4
+        >>> comp = pychemia.Composition()
+        >>> comp.composition
+        {}
+        >>> len(comp)
+        0
         """
 
         if isinstance(value, basestring):
@@ -84,6 +100,14 @@ class Composition:
         :param value: (str) String representing a chemical formula
 
         :rtype: dict
+        Examples:
+        >>> import pychemia
+        >>> import pprint
+        >>> pychemia.Composition.formula_parser('Au20')
+        {'Au': 20}
+        >>> ret = pychemia.Composition.formula_parser('UutUupUusUuo')
+        >>> pprint.pprint(ret)
+        {'Uuo': 1, 'Uup': 1, 'Uus': 1, 'Uut': 1}
         """
         ret = {}
         jump = False
@@ -116,7 +140,28 @@ class Composition:
         return ret
 
     @staticmethod
-    def _explode_composition(formula, units=1):
+    def formula_to_list(formula, nunits=1):
+        """
+        Reads a formula and returns a list of
+        atomic symbols consistent with the formula
+        and the number of formulas given by nunits
+
+        :param formula: (str) Chemical formula as string
+        :param nunits: (int) Number of formulas to apply
+        :rtype : (list)
+
+        Examples:
+
+        >>> import pychemia
+        >>> pychemia.Composition.formula_to_list('NaCl')
+        ['Na', 'Cl']
+        >>> flist = pychemia.Composition.formula_to_list(u'Uut2Uup3Uus4Uuo5')
+        >>> len(flist)
+        14
+        >>> flist = pychemia.Composition.formula_to_list('Uut2Uup3Uus4Uuo5', nunits=2)
+        >>> len(flist)
+        28
+        """
         import re
 
         # decompose composition
@@ -129,7 +174,7 @@ class Composition:
             else:
                 n = int(m.group(2))
 
-            for j in range(n*units):
+            for j in range(n*nunits):
                 composition.append(m.group(1))
 
         return composition
@@ -137,14 +182,27 @@ class Composition:
     @property
     def gcd(self):
         """
-        :return: The greatest common denominator for the composition
+        The number of formulas that can be extracted from a composition
+        The greatest common denominator for the composition.
 
-        :rtype: int
+        :rtype: (int)
+
+        Examples:
+        >>> import pychemia
+        >>> comp = pychemia.Composition('NaCl')
+        >>> comp.gcd
+        1
+        >>> comp = pychemia.Composition('Na2Cl2')
+        >>> comp.gcd
+        2
+        >>> comp = pychemia.Composition()
+        >>> comp.gcd is None
+        True
         """
         if self.natom > 0:
             return reduce(_gcd, self.values)
         else:
-            return 1
+            return None
 
     @property
     def symbols(self):
@@ -198,6 +256,36 @@ class Composition:
         :param reduced: (bool) If the formula should be normalized
 
         :rtype: str
+        Examples:
+        >>> import pychemia
+        >>> comp=pychemia.Composition('YBa2Cu3O7')
+        >>> comp.sorted_formula()
+        'Ba2Cu3O7Y'
+        >>> comp.sorted_formula(sortby='hill')
+        'Ba2Cu3O7Y'
+        >>> comp.sorted_formula(sortby='electroneg')
+        'Ba2YCu3O7'
+        >>> comp = pychemia.Composition('H10C5')
+        >>> comp.sorted_formula(sortby='hill', reduced=True)
+        'CH2'
+        >>> comp = pychemia.Composition('IBr')
+        >>> comp.sorted_formula(sortby='hill', reduced=False)
+        'BrI'
+        >>> comp = pychemia.Composition('Cl4C')
+        >>> comp.sorted_formula(sortby='hill', reduced=False)
+        'CCl4'
+        >>> comp = pychemia.Composition('IH3C')
+        >>> comp.sorted_formula(sortby='hill', reduced=False)
+        'CH3I'
+        >>> comp = pychemia.Composition('BrH5C2')
+        >>> comp.sorted_formula(sortby='hill', reduced=False)
+        'C2H5Br'
+        >>> comp = pychemia.Composition('S04H2')
+        >>> comp.sorted_formula(sortby='hill', reduced=False)
+        'H2S4'
+        >>> comp = pychemia.Composition('SO4H2')
+        >>> comp.sorted_formula(sortby='hill', reduced=False)
+        'H2O4S'
         """
         if reduced and self.gcd > 1:
             comp = Composition(self.composition)
@@ -257,7 +345,22 @@ class Composition:
         return iter(self.composition)
 
     def covalent_volume(self, packing='cubes'):
+        """
+        Returns the volume occupied by a given formula
+        assuming a 'cubes' packing or 'spheres' packing
 
+        :param packing: (str) The kind of packing could be
+                        'cubes' or 'spheres'
+        :rtype : (float)
+
+        Examples:
+        >>> import pychemia
+        >>> comp=pychemia.Composition('C5H10')
+        >>> comp.covalent_volume()
+        19.942320000000002
+        >>> comp.covalent_volume(packing='spheres')
+        10.441774334589468
+        """
         if packing == 'cubes':
             factor = 8
         elif packing == 'spheres':
@@ -272,3 +375,4 @@ class Composition:
             # Pack each atom in a cube (2*r)^3
             volume += factor*number_atoms_specie*covalent_radius(specie)**3
         return volume
+

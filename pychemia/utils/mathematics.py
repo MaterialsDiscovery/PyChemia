@@ -20,8 +20,8 @@ def length_vector(v):
 
     Examples
 
->>> length_vector([1, 2, 3])
-3.7416573867739413
+    >>> length_vector([1, 2, 3])
+    3.7416573867739413
     """
     return np.linalg.norm(v)
 
@@ -37,8 +37,8 @@ def length_vectors(m):
 
     Examples
 
->>> length_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
-array([  3.74165739,   8.77496439,  13.92838828,   1.        ,   2.        ])
+    >>> length_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
+    array([  3.74165739,   8.77496439,  13.92838828,   1.        ,   2.        ])
     """
     m = np.array(m)
     return np.apply_along_axis(np.linalg.norm, 1, m)
@@ -54,10 +54,10 @@ def unit_vector(v):
 
     Examples
 
->>> a = unit_vector([1, 2, 3])
->>> a
+    >>> a = unit_vector([1, 2, 3])
+    >>> a
     array([ 0.26726124,  0.53452248,  0.80178373])
->>> length_vector(a)
+    >>> length_vector(a)
     1.0
     """
     if length_vector(np.array(v, dtype=float)) < 1E-10:
@@ -74,15 +74,15 @@ def unit_vectors(m):
     :rtype : numpy.ndarray
 
     Example:
->>> b = unit_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
->>> b
-array([[ 0.26726124,  0.53452248,  0.80178373],
-       [ 0.45584231,  0.56980288,  0.68376346],
-       [ 0.50257071,  0.57436653,  0.64616234],
-       [ 1.        ,  0.        ,  0.        ],
-       [ 0.        ,  0.        ,  1.        ]])
->>> length_vectors(b)
-array([ 1.,  1.,  1.,  1.,  1.])
+    >>> b = unit_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
+    >>> b
+    array([[ 0.26726124,  0.53452248,  0.80178373],
+           [ 0.45584231,  0.56980288,  0.68376346],
+           [ 0.50257071,  0.57436653,  0.64616234],
+           [ 1.        ,  0.        ,  0.        ],
+           [ 0.        ,  0.        ,  1.        ]])
+    >>> length_vectors(b)
+    array([ 1.,  1.,  1.,  1.,  1.])
     """
     return np.divide(np.array(m, dtype=float).T, length_vectors(np.array(m, dtype=float))).T
 
@@ -99,16 +99,16 @@ def angle_vector(v1, v2, units='rad'):
     :rtype : float
 
     Examples:
->>> angle_vector([1, 0, 0], [0, 1, 0])
-1.5707963267948966
->>> angle_vector([1, 0, 0], [1, 0, 0])
-0.0
->>> angle_vector([1, 0, 0], [-1, 0, 0])
-3.1415926535897931
->>> angle_vector([1, 0, 0], [0, 1, 0], units='deg')
-90.0
->>> angle_vector([1, 0, 0], [-1, 0, 0], units='deg')
-180.0
+    >>> angle_vector([1, 0, 0], [0, 1, 0])
+    1.5707963267948966
+    >>> angle_vector([1, 0, 0], [1, 0, 0])
+    0.0
+    >>> angle_vector([1, 0, 0], [-1, 0, 0])
+    3.1415926535897931
+    >>> angle_vector([1, 0, 0], [0, 1, 0], units='deg')
+    90.0
+    >>> angle_vector([1, 0, 0], [-1, 0, 0], units='deg')
+    180.0
     """
     assert (units in ['rad', 'deg'])
 
@@ -138,9 +138,9 @@ def angle_vectors(m, units='rad'):
     :rtype : numpy.ndarray
     Example:
 
->>> a = angle_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
->>> import pprint
->>> pprint.pprint(a)
+    >>> a = angle_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
+    >>> import pprint
+    >>> pprint.pprint(a)
     {(0, 1): 0.22572612855273419,
      (0, 2): 0.2858867976945072,
      (0, 3): 1.3002465638163236,
@@ -151,8 +151,8 @@ def angle_vectors(m, units='rad'):
      (2, 3): 1.0442265974045177,
      (2, 4): 0.86825103780276369,
      (3, 4): 1.5707963267948966}
->>> a = angle_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]], units='deg')
->>> pprint.pprint(a)
+    >>> a = angle_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]], units='deg')
+    >>> pprint.pprint(a)
     {(0, 1): 12.933154491899135,
      (0, 2): 16.380106926405656,
      (0, 3): 74.498640433063002,
@@ -180,12 +180,12 @@ def distance(v1, v2):
     :param v2: (list, numpy.ndarray)
     :rtype : tuple
 
-    Examples
+    Examples:
 
->>> distance([0, 0, 0, 1], [1, 0, 0, 0])
-(array([ 1,  0,  0, -1]), 1.4142135623730951)
->>> distance([-1, 0, 0], [1, 0, 0])
-(array([2, 0, 0]), 2.0)
+    >>> distance([0, 0, 0, 1], [1, 0, 0, 0])
+    (array([ 1,  0,  0, -1]), 1.4142135623730951)
+    >>> distance([-1, 0, 0], [1, 0, 0])
+    (array([2, 0, 0]), 2.0)
     """
     ret = np.array(v2) - np.array(v1)
     return ret, length_vector(ret)
@@ -201,8 +201,8 @@ def distances(m):
 
     Example:
 
->>> import pprint
->>> pprint.pprint(distances([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]]))
+    >>> import pprint
+    >>> pprint.pprint(distances([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]]))
     {(0, 1): (array([3, 3, 3]), 5.196152422706632),
      (0, 2): (array([6, 6, 6]), 10.392304845413264),
      (0, 3): (array([ 0, -2, -3]), 3.6055512754639891),
@@ -229,15 +229,15 @@ def wrap2_pmhalf(x):
 
     Examples
 
->>> wrap2_pmhalf(-0.5)
-0.5
->>> wrap2_pmhalf(0.0)
-0.0
->>> wrap2_pmhalf([-0.75, -0.5, -0.25, 0.0, 0.25, 0.5, 0.75])
-array([ 0.25,  0.5 , -0.25,  0.  ,  0.25,  0.5 , -0.25])
->>> wrap2_pmhalf([[-0.75, -0.5, -0.25], [0.25, 0.5, 0.75]])
-array([[ 0.25,  0.5 , -0.25],
-       [ 0.25,  0.5 , -0.25]])
+    >>> wrap2_pmhalf(-0.5)
+    0.5
+    >>> wrap2_pmhalf(0.0)
+    0.0
+    >>> wrap2_pmhalf([-0.75, -0.5, -0.25, 0.0, 0.25, 0.5, 0.75])
+    array([ 0.25,  0.5 , -0.25,  0.  ,  0.25,  0.5 , -0.25])
+    >>> wrap2_pmhalf([[-0.75, -0.5, -0.25], [0.25, 0.5, 0.75]])
+    array([[ 0.25,  0.5 , -0.25],
+           [ 0.25,  0.5 , -0.25]])
     """
 
     def wrap(num):

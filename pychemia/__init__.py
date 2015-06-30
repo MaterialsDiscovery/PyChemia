@@ -8,7 +8,7 @@ import logging
 pcm_log = logging.getLogger(__name__)
 pcm_log.addHandler(logging.NullHandler())
 
-from core import Structure, Composition, Lattice
+from .core import Structure, Composition, Lattice
 import analysis
 import calc
 import code
@@ -68,32 +68,32 @@ except ImportError:
 
 def info():
 
-    print 'PyChemia\n--------\n'
-    print 'Version: '+__version__
-    print 'Path:    '+__path__[0]
-    print 'Date:    '+__date__
-    print
+    print('PyChemia\n--------\n')
+    print('Version: '+__version__)
+    print('Path:    '+__path__[0])
+    print('Date:    '+__date__)
+    print()
 
     import sys
-    print 'Python version='+sys.version+'\n'
+    print('Python version='+sys.version+'\n')
 
     try:
         mm = __import__('pymongo')
-        print '%10s %10s   %s' % ('pymongo', mm.version, mm.__path__[0])
+        print('%10s %10s   %s' % ('pymongo', mm.version, mm.__path__[0]))
     except ImportError:
-        print 'pymongo Not Found'
+        print('pymongo Not Found')
 
     for modui in ['numpy', 'scipy', 'mayavi', 'Scientific', 'matplotlib', 'pyhull', 'pymatgen', 'qmpy']:
         try:
             mm = __import__(modui)
-            print '%10s %10s   %s' % (modui, mm.__version__, mm.__path__[0])
+            print('%10s %10s   %s' % (modui, mm.__version__, mm.__path__[0]))
         except ImportError:
-            print '%10s Not Found' % modui
+            print('%10s Not Found' % modui)
 
     try:
         import ase
         from ase import version as ase_version
-        print '%10s %10s   %s' % ('ase', ase_version.version_base, ase.__path__[0])
+        print('%10s %10s   %s' % ('ase', ase_version.version_base, ase.__path__[0]))
     except ImportError:
-        print 'ase Not Found'
+        print('ase Not Found')
 

@@ -465,6 +465,16 @@ Empty structure
         stretching: Generating a random cell and random distribution of atoms
                     and stretching their bonds until the distance between any
                     two atoms is always greater than the sum of covalent radius.
+
+        Examples:
+        >>> import pychemia
+        >>> st = pychemia.Structure.random_cell('LiAlCl4', stabilization_number=3)
+        >>> st.natom
+        6
+        >>> st.save_json('test.json')
+        >>> st2 = pychemia.Structure.load_json('test.json')
+        >>> st == st2
+        True
         """
         comp = Composition(composition)
         pcm_log.debug('Generating a random structure with composition: ' + str(comp.composition))
@@ -1003,7 +1013,6 @@ def worker_star(x):
 
 
 def random_structure(method, composition, best_volume=1E10):
-
     comp = Composition(composition)
     natom = comp.natom
     symbols = comp.symbols

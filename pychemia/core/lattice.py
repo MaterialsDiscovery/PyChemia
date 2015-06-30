@@ -1,3 +1,5 @@
+__author__ = 'Guillermo Avendano-Franco'
+
 import sys
 import random
 import itertools
@@ -8,11 +10,9 @@ from pychemia.utils.mathematics import length_vectors, angle_vectors, wrap2_pmha
     unit_vector, rotation_matrix_axis_angle, angle_vector
 from composition import Composition
 from itertools import combinations
+from pychemia import pcm_log
 from pychemia.utils.periodic import covalent_radius
 from pychemia.utils.mathematics import matrix_from_eig, vector_set_perpendicular
-
-
-__author__ = 'Guillermo Avendano-Franco'
 
 
 class Lattice:
@@ -31,31 +31,31 @@ class Lattice:
 
         Examples
 
->>> import pychemia
+        >>> import pychemia
 
->>> cubic=pychemia.Lattice()
->>> cubic.lengths
-array([ 1.,  1.,  1.])
->>> cubic.angles
-array([ 90.,  90.,  90.])
+        >>> cubic=pychemia.Lattice()
+        >>> cubic.lengths
+        array([ 1.,  1.,  1.])
+        >>> cubic.angles
+        array([ 90.,  90.,  90.])
 
->>> ortho=pychemia.Lattice([1, 2, 3])
->>> ortho.lengths
-array([ 1.,  2.,  3.])
->>> ortho.angles
-array([ 90.,  90.,  90.])
+        >>> ortho=pychemia.Lattice([1, 2, 3])
+        >>> ortho.lengths
+        array([ 1.,  2.,  3.])
+        >>> ortho.angles
+        array([ 90.,  90.,  90.])
 
->>> bcc=pychemia.Lattice([[0.5, 0.5, -0.5], [-0.5, 0.5, 0.5], [0.5, -0.5, 0.5]])
->>> bcc.angles
-array([ 109.47122063,  109.47122063,  109.47122063])
->>> bcc.lengths
-array([ 0.8660254,  0.8660254,  0.8660254])
+        >>> bcc=pychemia.Lattice([[0.5, 0.5, -0.5], [-0.5, 0.5, 0.5], [0.5, -0.5, 0.5]])
+        >>> bcc.angles
+        array([ 109.47122063,  109.47122063,  109.47122063])
+        >>> bcc.lengths
+        array([ 0.8660254,  0.8660254,  0.8660254])
 
->>> fcc=pychemia.Lattice([[0.5, 0.5, 0], [0, 0.5, 0.5], [0.5, 0, 0.5]])
->>> fcc.lengths
-array([ 0.70710678,  0.70710678,  0.70710678])
->>> fcc.angles
-array([ 60.,  60.,  60.])
+        >>> fcc=pychemia.Lattice([[0.5, 0.5, 0], [0, 0.5, 0.5], [0.5, 0, 0.5]])
+        >>> fcc.lengths
+        array([ 0.70710678,  0.70710678,  0.70710678])
+        >>> fcc.angles
+        array([ 60.,  60.,  60.])
         """
         if cell is None:
             cell = np.eye(3)
@@ -233,30 +233,30 @@ array([ 60.,  60.,  60.])
 
         Example
 
->>> import numpy as np
->>> import pychemia
+        >>> import numpy as np
+        >>> import pychemia
 
->>> lattice=pychemia.Lattice.random_cell('C2')
->>> r1 = np.random.rand(4, 3)
->>> r2 = np.random.rand(4, 3)
->>> dist, close_imgs = lattice.minimal_distances(r1, r2)
+        >>> lattice=pychemia.Lattice.random_cell('C2')
+        >>> r1 = np.random.rand(4, 3)
+        >>> r2 = np.random.rand(4, 3)
+        >>> dist, close_imgs = lattice.minimal_distances(r1, r2)
 
->>> solution=np.zeros((len(r1), len(r2)))
+        >>> solution=np.zeros((len(r1), len(r2)))
 
->>> for i in range(len(r1)):
-...        for j in range(len(r2)):
-...                reduced1=r1[i]
-...                reduced2=r2[j]+close_imgs[i, j]
-...                cartesian1 = lattice.reduced2cartesian(reduced1)
-...                cartesian2 = lattice.reduced2cartesian(reduced2)
-...                diff_vector = cartesian2 - cartesian1
-...                solution[i, j] = np.linalg.norm(diff_vector)
+        >>> for i in range(len(r1)):
+        ...        for j in range(len(r2)):
+        ...                reduced1=r1[i]
+        ...                reduced2=r2[j]+close_imgs[i, j]
+        ...                cartesian1 = lattice.reduced2cartesian(reduced1)
+        ...                cartesian2 = lattice.reduced2cartesian(reduced2)
+        ...                diff_vector = cartesian2 - cartesian1
+        ...                solution[i, j] = np.linalg.norm(diff_vector)
 
->>> solution == dist
-array([[ True,  True,  True,  True],
-       [ True,  True,  True,  True],
-       [ True,  True,  True,  True],
-       [ True,  True,  True,  True]], dtype=bool)
+        >>> solution - dist < 1E-5
+        array([[ True,  True,  True,  True],
+               [ True,  True,  True,  True],
+               [ True,  True,  True,  True],
+               [ True,  True,  True,  True]], dtype=bool)
         """
         # Just in case of one single coordinate
         reduced1, reduced2 = np.atleast_2d(reduced1, reduced2)
@@ -386,11 +386,11 @@ array([[ True,  True,  True,  True],
         scalars = None
         triangles = None
         for i in ws:
-            print i
+            pcm_log.debug(i)
             iscalars = np.ones(len(i))
             itriangles = index + np.array(list(itertools.combinations(range(len(i)), 3)))
-            print iscalars
-            print itriangles
+            pcm_log.debug(iscalars)
+            pcm_log.debug(itriangles)
             if triangles is None:
                 triangles = itriangles
             else:
