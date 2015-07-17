@@ -249,21 +249,29 @@ class KPoints(PyChemiaJsonable):
 
         # Reciprocal lattice object
         rlattice = lattice.reciprocal()
-        rcell = rlattice.cell
 
         if number_of_kpoints is not None:
             vol = 1.0 / lattice.volume
             density_of_kpoints = number_of_kpoints / vol
 
-        # lets get the cell ratios
-        a1 = sqrt(rcell[0][0] ** 2 + rcell[0][1] ** 2 + rcell[0][2] ** 2)
-        a2 = sqrt(rcell[1][0] ** 2 + rcell[1][1] ** 2 + rcell[1][2] ** 2)
-        a3 = sqrt(rcell[2][0] ** 2 + rcell[2][1] ** 2 + rcell[2][2] ** 2)
+        factor = int(density_of_kpoints**0.3333333333)
 
-        factor = pow(density_of_kpoints, 1.0 / 3.0)
-        self.grid = np.array([int(max(ceil(factor * a1), 1)),
-                              int(max(ceil(factor * a2), 1)),
-                              int(max(ceil(factor * a3), 1))])
+        while True:
+            ini_density = density_of_kpoints
+
+            self.grid = np.array([int(max(ceil(factor * rlattice.a), 1)),
+                                  int(max(ceil(factor * rlattice.b), 1)),
+                                  int(max(ceil(factor * rlattice.c), 1))])
+
+            fin_density = float(np.prod(self.grid) * lattice.volume)
+
+            #print 'KPoint density [ini,fin]: %7.3f %7.3f %s' % (ini_density, fin_density, str(self.grid))
+
+            if fin_density > ini_density:
+                factor -= 1
+            else:
+                break
+
         if force_odd:
             for i in range(3):
                 if self.grid[i] % 2 == 0:

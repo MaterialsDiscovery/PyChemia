@@ -48,7 +48,7 @@ class VaspOutput:
         pos_forces = re.findall(r'TOTAL-FORCE \(eV/Angst\)\s*-*\s*([-.\d\s]+)\s+-{2}', data)
         pos_forces = np.array([x.split() for x in pos_forces], dtype=float)
 
-        if len(pos_forces) >0 and len(pos_forces[-1]) % 6 == 0:
+        if len(pos_forces) > 0 and len(pos_forces[-1]) % 6 == 0:
             pos_forces.shape = (len(pos_forces), -1, 6)
             forces = pos_forces[:, :, 3:]
             positions = pos_forces[:, :, :3]
@@ -136,10 +136,10 @@ class VaspOutput:
                 if np.all(charge[0] != charge[1]):
                     pcm_log.error('Bad Charge')
             charge = charge[0, :, 1:]
-            self.charge['s'] = charge[:, 0]
-            self.charge['p'] = charge[:, 1]
-            self.charge['d'] = charge[:, 2]
-            self.charge['total'] = charge[:, 3]
+            self.charge['s'] = list(charge[:, 0])
+            self.charge['p'] = list(charge[:, 1])
+            self.charge['d'] = list(charge[:, 2])
+            self.charge['total'] = list(charge[:, 3])
             # pcm_log.debug('Charge :' + str(self.charge))
 
         magnetization = re.findall(r'magnetization\s*\(x\)\s*#\s*of\s*ion\s*s\s*p\s*d\s*tot\s*-+([-.\s\d]+)\s--', data)

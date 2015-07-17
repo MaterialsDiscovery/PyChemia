@@ -4,12 +4,12 @@ This class defines methods to create and manipulate
 atomic structures such as molecules, clusters and crystals
 """
 
-import numpy as np
+import os
 import json
 import sys
-from math import sin, cos
-from itertools import combinations
+import numpy as np
 import itertools
+from math import sin, cos
 
 from pychemia import pcm_log
 from pychemia.core.lattice import Lattice
@@ -519,7 +519,7 @@ Empty structure
         if best_structure is not None:
             # Analysis of the quality for the best structure
             rpos = best_structure.reduced
-            for i, j in combinations(range(natom), 2):
+            for i, j in itertools.combinations(range(natom), 2):
                 distance = best_structure.lattice.minimal_distance(rpos[i], rpos[j])
                 covalent_distance = sum(covalent_radius([symbols[i], symbols[j]]))
                 if distance < covalent_distance:

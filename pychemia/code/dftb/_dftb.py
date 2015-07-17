@@ -313,7 +313,7 @@ class DFTBplus(Codes):
         for ispecie in self.structure.species:
             for jspecie in self.structure.species:
                 pair = ispecie+'-'+jspecie
-                pair_found =False
+                pair_found = False
                 for ipath in search_paths:
                     path = ipath+os.sep+pair+'.skf'
                     if os.path.exists(ipath+os.sep+ispecie+'-'+jspecie+'.skf'):
@@ -335,8 +335,8 @@ class DFTBplus(Codes):
 
         ret = {}
         rf = open(slater_koster, 'r')
-        xmldata=''
-        isxml =False
+        xmldata = ''
+        isxml = False
         for iline in rf.readlines():
             if iline.strip() == '<Documentation>':
                 isxml = True
@@ -484,7 +484,7 @@ def read_detailed_out(filename='detailed.out'):
 
     if stress:
         stress = np.array(stress[0].split(), dtype=float).reshape((3, 3))
-        pcm_log.debug('Stress :\n'+ str(stress))
+        pcm_log.debug('Stress :\n' + str(stress))
     else:
         stress = None
 
@@ -523,7 +523,7 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
     ionsteps = re.findall(r'Geometry step:', data)
     nionsteps = 0
     if ionsteps is not []:
-        nionsteps=len(ionsteps)
+        nionsteps = len(ionsteps)
 
     if nionsteps > 0:
         self_consistent_charges = re.findall(r'Self consistent charges:\s*([\w]+)[\s\w]*', data)[0]
@@ -563,10 +563,10 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
             max_lattice_force = np.array(max_lattice_force, dtype=float)
             geom_optimization['max_lattice_force'] = max_lattice_force
             pcm_log.info('Stress [initial -> final] %10.3E -> %10.3E' %
-                     (geom_optimization['max_lattice_force'][0], geom_optimization['max_lattice_force'][-1]))
+                         (geom_optimization['max_lattice_force'][0], geom_optimization['max_lattice_force'][-1]))
 
         pcm_log.info('Energy [initial -> final] %10.3E -> %10.3E' %
-                 (geom_optimization['total_energy'][0], geom_optimization['total_energy'][-1]))
+                     (geom_optimization['total_energy'][0], geom_optimization['total_energy'][-1]))
 
         stats['mean_nscc'] = np.mean(nscc_per_ionstep)
         stats['std_nscc'] = np.std(nscc_per_ionstep)

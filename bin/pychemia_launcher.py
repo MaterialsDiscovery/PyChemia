@@ -111,7 +111,7 @@ if __name__ == '__main__':
             structure_file = get_structure_file(i)
             if structure_file is None:
                 print 'No suitable structure was found on: ', i
-            rr.set_template('relaxator.py --binary %s --nparal %d --structure_file %s'
+            rr.set_template('pcm_vasp_relaxator.py --binary %s --nparal %d --structure_file %s'
                             % (binary, nparal, structure_file))
             rr.write_pbs()
             rr.submit()

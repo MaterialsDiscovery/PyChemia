@@ -8,7 +8,7 @@ import logging
 pcm_log = logging.getLogger(__name__)
 pcm_log.addHandler(logging.NullHandler())
 
-from .core import Structure, Composition, Lattice
+from .core import Structure, Composition, Lattice, structure_from_file
 import analysis
 import calc
 import code

@@ -487,6 +487,9 @@ class InputVariables:
     def clean(self):
         self.variables = {}
 
+    def has_variable(self, varname):
+        return varname in self.variables
+
 
 def netcdf2dict(filename):
     """

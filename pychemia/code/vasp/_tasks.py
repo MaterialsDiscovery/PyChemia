@@ -468,7 +468,7 @@ class ConvergenceCutOffEnergy(Convergence):
         self.initial_encut = initial_encut
         if kpoints is None:
             kp = KPoints()
-            kp.set_optimized_grid(self.structure.lattice, density_of_kpoints=1000, force_odd=True)
+            kp.set_optimized_grid(self.structure.lattice, density_of_kpoints=1E4, force_odd=True)
             self.kpoints = kp
         else:
             self.kpoints = kpoints
@@ -670,6 +670,7 @@ class VaspRelaxator(Relaxator):
         self.relaxed = False
         self.binary = binary
         self.nparal = None
+        self.relax_cell = True
         self.set_params(relaxator_params)
         self.vaspjob.initialize(workdir=self.workdir, structure=self.structure, kpoints=self.kpoints,
                                 binary=self.binary)
@@ -698,6 +699,10 @@ class VaspRelaxator(Relaxator):
             self.nparal = params['nparal']
         else:
             self.nparal = 4
+        if 'relax_cell' in params:
+            self.relax_cell = params['relax_cell']
+        else:
+            self.relax_cell = True
 
     def add_status(self, status):
         pass
@@ -760,7 +765,7 @@ class VaspRelaxator(Relaxator):
                             self.add_status('RELAXED')
 
         # How to change ISIF
-        if info['avg_force'] < 0.1:
+        if info['avg_force'] < 0.1 and self.relax_cell:
             if info['avg_stress_diag'] < 0.1:
                 if info['avg_stress_non_diag'] < 0.1:
                     vj.input_variables.variables['ISIF'] = 3
@@ -857,6 +862,10 @@ class VaspRelaxator(Relaxator):
 
                 max_force, max_stress = self.get_max_force_stress()
                 if max_force is not None and max_force < self.target_forces and max_stress < self.target_forces:
+                    print 'Max Force: %9.3E Stress: %9.3E' % (max_force, max_stress)
+                    break
+
+                if max_force is not None and max_force < self.target_forces and not self.relax_cell:
                     print 'Max Force: %9.3E Stress: %9.3E' % (max_force, max_stress)
                     break
 

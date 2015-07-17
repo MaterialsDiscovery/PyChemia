@@ -38,9 +38,12 @@ def read_poscar(path='POSCAR'):
 
     line = rf.readline()
     species = None
+
     try:
         natom_per_species = _np.array([int(x) for x in line.split()])
+        # print 'Old Format'
     except ValueError:
+        # print 'New format'
         species = [x for x in line.split()]
         line = rf.readline()
         natom_per_species = _np.array([int(x) for x in line.split()])
@@ -48,7 +51,13 @@ def read_poscar(path='POSCAR'):
     natom = _np.sum(natom_per_species)
 
     if species is None:
-        species = get_species(potcarfile)
+        if os.path.isfile(potcarfile):
+            species = get_species(potcarfile)
+        else:
+            print """ ERROR: The POSCAR does not contain information about the species present on the structure
+            You can set a consistent POTCAR along the POSCAR or
+            modify your POSCAR by adding the atomic symbol on the sixth line of the file"""
+            return None
 
     symbols = []
     for i in range(len(natom_per_species)):
@@ -73,7 +82,7 @@ def read_poscar(path='POSCAR'):
         return pychemia.Structure(cell=newcell, symbols=symbols, reduced=pos, comment=comment)
 
 
-def write_poscar(structure, filepath='POSCAR'):
+def write_poscar(structure, filepath='POSCAR', newformat=True):
     """
     Takes an structure from pychemia and save the file
     POSCAR for VASP.
@@ -86,6 +95,10 @@ def write_poscar(structure, filepath='POSCAR'):
     ret += '1.0\n'
     for i in range(3):
         ret += ' %20.16f %20.16f %20.16f\n' % tuple(structure.cell[i])
+    if newformat:
+        for i in comp.species:
+            ret += ' '+i
+        ret += '\n'
     for i in comp.values:
         ret += ' '+str(i)
     ret += '\n'

@@ -1,15 +1,16 @@
 __author__ = 'Guillermo Avendano'
 
-from _population import Population
-from pychemia import pcm_log
+import os
+import itertools
 import numpy as np
 from pychemia.code.abinit import InputVariables
-import os
-
+from _population import Population
+from pychemia import pcm_log
+from pychemia.utils.mathematics import gram_smith_qr
 
 class PopulationLDAU(Population):
 
-    def __init__(self, name, abinit_input, natpawu, nsppol, nspinor, constrains=None):
+    def __init__(self, name, abinit_input, natpawu, oxidations):
 
         Population.__init__(self, name, 'global')
         if not os.path.isfile(abinit_input):
@@ -19,11 +20,17 @@ class PopulationLDAU(Population):
         self.structure = self.input.get_structure()
         self.maxlpawu = max(self.input.get_value('lpawu'))
         self.natpawu = natpawu
-        self.nsppol = nsppol
-        self.nspinor = nspinor
-        if constrains is not None:
-            assert len(constrains) == max(self.nspinor, self.nsppol)*self.natpawu
-        self.constrains = constrains
+        if self.input.has_variable('nsppol'):
+            self.nsppol = self.input.get_value('nsppol')
+        else:
+            self.nsppol = 1
+        if self.input.has_variable('nspinor'):
+            self.nspinor = self.input.get_value('nspinor')
+        else:
+            self.nspinor = 1
+
+        self.oxidations = oxidations
+        self.connection = [1,-1,-1,1,1]
 
     @property
     def ndim(self):
@@ -42,20 +49,56 @@ class PopulationLDAU(Population):
 
     def add_random(self):
         """
-        Creates a new set of matrices P and D such that:
+        Creates a new set of variables to reconstruct the dmatpawu
 
-        D is a diagonal matrix with entries 0 or 1
-        P is a matrix whose entries are in [-1,1] and the
-        sum of each column is normalized to 1
+        I (integers) is a matrix natpawu x ndim with entries are 0 or 1
+        D (deltas) is a matrix natpawu x ndim with entries are [0, 0.5)
+        P (matrices) is a set of matrices natpawu x ndim x ndim
+        Those three matrices allow to reconstruct the variable 'dmatpawu' used by ABINIT
 
         :return:
         """
-        ndim = 2*self.maxlpawu+1
-        d = np.random.randint(2, size=ndim)
-        P = 2*np.random.rand(ndim, ndim)-1
-        c = P.sum(axis=0)
-        P /= c
-        return P, d
+        I = np.zeros((self.natpawu, self.ndim), dtype=int)
+        D = np.zeros((self.natpawu, self.ndim))
+        eigvec = np.zeros((self.natpawu, self.ndim, self.ndim))
+
+        # I and D for atoms 0 and 3
+        if self.oxidations[0] < 0:
+            nelect = self.ndim + self.oxidations[0]
+        else:
+            nelect = self.oxidations[0]
+        val = [x for x in list(itertools.product(range(2), repeat=self.ndim)) if sum(x) == nelect]
+        ii = val[np.random.randint(len(val))]
+        dd = 0.0*np.random.rand(self.ndim)
+        I[0] = ii
+        D[0] = dd
+        I[3] = ii
+        D[3] = dd
+
+        # I and D for atoms 1 and 2
+        if self.oxidations[1] < 0:
+            nelect = self.ndim + self.oxidations[1]
+        else:
+            nelect = self.oxidations[1]
+        val = [x for x in list(itertools.product(range(2), repeat=self.ndim)) if sum(x) == nelect]
+        ii = val[np.random.randint(len(val))]
+        dd = 0.0*np.random.rand(self.ndim)
+        I[1] = ii
+        D[1] = dd
+        I[2] = ii
+        D[2] = dd
+
+        p = gram_smith_qr(self.ndim)
+        eigvec[0] = p
+        eigvec[3] = np.dot(np.diag(self.connection), p)
+
+        p = gram_smith_qr(self.ndim)
+        eigvec[1] = p
+        eigvec[2] = np.dot(np.diag(self.connection), p)
+
+        data = {'eigvec': eigvec, 'I': I, 'D': D}
+
+        return self.new_entry(data)
 
     def cross(self, ids):
         pass
@@ -64,7 +107,9 @@ class PopulationLDAU(Population):
         pass
 
     def new_entry(self, data, active=True):
-        properties = {'P': list(data['P'].flatten()), 'd': list(data['d'])}
+        properties = {'eigvec': list(data['eigvec'].flatten()),
+                      'D': list(data['D'].flatten()),
+                      'I': list(data['I'].flatten())}
         status = {self.tag: active}
         entry_id = self.pcdb.insert(structure=self.structure, properties=properties, status=status)
         pcm_log.debug('Added new entry: %s with tag=%s: %s' % (str(entry_id), self.tag, str(active)))
@@ -123,12 +168,55 @@ class PopulationLDAU(Population):
     def get_duplicates(self, ids):
         return None
 
+def params_reshaped(params, ndim):
+    I = np.array(params['I'], dtype=int).reshape((-1, ndim))
+    D = np.array(params['D']).reshape((-1, ndim))
+    eigvec = np.array(params['eigvec']).reshape((-1, ndim, ndim))
+    return I, D, eigvec
 
-def get_dmatpawu(d, P):
-    return np.dot(P, np.dot(np.diag(d), np.linalg.inv(P)))
+def params2dmatpawu(params, ndim):
+    I, D, eigvec = params_reshaped(params, ndim)
 
+    eigval = np.array(I, dtype=float)
+    for i in range(len(eigval)):
+        for j in range(ndim):
+            if I[i,j] == 0:
+                eigval[i,j] += D[i,j]
+            else:
+                eigval[i,j] -= D[i,j]
+    dm = np.zeros((len(eigvec), ndim, ndim))
+    for i in range(len(eigvec)):
+        dm[i] = np.dot(eigvec[i], np.dot(np.diag(eigval[i]), np.linalg.inv(eigvec[i])))
+    return dm
 
-def get_P_and_d(dmatpawu):
+def dmatpawu2params(dmatpawu, ndim):
 
-    d, P = np.linalg.eig(dmatpawu)
-    return d, P
+    dm = np.array(dmatpawu).reshape((-1,ndim, ndim))
+    eigval = np.array([np.linalg.eigh(x)[0] for x in dm])
+    I = np.array(np.round(eigval), dtype=int)
+    D = np.abs(eigval - I)
+    eigvec = np.array([ np.linalg.eigh(x)[1] for x in dm])
+
+    params = {'I': list(I.flatten()),
+              'D': list(D.flatten()),
+              'eigvec': list(eigvec.flatten())}
+    return params
+
+def get_pattern(params, ndim):
+
+    eigvec = np.array(params['eigvec']).reshape((-1, ndim, ndim))
+    bb = np.dot(eigvec[0], np.linalg.inv(eigvec[3]))
+    connection = np.array(np.round(np.diagonal(bb)), dtype=int)
+
+    I = np.array(params['I'], dtype=int).reshape((-1, ndim))
+    pattern=np.zeros((len(I), len(I)))
+    for i in range(len(I)):
+        for j in range(i, len(I)):
+            if np.all(I[i] == I[j]):
+                pattern[i,j] = 1
+                pattern[j,i] = 1
+            else:
+                pattern[i,j] = 0
+                pattern[j,i] = 0
+
+    return connection, pattern

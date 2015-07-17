@@ -1,4 +1,4 @@
-__author__ = 'macbook'
+__author__ = 'Guillermo Avendano-Franco'
 
 import os
 import subprocess
@@ -48,7 +48,10 @@ class PBSRunner:
         self.walltime = walltime
 
     def set_template(self, template):
-        self.template = template
+        if os.path.isfile(template):
+            self.template = open(template).read()
+        elif isinstance(template, basestring):
+            self.template = template
 
     def write_pbs(self):
 
@@ -91,7 +94,7 @@ def report_cover():
     ret += socket.gethostname()+'\n\n'
     ret += 'Date\n'
     ret += '----\n'
-    dt=datetime.datetime.now()
+    dt = datetime.datetime.now()
     ret += dt.strftime("%A, %d. %B %Y %I:%M%p")+'\n\n'
 
     ret += 'PBS VARIABLES\n'

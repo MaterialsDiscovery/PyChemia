@@ -1,5 +1,6 @@
 __author__ = 'Guillermo Avendano-Franco'
 
+import sys
 
 def unicode2string(value):
     """
@@ -22,7 +23,12 @@ def unicode2string(value):
     {'abc': 'def'}
     """
     if isinstance(value, dict):
-        return {unicode2string(key): unicode2string(value) for key, value in value.items()}
+        ret = {}
+        for key in value:
+            ret[unicode2string(key)] = unicode2string(value[key])
+        return ret
+        # This line is Python 2.7+
+        #return {unicode2string(key): unicode2string(value) for key, value in value.items()}
     elif isinstance(value, list):
         return [unicode2string(element) for element in value]
     elif isinstance(value, str):
@@ -47,3 +53,18 @@ def convert_color(s):
     (1.0, 0.3333333333333333, 0.0)
     """
     return float(int(s[:2], 16))/255, float(int(s[2:4], 16))/255, float(int(s[4:6], 16))/255
+
+def get_int(value):
+    if value.isdigit():
+        return int(value)
+    else:
+        print "ERROR: The value '%s' should be an integer" % value
+        sys.exit(2)
+
+def get_float(value):
+    try:
+        ret = float(value)
+    except ValueError:
+        print "ERROR: The value '%s' should be an float number" % value
+        sys.exit(2)
+    return ret

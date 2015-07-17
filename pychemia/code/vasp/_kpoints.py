@@ -16,7 +16,7 @@ import numpy as _np
 import pychemia
 
 
-def read_kpoints(path):
+def read_kpoints(path='KPOINTS'):
     """
     Load the file KPOINTS in the directory 'path' or
     read directly the file 'path' and return a kpoints
@@ -99,4 +99,3 @@ def write_kpoints(kp, filepath='KPOINTS'):
         wf.write(" %7.4f %7.4f %7.4f\n" % tuple(kp.shifts))
 
     wf.close()
-
