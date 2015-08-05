@@ -3,6 +3,9 @@ import math
 import numpy as np
 from scipy.io import netcdf_file as _netcdf_file
 
+import matplotlib
+matplotlib.use('agg')
+
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -142,8 +145,16 @@ def compute_bonds(typat, xcart, znucl):
     inside the unitary box (NEEDS EXTENSION TO
     OUTSIDE THE BOX)
     """
+    if isinstance(typat, int):
+        lsttypat = [typat]
+    else:
+        lsttypat = typat
+    if isinstance(znucl, (int, float)):
+        lstznucl = [znucl]
+    else:
+        lstznucl = znucl
 
-    covrad = [angstrom_bohr * covalent_radius(znucl[i - 1]) for i in typat]
+    covrad = [angstrom_bohr * covalent_radius(lstznucl[i - 1]) for i in lsttypat]
     bonds = []
     for t in range(len(xcart)):
         bonds1 = []
@@ -225,8 +236,8 @@ def plot_history(abinitfile, dataset=""):
 
     # Getting Labels of atoms
     labels = [av.atom_name(i) for i in range(av.get_value('natom', dataset))]
-    znucl = av.get_value('znucl', idtset=dataset, full=True)
-    typat = av.get_value('typat', idtset=dataset, full=True)
+    znucl = av.get_value('znucl', idtset=dataset)
+    typat = av.get_value('typat', idtset=dataset)
 
     bonds = compute_bonds(typat, xcart, znucl)
     # natom = len(xcart[0])

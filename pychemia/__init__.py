@@ -8,27 +8,6 @@ import logging
 pcm_log = logging.getLogger(__name__)
 pcm_log.addHandler(logging.NullHandler())
 
-from .core import Structure, Composition, Lattice, structure_from_file
-import analysis
-import calc
-import code
-import db
-import dft
-import dm
-import gui
-import io
-import report
-import runner
-import searcher
-import symm
-import utils
-import web
-import population
-
-from _info import __author__, __copyright__, __version__, __email__, __status__, __date__, version
-
-# __all__ = filter(lambda s: not s.startswith('_'), dir())
-
 try:
     import pymongo
     HAS_PYMONGO = True
@@ -64,6 +43,28 @@ try:
     HAS_PYMATGEN = True
 except ImportError:
     HAS_PYMATGEN = False
+
+
+from .core import Structure, Composition, Lattice, structure_from_file
+import analysis
+import calc
+import code
+import db
+import dft
+import dm
+import gui
+import io
+import report
+import runner
+import searcher
+import symm
+import utils
+import web
+import population
+
+from _info import __author__, __copyright__, __version__, __email__, __status__, __date__, version
+
+# __all__ = filter(lambda s: not s.startswith('_'), dir())
 
 
 def info():

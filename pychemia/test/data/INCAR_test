@@ -1,0 +1,53 @@
+$system   =  CaMnO3 Pnma
+PREC      =  Accurate
+NELMIN    =  6
+NELM      =  100
+EDIFF     =  1E-09
+EDIFFG    = -5E-6
+IBRION    =  1
+ISIF      =  2
+LREAL     = .FALSE.
+ADDGRID   = .TRUE.
+NSW       =  0
+ISMEAR    = -5
+ENCUT     =  500
+
+ISPIN     =  2
+
+LORBIT    =  11
+
+#LDAU      =  .TRUE.
+#LDAUTYPE  =  1
+#LDAUL     =  -1  2 -1
+#LDAUU     =  0.0 4.0 0.0
+#LDAUJ     =  0.0 0.0 0.0
+#LDAUPRINT =  2
+
+LMAXMIX   =  4
+ISYM      =  0
+
+LSORBIT   = .TRUE.
+
+I_CONSTRAINED_M = 1
+LAMBDA          = 10
+M_CONSTR        = 12*0    0.0000000 0.0416472 2.3859677  0.0000000 0.0416472 -2.3859677  0.0000000 0.0416472 -2.3859677  0.0000000 0.0416472 2.3859677  60*0
+
+RWIGS     = 2.00 1.87 1.78 1.24 # d-d/2
+
+MAGMOM    = 12*0    0.0000000 0.0416472 2.3859677  0.0000000 0.0416472 -2.3859677  0.0000000 0.0416472 -2.3859677  0.0000000 0.0416472 2.3859677  60*0
+SAXIS     = 0 0 1
+
+#ICHARG    = 1
+
+LPLANE = .TRUE.
+NPAR   = 2
+LSCALU = .FALSE.
+NSIM   = 4
+
+LWAVE  = .FALSE.
+
+AMIX     = 0.8
+BMIX     = 0.9
+AMIX_MAG = 0.4
+BMIX_MAG = 0.9
+

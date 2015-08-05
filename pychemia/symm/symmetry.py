@@ -36,7 +36,7 @@ class StructureSymmetry(object):
 
         :param structure:
 
-        Example:
+        Example
 
         >>> import pychemia
         >>> a = 4.05
@@ -60,6 +60,18 @@ class StructureSymmetry(object):
         # Get a list of indices for each atom in structure
         # Indices starting in 1
         self._numbers = np.array([structure.species.index(x)+1 for x in structure.symbols], dtype='intc')
+
+    @property
+    def transposed(self):
+        return self._transposed_cell
+
+    @property
+    def reduced(self):
+        return self._reduced
+
+    @property
+    def numbers(self):
+        return self._numbers
 
     def get_symmetry_dataset(self, symprec=1e-5, angle_tolerance=-1.0):
 
@@ -256,7 +268,7 @@ def symmetrize(structure, initial_symprec=0.01, final_symprec=0.1, delta_symprec
         else:
             prec += delta_symprec
     if prec > final_symprec:
-        prec=final_symprec
+        prec = final_symprec
     new_bravais = sym.refine_cell(symprec=prec)
     sym2 = StructureSymmetry(new_bravais)
     return sym2.find_primitive()

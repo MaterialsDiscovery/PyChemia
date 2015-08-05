@@ -11,3 +11,6 @@ class version:
     @staticmethod
     def full_version():
         return 'PyChemia version='+__version__+' from='+__date__
+
+    def __init__(self):
+        pass

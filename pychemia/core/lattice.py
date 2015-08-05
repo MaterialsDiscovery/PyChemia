@@ -29,7 +29,7 @@ class Lattice:
         The Lattice class provides methods to compute the reciprocal lattice (That is another Lattice object)
         and  basic routines related to the cell
 
-        Examples:
+
         >>> import pychemia
         >>> cubic = pychemia.Lattice()
         >>> cubic.lengths
@@ -239,12 +239,12 @@ class Lattice:
         >>> r2 = np.random.rand(4, 3)
         >>> dist, close_imgs = lattice.minimal_distances(r1, r2)
 
-        >>> solution=np.zeros((len(r1), len(r2)))
+        >>> solution = np.zeros((len(r1), len(r2)))
 
         >>> for i in range(len(r1)):
         ...        for j in range(len(r2)):
-        ...                reduced1=r1[i]
-        ...                reduced2=r2[j]+close_imgs[i, j]
+        ...                reduced1 = r1[i]
+        ...                reduced2 = r2[j]+close_imgs[i, j]
         ...                cartesian1 = lattice.reduced2cartesian(reduced1)
         ...                cartesian2 = lattice.reduced2cartesian(reduced2)
         ...                diff_vector = cartesian2 - cartesian1
@@ -592,8 +592,8 @@ class Lattice:
             rotation_matrix = rotation_matrix_axis_angle(p1, av)
             cell = np.dot(rotation_matrix, self.cell.T).T.round(round_decimals)
             if np.dot(cell[1], vector_plane) > 1E-10:
-                #print 'Failed projection', np.dot(cell[1], vector_plane)
-                #print cell
+                # print 'Failed projection', np.dot(cell[1], vector_plane)
+                # print cell
                 pass
         self._cell = cell
 
@@ -615,8 +615,8 @@ class Lattice:
             if mindist < tolerance * covalent_distance:
                 factor = (tolerance+extra) * covalent_distance / mindist
                 v1, v2, v3 = vector_set_perpendicular(eigv)
-                matrixA = matrix_from_eig(v1, v2, v3, factor, 1, 1)
-                lattice = Lattice(np.dot(matrixA, lattice.cell))
+                matrix_a = matrix_from_eig(v1, v2, v3, factor, 1, 1)
+                lattice = Lattice(np.dot(matrix_a, lattice.cell))
         return lattice
 
     def scale(self, symbols, rpos, tolerance=1.0):

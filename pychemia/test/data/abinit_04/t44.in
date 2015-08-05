@@ -43,7 +43,7 @@ xred              # This keyword indicate that the location of the atoms
 ixc 1             # LDA Teter Pade parametrization
 
 #Definition of the planewave basis set
-ecut  6.0         # Maximal kinetic energy cut-off, in Hartree
+ecut  15.0         # Maximal kinetic energy cut-off, in Hartree
 
 #Definition of the SCF procedure
 nstep 10          # Maximal number of SCF cycles

@@ -14,14 +14,11 @@ __email__ = "guillermo.avendano@uclouvain.be"
 __status__ = "Development"
 __date__ = "Aug 27, 2012"
 
-import os as _os
+import os
+import numpy as np
 from ftplib import FTP as _FTP
 from scipy.io import netcdf_file as _netcdf_file
-from numpy import array as _array
-
-from pychemia.utils.constants import angstrom_bohr as _angstrom_bohr
-from pychemia.utils.periodic import atomic_symbol as _atom_symbol
-from _input import InputVariables
+from pychemia.utils.periodic import atomic_symbol
 
 
 def netcdf2dict(filename):
@@ -33,7 +30,7 @@ def netcdf2dict(filename):
         filename:
             NetCDF filename
     """
-    if not _os.path.isfile(filename):
+    if not os.path.isfile(filename):
         print('ERROR: No such file: ', filename)
         return None
     output = {}
@@ -50,7 +47,7 @@ def psp_name(atomicnumber, exchange, kind):
     atomic number, exchange ('LDA' or 'GGA')
     and kind ('FHI','TM')
     """
-    atom_symbol = str(_atom_symbol(atomicnumber))
+    atom_symbol = str(atomic_symbol(atomicnumber))
     if kind == 'FHI' and exchange == 'LDA':
         filename = str(atomicnumber).zfill(2) + '-' + atom_symbol + '.LDA.fhi'
     elif kind == 'FHI' and exchange == 'GGA':
@@ -85,71 +82,34 @@ def get_ftp_psp(atomicnumber, exchange, kind):
 
 def get_all_psps(basedir, exchange, kind):
     directory = basedir + '/' + exchange + '_' + kind
-    if not _os.path.isdir(directory):
-        _os.mkdir(directory)
+    if not os.path.isdir(directory):
+        os.mkdir(directory)
 
     ftp = _FTP('ftp.abinit.org')  # connect to host, default port
     ftp.login()  # user anonymous, passwd anonymous@
     for i in range(1, 113):
         filename = psp_name(i, exchange, kind)
-        if not _os.path.isfile(directory + '/' + filename):
+        if not os.path.isfile(directory + '/' + filename):
             print('Getting...' + filename)
             nofile = True
             while nofile:
                 try:
                     res = ftp.retrbinary('RETR ' + get_ftp_psp(i, exchange, kind) + filename,
                                          open(directory + '/' + filename, 'wb').write)
-                    if _os.path.getsize(directory + '/' + filename) == 0:
-                        _os.remove(directory + '/' + filename)
+                    if os.path.getsize(directory + '/' + filename) == 0:
+                        os.remove(directory + '/' + filename)
                         nofile = False
                     else:
                         nofile = False
                 except ValueError:
                     print('Could not download ' + filename)
                     ftp.close()
-                    if _os.path.isfile(directory + '/' + filename):
-                        _os.remove(directory + '/' + filename)
+                    if os.path.isfile(directory + '/' + filename):
+                        os.remove(directory + '/' + filename)
                     ftp = _FTP('ftp.abinit.org')  # connect to host, default port
                     ftp.login()  # user anonymous, passwd anonymous@
                     nofile = False
     ftp.close()
-
-
-def xyz2input(filename):
-    """
-    Reads a .xyz and return an ABINIT input
-    as a python dictionary
-    """
-
-    abiinput = InputVariables()
-    atomdict = _atom_symbol()
-    rf = open(filename, 'r')
-
-    natom = int(rf.readline())
-    typat = []
-    znucl = []
-    xcart = []
-    xangst = []
-
-    ntypat = 0
-    rf.readline()
-    data = rf.readlines()
-    for i in range(natom):
-        atom = data[i].split()
-        atomnumber = atomdict[atom[0]]
-        if atomnumber not in znucl:
-            ntypat += 1
-            znucl.append(atomnumber)
-        typat.append(znucl.index(atomnumber) + 1)
-        xangst = xangst + [float(atom[1]), float(atom[2]), float(atom[3])]
-
-    abiinput.variables['natom'] = _array([natom])
-    abiinput.variables['znucl'] = _array(znucl)
-    abiinput.variables['ntypat'] = _array([ntypat])
-    abiinput.variables['typat'] = _array(typat)
-    abiinput.variables['xcart'] = _angstrom_bohr * _array(xangst)
-
-    return abiinput
 
 
 def split_varname(varname):
@@ -174,36 +134,6 @@ def split_varname(varname):
     return prefix, suffix
 
 
-def merge(abi_into, abi_from, filename=None):
-    """
-    From the variables present in the file 'abi_into'
-    will try to recover the value from 'abi_from'
-    if the value has changed, the value will be updated.
-
-    The new variables will be save in the given filename
-    If filename==None the new values will overwrite
-    abi_into
-
-    Example:
-
-       merge('abinit.in','abinit_xo_OUT.nc')
-
-    It will update the abinit input with the values of the output
-
-    """
-    abinit_into = InputVariables(abi_into)
-    abinit_from = InputVariables(abi_from)
-
-    for i in abinit_into.variables.keys():
-        if i in abinit_from.variables.keys():
-            abinit_into.variables[i] = abinit_from.variables[i]
-
-    if filename is None:
-        filename = abi_into
-
-    abinit_into.write(filename)
-
-
 def plot_simple(variables, varname):
     from matplotlib.pylab import subplots
     from numpy import arange, mean, apply_along_axis, linalg
@@ -213,18 +143,18 @@ def plot_simple(variables, varname):
     fig.set_size_inches(15, 4)
 
     ndtset = variables['ndtset'][0]
-    lens = _array([len(variables[varname + str(x + 1)]) for x in range(ndtset)])
+    lens = np.array([len(variables[varname + str(x + 1)]) for x in range(ndtset)])
 
     x = arange(ndtset) + 1
 
     if max(lens) == min(lens):
         if lens[0] == 1:
-            y = _array([variables['etotal' + str(x + 1)][0] for x in range(ndtset)])
+            y = np.array([variables['etotal' + str(x + 1)][0] for x in range(ndtset)])
         elif lens[0] % 3 == 0:
-            y = _array([mean(apply_along_axis(linalg.norm, 1, variables['fcart' + str(x + 1)].reshape((-1, 3))))
+            y = np.array([mean(apply_along_axis(linalg.norm, 1, variables['fcart' + str(x + 1)].reshape((-1, 3))))
                         for x in range(ndtset)])
         else:
-            y = _array([sqrt(sum(variables['fcart' + str(x + 1)] ** 2)) for x in range(ndtset)])
+            y = np.array([sqrt(sum(variables['fcart' + str(x + 1)] ** 2)) for x in range(ndtset)])
     ax.plot(x, y, 'ro')
     ax.plot(x, y, 'b-')
     ax.set_xlabel('Dataset')

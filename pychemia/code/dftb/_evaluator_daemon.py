@@ -65,14 +65,15 @@ class EvaluatorDaemon:
                     pcm_log.info('[%s]: Updating properties' % str(entry_id))
                     symmetry = StructureSymmetry(new_structure)
                     pcdb.update(entry_id, structure=new_structure)
+                    te = total_energy
                     pcdb.entries.update({'_id': entry_id},
                                         {'$set': {'status.relaxation': 'succeed',
                                                   'status.target_forces': target_forces,
                                                   'properties.forces': generic_serializer(forces),
                                                   'properties.stress': generic_serializer(stress),
-                                                  'properties.energy': total_energy,
-                                                  'properties.energy_pa': total_energy/new_structure.natom,
-                                                  'properties.energy_pf': total_energy/new_structure.get_composition().gcd,
+                                                  'properties.energy': te,
+                                                  'properties.energy_pa': te/new_structure.natom,
+                                                  'properties.energy_pf': te/new_structure.get_composition().gcd,
                                                   'properties.spacegroup': symmetry.number()}})
 
                     # Fingerprint
@@ -183,7 +184,8 @@ class EvaluatorDaemon:
     def is_evaluated(self, entry):
         return self.get_current_status(entry) < self.target_forces
 
-    def get_current_status(self, entry):
+    @staticmethod
+    def get_current_status(entry):
         if entry is not None and 'properties' in entry and entry['properties'] is not None:
             if 'forces' in entry['properties'] and entry['properties']['forces'] is not None:
                 forces = np.max(np.abs(np.array(entry['properties']['forces'], dtype=float).flatten()))

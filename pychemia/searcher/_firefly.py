@@ -128,7 +128,8 @@ class FireFly(Searcher):
 
         for entry_id in selection:
             if new_selection[entry_id] is not None:
-                pcm_log.debug('[%s] Moved to: %s (%d moves)' % (str(entry_id), new_selection[entry_id], moves[entry_id]))
+                pcm_log.debug('[%s] Moved to: %s (%d moves)' %
+                              (str(entry_id), new_selection[entry_id], moves[entry_id]))
                 self.replace_by_other(entry_id, new_selection[entry_id],
                                       reason='Moved %d times' % moves[entry_id])
                 self.population.enable(new_selection[entry_id])

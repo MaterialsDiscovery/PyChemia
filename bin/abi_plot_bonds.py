@@ -1,9 +1,11 @@
 import sys
 import math
+import numpy as np
 
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-
 from pychemia.code.abinit import InputVariables, AbiFiles
 from pychemia.utils.periodic import covalent_radius
 from pychemia.utils.constants import bohr_angstrom
@@ -16,15 +18,24 @@ def compute_bonds(typat, xcart, znucl):
     OUTSIDE THE BOX)
     """
 
-    covrad = [covalent_radius(znucl[iatom - 1]) for iatom in typat]
+    npxcart = np.array(xcart).reshape((-1, 3))
+    if isinstance(typat, int):
+        lsttypat = [typat]
+    else:
+        lsttypat = typat
+    if isinstance(znucl, (int, float)):
+        lstznucl = [znucl]
+    else:
+        lstznucl = znucl
+    covrad = [covalent_radius(lstznucl[iatom - 1]) for iatom in lsttypat]
 
     bonds = []
-    for iatom in range(len(xcart)):
-        for jatom in range(iatom + 1, len(xcart)):
+    for iatom in range(len(npxcart)):
+        for jatom in range(iatom + 1, len(npxcart)):
             # Compute bond length between atoms i and j
-            bl = math.sqrt(sum((xcart[jatom] - xcart[iatom]) ** 2))
+            bl = math.sqrt(sum((npxcart[jatom] - npxcart[iatom]) ** 2))
             if 1.35 * (covrad[iatom] + covrad[jatom]) > bl:
-                bonds.append([iatom, jatom, bl, (xcart[jatom] - xcart[iatom]) / bl])
+                bonds.append([iatom, jatom, bl, (npxcart[jatom] - npxcart[iatom]) / bl])
 
     return bonds
 
@@ -54,11 +65,9 @@ def get_all_bonds(abinitfile, dtset=''):
 
         out = InputVariables(filep)
 
-        xcart = out.get_value('xcart', idtset=idt, full=True)
-        znucl = out.get_value('znucl', idtset=idt, full=True)
-        typat = out.get_value('typat', idtset=idt, full=True)
-
-        xcart = xcart.reshape(-1, 3)
+        xcart = out.get_value('xcart', idtset=idt)
+        znucl = out.get_value('znucl', idtset=idt)
+        typat = out.get_value('typat', idtset=idt)
 
         bonds = compute_bonds(typat, xcart, znucl)
         allbonds.append(bonds)
@@ -111,6 +120,7 @@ def plot_bonds(listabifile, listidtset):
         label = abivar.atom_name(seti[ibond][0]) + ' ' + abivar.atom_name(seti[ibond][1])
         plt.plot(y, label=label)
         plt.plot(y, 'ro')
+
         plt.text(0.09, y[0] + 0.001, label, size='small')
         iplot += 1
         plt.legend()

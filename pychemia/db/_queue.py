@@ -92,11 +92,11 @@ class PyChemiaQueue:
 
 
 def hashfile(filename):
-    BLOCKSIZE = 65536
+    blocksize = 65536
     hasher = hashlib.md5()
     with open(filename, 'rb') as afile:
-        buf = afile.read(BLOCKSIZE)
+        buf = afile.read(blocksize)
         while len(buf) > 0:
             hasher.update(buf)
-            buf = afile.read(BLOCKSIZE)
+            buf = afile.read(blocksize)
     return hasher.hexdigest()

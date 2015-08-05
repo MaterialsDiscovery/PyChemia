@@ -6,7 +6,7 @@ def test_abinit_parser():
     Test abinit parser module           :
     """
     if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
-        from pychemia.code.abinit import parser
+        from pychemia.code.abinit._parser import parser
         from numpy import array, all, ones
         from math import sqrt
         import tempfile
@@ -50,7 +50,9 @@ def test_abinit_utils():
     Test abinit utils module            :
     """
     if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
-        from pychemia.code.abinit import psp_name, xyz2input, netcdf2dict
+        from pychemia.code.abinit._utils import psp_name
+        from pychemia.code.abinit._input import xyz2input
+        from pychemia.code.abinit._output import netcdf2dict
 
         filename = "pychemia/test/data/abinit_01/abinit-o_OUT.nc"
         print(len(netcdf2dict(filename)))
@@ -84,8 +86,8 @@ def test_abinit_input():
         abf = AbiFiles(filename)
         inp = InputVariables(abf)
         print(inp)
-        print(len(inp.variables))
-        assert len(inp.variables) == 31
+        print(len(inp))
+        assert len(inp) == 31
         assert inp.get_value('ecut') == 10
         assert len(inp.get_dtsets_keys()) == 12
         assert inp.get_value('ntime', 41) == 10

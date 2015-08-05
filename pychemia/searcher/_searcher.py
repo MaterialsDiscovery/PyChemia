@@ -236,18 +236,17 @@ class Searcher:
             number_evaluated = len(self.population.actives_evaluated)
             while len(self.population.actives_evaluated) < self.fraction_evaluated * self.generation_size:
                 if len(self.population.actives_evaluated) != number_evaluated:
-                    pcm_log.debug("Population '%s' still not evaluated. Ratio %5.3f / %5.3f" % (self.population.name,
-                                                                                            self.population.fraction_evaluated,
-                                                                                            self.fraction_evaluated))
+                    pcm_log.debug("Population '%s' still not evaluated. Ratio %5.3f / %5.3f" %
+                                  (self.population.name, self.population.fraction_evaluated, self.fraction_evaluated))
                     self.print_status(level='DEBUG')
                     number_evaluated = len(self.population.actives_evaluated)
                 self.population.replace_failed()
                 time.sleep(self.sleep_time)
             pcm_log.debug("Population '%s' evaluated. Ratio %5.3f / %5.3f" %
-                      (self.population.name, self.population.fraction_evaluated, self.fraction_evaluated))
+                          (self.population.name, self.population.fraction_evaluated, self.fraction_evaluated))
 
             pcm_log.debug('[%s] Removing not evaluated: %d' %
-                     (self.searcher_name, len(self.population.actives_no_evaluated)))
+                          (self.searcher_name, len(self.population.actives_no_evaluated)))
             for entry_id in self.population.actives_no_evaluated:
                 self.replace_by_random(entry_id, reason='no evaluated')
             self.print_status()

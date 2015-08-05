@@ -8,6 +8,7 @@ from _population import Population
 from pychemia import pcm_log
 from pychemia.utils.mathematics import gram_smith_qr
 
+
 class PopulationLDAU(Population):
 
     def __init__(self, name, abinit_input, natpawu, oxidations):
@@ -30,7 +31,7 @@ class PopulationLDAU(Population):
             self.nspinor = 1
 
         self.oxidations = oxidations
-        self.connection = [1,-1,-1,1,1]
+        self.connection = [1, -1, -1, 1]
 
     @property
     def ndim(self):
@@ -69,7 +70,7 @@ class PopulationLDAU(Population):
             nelect = self.oxidations[0]
         val = [x for x in list(itertools.product(range(2), repeat=self.ndim)) if sum(x) == nelect]
         ii = val[np.random.randint(len(val))]
-        dd = 0.0*np.random.rand(self.ndim)
+        dd = 0.0*np.random.random_sample((self.ndim,))
         I[0] = ii
         D[0] = dd
         I[3] = ii
@@ -82,7 +83,7 @@ class PopulationLDAU(Population):
             nelect = self.oxidations[1]
         val = [x for x in list(itertools.product(range(2), repeat=self.ndim)) if sum(x) == nelect]
         ii = val[np.random.randint(len(val))]
-        dd = 0.0*np.random.rand(self.ndim)
+        dd = 0.0*np.random.random_sample((self.ndim,))
         I[1] = ii
         D[1] = dd
         I[2] = ii
@@ -168,11 +169,13 @@ class PopulationLDAU(Population):
     def get_duplicates(self, ids):
         return None
 
+
 def params_reshaped(params, ndim):
     I = np.array(params['I'], dtype=int).reshape((-1, ndim))
     D = np.array(params['D']).reshape((-1, ndim))
     eigvec = np.array(params['eigvec']).reshape((-1, ndim, ndim))
     return I, D, eigvec
+
 
 def params2dmatpawu(params, ndim):
     I, D, eigvec = params_reshaped(params, ndim)
@@ -180,27 +183,29 @@ def params2dmatpawu(params, ndim):
     eigval = np.array(I, dtype=float)
     for i in range(len(eigval)):
         for j in range(ndim):
-            if I[i,j] == 0:
-                eigval[i,j] += D[i,j]
+            if I[i, j] == 0:
+                eigval[i, j] += D[i, j]
             else:
-                eigval[i,j] -= D[i,j]
+                eigval[i, j] -= D[i, j]
     dm = np.zeros((len(eigvec), ndim, ndim))
     for i in range(len(eigvec)):
         dm[i] = np.dot(eigvec[i], np.dot(np.diag(eigval[i]), np.linalg.inv(eigvec[i])))
     return dm
 
+
 def dmatpawu2params(dmatpawu, ndim):
 
-    dm = np.array(dmatpawu).reshape((-1,ndim, ndim))
+    dm = np.array(dmatpawu).reshape((-1, ndim, ndim))
     eigval = np.array([np.linalg.eigh(x)[0] for x in dm])
     I = np.array(np.round(eigval), dtype=int)
     D = np.abs(eigval - I)
-    eigvec = np.array([ np.linalg.eigh(x)[1] for x in dm])
+    eigvec = np.array([np.linalg.eigh(x)[1] for x in dm])
 
     params = {'I': list(I.flatten()),
               'D': list(D.flatten()),
               'eigvec': list(eigvec.flatten())}
     return params
+
 
 def get_pattern(params, ndim):
 
@@ -213,10 +218,10 @@ def get_pattern(params, ndim):
     for i in range(len(I)):
         for j in range(i, len(I)):
             if np.all(I[i] == I[j]):
-                pattern[i,j] = 1
-                pattern[j,i] = 1
+                pattern[i, j] = 1
+                pattern[j, i] = 1
             else:
-                pattern[i,j] = 0
-                pattern[j,i] = 0
+                pattern[i, j] = 0
+                pattern[j, i] = 0
 
     return connection, pattern

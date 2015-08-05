@@ -265,8 +265,6 @@ class KPoints(PyChemiaJsonable):
 
             fin_density = float(np.prod(self.grid) * lattice.volume)
 
-            #print 'KPoint density [ini,fin]: %7.3f %7.3f %s' % (ini_density, fin_density, str(self.grid))
-
             if fin_density > ini_density:
                 factor -= 1
             else:

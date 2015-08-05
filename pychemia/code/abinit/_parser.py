@@ -263,7 +263,10 @@ def parser(filename):
                 else:
                     # Store the varlist in the dictionary
                     # for the previuos keyword
-                    inputvars[keyword] = _array(varlist)
+                    if len(varlist) == 1:
+                        inputvars[keyword] = varlist[0]
+                    else:
+                        inputvars[keyword] = varlist
                     # New keyword
                     keyword = value
                     varlist = []
@@ -282,6 +285,9 @@ def parser(filename):
     else:
         # Store the varlist in the dictionary
         # for the previuos keyword
-        inputvars[keyword] = _array(varlist)
+        if len(varlist) == 1:
+            inputvars[keyword] = varlist[0]
+        else:
+            inputvars[keyword] = varlist
 
     return inputvars

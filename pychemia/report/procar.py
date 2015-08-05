@@ -69,7 +69,7 @@ class UtilsProcar:
         self.log.debug("UtilsProcar()...done")
         return
 
-    def OpenFile(self, FileName=None):
+    def OpenFile(self, FileName = None):
         """
         Tries to open a File, it has suitable values for PROCAR and can
         handle gzipped files
@@ -1104,7 +1104,7 @@ class ProcarSelect:
         >>> foo.readFile("PROCAR")
         >>> bar = ProcarSelect(foo)
         >>> bar.selectIspin([...])
-        >>> bar.selectAtoms([0, 1, 2]) # atom0+atom1+atom2
+        >>> bar.selectAtoms([0, 1, 2])  # atom0+atom1+atom2
 
         Note: this method should be called after select.Ispin
         """
@@ -1880,6 +1880,7 @@ def scriptBandsplot(args):
         data.selectOrbital(args.orbitals)
 
     # Plotting the data
+    assert (data.bands is not None)
     data.bands = (data.bands.transpose() - np.array(args.fermi)).transpose()
     plot = ProcarPlot(data.bands, data.spd, data.kpoints)
 

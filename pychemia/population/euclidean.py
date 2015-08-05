@@ -224,7 +224,7 @@ class EuclideanPopulation(Population):
         outside = True
         while outside:
             dx = 2*np.random.random_sample(self.ndim) - 1
-            #print 'Random movement', dx, factor
+            # print 'Random movement', dx, factor
             dx = unit_vector(dx)
             newx = x + factor*dx
             outside = not self.is_inside(newx)
@@ -294,3 +294,5 @@ class EuclideanPopulation(Population):
     def members(self):
         return self._members
 
+    def get_duplicates(self, ids):
+        pass

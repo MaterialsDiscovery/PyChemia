@@ -16,7 +16,7 @@ try:
         # Testing version of spglib
         st = Structure(symbols=['H'])
         symm = StructureSymmetry(st)
-        ret = pyspglib.spglib.spg.dataset(symm._transposed_cell, symm._reduced, symm._numbers, 1e-5, -1.0)
+        ret = pyspglib.spglib.spg.dataset(symm.transposed, symm.reduced, symm.numbers, 1e-5, -1.0)
         if type(ret[3]) is list:
             USE_SPGLIB = False
             print 'SPGLIB is present but outdated, please install spglib > 1.7'

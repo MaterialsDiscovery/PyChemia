@@ -46,7 +46,7 @@ class DFTBplusRelaxator(Relaxator):
                 except TypeError:
                     raise ValueError('Missing a valid slater_path or list of slater_paths')
         if 'symmetrize' in params and params['symmetrize'] is True:
-            self.symetrize = True
+            self.symmetrize = True
 
     def run(self):
 

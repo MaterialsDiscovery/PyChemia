@@ -80,22 +80,22 @@ class Structure:
 
         Examples:
 
->>> import pychemia
->>> a = pychemia.Structure()
->>> print a
-Empty structure
->>> a = pychemia.Structure(symbols=['Xe'])
->>> print a.natom
-1
->>> d = 1.104
->>> a = pychemia.Structure(symbols=['N', 'N'], positions=[[0, 0, 0], [0, 0, d]], periodicity=False)
->>> print a.natom
-2
->>> a = 4.05
->>> b = a/2
->>> fcc = pychemia.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
->>> print fcc.natom
-1
+        >>> import pychemia
+        >>> a = pychemia.Structure()
+        >>> print a
+        Empty structure
+        >>> a = pychemia.Structure(symbols=['Xe'])
+        >>> print a.natom
+        1
+        >>> d = 1.104
+        >>> a = pychemia.Structure(symbols=['N', 'N'], positions=[[0, 0, 0], [0, 0, d]], periodicity=False)
+        >>> print a.natom
+        2
+        >>> a = 4.05
+        >>> b = a/2
+        >>> fcc = pychemia.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
+        >>> print fcc.natom
+        1
         """
         self.vector_info = {}
         self.name = None
@@ -467,6 +467,7 @@ Empty structure
 
         Examples:
         >>> import pychemia
+        >>> import os
         >>> st = pychemia.Structure.random_cell('LiAlCl4', stabilization_number=3)
         >>> st.natom
         6
@@ -474,6 +475,7 @@ Empty structure
         >>> st2 = pychemia.Structure.load_json('test.json')
         >>> st == st2
         True
+        >>> os.remove('test.json')
         """
         comp = Composition(composition)
         pcm_log.debug('Generating a random structure with composition: ' + str(comp.composition))

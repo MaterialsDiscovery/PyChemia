@@ -302,7 +302,7 @@ class StructurePopulation(Population):
         changer = StructureChanger(structure=structure)
         if kind == 'move':
             changer.random_move_many_atoms(epsilon=factor)
-        else: # change
+        else:  # change
             changer.random_change(factor)
         if in_place:
             return self.pcdb.update(entry_id, structure=changer.new_structure)

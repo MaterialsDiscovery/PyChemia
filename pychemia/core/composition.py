@@ -31,7 +31,7 @@ class Composition:
         of species and values
 
         :rtype: Composition
-        Examples:
+
         >>> import pychemia
         >>> comp = pychemia.Composition({'Ba': 2, 'Cu': 3, 'O': 7, 'Y': 1})
         >>> comp.formula
@@ -256,7 +256,7 @@ class Composition:
         :param reduced: (bool) If the formula should be normalized
 
         :rtype: str
-        Examples:
+
         >>> import pychemia
         >>> comp=pychemia.Composition('YBa2Cu3O7')
         >>> comp.sorted_formula()
@@ -353,7 +353,6 @@ class Composition:
                         'cubes' or 'spheres'
         :rtype : (float)
 
-        Examples:
         >>> import pychemia
         >>> comp=pychemia.Composition('C5H10')
         >>> comp.covalent_volume()

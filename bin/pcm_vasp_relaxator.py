@@ -4,6 +4,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 import os
 import sys
+import json
 import getopt
 import pychemia
 from pychemia.code.vasp import ConvergenceKPointGrid, VaspRelaxator, read_poscar, ConvergenceCutOffEnergy
@@ -112,6 +113,15 @@ def main(argv):
     print " Structure           :\n"
     print structure
 
+    wf = open(output_file, 'w')
+    data = {'input': {'binary': binary,
+                      'energy_tol': energy_tol,
+                      'target_forces': target_forces,
+                      'nparal': nparal,
+                      'structure': structure.to_dict}}
+    json.dumps(data, wf)
+    wf.close()
+
     # First Round (Relaxing the original structure)
     print '\nFirst Round'
     print '==========='
@@ -125,6 +135,11 @@ def main(argv):
     ce.plot()
     encut = ce.best_encut
 
+    data['output'] = {'1R_ENCUT': encut}
+    wf = open(output_file, 'w')
+    json.dumps(data, wf)
+    wf.close()
+
     cleaner()
     print '\nConvergence of K-Point Grid'
     print '---------------------------\n'
@@ -133,6 +148,11 @@ def main(argv):
     ck.save()
     ck.plot()
     kp = ck.best_kpoints
+
+    data['output'] = {'1R_KPOINTS': kp.grid}
+    wf = open(output_file, 'w')
+    json.dumps(data, wf)
+    wf.close()
 
     os.rename('convergence_encut.json', 'convergence_encut_phase1.json')
     os.rename('convergence_encut.pdf', 'convergence_encut_phase1.pdf')
@@ -150,6 +170,11 @@ def main(argv):
     structure = vr.get_final_geometry()
     structure.save_json(workdir+os.sep+'structure_phase1.json')
 
+    data['output'] = {'1R_structure': structure.to_dict}
+    wf = open(output_file, 'w')
+    json.dumps(data, wf)
+    wf.close()
+
     # Second Round (Symetrize structure and redo convergences)
     st = symmetrize(structure)
 
@@ -165,6 +190,11 @@ def main(argv):
     ck.plot()
     kp = ck.best_kpoints
 
+    data['output'] = {'2R_KPOINTS': kp.grid}
+    wf = open(output_file, 'w')
+    json.dumps(data, wf)
+    wf.close()
+
     cleaner()
     print '\nConvergence of Cut-off Energy'
     print '-----------------------------\n'
@@ -173,6 +203,11 @@ def main(argv):
     ce.save()
     ce.plot()
     encut = ce.best_encut
+
+    data['output'] = {'2R_ENCUT': encut}
+    wf = open(output_file, 'w')
+    json.dumps(data, wf)
+    wf.close()
 
     os.rename('convergence_encut.json', 'convergence_encut_phase2.json')
     os.rename('convergence_encut.pdf', 'convergence_encut_phase2.pdf')
@@ -189,6 +224,11 @@ def main(argv):
 
     structure = vr.get_final_geometry()
     structure.save_json(workdir+os.sep+'structure_phase2.json')
+
+    data['output'] = {'2R_structure': structure.to_dict}
+    wf = open(output_file, 'w')
+    json.dumps(data, wf)
+    wf.close()
 
     cleaner()
 

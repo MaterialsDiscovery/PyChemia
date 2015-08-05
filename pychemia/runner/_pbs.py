@@ -99,7 +99,8 @@ def report_cover():
 
     ret += 'PBS VARIABLES\n'
     ret += '-------------\n\n'
-    for x in ['PBS_O_HOST', 'PBS_SERVER', 'PBS_O_QUEUE', 'PBS_O_WORKDIR', 'PBS_ARRAYID', 'PBS_ENVIRONMENT', 'PBS_JOBID', 'PBS_JOBNAME', 'PBS_NODEFILE', 'PBS_QUEUE']:
+    for x in ['PBS_O_HOST', 'PBS_SERVER', 'PBS_O_QUEUE', 'PBS_O_WORKDIR', 'PBS_ARRAYID', 'PBS_ENVIRONMENT',
+              'PBS_JOBID', 'PBS_JOBNAME', 'PBS_NODEFILE', 'PBS_QUEUE']:
         if os.getenv(x) is not None:
             ret += x + ' = ' + os.getenv(x) +'\n'
     return ret

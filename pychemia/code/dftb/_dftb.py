@@ -21,8 +21,8 @@ class DFTBplus(Codes):
         self.options = {}
         self.analysis = {}
         self.parser_options = {}
-        self.slater_koster = None
-        self.structure = None
+        self.slater_koster = []
+        self.structure = Structure()
         self.binary = 'dftb+'
         self.runner = None
         self.kpoints = None
@@ -146,6 +146,8 @@ class DFTBplus(Codes):
         return ret
 
     def get_geometry(self):
+        assert (self.structure is not None)
+
         self.geometry['TypeNames'] = list(self.structure.species)
         self.geometry['TypesAndCoordinates'] = {'units': 'Angstrom'}
         indices = []
@@ -173,7 +175,8 @@ class DFTBplus(Codes):
     def basic_parser_options(self):
         self.parser_options = {'WriteXMLInput': True}
 
-    def print_block(self, name, block):
+    @staticmethod
+    def print_block(name, block):
 
         if block == {}:
             return '\n' + name + ' = {}\n'
@@ -280,7 +283,7 @@ class DFTBplus(Codes):
 
     def basic_input(self):
         self.basic_driver()
-        if self.slater_koster is None:
+        if not self.slater_koster:
             pcm_log.debug('The Slater-Koster files were not selected')
             pcm_log.debug('The Hamiltonian could not be setup')
         else:
@@ -325,13 +328,15 @@ class DFTBplus(Codes):
                     pcm_log.debug('ERROR: Slater_Koster for ' + pair + ' not found')
 
     def print_slater_koster(self):
+
         for i in self.slater_koster:
             filename = self.workdir+os.sep+os.path.basename(i)
             if os.path.lexists(filename):
                 os.remove(filename)
             os.symlink(os.path.abspath(i), filename)
 
-    def get_shells(self, slater_koster):
+    @staticmethod
+    def get_shells(slater_koster):
 
         ret = {}
         rf = open(slater_koster, 'r')
@@ -364,7 +369,6 @@ class DFTBplus(Codes):
         return ret
 
     def get_all_shells(self):
-        assert (self.slater_koster is not None)
         ret = {}
         for islater in self.slater_koster:
             shells = self.get_shells(islater)

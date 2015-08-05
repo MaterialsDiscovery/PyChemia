@@ -2,6 +2,7 @@ __author__ = 'Guillermo Avendano-Franco'
 
 import os
 import sys
+import pychemia
 from .structure import Structure
 
 def structure_from_file(structure_file):

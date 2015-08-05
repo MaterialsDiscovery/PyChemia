@@ -11,6 +11,8 @@ are post-process using the output in NetCDF format
 
 import os
 import sys
+import shutil
+import tempfile
 import subprocess
 
 import pychemia
@@ -26,8 +28,7 @@ def test_example1():
     Example of a simple calc            :
     """
     if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
-        assert(os.path.isdir(path))
-        workdir = get_path()
+        workdir = tempfile.mkdtemp()
         print(workdir)
         creation(workdir)
         execution(workdir)
@@ -35,19 +36,8 @@ def test_example1():
         print('ecut=', ecut)
         print('etotal=', etotal)
         assert ecut == 15.0
-        assert abs(etotal + 4.19934820332) < 0.001
-
-
-def get_path():
-    workdir = None
-    if os.path.isdir(path + '/abinit_04'):
-        workdir = path + '/abinit_04'
-    elif os.path.isdir('data/abinit_04'):
-        workdir = 'data/abinit_04'
-    else:
-        print('The directory "abinit_04" was not found')
-        exit(1)
-    return workdir
+        assert abs(etotal + 4.199348203363531) < 0.001
+        shutil.rmtree(workdir)
 
 
 def which(program):
@@ -77,7 +67,7 @@ def creation(filep):
     Create the input file from the original and
     set the proper values for abinit.files
     """
-    var = pa.InputVariables(filep + '/t44.in')
+    var = pa.InputVariables(path + os.sep + 'abinit_04' + os.sep + 't44.in')
     abifile = pa.AbiFiles(filep)
     abifile.set_input(var)
     abifile.set_psps('LDA', 'FHI')
@@ -100,9 +90,6 @@ def execution(filep):
     else:
         print('The executable "abinit" is not in the PATH')
         print('Using the results of a previous calc')
-    files = [x for x in os.listdir('.') if x not in ['t44.in', 'abinit-o_OUT.nc']]
-    for i in files:
-        os.remove(i)
     os.chdir(cwd)
     abifile.close()
     logfile.close()
@@ -113,20 +100,23 @@ def datamining(filep):
     Read some output variables from abinit-o_OUT.nc
     """
     print('Extracting ecut and etotal')
-    data = pa.netcdf2dict(filep + '/abinit-o_OUT.nc')
+    if os.path.isfile(filep + os.sep + 'abinit-o_OUT.nc'):
+        data = pa.netcdf2dict(filep + os.sep + 'abinit-o_OUT.nc')
+    else:
+        data = pa.netcdf2dict(path + os.sep +'abinit_04' + os.sep + 'abinit-o_OUT.nc')
     print(data)
-    print(data['ecut'][0], data['etotal'][0])
-    return data['ecut'][0], data['etotal'][0]
+    print(data['ecut'], data['etotal'])
+    return data['ecut'], data['etotal']
 
 
 if __name__ == '__main__':
-    path = get_path()
+    workdir = tempfile.mkdtemp()
     if len(sys.argv) == 1:
         test_example1()
     elif len(sys.argv) == 2:
         if sys.argv[1] == 'create':
-            creation(path)
+            creation(workdir)
         if sys.argv[1] == 'execute':
-            execution(path)
+            execution(workdir)
         elif sys.argv[1] == 'result':
-            datamining(path)
+            datamining(workdir)

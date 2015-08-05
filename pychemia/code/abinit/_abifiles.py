@@ -194,5 +194,10 @@ class AbiFiles:
         else:
             self.files['psps'] = []
             pspdir = _os.getenv('HOME') + '/.abinit/' + exchange + '_' + kind
-            for i in self.inp.variables['znucl']:
+            if isinstance(self.inp.variables['znucl'], (int, float)):
+                lstznucl = [self.inp.variables['znucl']]
+            else:
+                lstznucl = self.inp.variables['znucl']
+
+            for i in lstznucl:
                 self.files['psps'].append(pspdir + '/' + psp_name(i, exchange, kind))

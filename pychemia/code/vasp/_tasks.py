@@ -384,7 +384,7 @@ class Convergence:
 
     def __init__(self, energy_tolerance):
 
-        self.convergence_info = None
+        self.convergence_info = []
         self.energy_tolerance = energy_tolerance
 
     def _best_value(self, variable):
@@ -425,6 +425,7 @@ class Convergence:
         plt.plot(xlims, [sup_dy, sup_dy], '0.5')
         plt.plot(xlims, [low_dy, low_dy], '0.5')
         plt.fill_between(xlims, [low_dy, low_dy], [sup_dy, sup_dy], color='0.9', alpha=0.5)
+        assert (self.convergence_info is not None)
         for idata in self.convergence_info:
             plt.annotate(s=str(idata[annotate]), xy=(idata[variable], idata['free_energy']), size=10)
 

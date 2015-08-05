@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import logging
-#logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 
 import os
 import sys
@@ -9,6 +9,7 @@ import json
 import getopt
 import numpy as np
 import pychemia
+import pandas
 from pychemia.utils.computing import get_int, get_float
 from pychemia.code.vasp import ConvergenceKPointGrid, ConvergenceCutOffEnergy, VaspRelaxator
 
@@ -188,10 +189,10 @@ def main(argv):
         tmpkp.set_optimized_grid(newst.lattice, density_of_kpoints=kp_density, force_odd=True)
 
         if ifactor < 0.0:
-            print '\nCompresing cell by %7.3f percent' % ifactor*100
+            print '\nCompresing cell by %7.3f percent' % (ifactor*100)
             print '-------------------\n'
         elif ifactor > 0.0:
-            print '\nExpanding cell by %7.3f percent' % ifactor*100
+            print '\nExpanding cell by %7.3f percent' % (ifactor*100)
             print '-------------------\n'
         else:
             print '\nOriginal cell'
@@ -221,15 +222,30 @@ def main(argv):
         relax.run()
         
         vo = pychemia.code.vasp.VaspOutput('OUTCAR')
+        relst = relax.get_final_geometry()
+        symm = pychemia.symm.StructureSymmetry(relst)
 
         data.append({'factor': ifactor, 'volume': newst.volume, 'density': newst.density, 'grid': list(kp.grid),
-                     'output': vo.to_dict})
+                     'output': vo.to_dict, 'spacegroup': symm.number()})
 
         wf = open('IdealStrength.json', 'w')
         json.dump(data, wf)
         wf.close()
 
     cleaner()
+
+
+def plot_strain(filename):
+
+    import matplotlib.pyplot as plt
+    a = json.load(open(filename))
+    df = pandas.DataFrame(a)
+
+    def trace(x):
+        return np.trace(np.array(x['stress'])[0])
+    df['stress'] = df['output'].map(trace)
+    plt.plot(df['factor'], df['stress'])
+    plt.savefig(filename+'.pdf')
 
 if __name__ == "__main__":
 

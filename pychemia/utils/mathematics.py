@@ -12,6 +12,7 @@ from math import cos, sin, sqrt
 import numpy.random as nr
 from scipy import weave
 
+
 def length_vector(v):
     """
     Returns the length of a vector 'v'
@@ -20,7 +21,7 @@ def length_vector(v):
     :param v: list, numpy.ndarray
     :rtype : float
 
-    Examples
+    Examples:
 
     >>> length_vector([1, 2, 3])
     3.7416573867739413
@@ -53,8 +54,6 @@ def unit_vector(v):
 
     :param v: list, numpy.array
     :rtype : numpy.ndarray
-
-    Examples
 
     >>> a = unit_vector([1, 2, 3])
     >>> a
@@ -474,8 +473,9 @@ def rotation_z(theta):
 def apply_rotation(vector, theta_x, theta_y, theta_z):
     return np.round(np.dot(rotation_x(theta_x), np.dot(rotation_y(theta_y), np.dot(rotation_z(theta_z), vector))), 14)
 
-def rotation_matrix_weave(axis, theta, mat = None):
-    if mat == None:
+
+def rotation_matrix_weave(axis, theta, mat=None):
+    if mat is None:
         mat = np.eye(3,3)
 
     support = "#include <math.h>"
@@ -499,42 +499,46 @@ def rotation_matrix_weave(axis, theta, mat = None):
         mat[3*2 + 2] = a*a+d*d-b*b-c*c;
     """
 
-    weave.inline(code, ['axis', 'theta', 'mat'], support_code = support, libraries = ['m'])
+    weave.inline(code, ['axis', 'theta', 'mat'], support_code=support, libraries=['m'])
 
     return mat
 
+
 def rotation_matrix_numpy(axis, theta):
-    mat = np.eye(3,3)
-    axis = axis/sqrt(np.dot(axis, axis))
+    mat = np.eye(3, 3)
+    axis /= sqrt(np.dot(axis, axis))
     a = cos(theta/2.)
     b, c, d = -axis*sin(theta/2.)
 
     return np.array([[a*a+b*b-c*c-d*d, 2*(b*c-a*d), 2*(b*d+a*c)],
-                  [2*(b*c+a*d), a*a+c*c-b*b-d*d, 2*(c*d-a*b)],
-                  [2*(b*d-a*c), 2*(c*d+a*b), a*a+d*d-b*b-c*c]])
+                     [2*(b*c+a*d), a*a+c*c-b*b-d*d, 2*(c*d-a*b)],
+                     [2*(b*d-a*c), 2*(c*d+a*b), a*a+d*d-b*b-c*c]])
 
-def projector(u,v):
-    return np.dot(v,u)/np.dot(u,u) * u
+
+def projector(u, v):
+    return np.dot(v, u)/np.dot(u, u) * u
+
 
 def gram_smith(v):
 
-    ret = np.zeros((len(v[0]),len(v[0])))
+    ret = np.zeros((len(v[0]), len(v[0])))
 
     ret[0] = v[0]/np.linalg.norm(v[0])
     print ret[0]
 
-    for k in range(1,len(v[0])):
+    for k in range(1, len(v[0])):
         ret[k] = v[k]
         print k, ret[k]
-        for j in range(0,k):
+        for j in range(0, k):
             print j
             ret[k] -= projector(ret[j], v[k])
         ret[k] /= np.linalg.norm(ret[k])
     return ret
 
+
 def gram_smith_qr(ndim):
     while True:
-        A = np.random.rand(ndim,ndim)
-        if np.linalg.det(A) > 1E-5:
+        matrix_a = np.random.rand(ndim, ndim)
+        if np.linalg.det(matrix_a) > 1E-5:
             break
-    return np.linalg.qr(A)[0]
+    return np.linalg.qr(matrix_a)[0]

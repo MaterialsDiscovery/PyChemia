@@ -185,7 +185,7 @@ class BeeAlgorithm(Searcher):
         for ibee in list(scouts):
             foragers_alive = self.population.ids_sorted(self.foragers[ibee])
             print 'Foragers that survived:', foragers_alive
-            if len(foragers_alive)>0:
+            if len(foragers_alive) > 0:
                 best_forager = foragers_alive[0]
                 if self.population.value(best_forager) < self.population.value(ibee):
                     # We found a better elite

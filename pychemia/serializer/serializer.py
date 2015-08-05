@@ -74,5 +74,15 @@ def generic_serializer(value):
         return value
     elif isinstance(value, int):
         return value
+    elif isinstance(value, dict):
+        new_value = {}
+        for i in value:
+            new_value[i] = generic_serializer(value[i])
+        return new_value
+    elif isinstance(value, list):
+        new_value = []
+        for i in range(len(value)):
+            new_value.append(generic_serializer(value[i]))
+        return new_value
     else:
-        raise ValueError("I do not know how to covert this: ", type(value), value)
+        raise ValueError("I do not know how to covert this: ", type(value))

@@ -11,6 +11,8 @@ are post-process using the output in NetCDF format
 
 import os
 import shutil
+import json
+import tempfile
 import subprocess
 
 import pychemia
@@ -27,16 +29,19 @@ def test_example2():
 
     path = 'pychemia/test/data'
     assert(os.path.isdir(path))
-    path = get_path()
-    print(path)
-    assert(os.path.isfile(path + '/t44.in'))
-    var = pychemia.code.abinit.InputVariables(path + '/t44.in')
-    abifiles = pychemia.code.abinit.AbiFiles(path)
+    workdir = tempfile.mkdtemp()
+    print(workdir)
+    assert(os.path.isfile(path + '/abinit_04/t44.in'))
+    var = pychemia.code.abinit.InputVariables(path + '/abinit_04/t44.in')
+    abifiles = pychemia.code.abinit.AbiFiles(workdir)
     abifiles.set_input(var)
     abifiles.set_psps('LDA', 'FHI')
     abifiles.create()
 
-    wf = open(path + '/results.txt', 'w')
+    res = []
+    wf = open(workdir + '/results.json', 'w')
+    cwd = os.getcwd()
+    os.chdir(workdir)
 
     for i in range(3):
         print(i)
@@ -44,10 +49,8 @@ def test_example2():
         if i > 0:
             var.set_value('irdwfk', 1)
         var.write(abifiles.get_input_filename())
-        abifile = open(path + '/abinit.files')
-        logfile = open(path + '/abinit.log', 'w')
-        cwd = os.getcwd()
-        os.chdir(path)
+        abifile = open(workdir + '/abinit.files')
+        logfile = open(workdir + '/abinit.log', 'w')
         if which('abinit') is not None:
             subprocess.call(['abinit'], stdin=abifile, stdout=logfile)
         else:
@@ -55,30 +58,21 @@ def test_example2():
             print('Using the results of a previous calc')
         if os.path.isfile('abinit-o_WFK'):
             shutil.copyfile('abinit-o_WFK', 'abinit-i_WFK')
-        os.chdir(cwd)
-        print(os.getcwd())
-        data = pychemia.code.abinit.netcdf2dict(path + '/abinit-o_OUT.nc')
-        wf.write(str(data['ecut'][0]).rjust(20) + ' ' + str(data['etotal'][0]).rjust(20) + '\n')
-        if os.path.isfile(path + '/abinit.out'):
-            os.remove(path + '/abinit.out')
-        if os.path.isfile(path + '/abinit.log'):
-            os.remove(path + '/abinit.log')
+        data = pychemia.code.abinit.netcdf2dict(workdir + '/abinit-o_OUT.nc')
+        os.rename(workdir + '/abinit-o_OUT.nc', '%s/abinit-o_OUT.nc_%d' % (workdir,i))
+        res.append({'ecut': data['ecut'], 'etotal': data['etotal']})
 
+    os.chdir(cwd)
+    json.dump(res, wf)
     wf.close()
-    if os.path.isfile(path + '/abinit.files'):
-        os.remove(path + '/abinit.files')
 
+    if which('abinit') is None:
+        res = json.load(open(path+os.sep+'abinit_04'+os.sep+'results.json'))
 
-def get_path():
-    path = None
-    if os.path.isdir('pychemia/test/data/abinit_04'):
-        path = 'pychemia/test/data/abinit_04'
-    elif os.path.isdir('data/abinit_04'):
-        path = 'data/abinit_04'
-    else:
-        print('The directory "abinit_04" was not found')
-        exit(1)
-    return path
+    assert (res[0]['etotal']+4.19954643154 < 1E-6)
+    assert (res[1]['etotal']+4.19954643154 < 1E-6)
+    assert (res[2]['etotal']+4.19954643154 < 1E-6)
+    shutil.rmtree(workdir)
 
 
 def which(program):
