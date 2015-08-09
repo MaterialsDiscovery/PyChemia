@@ -5,6 +5,7 @@ import sys
 import pychemia
 from .structure import Structure
 
+
 def structure_from_file(structure_file):
 
     from pychemia.code.vasp import read_poscar

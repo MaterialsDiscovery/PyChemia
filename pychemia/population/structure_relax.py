@@ -106,6 +106,7 @@ class StructurePopulation(Population):
         """
         Add one random structure to the population
         """
+        structure = Structure()
         if self.composition is None:
             raise ValueError('No composition associated to this population')
         comp = self.composition.composition.copy()
@@ -129,7 +130,7 @@ class StructurePopulation(Population):
             while True:
 
                 entry = None
-                condition['properties.spacegroup']=random.randint(1, 230)
+                condition['properties.spacegroup'] = random.randint(1, 230)
                 print 'Trying', condition['properties.spacegroup']
                 for ientry in self.pcdb_source.entries.find(condition):
                     if ientry['_id'] not in self.source_blacklist:

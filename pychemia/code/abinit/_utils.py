@@ -16,8 +16,7 @@ __date__ = "Aug 27, 2012"
 
 import os
 import numpy as np
-from ftplib import FTP as _FTP
-from scipy.io import netcdf_file as _netcdf_file
+from scipy.io import netcdf_file
 from pychemia.utils.periodic import atomic_symbol
 
 
@@ -34,7 +33,7 @@ def netcdf2dict(filename):
         print('ERROR: No such file: ', filename)
         return None
     output = {}
-    netcdffile = _netcdf_file(filename, 'r', mmap=False)
+    netcdffile = netcdf_file(filename, 'r', mmap=False)
     for ii in netcdffile.variables.keys():
         output[ii] = netcdffile.variables[ii][:]
     netcdffile.close()
@@ -52,64 +51,20 @@ def psp_name(atomicnumber, exchange, kind):
         filename = str(atomicnumber).zfill(2) + '-' + atom_symbol + '.LDA.fhi'
     elif kind == 'FHI' and exchange == 'GGA':
         filename = str(atomicnumber).zfill(2) + '-' + atom_symbol + '.GGA.fhi'
+    elif kind == 'CORE' and exchange == 'LDA':
+        filename = str(atomicnumber) + atom_symbol.lower() + '.1s_psp.mod'
+    elif kind == 'GTH' and exchange == 'LDA':
+        filename = str(atomicnumber).zfill(2) + atom_symbol.lower() + '.pspgth'
     elif kind == 'TM' and exchange == 'LDA':
         filename = str(atomicnumber) + atom_symbol.lower() + '.pspnc'
     elif kind == 'DEN' and exchange == 'AE':
         filename = '0.' + str(atomicnumber).zfill(2) + '-' + atom_symbol + '.8.density.AE'
+    elif kind == 'HGH' and exchange == 'GGA':
+        filename = str(atomicnumber).zfill(2) + atom_symbol.lower() + '.pbe_hgh'
     else:
         print('Not know kind of PSP')
         filename = ''
     return filename
-
-
-def get_ftp_psp(atomicnumber, exchange, kind):
-    """
-    Get the ftp path to get the PSP
-    """
-    if kind == 'FHI' and exchange == 'LDA':
-        ftppath = '/pub/abinitio/Psps/LDA_FHI/'
-    elif kind == 'FHI' and exchange == 'GGA':
-        ftppath = '/pub/abinitio/Psps/GGA_FHI/'
-    elif kind == 'TM' and exchange == 'LDA':
-        ftppath = '/pub/abinitio/Psps/LDA_TM.psps/' + str(atomicnumber).zfill(2) + '/'
-    elif kind == 'DEN' and exchange == 'AE':
-        ftppath = '/pub/abinitio/Psps/AE_DEN/'
-    else:
-        print('Not know kind of PSP')
-        ftppath = ''
-    return ftppath
-
-
-def get_all_psps(basedir, exchange, kind):
-    directory = basedir + '/' + exchange + '_' + kind
-    if not os.path.isdir(directory):
-        os.mkdir(directory)
-
-    ftp = _FTP('ftp.abinit.org')  # connect to host, default port
-    ftp.login()  # user anonymous, passwd anonymous@
-    for i in range(1, 113):
-        filename = psp_name(i, exchange, kind)
-        if not os.path.isfile(directory + '/' + filename):
-            print('Getting...' + filename)
-            nofile = True
-            while nofile:
-                try:
-                    res = ftp.retrbinary('RETR ' + get_ftp_psp(i, exchange, kind) + filename,
-                                         open(directory + '/' + filename, 'wb').write)
-                    if os.path.getsize(directory + '/' + filename) == 0:
-                        os.remove(directory + '/' + filename)
-                        nofile = False
-                    else:
-                        nofile = False
-                except ValueError:
-                    print('Could not download ' + filename)
-                    ftp.close()
-                    if os.path.isfile(directory + '/' + filename):
-                        os.remove(directory + '/' + filename)
-                    ftp = _FTP('ftp.abinit.org')  # connect to host, default port
-                    ftp.login()  # user anonymous, passwd anonymous@
-                    nofile = False
-    ftp.close()
 
 
 def split_varname(varname):

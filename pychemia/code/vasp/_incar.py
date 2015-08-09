@@ -234,53 +234,39 @@ class InputVariables:
                     if j[1] > 3:
                         if real:
                             if compact:
-                                ret += ("%d*%g" % (j[1]-j[1] % 3, j[0])).rjust(8)
+                                ret += (" %d*%g" % (j[1]-j[1] % 3, j[0])).rjust(8)
                             else:
-                                ret += "%d*%g" % (j[1]-j[1] % 3, j[0])
+                                ret += " %d*%g" % (j[1]-j[1] % 3, j[0])
                         elif integer:
-                            ret += "%d*%d" % (j[1]-j[1] % 3, j[0])
+                            ret += " %d*%d" % (j[1]-j[1] % 3, j[0])
                         else:
-                            ret += "%d*%s" % (j[1]-j[1] % 3, j[0])
+                            ret += " %d*%s" % (j[1]-j[1] % 3, j[0])
 
                         if j[1] % 3 != 0:
-                            ret += ';\n' + 19*' '
                             for i in range(j[1] % 3):
                                 if real:
                                     if compact:
-                                        ret += ("%g" % j[0]).rjust(8)
+                                        ret += (" %g" % j[0]).rjust(8)
                                     else:
-                                        ret += "%17.10e" % j[0]
+                                        ret += " %17.10e" % j[0]
                                 elif integer:
-                                    ret += "%d" % j[0]
+                                    ret += " %d" % j[0]
                                 else:
-                                    ret += "%s" % j[0]
+                                    ret += " %s" % j[0]
 
                         counter += j[1]
-                        # Conditions to jump to a new line
-                        if (counter % 3) == 0 and real and counter < len(self.variables[varname]) - 1:
-                            ret += ";\n" + 19 * " "
-                        elif counter < len(self.variables[varname]):
-                            ret += " "
                     else:
                         for i in range(j[1]):
                             if real:
                                 if compact:
-                                    ret += ("%g" % j[0]).rjust(8)
+                                    ret += (" %g" % j[0]).rjust(8)
                                 else:
-                                    ret += "%17.10e" % j[0]
+                                    ret += " %17.10e" % j[0]
                             elif integer:
-                                ret += "%d" % j[0]
+                                ret += " %d" % j[0]
                             elif string:
-                                ret += "%s" % j[0]
+                                ret += " %s" % j[0]
 
-                            # Conditions to jump to a new line
-                            if ((counter + 1) % 3) == 0 \
-                                    and real \
-                                    and counter < len(self.variables[varname]) - 1 \
-                                    and len(self.variables[varname])>5:
-                                ret += ";\n" + 19 * " "
-                            elif counter < len(self.variables[varname]) - 1:
-                                ret += " "
                             counter += 1
 
         ret += ";\n"
@@ -348,3 +334,16 @@ class InputVariables:
 
     def set_density_for_restart(self):
         self.variables['ICHARG'] = 1
+
+    def get_value(self, varname, return_iterable=False):
+
+        if varname not in self.variables:
+            raise ValueError('Input variables does not contain value for "%"' % varname)
+
+        value = self.variables[varname]
+        if return_iterable and isinstance(value, (int, float, basestring)):
+            value = [value]
+
+        return value
+
+

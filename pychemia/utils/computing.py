@@ -1,7 +1,7 @@
 __author__ = 'Guillermo Avendano-Franco'
 
 import sys
-
+import hashlib
 
 def unicode2string(value):
     """
@@ -68,3 +68,14 @@ def get_float(value):
         print "ERROR: The value '%s' should be an float number" % value
         sys.exit(2)
     return ret
+
+
+def hashfile(filename):
+    blocksize = 65536
+    hasher = hashlib.md5()
+    with open(filename, 'rb') as afile:
+        buf = afile.read(blocksize)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = afile.read(blocksize)
+    return hasher.hexdigest()

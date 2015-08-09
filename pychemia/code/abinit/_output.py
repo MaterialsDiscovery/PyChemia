@@ -5,6 +5,7 @@ import os
 import numpy as np
 from scipy.io import netcdf_file
 
+
 class AbinitOutput:
 
     def __init__(self, filename='abinit.out'):
@@ -54,7 +55,8 @@ class AbinitOutput:
                     ret.append(iom['occ_matrix'])
         return np.array(ret)
 
-    def read_output_netcdf(self, filename):
+    @staticmethod
+    def read_output_netcdf(filename):
         return netcdf2dict(filename)
 
 

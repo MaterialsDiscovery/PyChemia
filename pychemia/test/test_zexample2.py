@@ -29,12 +29,21 @@ def test_example2():
 
     path = 'pychemia/test/data'
     assert(os.path.isdir(path))
+
+
+    if which('abinit') is None:
+        print('The executable "abinit" is not in the PATH')
+        print('Using the results of a previous calc')
+        check_results(path+os.sep+'abinit_04')
+        return
+
     workdir = tempfile.mkdtemp()
-    print(workdir)
+    print("Work directory: %s" % workdir)
     assert(os.path.isfile(path + '/abinit_04/t44.in'))
-    var = pychemia.code.abinit.InputVariables(path + '/abinit_04/t44.in')
+    av = pychemia.code.abinit.InputVariables(path + '/abinit_04/t44.in')
+    print 'Original input:\n%s' % av
     abifiles = pychemia.code.abinit.AbiFiles(workdir)
-    abifiles.set_input(var)
+    abifiles.set_input(av)
     abifiles.set_psps('LDA', 'FHI')
     abifiles.create()
 
@@ -44,35 +53,33 @@ def test_example2():
     os.chdir(workdir)
 
     for i in range(3):
-        print(i)
-        var.set_value('ecut', var.get_value('ecut') + 3)
+        av.set_value('ecut', av.get_value('ecut') + 3)
+        print 'Computing convergence study with ecut=%f ' % av.get_value('ecut'),
         if i > 0:
-            var.set_value('irdwfk', 1)
-        var.write(abifiles.get_input_filename())
+            av.set_value('irdwfk', 1)
+        av.write(abifiles.get_input_filename())
         abifile = open(workdir + '/abinit.files')
         logfile = open(workdir + '/abinit.log', 'w')
-        if which('abinit') is not None:
-            subprocess.call(['abinit'], stdin=abifile, stdout=logfile)
-        else:
-            print('The executable "abinit" is not in the PATH')
-            print('Using the results of a previous calc')
+        subprocess.call(['abinit'], stdin=abifile, stdout=logfile)
         if os.path.isfile('abinit-o_WFK'):
             shutil.copyfile('abinit-o_WFK', 'abinit-i_WFK')
         data = pychemia.code.abinit.netcdf2dict(workdir + '/abinit-o_OUT.nc')
         os.rename(workdir + '/abinit-o_OUT.nc', '%s/abinit-o_OUT.nc_%d' % (workdir,i))
         res.append({'ecut': data['ecut'], 'etotal': data['etotal']})
-
+        print 'Total energy: %f' % data['etotal']
     os.chdir(cwd)
     json.dump(res, wf)
     wf.close()
+    check_results(workdir)
+    shutil.rmtree(workdir)
 
-    if which('abinit') is None:
-        res = json.load(open(path+os.sep+'abinit_04'+os.sep+'results.json'))
 
+def check_results(workdir):
+
+    res = json.load(open(workdir+os.sep+'results.json'))
     assert (res[0]['etotal']+4.19954643154 < 1E-6)
     assert (res[1]['etotal']+4.19954643154 < 1E-6)
     assert (res[2]['etotal']+4.19954643154 < 1E-6)
-    shutil.rmtree(workdir)
 
 
 def which(program):

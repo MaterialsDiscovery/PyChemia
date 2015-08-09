@@ -10,14 +10,20 @@ from pychemia import pcm_log
 
 class PopulationNonColl(Population):
 
-    def __init__(self, name, mag_atoms):
+    def __init__(self, name, source_dir='.', mag_atoms=None):
         Population.__init__(self, name, 'global')
-        if not os.path.isfile(vasp_input):
-            print "VASP input not found"
-            raise ValueError
-        self.input = pychemia.code.vasp.read_incar()
-        self.structure = pychemia.code.vasp.read_poscar()
-        self.mag_atoms = mag_atoms
+        if not os.path.isfile(source_dir + os.sep + 'INCAR'):
+            raise ValueError("INCAR not found")
+        if not os.path.isfile(source_dir + os.sep + 'POSCAR'):
+            raise ValueError("POSCAR not found")
+        self.input = pychemia.code.vasp.read_incar(source_dir + os.sep + 'INCAR')
+        magmom = np.array(self.input.get_value('MAGMOM')).reshape((-1, 3))
+
+        self.structure = pychemia.code.vasp.read_poscar(source_dir + os.sep + 'POSCAR')
+        if mag_atoms is None:
+            self.mag_atoms = list(np.where(np.apply_along_axis(np.linalg.norm, 1, magmom) > 0.0)[0])
+        else:
+            self.mag_atoms = mag_atoms
 
     def __str__(self):
         ret = ' Population NonColl\n\n'
@@ -38,16 +44,16 @@ class PopulationNonColl(Population):
         magmom = np.zeros((self.structure.natom, 3))
         mag_angles = []
         for i in range(self.structure.natom):
-            if j in self.mag_atoms:
-                angles = np.random.random(3)
-                mag = random.random()
-                mag_angles.append((mag, angles))
+            if i in self.mag_atoms:
+                angles = 2 * np.pi * np.random.random(3)
+                mag = 2
+                mag_angles.append([mag] + list(angles))
                 rx = pychemia.utils.mathematics.rotation_x(angles[0])
                 ry = pychemia.utils.mathematics.rotation_y(angles[1])
                 rz = pychemia.utils.mathematics.rotation_z(angles[2])
                 vec = mag * np.dot(rz, np.dot(ry, np.dot(rx, np.array([1, 0, 0]))))
                 magmom[i] = vec
-        data = {'mag_angles': mag_angles, 'magmon': list(magmom.flatten())}
+        data = {'mag_angles': mag_angles, 'magmom': list(magmom.flatten())}
 
         return self.new_entry(data)
 
@@ -58,7 +64,7 @@ class PopulationNonColl(Population):
         pass
 
     def new_entry(self, data, active=True):
-        properties = {'mag_angles': list(data['mag_angles'].flatten()), 'magmom': list(data['magmom'].flatten())}
+        properties = {'mag_angles': data['mag_angles'], 'magmom': data['magmom']}
         status = {self.tag: active}
         entry_id = self.pcdb.insert(structure=self.structure, properties=properties, status=status)
         pcm_log.debug('Added new entry: %s with tag=%s: %s' % (str(entry_id), self.tag, str(active)))

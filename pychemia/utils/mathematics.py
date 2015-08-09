@@ -537,8 +537,7 @@ def gram_smith(v):
 
 
 def gram_smith_qr(ndim):
-    while True:
+    matrix_a = np.random.rand(ndim, ndim)
+    while np.linalg.det(matrix_a) < 1E-5:
         matrix_a = np.random.rand(ndim, ndim)
-        if np.linalg.det(matrix_a) > 1E-5:
-            break
     return np.linalg.qr(matrix_a)[0]

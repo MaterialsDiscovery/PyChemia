@@ -69,7 +69,7 @@ class UtilsProcar:
         self.log.debug("UtilsProcar()...done")
         return
 
-    def OpenFile(self, FileName = None):
+    def OpenFile(self, FileName=None):
         """
         Tries to open a File, it has suitable values for PROCAR and can
         handle gzipped files

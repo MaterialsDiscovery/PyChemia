@@ -1,0 +1,12 @@
+EDIFF           =  1e-07;
+ENCUT           =  624;
+IALGO           =  48;
+ICHARG          =  1;
+ISMEAR          =  0;
+ISPIN           =  2;
+LORBIT          =  11;
+LREAL           =  .FALSE.;
+NELM            =  60;
+NELMIN          =  2;
+NPAR            =  2;
+PREC            =  Normal;

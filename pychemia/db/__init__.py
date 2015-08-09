@@ -12,6 +12,6 @@ except ImportError:
 
 if USE_MONGO:
     from _db import PyChemiaDB, get_database, object_id, create_user, create_database
-
+    from _queue import PyChemiaQueue
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

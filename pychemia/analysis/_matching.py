@@ -89,7 +89,7 @@ class StructureMatch:
 
             print 'For specie %s best permutation is %s' % (specie, str(best[specie]))
 
-        best_permutation=np.zeros(self.structure1.natom, dtype=int)
+        best_permutation = np.zeros(self.structure1.natom, dtype=int)
         index = 0
         while index < self.structure1.natom:
             specie = self.structure1.symbols[index]

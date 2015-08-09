@@ -217,6 +217,7 @@ class Searcher:
         print str(self.population)
         self.save_info()
         self.population.save_info()
+        best_member = ''
 
         while True:
             self.print_status(level='DEBUG')
