@@ -44,6 +44,12 @@ try:
 except ImportError:
     HAS_PYMATGEN = False
 
+try:
+    import gridfs
+    HAS_GRIDFS = True
+except ImportError:
+    HAS_GRIDFS = False
+
 
 from .core import Structure, Composition, Lattice, structure_from_file
 import analysis

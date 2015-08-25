@@ -14,22 +14,31 @@ class AbinitOutput:
         rf = open(self.filename)
         self.data = rf.read()
 
+    def reload(self):
+        rf = open(self.filename)
+        self.data = rf.read()
+
     def get_energetics(self):
 
         ret = re.findall('ETOT\s*([\d]+)\s*([\.E\d\-\+]+)\s*([\.E\d\-\+]+)\s*([\.E\d\-\+]+)\s*([\.E\d\-\+]+)\n',
                          self.data)
-        ret = [[float(x) for x in y] for y in ret]
-        ret = np.array(ret)
-        energetics = {'iter': list(ret[:, 0]),
-                      'etot': list(ret[:, 1]),
-                      'deltaEh': list(ret[:, 2]),
-                      'residm': list(ret[:, 3]),
-                      'nres2': list(ret[:, 4])}
-        return energetics
+        if not ret:
+            return None
+        else:
+            ret = [[float(x) for x in y] for y in ret]
+            ret = np.array(ret)
+            energetics = {'iter': list(ret[:, 0]),
+                          'etot': list(ret[:, 1]),
+                          'deltaEh': list(ret[:, 2]),
+                          'residm': list(ret[:, 3]),
+                          'nres2': list(ret[:, 4])}
+            return energetics
 
     def get_occupation_matrix(self):
 
         occ_block = re.findall(r"=== For Atom[\s\w\d\-\.,=>:]*\n \n \n", self.data)
+        if not occ_block:
+            return None
         occs = re.findall('Occupation matrix for spin[\s\d\w]*([\s\d\-\.]*)', occ_block[0])
         atoms = [int(x) for x in re.findall('For Atom([\s\w\d]*)', occ_block[0])]
         spins = [int(x) for x in re.findall('Occupation matrix for spin([\s\w\d]*\n)', occ_block[0])]

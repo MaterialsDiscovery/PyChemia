@@ -8,7 +8,7 @@ import numpy as np
 from multiprocessing import Process
 from pychemia import pcm_log
 from pychemia.analysis import StructureAnalysis
-from pychemia.code.dftb import DFTBplusRelaxator
+from pychemia.code.dftb.task import Relaxation
 from pychemia.serializer import generic_serializer
 from pychemia.db import get_database
 from pychemia.utils.periodic import atomic_number
@@ -44,7 +44,7 @@ class EvaluatorDaemon:
             structure = pcdb.get_structure(entry_id)
             structure = structure.scale()
 
-            relaxer = DFTBplusRelaxator(workdir, structure, relaxator_params=relaxator_params,
+            relaxer = Relaxation(structure, workdir, relaxator_params=relaxator_params,
                                         target_forces=target_forces, waiting=True)
             relaxer.run()
             pcm_log.info('[%s]: Finished relaxation. Target forces: %7.3e' % (str(entry_id), target_forces))

@@ -10,6 +10,7 @@
 import os
 import ftplib
 import urllib2
+import tarfile
 import time
 from pychemia.code.abinit import psp_name
 
@@ -34,11 +35,13 @@ def get_rpath_psp(kind, exchange, atomicnumber=None):
         if atomicnumber is None:
             raise ValueError('Atomic number required')
         rpath = '/pub/abinitio/Psps/LDA_TM.psps/' + str(atomicnumber).zfill(2) + '/'
-    elif kind == 'DEN' and exchange == 'AE':
+    elif kind == 'AE' and exchange == 'DEN':
         rpath = '/pub/abinitio/Psps/AE_DEN/'
+    elif kind == 'FC' and exchange == 'DEN':
+        rpath = '/pub/abinitio/Psps/FC_DEN/'
     elif kind == 'PAW' and exchange == 'LDA':
         rpath = 'http://www.abinit.org/downloads/PAW2/ATOMICDATA/JTH-LDA-atomicdata.tar.gz'
-    elif kind == 'PAW' and exchange == 'PBE':
+    elif kind == 'PAW' and exchange == 'GGA':
         rpath = 'http://www.abinit.org/downloads/PAW2/ATOMICDATA/JTH-PBE-atomicdata.tar.gz'
     else:
         print('Not know kind of PSP')
@@ -67,19 +70,36 @@ def get_all_psps(basedir, exchange, kind):
                 file_size_dl += len(buffer)
                 f.write(buffer)
                 status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / file_size)
-                status = status + chr(8)*(len(status)+1)
+                status += chr(8) * (len(status) + 1)
                 print status,
             f.close()
+            print '\n'
+        try:
+            tar = tarfile.open(directory + '/' + filename, 'r:gz')
+            for item in tar:
+                if not os.path.exists(item.name):
+                    tar.extract(item, path=directory)
+        except:
+            name = os.path.basename(filename)
+            print name[:name.rfind('.')], '<filename>'
+
     elif kind == 'HGH':
-        ftp = ftplib.FTP('ftp.abinit.org')  # connect to host, default port
-        ret = ftp.login()  # user anonymous, passwd anonymous@
-        print ret
-        ret = ftp.cwd('pub/abinitio/Psps/LDA_HGH/')
-        print ret
-        for filename in ftp.nlst():
-            print 'Getting %s' % filename
-            ftp.retrbinary('RETR ' + filename, open(directory + '/' + filename, 'wb').write)
-        ftp.close()
+        while True:
+            succeed = True
+            ftp = ftplib.FTP('ftp.abinit.org')  # connect to host, default port
+            ret = ftp.login()  # user anonymous, passwd anonymous@
+            ret = ftp.cwd('pub/abinitio/Psps/LDA_HGH/')
+            for filename in ftp.nlst():
+                if not os.path.exists(directory + '/' + filename) or os.path.getsize(directory + '/' + filename) == 0:
+                    print 'Getting %s' % filename
+                    try:
+                        ftp.retrbinary('RETR ' + filename, open(directory + '/' + filename, 'wb').write)
+                    except:
+                        print 'Failed to get ', filename
+                        succeed = False
+            ftp.close()
+            if succeed:
+                break
     else:
         ftp = ftplib.FTP('ftp.abinit.org')  # connect to host, default port
         ftp.login()  # user anonymous, passwd anonymous@
@@ -89,18 +109,20 @@ def get_all_psps(basedir, exchange, kind):
                 continue
             if kind == 'CORE' and i not in [6, 7]:
                 continue
-            if kind == 'FHI' and exchange == 'LDA' and i in [65, 66, 67, 90, 94, 102, 110, 111, 112]:
+            if kind == 'FHI' and exchange == 'LDA' and i in [57, 59, 63, 65, 66, 67, 90, 94, 102, 110, 111, 112]:
                 continue
             if kind == 'TM' and exchange == 'LDA' and i in [104, 105, 106, 107, 108, 109, 110, 111, 112]:
                 continue
             if kind == 'FHI' and exchange == 'GGA' and i in [57, 59, 63, 65, 66, 67, 90, 94, 102, 110, 111, 112]:
                 continue
-            if kind == 'DEN' and exchange == 'AE' and i in [57, 59, 63, 65, 66, 67, 90, 102, 110, 111, 112]:
+            if kind == 'AE' and exchange == 'DEN' and i in [57, 59, 63, 65, 66, 67, 90, 94, 102, 110, 111, 112]:
                 continue
             if kind == 'GTH' and exchange == 'LDA' and i in [2, 10]:
                 continue
+            if kind == 'FC' and exchange == 'DEN' and i in [63, 65, 66, 67, 110, 111, 112]:
+                continue
             filename = psp_name(i, exchange, kind)
-            if not os.path.isfile(directory + '/' + filename):
+            if not os.path.isfile(directory + '/' + filename) or os.path.getsize(directory + '/' + filename) == 0:
                 print('Getting...' + filename)
                 nofile = True
                 while nofile:
@@ -110,7 +132,7 @@ def get_all_psps(basedir, exchange, kind):
                         nofile = False
                         if os.path.getsize(directory + '/' + filename) == 0:
                             os.remove(directory + '/' + filename)
-                    except ftplib.error_perm:
+                    except:
                         print('Could not download ' + retr)
                         missing_psps.append(i)
                         ftp.close()
@@ -133,17 +155,16 @@ if __name__ == '__main__':
     if not os.path.isdir(basedir):
         os.mkdir(basedir)
 
-    for exchange in ['LDA', 'GGA', 'AE', 'PBE']:
-
+    for exchange in ['LDA', 'GGA', 'DEN']:
+        print '=> '+exchange
         lista = []
         if exchange == 'LDA':
             lista = ['FHI', 'TM', 'GTH', 'PAW', 'CORE', 'HGH']
         elif exchange == 'GGA':
-            lista = ['FHI', 'HGH']
-        elif exchange == 'AE':
-            lista = ['DEN']
-        elif exchange == 'PBE':
-            lista = ['PAW']
+            lista = ['FHI', 'HGH', 'PAW']
+        elif exchange == 'DEN':
+            lista = ['AE', 'FC']
 
         for kind in lista:
+            print '--> ' + kind
             get_all_psps(basedir, exchange, kind)

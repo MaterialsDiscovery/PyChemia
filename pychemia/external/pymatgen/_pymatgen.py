@@ -5,7 +5,7 @@ pymatdis objects
 import numpy as np
 
 try:
-    import pymatgen.io.cifio
+    import pymatgen.io.cif
 except ImportError:
     raise ImportError
 from pychemia import Structure
@@ -18,7 +18,7 @@ def cif2structure(filename, primitive=False):
     pymatgen structure and finally into a pychemia
     structure
     """
-    cifp = pymatgen.io.cifio.CifParser(filename)
+    cifp = pymatgen.io.cif.CifParser(filename)
     pmg_structs = cifp.get_structures(primitive)
     ret = []
     for i in pmg_structs:

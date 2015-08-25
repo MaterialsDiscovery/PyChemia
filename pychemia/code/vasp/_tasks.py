@@ -10,14 +10,14 @@ import numpy as np
 from _incar import InputVariables
 from _outcar import VaspOutput, read_vasp_stdout
 from _vasp import VaspJob, VaspAnalyser
-from _poscar import read_poscar
+from _poscar import read_poscar, write_poscar
 from _kpoints import read_kpoints
 from pychemia.utils.mathematics import round_small
 from pychemia.dft import KPoints
 from pychemia import pcm_log
 from pychemia.code import Relaxator
 from pychemia.runner import Runner
-
+from pychemia import Structure
 
 class RelaxPopulation:
     def __init__(self, population, basedir, target_force=1E-2, target_stress=1E-2):
@@ -454,6 +454,71 @@ class Convergence:
         rf = open(filename, 'r')
         self.convergence_info = json.load(rf)
         rf.close()
+
+class StaticCalculation():
+
+    def __init__(self, structure, workdir='.', kpoints=None, binary='vasp', nparal=4, encut=1.3):
+
+        self.structure = structure
+        self.workdir = workdir
+        self.binary = binary
+        self.nparal = nparal
+        self.encut = encut
+        if kpoints is None:
+            kp = KPoints()
+            kp.set_optimized_grid(self.structure.lattice, density_of_kpoints=1E4, force_odd=True)
+            self.kpoints = kp
+        else:
+            self.kpoints = kpoints
+
+    def run(self):
+
+        vj = VaspJob()
+        vj.initialize(self.workdir, self.structure, self.kpoints, binary=self.binary)
+        vj.clean()
+        vj.job_static()
+        vj.input_variables.set_density_for_restart()
+        vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir+os.sep+'POTCAR')
+        vj.set_inputs()
+        self.encut = vj.input_variables.variables['ENCUT']
+        vj.run(use_mpi=True, mpi_num_procs=self.nparal)
+        pcm_log.debug('Starting VASP')
+        while True:
+            energy_str = ''
+            filename = self.workdir + os.sep + 'vasp_stdout.log'
+            if os.path.exists(filename):
+                vasp_stdout = read_vasp_stdout(filename=filename)
+                if len(vasp_stdout['data']) > 2:
+                    scf_energies = [i[2] for i in vasp_stdout['data']]
+                    energy_str = ' %7.3f' % scf_energies[1]
+                    for i in range(1, len(scf_energies)):
+                        if scf_energies[i] < scf_energies[i-1]:
+                            energy_str += ' >'
+                        else:
+                            energy_str += ' <'
+                    pcm_log.debug(energy_str)
+
+            if vj.runner is not None and vj.runner.poll() is not None:
+                filename = self.workdir + os.sep + 'vasp_stdout.log'
+                if os.path.exists(filename):
+                    vasp_stdout = read_vasp_stdout(filename=filename)
+                    if len(vasp_stdout['data']) > 2:
+                        scf_energies = [i[2] for i in vasp_stdout['data']]
+                        energy_str += ' %7.3f' % scf_energies[-1]
+                        pcm_log.debug(energy_str)
+                pcm_log.debug('Execution complete')
+                break
+            time.sleep(5)
+        vj.get_outputs()
+        self.forces = list(vj.outcar.forces.flatten())
+        self.stress = list(vj.outcar.stress.flatten())
+
+
+    def plot(self, figname='static_calculation.pdf'):
+        pass
+
+    def save(self, filename='static_calculation.json'):
+        pass
 
 
 class ConvergenceCutOffEnergy(Convergence):
@@ -921,3 +986,21 @@ class VaspRelaxator(Relaxator):
             except ValueError:
                 print 'Error reading CONTCAR'
         return structure
+
+
+
+def vasp_magmons():
+
+    st = Structure.load_json('structure.json')
+    write_poscar(st,'POSCAR')
+    inp = InputVariables()
+    inp.variables = json.load(open('input.json'))
+    inp.write('INCAR')
+    kp=read_kpoints('KPOINTS')
+    vj = VaspJob()
+    vj.initialize(workdir='.', structure=st, kpoints=kp, binary='vasp-noncol')
+    vj.run(use_mpi=True,mpi_num_procs=8)
+    while True:
+        if vj.runner is not None and vj.runner.poll() is not None:
+            pcm_log.info('Execution completed. Return code %d' % vj.runner.returncode)
+

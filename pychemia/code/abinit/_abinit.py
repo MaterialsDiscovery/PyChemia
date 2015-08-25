@@ -11,7 +11,7 @@ class AbinitJob(Codes):
 
     def __init__(self):
         Codes.__init__(self)
-        self.abifile = AbiFiles(self.workdir)
+        self.abifile = None
         self.kpoints = None
         self.structure = None
         self.workdir = None
@@ -26,28 +26,33 @@ class AbinitJob(Codes):
     def get_outputs(self):
         pass
 
-    def initialize(self, workdir, structure, kpoints, binary='abinit'):
+    def initialize(self, workdir, structure=None, input_file='abinit.in', binary='abinit', psp_kind='FHI',
+                   psp_exchange='LDA'):
         """
         Initialize the mandatory variables for a AbinitJob
 
         :param workdir: (str) The directory where the input files will be
         :param structure: (pychemia.Structure) A pychemia structure for the input
-        :param kpoints: (pychemia.dft.KPoints) The Kpoints object to use
+        :param input_file: (str) Input file for ABINIT
         :param binary: (str) The name or path for the ABINIT binary file
 
         :return:
         """
-        assert structure.is_crystal
-        assert structure.is_perfect
-        self.structure = structure
         self.workdir = workdir
+        self.abifile = AbiFiles(self.workdir)
         if not os.path.lexists(workdir):
             os.mkdir(workdir)
+        if structure is not None:
+            assert structure.is_crystal
+            assert structure.is_perfect
+            self.structure = structure
+            self.inp.from_structure(self.structure)
         self.binary = binary
-        self.kpoints = None
-
-        self.inp.from_structure(self.structure)
+        if os.path.isfile(input_file):
+            self.inp = InputVariables(input_file)
         self.abifile.set_input(self.inp)
+        self.kind = psp_kind
+        self.exchange = psp_exchange
 
     def job_ion_relaxation(self, internal_opt=True, external_opt=True, ionmov=2, nstep=20, ntime=30,
                            tolmxf=1E-7, tolrff=1E-3, dilatmx=1.05):
@@ -102,21 +107,22 @@ class AbinitJob(Codes):
 
         :return:
         """
-        self.set_psps()
+        self.set_psps(kind=self.kind, exchange=self.exchange)
         self.set_kpoints()
         self.write_abifiles()
         self.write_abiinput()
 
     def set_kpoints(self):
-        if self.kpoints is None:
-            self.inp.set_value('kptrlen', 1)
-        elif self.kpoints.kmode != 'gamma':
-            raise ValueError('Not Implemented yet')
-        else:
-            self.inp.set_value('ngkpt', list(self.kpoints.grid))
-            if self.kpoints.shifts is not None:
-                self.inp.set_value('nshiftk', len(self.kpoints.shifts))
-                self.inp.set_value('shiftk', self.kpoints.shifts)
+        if 'ngkpt' not in self.inp.variables.keys():
+            if self.kpoints is None:
+                self.inp.set_value('kptrlen', 1)
+            elif self.kpoints.kmode != 'gamma':
+                raise ValueError('Not Implemented yet')
+            else:
+                self.inp.set_value('ngkpt', list(self.kpoints.grid))
+                if self.kpoints.shifts is not None:
+                    self.inp.set_value('nshiftk', len(self.kpoints.shifts))
+                    self.inp.set_value('shiftk', self.kpoints.shifts)
 
     def set_ecut(self, ecut=50):
         self.inp.set_value('ecut', ecut)

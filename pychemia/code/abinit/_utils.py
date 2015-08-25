@@ -57,8 +57,14 @@ def psp_name(atomicnumber, exchange, kind):
         filename = str(atomicnumber).zfill(2) + atom_symbol.lower() + '.pspgth'
     elif kind == 'TM' and exchange == 'LDA':
         filename = str(atomicnumber) + atom_symbol.lower() + '.pspnc'
-    elif kind == 'DEN' and exchange == 'AE':
+    elif kind == 'AE' and exchange == 'DEN':
         filename = '0.' + str(atomicnumber).zfill(2) + '-' + atom_symbol + '.8.density.AE'
+    elif kind == 'FC' and exchange == 'DEN':
+        filename = str(atomicnumber).zfill(2) + '-' + atom_symbol + '.8.fc'
+    elif kind == 'PAW' and exchange == 'GGA':
+        filename = 'JTH-PBE-atomicdata-0.2/' + atom_symbol + '.GGA_PBE-JTH.xml'
+    elif kind == 'PAW' and exchange == 'LDA':
+        filename = 'JTH-LDA-atomicdata-0.2/' + atom_symbol + '.LDA_PW-JTH.xml'
     elif kind == 'HGH' and exchange == 'GGA':
         filename = str(atomicnumber).zfill(2) + atom_symbol.lower() + '.pbe_hgh'
     else:

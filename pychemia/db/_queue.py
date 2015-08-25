@@ -1,7 +1,7 @@
 __author__ = 'Guillermo Avendano-Franco'
 
 import os
-from pymongo import MongoClient
+import pymongo
 from pychemia import Structure
 import gridfs
 from pychemia.utils.computing import hashfile
@@ -30,13 +30,20 @@ class PyChemiaQueue:
                 uri += ':'+str(passwd)
             uri += '@'
         uri += host + ':' + str(port)
+        print 'URI:', uri
         if user is not None:
             uri += '/' + name
         if replicaset is not None:
-            self._client = MongoClient(uri, ssl=ssl, replicaset=replicaset)
+            self._client = pymongo.MongoClient(uri, ssl=ssl, replicaset=replicaset)
         else:
-            self._client = MongoClient(uri, ssl=ssl)
+            self._client = pymongo.MongoClient(host=host, port=port, ssl=ssl,
+                                               ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE)
+        for i in ['version', 'sysInfo', 'OpenSSLVersion']:
+            print '%20s : %s' % (i, self._client.server_info()[i])
         self.db = self._client[name]
+        if user is not None and self.db.authenticate(user,passwd):
+            print 'Authentication successful'
+
         self.set_minimal_schema()
         self.fs = gridfs.GridFS(self.db)
 
@@ -69,33 +76,44 @@ class PyChemiaQueue:
         self.add_file(entry_id, 'input', filename)
 
     def set_minimal_schema(self):
-        for entry_id in self.db.pychemia_entries.find({'meta': None}, {'meta': 1}):
-            print entry_id
-            self.db.pychemia_entries.update({'_id': entry_id['_id']}, {'$set': {'meta': {}}})
-        for entry_id in self.db.pychemia_entries.find({'input': None}):
-            print entry_id
-            self.db.pychemia_entries.update({'_id': entry_id['_id']}, {'$set': {'input': {}}})
-        for entry_id in self.db.pychemia_entries.find({'output': None}):
-            print entry_id
-            self.db.pychemia_entries.update({'_id': entry_id['_id']}, {'$set': {'output': {}}})
+        for entry in self.db.pychemia_entries.find({'meta': None}, {'_id': 1}):
+            print 'Missing field "meta" on', entry['_id']
+            self.db.pychemia_entries.update({'_id': entry['_id']}, {'$set': {'meta': {}}})
+        for entry in self.db.pychemia_entries.find({'input': None}, {'_id': 1}):
+            print 'Missing field "input" on', entry['_id']
+            self.db.pychemia_entries.update({'_id': entry['_id']}, {'$set': {'input': {}}})
+        for entry in self.db.pychemia_entries.find({'output': None}, {'_id': 1}):
+            print 'Missing field "output" on', entry['_id']
+            self.db.pychemia_entries.update({'_id': entry['_id']}, {'$set': {'output': {}}})
+        for entry in self.db.pychemia_entries.find({'job': None}, {'_id': 1}):
+            print 'Missing field "job" on', entry['_id']
+            self.db.pychemia_entries.update({'_id': entry['_id']}, {'$set': {'job': {}}})
 
     def set_structure(self, entry_id, location, structure):
         assert(location in ['input', 'output'])
         self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {location+'.structure': structure.to_dict}})
 
     def set_input(self, entry_id, code, input):
+
+        for i in input.variables.keys():
+            if i.startswith('$'):
+                value = input.variables.pop(i)
+                input.variables[i[1:]] = value
         self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'input.variables': input.variables,
                                                                      'input.code': code.lower()}})
 
-    def new_entry(self, structure=None, variables=None, code=None, files=None):
+    def new_entry(self, structure=None, variables=None, code=None, files=None, priority=0):
 
         if variables is not None and code is None:
             raise ValueError("Input variables requiere code name")
         if variables is None and code is not None:
             raise ValueError("Input variables requiere code name")
 
-        entry = {'input': {}, 'output': {}, 'meta': {}}
+        entry = {'input': {}, 'output': {}, 'meta': {'submitted': False, 'priority': priority, 'finished': False,
+                                                     'deployed': False}}
         entry_id = self.db.pychemia_entries.insert(entry)
+
+        self.db.pychemia_entries.update({'_id': entry_id}, { '$currentDate': {'meta.CreationDate': True}})
 
         if structure is not None:
             self.set_input_structure(entry_id, structure)
@@ -105,6 +123,23 @@ class PyChemiaQueue:
             for ifile in files:
                 self.add_input_file(entry_id, filename=ifile)
         return entry_id
+
+    def set_job_settings(self, entry_id, nparal=None, queue=None, nhours=None, mail=None, task_name=None,
+                         task_settings=None, task_kind=None ):
+        if nparal is not None:
+            self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.nparal': nparal}})
+        if queue is not None:
+            self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.queue': queue}})
+        if mail is not None:
+            self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.mail': mail}})
+        if nhours is not None:
+            self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.nhours': nhours}})
+        if task_name is not None:
+            self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.task_name': task_name}})
+        if task_kind is not None:
+            self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.task_kind': task_name}})
+        if task_settings is not None:
+            self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.task_settings': task_settings}})
 
     def set_input_structure(self, entry_id, structure):
         return self.set_structure(entry_id, 'input', structure)

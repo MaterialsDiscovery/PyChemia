@@ -38,7 +38,7 @@ OPTIONS
     --structure, -s <string> (Default: 'POSCAR')
         Structure for which the strength will be computed
 
-    --output, -o <string> (Default: 'IdealStrength.json')
+    --output, -o <string> (Default: 'pcm_results.json')
         File in JSON format where the results are stored
 
     --nparal, -n <int> (Default: 2)
@@ -58,7 +58,7 @@ OPTIONS
 def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], "hs:o:n:b:e:t:", ["help", "structure=", "output=", "nparal=",
-                                                               "binary=", "energy_tol=", "target_forces"])
+                                                               "binary=", "energy_tol=", "target_forces="])
     except getopt.GetoptError:
         usage(argv[0])
         sys.exit(2)
@@ -70,7 +70,7 @@ def main(argv):
     # Default Values
     workdir = '.'
     structure_file = 'POSCAR'
-    output_file = 'Relaxation.json'
+    output_file = 'pcm_results.json'
     nparal = 2
     energy_tol = 1E-3
     target_forces = 1E-3
@@ -94,7 +94,7 @@ def main(argv):
         elif opt in ("-t", "--target_forces"):
             target_forces = get_float(arg)
         elif opt in ("-s", "--structure"):
-            structure_file = get_int(arg)
+            structure_file = arg
 
     structure = pychemia.structure_from_file(structure_file)
     if structure is None:
@@ -106,7 +106,7 @@ def main(argv):
 
     print "\n PyChemia VASP Relaxator"
     print " =======================\n"
-    print " Executable          : ", binary
+    print " VASP binary         : ", binary
     print " Energy tolerance    : ", energy_tol
     print " Target forces       : ", target_forces
     print " MPI number of procs : ", nparal
@@ -119,7 +119,7 @@ def main(argv):
                       'target_forces': target_forces,
                       'nparal': nparal,
                       'structure': structure.to_dict}}
-    json.dumps(data, wf)
+    json.dump(data, wf)
     wf.close()
 
     # First Round (Relaxing the original structure)
@@ -137,7 +137,7 @@ def main(argv):
 
     data['output'] = {'1R_ENCUT': encut}
     wf = open(output_file, 'w')
-    json.dumps(data, wf)
+    json.dump(data, wf)
     wf.close()
 
     cleaner()
@@ -149,9 +149,10 @@ def main(argv):
     ck.plot()
     kp = ck.best_kpoints
 
-    data['output'] = {'1R_KPOINTS': kp.grid}
+    data['output'] = {'1R_KPOINTS': list(kp.grid)}
+    print data
     wf = open(output_file, 'w')
-    json.dumps(data, wf)
+    json.dump(data, wf)
     wf.close()
 
     os.rename('convergence_encut.json', 'convergence_encut_phase1.json')
@@ -172,7 +173,7 @@ def main(argv):
 
     data['output'] = {'1R_structure': structure.to_dict}
     wf = open(output_file, 'w')
-    json.dumps(data, wf)
+    json.dump(data, wf)
     wf.close()
 
     # Second Round (Symetrize structure and redo convergences)
@@ -190,9 +191,9 @@ def main(argv):
     ck.plot()
     kp = ck.best_kpoints
 
-    data['output'] = {'2R_KPOINTS': kp.grid}
+    data['output'] = {'2R_KPOINTS': list(kp.grid)}
     wf = open(output_file, 'w')
-    json.dumps(data, wf)
+    json.dump(data, wf)
     wf.close()
 
     cleaner()
@@ -206,7 +207,7 @@ def main(argv):
 
     data['output'] = {'2R_ENCUT': encut}
     wf = open(output_file, 'w')
-    json.dumps(data, wf)
+    json.dump(data, wf)
     wf.close()
 
     os.rename('convergence_encut.json', 'convergence_encut_phase2.json')
@@ -226,8 +227,9 @@ def main(argv):
     structure.save_json(workdir+os.sep+'structure_phase2.json')
 
     data['output'] = {'2R_structure': structure.to_dict}
+
     wf = open(output_file, 'w')
-    json.dumps(data, wf)
+    json.dump(data, wf)
     wf.close()
 
     cleaner()

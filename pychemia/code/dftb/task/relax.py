@@ -1,8 +1,8 @@
-__author__ = 'Guillermo Avendano Franco'
+__author__ = 'Guillermo Avendano-Franco'
 
 import os
 import time
-from _dftb import DFTBplus, read_detailed_out, read_dftb_stdout, read_geometry_gen
+from .._dftb import DFTBplus, read_detailed_out, read_dftb_stdout, read_geometry_gen
 from pychemia import pcm_log
 from pychemia.dft import KPoints
 
@@ -14,9 +14,9 @@ except ImportError:
 from pychemia.code import Relaxator
 
 
-class DFTBplusRelaxator(Relaxator):
+class Relaxation(Relaxator):
 
-    def __init__(self, workdir, structure, relaxator_params, target_forces=1E-3, waiting=False):
+    def __init__(self, structure, relaxator_params, workdir='.', kpoints=None, target_forces=1E-3, waiting=False):
 
         self.workdir = workdir
         self.initial_structure = structure
@@ -28,6 +28,12 @@ class DFTBplusRelaxator(Relaxator):
             self.initial_structure = symmetrize(structure)
         self.structure = self.initial_structure.copy()
         self.waiting = waiting
+        if kpoints is None:
+            self.kpoints = KPoints()
+            self.kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=10000)
+        else:
+            self.kpoints = kpoints
+
         Relaxator.__init__(self, target_forces)
 
     def set_params(self, params):
@@ -53,8 +59,7 @@ class DFTBplusRelaxator(Relaxator):
         irun = 0
         score = 0
         dftb = DFTBplus()
-        kpoints = KPoints(kmode='gamma', grid=[7, 7, 7])
-        dftb.initialize(workdir=self.workdir, structure=self.structure, kpoints=kpoints)
+        dftb.initialize(workdir=self.workdir, structure=self.structure, kpoints=self.kpoints)
         dftb.set_slater_koster(search_paths=self.slater_path)
         dftb.basic_input()
         dftb.driver['LatticeOpt'] = False
@@ -133,7 +138,12 @@ class DFTBplusRelaxator(Relaxator):
                         time.sleep(10)
                     pcm_log.debug('I am alive!!!')
                     filename = dftb.workdir + os.sep + 'detailed.out'
-                    forces, stress, total_energy = read_detailed_out(filename=filename)
+
+                    ret = read_detailed_out(filename=filename)
+                    forces = ret['forces']
+                    stress = ret['stress']
+                    total_energy = ret['total_energy']
+
                     if stress is None or forces is None or total_energy is None:
                         pcm_log.debug('Avoiding a static run relaxing and exiting')
                         dftb.basic_input()
@@ -212,7 +222,10 @@ class DFTBplusRelaxator(Relaxator):
 
         filename = self.workdir + os.sep + 'detailed.out'
         if os.path.isfile(filename):
-            forces, stress, total_energy = read_detailed_out(filename=filename)
+            ret = read_detailed_out(filename=filename)
+            forces = ret['forces']
+            stress = ret['stress']
+            total_energy = ret['total_energy']
         else:
             forces = None
             stress = None

@@ -338,7 +338,7 @@ class InputVariables:
     def get_value(self, varname, return_iterable=False):
 
         if varname not in self.variables:
-            raise ValueError('Input variables does not contain value for "%"' % varname)
+            raise ValueError('Input variables does not contain value for "%s"' % varname)
 
         value = self.variables[varname]
         if return_iterable and isinstance(value, (int, float, basestring)):

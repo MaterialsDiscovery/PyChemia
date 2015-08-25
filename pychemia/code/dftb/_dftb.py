@@ -91,13 +91,15 @@ class DFTBplus(Codes):
         current_container = ret
         tree_pos = [ret]
         for line in rf.readlines():
+            line = line.partition('#')[0]
+            line = line.rstrip()
             print 'line--->', line
             print 'return->', ret
             #print 'container',current_container
             #print 'tree_pos',tree_pos
             print 80*'-'
             if line.strip() == '':
-                pass
+                continue
             elif '=' in line and line.strip()[-1] == '{':
                 leftside = line.split('=')[0].strip()
                 rightside = line.split('=')[1].split()[0].strip()
@@ -166,6 +168,9 @@ class DFTBplus(Codes):
         self.driver['LatticeOpt'] = lattice_optimization
         self.driver['MovedAtoms'] = '1:-1'
 
+    def set_static(self):
+        self.driver = {}
+
     def basic_options(self):
         self.options = {'WriteDetailedXML': True}
 
@@ -222,7 +227,7 @@ class DFTBplus(Codes):
         if 'name' in the_dict:
             ret += ' = '
             ret += the_dict['name'] + ' {'
-            if isinstance(the_dict['value'], np.ndarray):
+            if 'value' in the_dict and isinstance(the_dict['value'], np.ndarray):
                 ret += DFTBplus._write_ndarray(the_dict['value'])
         elif 'units' in the_dict:
             ret += '[' + the_dict['units'] + '] = {'
@@ -468,6 +473,8 @@ def read_detailed_out(filename='detailed.out'):
     :param filename: The filename in the format of DFTB+ 'detailed.out'
     :return: tuple (forces, stress, total_energy)
     """
+    ret = {}
+
     rf = open(filename, 'r')
     data = rf.read()
 
@@ -482,23 +489,35 @@ def read_detailed_out(filename='detailed.out'):
 
     if forces:
         forces = np.array(forces[0].split(), dtype=float).reshape((-1, 3))
-        pcm_log.debug('Forces :\n'+str(forces))
+        #pcm_log.debug('Forces :\n'+str(forces))
     else:
         forces = None
 
     if stress:
         stress = np.array(stress[0].split(), dtype=float).reshape((3, 3))
-        pcm_log.debug('Stress :\n' + str(stress))
+        #pcm_log.debug('Stress :\n' + str(stress))
     else:
         stress = None
 
     if total_energy:
         total_energy = float(total_energy[0])
-        pcm_log.debug('Energy :' + str(total_energy))
+        #pcm_log.debug('Energy :' + str(total_energy))
     else:
         total_energy = None
 
-    return forces, stress, total_energy
+    scc =  re.findall('iSCC Total electronic   Diff electronic      SCC error  \s*  ([\s\dE+-.]*)',data)
+    if len(scc)>0:
+        ret['SCC'] = {}
+        ret['SCC']['iSCC'] = int(scc[0].split()[0])
+        ret['SCC']['Total_electronic'] = float(scc[0].split()[1])
+        ret['SCC']['Diff_electronic'] = float(scc[0].split()[2])
+        ret['SCC']['SCC_error'] = float(scc[0].split()[3])
+
+    ret['forces'] = forces
+    ret['stress'] = stress
+    ret['total_energy'] = total_energy
+
+    return ret
 
 
 def read_dftb_stdout(filename='dftb_stdout.log'):

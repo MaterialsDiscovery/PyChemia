@@ -1,6 +1,6 @@
 __author__ = 'Guillermo Avendano Franco'
 
-from pymongo import MongoClient
+import pymongo
 from multiprocessing import Pool
 from bson.objectid import ObjectId
 import numpy as np
@@ -37,7 +37,12 @@ class PyChemiaDB:
         uri += host + ':' + str(port)
         if user is not None:
             uri += '/' + name
-        self._client = MongoClient(uri, ssl=ssl)
+        if pymongo.version_tuple[0] == 2:
+            self._client = pymongo.MongoClient(uri, ssl=ssl)
+        elif pymongo.version_tuple[0] == 3:
+            self._client = pymongo.MongoClient(uri, ssl=ssl, ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE)
+        else:
+            raise ValueError('Wrong version of pymongo')
         self.db = self._client[name]
         self.entries = self.db.pychemia_entries
         self.set_minimal_schema()
@@ -295,7 +300,7 @@ def create_user(name, admin_name, admin_passwd, user_name, user_passwd, host='lo
     :param ssl
     :return:
     """
-    mc = MongoClient(host=host, port=port, ssl=ssl)
+    mc = pymongo.MongoClient(host=host, port=port, ssl=ssl)
     mc.admin.authenticate(admin_name, admin_passwd)
     mc[name].add_user(user_name, user_passwd)
     return PyChemiaDB(name=name, user=user_name, passwd=user_passwd, host=host, port=port, ssl=ssl)
