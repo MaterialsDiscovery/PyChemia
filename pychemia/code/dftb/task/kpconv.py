@@ -6,7 +6,7 @@ import json
 import numpy as np
 from .._dftb import DFTBplus, read_detailed_out
 from pychemia.dft import KPoints
-from pychemia import pcm_log
+from pychemia import pcm_log, Structure
 
 
 class KPointConvergence:
@@ -24,14 +24,28 @@ class KPointConvergence:
         self.results = []
         self.output_file = output_file
 
+        dftb = DFTBplus()
+        kpoints = KPoints()
+        kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=10000, force_odd=True)
+        dftb.initialize(workdir=self.workdir, structure=self.structure, kpoints=kpoints)
+        ans = dftb.set_slater_koster(search_paths=self.slater_path)
+        if not ans:
+            print 'Slater-Koster files not complete'
+
+
     def run(self):
 
         n = 10
+
         dftb = DFTBplus()
         kpoints = KPoints()
-        kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=1000, force_odd=True)
+        kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=10000, force_odd=True)
         dftb.initialize(workdir=self.workdir, structure=self.structure, kpoints=kpoints)
-        dftb.set_slater_koster(search_paths=self.slater_path)
+        ans = dftb.set_slater_koster(search_paths=self.slater_path)
+        if not ans:
+            print 'Slater-Koster files not complete'
+            return
+
         grid = None
         energies = []
 
@@ -40,7 +54,7 @@ class KPointConvergence:
             kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=density, force_odd=True)
             if np.sum(grid) != np.sum(kpoints.grid):
                 pcm_log.debug('Trial density: %d  Grid: %s' % (density, kpoints.grid))
-                grid = kpoints.grid
+                grid = list(kpoints.grid)
                 dftb.kpoints = kpoints
 
                 dftb.basic_input()
@@ -57,22 +71,26 @@ class KPointConvergence:
                     if dftb.runner is not None and dftb.runner.poll() is not None:
                         pcm_log.info('Execution completed. Return code %d' % dftb.runner.returncode)
                         filename = dftb.workdir + os.sep + 'detailed.out'
-                        ret = read_detailed_out(filename)
-                        print 'KPoint_grid= %15s  iSCC= %4d  Total_energy= %10.4f  SCC_error= %9.3E' % (grid,
+                        if os.path.exists(filename):
+                            ret = read_detailed_out(filename)
+                            print 'KPoint_grid= %15s  iSCC= %4d  Total_energy= %10.4f  SCC_error= %9.3E' % (grid,
                                                                                     ret['SCC']['iSCC'],
                                                                                     ret['total_energy'],
                                                                                     ret['SCC']['SCC_error'])
+                        else:
+                            print 'detailed.out could not be found, exiting...'
+                            return
                         n += 2
                         energies.append(ret['total_energy'])
                         break
                     time.sleep(10)
+
+                self.results.append({'kp_grid': grid,
+                                    'iSCC': ret['SCC']['iSCC'],
+                                    'Total_energy': ret['total_energy'],
+                                    'SCC_error': ret['SCC']['SCC_error']})
             else:
                 n += 2
-
-            self.results.append({'kp_grid': grid,
-                                 'iSCC': ret['SCC']['iSCC'],
-                                 'Total_energy': ret['total_energy'],
-                                 'SCC_error': ret['SCC']['SCC_error']})
 
             if len(energies) > 2 and abs(max(energies[-3:])-min(energies[-3:])) < self.energy_tolerance:
                 break
@@ -80,5 +98,12 @@ class KPointConvergence:
     def save_json(self):
 
         wf = open(self.output_file,'w')
-        json.dump(self.results, wf)
+        json.dump(self.results, wf, sort_keys=True, separators=(',\n', ': '))
         wf.close()
+
+def kpoint_convergence():
+
+    st = Structure.load_json('structure.json')
+    job = KPointConvergence(st)
+    job.run()
+    job.save_json()

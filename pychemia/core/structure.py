@@ -125,13 +125,13 @@ class Structure:
         if 'periodicity' in kwargs:
             periodicity = kwargs['periodicity']
             self.set_periodicity(periodicity)
-        if 'cell' in kwargs:
+        if 'cell' in kwargs and kwargs['cell'] is not None:
             cell = np.array(kwargs['cell'])
             self.set_cell(cell)
         if 'positions' in kwargs:
             positions = np.array(kwargs['positions'])
             self.set_positions(positions)
-        if 'reduced' in kwargs:
+        if 'reduced' in kwargs  and kwargs['reduced'] is not None:
             reduced = np.array(kwargs['reduced'])
             self.set_reduced(reduced)
         if 'mag_moments' in kwargs:
@@ -530,6 +530,13 @@ class Structure:
 
         best_structure.canonical_form()
         return best_structure
+
+    @staticmethod
+    def random_cluster(composition, method='stretching', stabilization_number=20, nparal=5):
+
+        st = Structure.random_cell(composition, method='stretching', stabilization_number=20, nparal=5)
+        return Structure(symbols=st.symbols, positions=st.positions, periodicity=False)
+
 
     def adjust_reduced(self):
         for i in range(self.natom):
@@ -967,12 +974,16 @@ class SiteSet:
                         symbols.append(structure.symbols[jatom])
                         occupancies.append(structure.occupancies[jatom])
                 position = structure.positions[isite]
-                reduced = structure.reduced[isite]
+                if self.structure.is_periodic:
+                    reduced = structure.reduced[isite]
             else:
                 symbols = [structure.symbols[isite]]
                 occupancies = [structure.occupancies[isite]]
                 position = structure.positions[isite]
-                reduced = structure.reduced[isite]
+                if self.structure.is_periodic:
+                    reduced = structure.reduced[isite]
+                else:
+                    reduced = None
             self.sitelist.append(Site(symbols=symbols, occupancies=occupancies, position=position, reduced=reduced))
 
     def __iter__(self):
@@ -980,7 +991,7 @@ class SiteSet:
 
 
 class Site:
-    def __init__(self, symbols, occupancies, position, reduced):
+    def __init__(self, symbols, occupancies, position, reduced=None):
 
         if isinstance(symbols, list):
             self.symbols = symbols
@@ -1001,7 +1012,8 @@ class Site:
         ret = 'Site(symbols=' + repr(self.symbols)
         ret += ',occupancies=' + repr(self.occupancies)
         ret += ',position=' + repr(self.position)
-        ret += ',reduced=' + repr(self.reduced)
+        if self.reduced is not None:
+            ret += ',reduced=' + repr(self.reduced)
         ret += ')'
         return ret
 

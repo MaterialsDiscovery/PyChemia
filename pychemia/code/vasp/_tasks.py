@@ -722,7 +722,7 @@ class ConvergenceKPointGrid(Convergence):
 
 class VaspRelaxator(Relaxator):
 
-    def __init__(self, workdir, structure, relaxator_params, target_forces=1E-3, waiting=False, binary='vasp'):
+    def __init__(self, structure, relaxator_params, workdir='.', target_forces=1E-3, waiting=False, binary='vasp'):
 
         Relaxator.__init__(self, target_forces)
         self.encut = 1.3
@@ -858,7 +858,10 @@ class VaspRelaxator(Relaxator):
 
         # How to change EDIFFG
         if max_force > self.target_forces or max_stress > self.target_forces:
-            vj.input_variables.variables['EDIFFG'] = round_small(-0.01*max(max_force, max_stress))
+            if self.relax_cell:
+                vj.input_variables.variables['EDIFFG'] = round_small(-0.01*max(max_force, max_stress))
+            else:
+                vj.input_variables.variables['EDIFFG'] = round_small(-0.01*max_force)
 
         pcm_log.debug('Current Values: ISIF: %2d   IBRION: %2d   EDIFF: %7.1E \tEDIFFG: %7.1E' %
                       (vj.input_variables.variables['ISIF'],

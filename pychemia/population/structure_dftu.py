@@ -9,9 +9,9 @@ from pychemia import pcm_log
 from pychemia.utils.mathematics import gram_smith_qr
 
 
-class PopulationLDAU(Population):
+class PopulationDFTU(Population):
 
-    def __init__(self, name, abinit_input, natpawu, oxidations):
+    def __init__(self, name, abinit_input='abinit.in', natpawu=None, oxidations=None):
 
         Population.__init__(self, name, 'global')
         if not os.path.isfile(abinit_input):
@@ -20,7 +20,17 @@ class PopulationLDAU(Population):
         self.input = InputVariables(abinit_input)
         self.structure = self.input.get_structure()
         self.maxlpawu = max(self.input.get_value('lpawu'))
-        self.natpawu = natpawu
+
+        if natpawu is None:
+            spinat = self.input.get_value('spinat')
+            if spinat is None:
+                print 'I could not determine the number of atoms playing a role in the DFT+U calculation'
+                raise ValueError('Could not determine natpawu')
+            else:
+                spinat = np.array(spinat).reshape((-1, 3))
+                self.natpawu = np.sum(np.apply_along_axis(np.linalg.norm, 1, spinat) != 0)
+        else:
+            self.natpawu = natpawu
         if self.input.has_variable('nsppol'):
             self.nsppol = self.input.get_value('nsppol')
         else:
@@ -42,6 +52,9 @@ class PopulationLDAU(Population):
         ret += ' Name:               %s\n' % self.name
         ret += ' Tag:                %s\n' % self.tag
         ret += ' Formula:            %s\n' % self.structure.formula
+        ret += ' natpawu:            %d\n' % self.natpawu
+        ret += ' connection:         %d\n' % self.connection
+
 
         ret += ' Members:            %d\n' % len(self.members)
         ret += ' Actives:            %d\n' % len(self.actives)
@@ -210,13 +223,22 @@ def dmatpawu2params(dmatpawu, ndim):
 def get_pattern(params, ndim):
 
     eigvec = np.array(params['eigvec']).reshape((-1, ndim, ndim))
+    natpawu = len(eigvec)
+    connection = np.zeros((natpawu, natpawu, ndim, ndim))
+
     bb = np.dot(eigvec[0], np.linalg.inv(eigvec[3]))
-    connection = np.array(np.round(np.diagonal(bb)), dtype=int)
+    #connection = np.array(np.round(np.diagonal(bb)), dtype=int)
 
     I = np.array(params['I'], dtype=int).reshape((-1, ndim))
-    pattern=np.zeros((len(I), len(I)))
-    for i in range(len(I)):
-        for j in range(i, len(I)):
+
+    pattern=np.zeros((natpawu, natpawu))
+    for i in range(natpawu):
+        for j in range(i, natpawu):
+
+            bb = np.dot(eigvec[0], np.linalg.inv(eigvec[3]))
+            connection[i,j] = bb
+            connection[j,i] = bb
+
             if np.all(I[i] == I[j]):
                 pattern[i, j] = 1
                 pattern[j, i] = 1

@@ -130,9 +130,13 @@ def main(argv):
     print '\nConvergence of Cut-off Energy'
     print '-----------------------------\n'
     ce = ConvergenceCutOffEnergy(structure, energy_tolerance=energy_tol, nparal=nparal)
-    ce.run()
-    ce.save()
-    ce.plot()
+    if os.path.isfile('convergence_encut.json'):
+        print 'A previous convergence study was found, loading...'
+        ce.load()
+    if not ce.is_converge:
+        ce.run()
+        ce.save()
+        ce.plot()
     encut = ce.best_encut
 
     data['output'] = {'1R_ENCUT': encut}
@@ -144,9 +148,13 @@ def main(argv):
     print '\nConvergence of K-Point Grid'
     print '---------------------------\n'
     ck = ConvergenceKPointGrid(structure, encut=encut, nparal=nparal, energy_tolerance=energy_tol)
-    ck.run()
-    ck.save()
-    ck.plot()
+    if os.path.isfile('convergence_kpoints.json'):
+        print 'A previous convergence study was found, loading...'
+        ce.load()
+    if not ce.is_converge:
+        ce.run()
+        ce.save()
+        ce.plot()
     kp = ck.best_kpoints
 
     data['output'] = {'1R_KPOINTS': list(kp.grid)}
@@ -163,8 +171,8 @@ def main(argv):
     cleaner()
     print '\nIonic Relaxation'
     print '----------------\n'
-    vr = VaspRelaxator(workdir=workdir, structure=structure,
-                       relaxator_params={'encut': encut, 'kp_grid': kp.grid, 'nparal': nparal},
+    vr = VaspRelaxator(structure=structure,
+                       relaxator_params={'encut': encut, 'kp_grid': kp.grid, 'nparal': nparal}, workdir=workdir,
                        target_forces=10*target_forces)
     vr.run()
 

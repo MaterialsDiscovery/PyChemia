@@ -5,23 +5,26 @@ import time
 from .._dftb import DFTBplus, read_detailed_out, read_dftb_stdout, read_geometry_gen
 from pychemia import pcm_log
 from pychemia.dft import KPoints
+from pychemia.code import Relaxator
 
 try:
     from pychemia.symm import symmetrize
 except ImportError:
     def symmetrize(structure):
         return structure
-from pychemia.code import Relaxator
 
 
 class Relaxation(Relaxator):
 
-    def __init__(self, structure, relaxator_params, workdir='.', kpoints=None, target_forces=1E-3, waiting=False):
+    def __init__(self, structure, relaxator_params=None, workdir='.', kpoints=None, target_forces=1E-3, waiting=False):
 
         self.workdir = workdir
         self.initial_structure = structure
         self.slater_path = None
         self.symmetrize = False
+        if relaxator_params is None:
+            relaxator_params = {'slater_path': '.'}
+
         self.set_params(relaxator_params)
 
         if self.symmetrize:
@@ -39,18 +42,17 @@ class Relaxation(Relaxator):
     def set_params(self, params):
         assert(isinstance(params, dict))
         if 'slater_path' not in params:
-            raise ValueError('A least one path must to be present to search for Slater-Koster files')
+            params['slater_path'] = '.'
+        if isinstance(params['slater_path'], basestring):
+            assert os.path.exists(params['slater_path'])
+            self.slater_path = [params['slater_path']]
         else:
-            if isinstance(params['slater_path'], basestring):
-                assert os.path.exists(params['slater_path'])
-                self.slater_path = [params['slater_path']]
-            else:
-                self.slater_path = params['slater_path']
-                try:
-                    for x in self.slater_path:
-                        assert os.path.exists(x)
-                except TypeError:
-                    raise ValueError('Missing a valid slater_path or list of slater_paths')
+            self.slater_path = params['slater_path']
+            try:
+                for x in self.slater_path:
+                    assert os.path.exists(x)
+            except TypeError:
+                raise ValueError('Missing a valid slater_path or list of slater_paths')
         if 'symmetrize' in params and params['symmetrize'] is True:
             self.symmetrize = True
 
@@ -70,12 +72,20 @@ class Relaxation(Relaxator):
         dftb.driver['MaxSteps'] = 50
         dftb.hamiltonian['MaxSCCIterations'] = 50
         dftb.set_inputs()
+        print 'Launching DFTB+ with target force of %9.2E ' % dftb.driver['MaxForceComponent']
         dftb.run()
         if self.waiting:
             dftb.runner.wait()
         while True:
             if dftb.runner is not None and dftb.runner.poll() is not None:
                 pcm_log.info('Execution completed. Return code %d' % dftb.runner.returncode)
+                booleans, geom_optimization, stats=read_dftb_stdout()
+                print 'Converged: ',stats['ion_convergence']
+                print 'SCC:', geom_optimization['nscc_per_ionstep']
+                print 'Forces:', geom_optimization['max_force'][-1]
+                if 'max_lattice_force' in geom_optimization:
+                    print 'Stress:', geom_optimization['max_lattice_force'][-1]
+
                 filename = dftb.workdir + os.sep + 'detailed.out'
                 if not os.path.exists(filename):
                     pcm_log.error('Could not find ' + filename)
@@ -87,6 +97,7 @@ class Relaxation(Relaxator):
                     dftb.driver['ConvergentForcesOnly'] = False
                 else:
                     dftb.driver['ConvergentForcesOnly'] = True
+
 
                 score = self.quality(dftb, score)
                 pcm_log.debug('Present score : ' + str(score))
@@ -115,6 +126,7 @@ class Relaxation(Relaxator):
                     dftb.roll_outputs(irun)
                     dftb.set_inputs()
                     irun += 1
+                    print 'Launching DFTB+ with target force of %9.2E ' % dftb.driver['MaxForceComponent']
                     dftb.run()
                     if self.waiting:
                         dftb.runner.wait()
@@ -130,6 +142,7 @@ class Relaxation(Relaxator):
                     dftb.options['CalculateForces'] = True
                     dftb.driver = {}
                     dftb.set_inputs()
+                    print 'Launching DFTB+ with static evaluation of forces '
                     dftb.run()
                     if self.waiting:
                         dftb.runner.wait()

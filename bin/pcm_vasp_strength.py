@@ -137,7 +137,7 @@ def main(argv):
 
     print "\n PyChemia Ideal Strenght"
     print " =======================\n"
-    print " Scaling factors     : ", str(np.arange(ini_factor, fin_factor, delta_factor))
+    print " Scaling factors     : ", str(np.arange(ini_factor, fin_factor+0.9*delta_factor, delta_factor))
     print " Executable          : ", binary
     print " Energy tolerance    : ", energy_tol
     print " Target forces       : ", target_forces
@@ -161,24 +161,34 @@ def main(argv):
     print '\nConvergence of Cut-off Energy'
     print '-----------------------------\n'
     ce = ConvergenceCutOffEnergy(structure, energy_tolerance=energy_tol, nparal=nparal, binary=binary)
-    ce.run()
-    ce.save()
-    ce.plot()
+    if os.path.isfile('convergence_encut.json'):
+        print 'A previous convergence study was found, loading...'
+        ce.load()
+    if not ce.is_converge:
+        ce.run()
+        ce.save()
+        ce.plot()
     encut = ce.best_encut
+    print 'ENCUT: ', encut
 
     cleaner()
     print '\nConvergence of K-Point Grid'
     print '---------------------------\n'
     ck = ConvergenceKPointGrid(structure, workdir='.', binary=binary, encut=encut, nparal=nparal,
                                energy_tolerance=energy_tol, recover=True)
-    ck.run()
-    ck.save()
-    ck.plot()
+    if os.path.isfile('convergence_kpoints.json'):
+        print 'A previous convergence study was found, loading...'
+        ck.load()
+    if not ce.is_converge:
+        ck.run()
+        ck.save()
+        ck.plot()
     kp = ck.best_kpoints
     kp_density = kp.get_density_of_kpoints(structure.lattice)
+    print 'KPOINT GRID', kp.grid
 
-    for ifactor in np.arange(ini_factor, fin_factor, delta_factor):
-            
+    for ifactor in np.arange(ini_factor, fin_factor+0.9*delta_factor, delta_factor):
+
         lattice = structure.lattice
         newlattice_params = tuple(np.concatenate((ifactor*np.array(expansion)*lattice.lengths + lattice.lengths,
                                                   lattice.angles)))
@@ -201,7 +211,7 @@ def main(argv):
         print 'KP Density %d -> %d' % (kp_density, tmpkp.get_density_of_kpoints(newst.lattice))
         print 'KP Grid %s -> %s' % (kp.grid, tmpkp.grid)
 
-        if np.prod(tmpkp.grid) < np.prod(kp.grid):
+        if np.prod(kp.grid) < np.prod(tmpkp.grid):
 
             cleaner()
             print '\nConvergence of K-Point Grid'
@@ -216,9 +226,9 @@ def main(argv):
             print 'The current grid is still good'
 
         cleaner()
-        relax = VaspRelaxator(workdir='.', structure=newst, relaxator_params={'kp_grid': kp.grid, 'encut': encut,
+        relax = VaspRelaxator(structure=newst, relaxator_params={'kp_grid': kp.grid, 'encut': encut,
                                                                               'nparal': nparal, 'relax_cell': False},
-                              target_forces=target_forces, waiting=False, binary=binary)
+                              workdir='.', target_forces=target_forces, waiting=False, binary=binary)
         relax.run()
         
         vo = pychemia.code.vasp.VaspOutput('OUTCAR')

@@ -42,7 +42,7 @@ class DFTBplus(Codes):
 
     def set_inputs(self):
         self.write_input(filename=self.workdir+os.sep+'dftb_in.hsd')
-        self.print_slater_koster()
+        self.link_slater_koster()
 
     def get_outputs(self):
         self.output = read_detailed_out(filename=self.workdir+os.sep+'detailed.out')
@@ -313,6 +313,7 @@ class DFTBplus(Codes):
         wf.close()
 
     def set_slater_koster(self, search_paths):
+        ret = True
         if isinstance(search_paths, basestring):
             search_paths = [search_paths]
         elif not isinstance(search_paths, list):
@@ -322,23 +323,37 @@ class DFTBplus(Codes):
             for jspecie in self.structure.species:
                 pair = ispecie+'-'+jspecie
                 pair_found = False
-                for ipath in search_paths:
-                    path = ipath+os.sep+pair+'.skf'
-                    if os.path.exists(ipath+os.sep+ispecie+'-'+jspecie+'.skf'):
-                        self.slater_koster.append(path)
-                        pair_found = True
+                path = self.workdir+os.sep+pair+'.skf'
+                if os.path.exists(path):
+                    self.slater_koster.append(path)
+                    pair_found = True
+                else:
+                    for ipath in search_paths:
+                        path = ipath+os.sep+pair+'.skf'
+                        if os.path.exists(ipath+os.sep+ispecie+'-'+jspecie+'.skf'):
+                            self.slater_koster.append(path)
+                            pair_found = True
                 if pair_found:
-                    pcm_log.debug('Slater-Koster ' + pair + ':' + path)
+                    #print 'Slater-Koster %7s : %s' % (pair, path)
+                    pcm_log.debug('Slater-Koster %7s : %s' % (pair, path))
                 else:
                     pcm_log.debug('ERROR: Slater_Koster for ' + pair + ' not found')
+                    ret = False
+        return ret
 
-    def print_slater_koster(self):
-
+    def link_slater_koster(self):
+        """
+        Create symbolic links to Slater-Koster files not already on the workdir
+        """
         for i in self.slater_koster:
             filename = self.workdir+os.sep+os.path.basename(i)
-            if os.path.lexists(filename):
+            if os.path.exists(filename):
+                pass
+            elif os.path.lexists(filename):
                 os.remove(filename)
-            os.symlink(os.path.abspath(i), filename)
+                os.symlink(os.path.abspath(i), filename)
+            else:
+                os.symlink(os.path.abspath(i), filename)
 
     @staticmethod
     def get_shells(slater_koster):

@@ -90,36 +90,43 @@ class VaspOutput:
         kpoints = re.findall(r'k-point\s*\d+\s*:\s*([-.\d\s]+)band', self.data)
         kpoints = np.array([x.split() for x in kpoints], dtype=float)
 
-        if False and self.array_sizes['NKPTS'] < 1000:
-            if len(kpoints) == 2 * self.array_sizes['NKPTS'] * self.array_sizes['NIONSTEPS']:
-                assert (self.array_sizes['ISPIN'] == 2)
-            else:
-                assert (self.array_sizes['ISPIN'] == 1)
+        if self.array_sizes['NKPTS'] < 1000:
+            print 'NKPTS', self.array_sizes['NKPTS']
 
-            kpoints.shape = (self.array_sizes['NIONSTEPS'], self.array_sizes['ISPIN'], self.array_sizes['NKPTS'], 3)
-            # pcm_log.debug('K-points:' + str(kpoints))
-            # pcm_log.debug('K-points shape;:' + str(kpoints.shape))
+            kpoints.shape = (-1, self.array_sizes['ISPIN'], self.array_sizes['NKPTS'], 3)
 
             if self.array_sizes['ISPIN'] == 2:
                 assert (np.all(kpoints[:, 0, :, :] == kpoints[:, 1, :, :]))
-            kpoints = kpoints[:, 0, :, :]
-            self.kpoints = kpoints
+            self.kpoints = kpoints[0, 0, :, :]
 
-        bands = re.findall(r'^\s*[1-9]\d*\s+([-\d]+\.[\d]+)\s+[-.\d]+\s*\n', self.data, re.MULTILINE)
+        pattern = r"k-point([\s\d]+):([\d\s.+-]+)\s*band No.\s*band energies\s*occupation\s*\n([\d\w\s.+-]+)\n\n"
+        bands = re.findall(pattern, self.data)
+        bands_dict = {}
+        for iband in bands:
+            try:
+                ikpt = int(iband[0])
+                kpt_pos = [float(x) for x in iband[1].split()]
+                kpt_eigenvals = np.array([float(x) for x in iband[2].split()[:3*self.array_sizes['NBANDS']]])
+                kpt_eigenvals.reshape((-1, 3))
+                bands_dict[ikpt] = {'position': kpt_pos, 'eigenvalues': kpt_eigenvals}
+            except ValueError:
+                print 'Error parsing bands'
+        self.bands = bands_dict
 
         if 'NIONSTEPS' in self.array_sizes:
             if len(bands) != self.array_sizes['NBANDS'] * self.array_sizes['ISPIN'] * self.array_sizes['NKPTS'] \
                     * self.array_sizes['NIONSTEPS']:
                 pcm_log.error('Bad number of bands')
-        bands = np.array(bands, dtype=float)
+
         # pcm_log.info('Bands : ' + str(bands))
 
-        stress = re.findall(r'in\s+kB ([-.\s\d]+)external', self.data)
+        stress = re.findall(r'in\s+kB ([-*.\s\d]+)external', self.data)
         # Converted from kBar to GPa
         if stress:
-            stress = 0.1 * np.array([x.split() for x in stress], dtype=float)
-            stress.shape = (self.array_sizes['NIONSTEPS'], 6)
-            self.stress = np.zeros((self.array_sizes['NIONSTEPS'], 3, 3))
+            stress = 0.1 * np.array([x.split() if '*' not in x else 6*[float('nan')] for x in stress], dtype=float)
+            stress.reshape((-1, 6))
+            nionsteps = len(stress)
+            self.stress = np.zeros((nionsteps, 3, 3))
             self.stress[:, 0, 0] = stress[:, 0]
             self.stress[:, 1, 1] = stress[:, 1]
             self.stress[:, 2, 2] = stress[:, 2]

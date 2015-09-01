@@ -5,7 +5,7 @@ from _codes import Codes
 from _relaxator import Relaxator
 import vasp
 import dftb
-
+from lennardjones import LennardJones
 try:
     import scipy
     import abinit

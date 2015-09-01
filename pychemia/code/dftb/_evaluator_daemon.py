@@ -52,6 +52,8 @@ class EvaluatorDaemon:
             filename = workdir + os.sep + 'detailed.out'
             if os.path.isfile(filename):
                 forces, stress, total_energy = relaxer.get_forces_stress_energy()
+                print 'Forces: ',np.apply_along_axis(np.linalg.norm, 1, forces)
+                print 'Stress: ', np.max(np.abs(stress.flatten()))
                 if forces is None:
                     pcm_log.error('No forces found on %s' % filename)
                 if stress is None:
