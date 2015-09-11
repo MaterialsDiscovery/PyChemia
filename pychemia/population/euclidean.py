@@ -1,10 +1,6 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import uuid
-
 import scipy.optimize
 import numpy as np
-
 from pychemia.utils.mathematics import unit_vector
 from _population import Population
 

@@ -51,7 +51,7 @@ except ImportError:
     HAS_GRIDFS = False
 
 
-from .core import Structure, Composition, Lattice, structure_from_file
+from .core import Structure, Composition, Lattice
 import analysis
 import calc
 import code
@@ -66,7 +66,9 @@ import searcher
 import symm
 import utils
 import web
+import external
 import population
+import serializer
 
 from _info import __author__, __copyright__, __version__, __email__, __status__, __date__, version
 

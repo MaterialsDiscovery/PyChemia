@@ -30,7 +30,6 @@ def test_example2():
     path = 'pychemia/test/data'
     assert(os.path.isdir(path))
 
-
     if which('abinit') is None:
         print('The executable "abinit" is not in the PATH')
         print('Using the results of a previous calc')
@@ -64,7 +63,7 @@ def test_example2():
         if os.path.isfile('abinit-o_WFK'):
             shutil.copyfile('abinit-o_WFK', 'abinit-i_WFK')
         data = pychemia.code.abinit.netcdf2dict(workdir + '/abinit-o_OUT.nc')
-        os.rename(workdir + '/abinit-o_OUT.nc', '%s/abinit-o_OUT.nc_%d' % (workdir,i))
+        os.rename(workdir + '/abinit-o_OUT.nc', '%s/abinit-o_OUT.nc_%d' % (workdir, i))
         res.append({'ecut': data['ecut'], 'etotal': data['etotal']})
         print 'Total energy: %f' % data['etotal']
     os.chdir(cwd)

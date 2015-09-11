@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano Franco'
-
 import pymongo
 from multiprocessing import Pool
 from bson.objectid import ObjectId

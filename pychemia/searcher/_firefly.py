@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import math
 from pychemia import pcm_log
 from _searcher import Searcher
@@ -7,7 +5,8 @@ from _searcher import Searcher
 
 class FireFly(Searcher):
 
-    def __init__(self, population, params=None, fraction_evaluated=0.90, generation_size=32, stabilization_limit=10):
+    def __init__(self, population, params=None, fraction_evaluated=1.0, generation_size=32,
+                 stabilization_limit=10, target_value=None):
         """
         Implementation fo the Firefly algorithm for global minimization
         This searcher uses a metric to compute the attractiveness and the vector displacement
@@ -28,7 +27,7 @@ class FireFly(Searcher):
         :return:
         """
         # Initializing objects
-        Searcher.__init__(self, population, fraction_evaluated, generation_size, stabilization_limit)
+        Searcher.__init__(self, population, fraction_evaluated, generation_size, stabilization_limit, target_value)
         # Parameters
         self.gamma = None
         self.beta0 = None

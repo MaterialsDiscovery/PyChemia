@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano'
-
 import os
 import itertools
 import numpy as np
@@ -54,7 +52,6 @@ class PopulationDFTU(Population):
         ret += ' Formula:            %s\n' % self.structure.formula
         ret += ' natpawu:            %d\n' % self.natpawu
         ret += ' connection:         %d\n' % self.connection
-
 
         ret += ' Members:            %d\n' % len(self.members)
         ret += ' Actives:            %d\n' % len(self.actives)
@@ -236,8 +233,8 @@ def get_pattern(params, ndim):
         for j in range(i, natpawu):
 
             bb = np.dot(eigvec[0], np.linalg.inv(eigvec[3]))
-            connection[i,j] = bb
-            connection[j,i] = bb
+            connection[i, j] = bb
+            connection[j, i] = bb
 
             if np.all(I[i] == I[j]):
                 pattern[i, j] = 1

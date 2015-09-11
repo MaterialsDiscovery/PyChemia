@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import json
 from abc import ABCMeta, abstractmethod
 
@@ -189,3 +187,10 @@ class Population:
     @property
     def to_dict(self):
         return {'name': self.name, 'tag': self.tag}
+
+    @property
+    def best_candidate(self):
+        return self.ids_sorted(self.evaluated)[0]
+
+    def refine_progressive(self, entry_id):
+        pass

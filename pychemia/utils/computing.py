@@ -1,7 +1,6 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import sys
 import hashlib
+
 
 def unicode2string(value):
     """

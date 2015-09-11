@@ -1,5 +1,3 @@
-__author__ = 'Guillermo'
-
 import re
 import os
 import numpy as np

@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import sys
 import random
 import itertools
@@ -7,7 +5,7 @@ import numpy as np
 from math import ceil, sqrt, cos, sin, radians, acos
 
 from pychemia.utils.mathematics import length_vectors, angle_vectors, wrap2_pmhalf, \
-    unit_vector, rotation_matrix_axis_angle, angle_vector
+    unit_vector, rotation_matrix_around_axis_angle, angle_vector
 from .composition import Composition
 from itertools import combinations
 from pychemia import pcm_log
@@ -43,7 +41,7 @@ class Lattice:
         >>> ortho.angles
         array([ 90.,  90.,  90.])
 
-        >>> bcc=pychemia.Lattice([[0.5, 0.5, -0.5], [-0.5, 0.5, 0.5], [0.5, -0.5, 0.5]])
+        >>> bcc = pychemia.Lattice([[0.5, 0.5, -0.5], [-0.5, 0.5, 0.5], [0.5, -0.5, 0.5]])
         >>> bcc.angles
         array([ 109.47122063,  109.47122063,  109.47122063])
         >>> bcc.lengths
@@ -551,7 +549,7 @@ class Lattice:
             return
         c = unit_vector(np.cross(a, b))
         av = angle_vector(a, b)
-        rotation_matrix = rotation_matrix_axis_angle(c, av)
+        rotation_matrix = rotation_matrix_around_axis_angle(c, av)
         self._cell = np.dot(rotation_matrix, self.cell.T).T.round(round_decimals)
 
     def align_with_plane(self, axis=2, round_decimals=14):
@@ -582,14 +580,14 @@ class Lattice:
         av = np.arccos(proj)
         # import math
         # print 'Angle=', math.degrees(av)
-        rotation_matrix = rotation_matrix_axis_angle(p1, -av)
+        rotation_matrix = rotation_matrix_around_axis_angle(p1, -av)
         cell = np.dot(rotation_matrix, self.cell.T).T.round(round_decimals)
         # print '-->',cell[1], vector_plane
         # print 'PROJECTION', np.dot(cell[1], vector_plane)
         if np.abs(np.dot(cell[1], vector_plane)) > 1E-10:
             # print 'Failed projection', np.dot(cell[1], vector_plane)
             # print cell
-            rotation_matrix = rotation_matrix_axis_angle(p1, av)
+            rotation_matrix = rotation_matrix_around_axis_angle(p1, av)
             cell = np.dot(rotation_matrix, self.cell.T).T.round(round_decimals)
             if np.dot(cell[1], vector_plane) > 1E-10:
                 # print 'Failed projection', np.dot(cell[1], vector_plane)

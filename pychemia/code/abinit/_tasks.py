@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano Franco'
-
 import os
 import shutil
 import pychemia
@@ -45,7 +43,8 @@ class RelaxPopulation:
             workdir = self.basedir+os.sep+name
             struct = pychemia.Structure.from_dict(i)
             job = pychemia.code.abinit.AbinitJob()
-            job.initialize(workdir=workdir, structure=struct, kpoints=kpoints)
+            job.initialize(workdir=workdir, structure=struct)
+            job.set_kpoints(kpoints=kpoints)
             job.ion_relax(tolmxf=1E-4, tolrff=1E-2,)
             job.energetics()
             job.write_all()
@@ -85,7 +84,8 @@ class AbinitRelaxator(Relaxator):
         score = 0
         job = pychemia.code.abinit.AbinitJob()
         kpoints = KPoints(kmode='gamma', grid=[7, 7, 7])
-        job.initialize(workdir=self.workdir, structure=self.structure, kpoints=kpoints)
+        job.initialize(workdir=self.workdir, structure=self.structure)
+        job.set_kpoints(kpoints=kpoints)
         job.set_psp(search_paths=self.slater_path)
         job.basic_input()
         dftb.driver['LatticeOpt'] = False

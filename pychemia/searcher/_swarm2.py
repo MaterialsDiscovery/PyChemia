@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import math
 from pychemia import pcm_log
 from _searcher import Searcher

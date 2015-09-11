@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import os
 import time
 import json
@@ -32,11 +30,9 @@ class KPointConvergence:
         if not ans:
             print 'Slater-Koster files not complete'
 
-
     def run(self):
 
         n = 10
-
         dftb = DFTBplus()
         kpoints = KPoints()
         kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=10000, force_odd=True)
@@ -100,6 +96,7 @@ class KPointConvergence:
         wf = open(self.output_file,'w')
         json.dump(self.results, wf, sort_keys=True, separators=(',\n', ': '))
         wf.close()
+
 
 def kpoint_convergence():
 

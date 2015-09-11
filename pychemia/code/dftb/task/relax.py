@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import os
 import time
 from .._dftb import DFTBplus, read_detailed_out, read_dftb_stdout, read_geometry_gen
@@ -80,7 +78,7 @@ class Relaxation(Relaxator):
             if dftb.runner is not None and dftb.runner.poll() is not None:
                 pcm_log.info('Execution completed. Return code %d' % dftb.runner.returncode)
                 booleans, geom_optimization, stats=read_dftb_stdout()
-                print 'Converged: ',stats['ion_convergence']
+                print 'Converged: ', stats['ion_convergence']
                 print 'SCC:', geom_optimization['nscc_per_ionstep']
                 print 'Forces:', geom_optimization['max_force'][-1]
                 if 'max_lattice_force' in geom_optimization:
@@ -97,7 +95,6 @@ class Relaxation(Relaxator):
                     dftb.driver['ConvergentForcesOnly'] = False
                 else:
                     dftb.driver['ConvergentForcesOnly'] = True
-
 
                 score = self.quality(dftb, score)
                 pcm_log.debug('Present score : ' + str(score))

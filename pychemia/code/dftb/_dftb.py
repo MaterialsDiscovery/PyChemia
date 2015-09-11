@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano Franco'
-
 import os
 import re
 import subprocess
@@ -95,8 +93,8 @@ class DFTBplus(Codes):
             line = line.rstrip()
             print 'line--->', line
             print 'return->', ret
-            #print 'container',current_container
-            #print 'tree_pos',tree_pos
+            # print 'container',current_container
+            # print 'tree_pos',tree_pos
             print 80*'-'
             if line.strip() == '':
                 continue
@@ -520,7 +518,7 @@ def read_detailed_out(filename='detailed.out'):
     else:
         total_energy = None
 
-    scc =  re.findall('iSCC Total electronic   Diff electronic      SCC error  \s*  ([\s\dE+-.]*)',data)
+    scc =  re.findall('iSCC Total electronic   Diff electronic      SCC error  \s*  ([\s\dE+-.]*)', data)
     if len(scc)>0:
         ret['SCC'] = {}
         ret['SCC']['iSCC'] = int(scc[0].split()[0])

@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano Franco'
-
 import json
 from abc import ABCMeta, abstractproperty
 import numpy as np

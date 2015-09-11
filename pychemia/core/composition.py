@@ -1,9 +1,3 @@
-"""
-Class Composition
-"""
-
-__author__ = 'Guillermo Avendano-Franco'
-
 from numpy import array, argsort
 from fractions import gcd as _gcd
 from math import pi

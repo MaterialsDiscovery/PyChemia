@@ -132,7 +132,7 @@ class InputVariables:
                         newval= [round(float(val_splt[i]), 10)]
                     except ValueError:
                         if '*' in val_splt[i] and len(val_splt[i].split('*'))==2:
-                            #print 'Trying this', val_splt[i]
+                            # print 'Trying this', val_splt[i]
                             newval = int(val_splt[i].split('*')[0])*[float(val_splt[i].split('*')[1])]
                         else:
                             newval = [val_splt[i]]

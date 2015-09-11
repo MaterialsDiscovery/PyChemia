@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-__author__ = 'Guillermo Avendano-Franco'
 
 import os
 import pychemia

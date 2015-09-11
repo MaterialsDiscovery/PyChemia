@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 from abc import ABCMeta, abstractmethod
 import os
 import subprocess

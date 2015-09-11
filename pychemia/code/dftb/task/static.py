@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import os
 import time
 import json
@@ -8,7 +6,8 @@ from .._dftb import DFTBplus, read_detailed_out
 from pychemia.dft import KPoints
 from pychemia import pcm_log
 
-class StaticCalculation():
+
+class StaticCalculation:
 
     def __init__(self, structure, workdir, slater_path, waiting=False, kpoints=None, output_file='results.json',
                  MaxSCCIterations=50):
@@ -76,6 +75,6 @@ class StaticCalculation():
 
     def save_json(self):
 
-        wf = open(self.output_file,'w')
+        wf = open(self.output_file, 'w')
         json.dump(self.results, wf)
         wf.close()

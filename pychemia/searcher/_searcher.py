@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 from abc import ABCMeta, abstractmethod
 from pychemia import pcm_log
 import time
@@ -12,11 +10,13 @@ class Searcher:
     Generations
     """
 
-    def __init__(self, population, fraction_evaluated=0.9, generation_size=32, stabilization_limit=10):
+    def __init__(self, population, fraction_evaluated=1.0, generation_size=32, stabilization_limit=10,
+                 target_value=None):
         self.population = population
         self.generation_size = generation_size
         self.fraction_evaluated = fraction_evaluated
         self.stabilization_limit = stabilization_limit
+        self.target_value = target_value
         self.current_generation = 0
         self.generation = {}
         self.sleep_time = 2
@@ -246,6 +246,20 @@ class Searcher:
             pcm_log.debug("Population '%s' evaluated. Ratio %5.3f / %5.3f" %
                           (self.population.name, self.population.fraction_evaluated, self.fraction_evaluated))
 
+            best_member = self.population.best_candidate
+            self.population.refine_progressive(best_member)
+
+            pcm_log.info('Best candidate: [%s] %s' % (best_member, self.population.str_entry(best_member)))
+            pcm_log.debug('[%s] Generations %s' % (str(best_member), str(self.generation[best_member])))
+            if len(self.generation[best_member]) > self.stabilization_limit:
+                break
+
+            if self.target_value is not None:
+                if self.population.value(best_member) < self.target_value:
+                    break
+                else:
+                    print 'Best value = %7.3f     target value = %7.3f' % (self.population.value(best_member), self.target_value)
+
             pcm_log.debug('[%s] Removing not evaluated: %d' %
                           (self.searcher_name, len(self.population.actives_no_evaluated)))
             for entry_id in self.population.actives_no_evaluated:
@@ -263,12 +277,6 @@ class Searcher:
             pcm_log.debug('[%s] Running one cycle' % self.searcher_name)
             self.run_one()
             self.print_status(level='DEBUG')
-
-            best_member = self.population.ids_sorted(self.population.actives_evaluated)[0]
-            pcm_log.info('Best candidate: [%s] %s' % (best_member, self.population.str_entry(best_member)))
-            pcm_log.debug('[%s] Generations %s' % (str(best_member), str(self.generation[best_member])))
-            if len(self.generation[best_member]) > self.stabilization_limit:
-                break
 
             # Increase the current generation number
             self.current_generation += 1

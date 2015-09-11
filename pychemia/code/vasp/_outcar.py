@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import re
 import os
 import numpy as np
@@ -19,10 +17,12 @@ class VaspOutput:
             rf.close()
 
         self.charge = {}
-        self.energy = None
+        self.energies = None
+        self.last_energy = None
         self.forces = None
         self.stress = None
         self.fermi = None
+        self.bands = None
         self.positions = None
         self.kpoints = None
         self.array_sizes = {}
@@ -74,30 +74,39 @@ class VaspOutput:
         # The expression in the middle, catch everything but ('>' greater than)
         # The final part catch the value of the energy
         # It returns a list of tuples in the form [(ionic iter, Energy (elect. Iter), ...]
-        energy = re.findall(r'Iteration\s*(\d+)[-+*/=():.\s\d\w]+>0\)\s*=\s*([-.\d]+)', self.data)
+        energy = re.findall(r'Iteration\s*(\d+)\s*\(\s*(\d+)\)[-+*/=():.\s\d\w]+>0\)\s*=\s*([-.\d]+)', self.data)
         # pcm_log.debug('Energy(eV) [(ionic iter, Energy (elect. Iter)),...]: ' + str(energy))
 
-        self.energy = []
+        self.energies = []
         index = None
 
-        for i in energy:
-            if index != i[0]:
-                if len(self.energy) == int(i[0]) - 1:
-                        self.energy.append([])
-                self.energy[int(i[0])-1].append(float(i[1]))
+        for ienergy in energy:
+            self.energies.append([int(ienergy[0]), int(ienergy[1]), float(ienergy[2])])
+
+        level0 = 0
+        level1 = 0
+        for i in self.energies:
+            if i[0] > level0:
+                self.last_energy = i[2]
+                level0 = i[0]
+            elif i[0] == level0 and i[1] > level1:
+                self.last_energy = i[2]
+                level1 = i[1]
 
         # TODO: Check for magnetic cases
         kpoints = re.findall(r'k-point\s*\d+\s*:\s*([-.\d\s]+)band', self.data)
         kpoints = np.array([x.split() for x in kpoints], dtype=float)
 
         if self.array_sizes['NKPTS'] < 1000:
-            print 'NKPTS', self.array_sizes['NKPTS']
 
-            kpoints.shape = (-1, self.array_sizes['ISPIN'], self.array_sizes['NKPTS'], 3)
-
-            if self.array_sizes['ISPIN'] == 2:
-                assert (np.all(kpoints[:, 0, :, :] == kpoints[:, 1, :, :]))
-            self.kpoints = kpoints[0, 0, :, :]
+            if (len(kpoints) % (self.array_sizes['ISPIN'] * self.array_sizes['NKPTS'] * 3)) == 0:
+                print 'NKPTS', self.array_sizes['NKPTS']
+                print 'ISPIN', self.array_sizes['ISPIN']
+                print 'kpoints', len(kpoints)
+                kpoints.shape = (-1, self.array_sizes['ISPIN'], self.array_sizes['NKPTS'], 3)
+                self.kpoints = kpoints[0, 0, :, :]
+            else:
+                print 'The number of kpoints recorded is not consistent with NKPTS and ISPIN', len(kpoints)
 
         pattern = r"k-point([\s\d]+):([\d\s.+-]+)\s*band No.\s*band energies\s*occupation\s*\n([\d\w\s.+-]+)\n\n"
         bands = re.findall(pattern, self.data)
@@ -203,7 +212,7 @@ class VaspOutput:
                     self.iteration_data[io_iter][scf_iter]['Free_Energy'][j] = float(iter_block[0])
 
     def has_forces_stress_energy(self):
-        return self.forces is not None and self.stress is not None and self.energy is not None
+        return self.forces is not None and self.stress is not None and self.last_energy is not None
 
     def __str__(self):
         ret = '\nForces:\n'
@@ -296,6 +305,10 @@ class VaspOutput:
                     except ValueError:
                         print 'Failed to parse: ', key_value
         return ret
+
+    @property
+    def is_finished(self):
+        return len(self.get_general_timing()) > 0
 
 
 def read_vasp_stdout(filename):

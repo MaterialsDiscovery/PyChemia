@@ -1,10 +1,3 @@
-"""
-Module MinimaHopping
-
-"""
-""
-__author__ = 'Guillermo Avendano-Franco'
-
 from _searcher import Searcher
 
 

@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import pychemia
 import numpy as np
 

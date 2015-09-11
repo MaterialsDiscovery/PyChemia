@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import os
 from ._incar import InputVariables
 from ._poscar import write_poscar

@@ -10,6 +10,8 @@ import sys
 import numpy as np
 import itertools
 from math import sin, cos
+import scipy.spatial
+import struct
 
 from pychemia import pcm_log
 from pychemia.core.lattice import Lattice
@@ -131,13 +133,13 @@ class Structure:
         if 'positions' in kwargs:
             positions = np.array(kwargs['positions'])
             self.set_positions(positions)
-        if 'reduced' in kwargs  and kwargs['reduced'] is not None:
+        if 'reduced' in kwargs and kwargs['reduced'] is not None:
             reduced = np.array(kwargs['reduced'])
             self.set_reduced(reduced)
         if 'mag_moments' in kwargs:
             self.set_mag_moments(np.array(kwargs['mag_moments']))
         if 'occupancies' in kwargs:
-            self.occupancies = kwargs['occupancies']
+            self.occupancies = list(kwargs['occupancies'])
         if 'sites' in kwargs:
             self.sites = kwargs['sites']
 
@@ -256,7 +258,7 @@ class Structure:
             self.sites = range(self.natom)
 
         if self.occupancies is None:
-            self.occupancies = np.ones(self.natom)
+            self.occupancies = self.natom*[1.0]
 
     def _check(self):
         check = True
@@ -453,7 +455,7 @@ class Structure:
         return ret
 
     @staticmethod
-    def random_cell(composition, method='stretching', stabilization_number=20, nparal=5):
+    def random_cell(composition, method='stretching', stabilization_number=20, nparal=5, periodic=True):
         """
         Generate a random cell
         There are two algorithms implemented:
@@ -493,7 +495,9 @@ class Structure:
         while stabilization_history < stabilization_number:
             args = list(best_volume * np.ones(10))
 
-            ret = pool.map(worker_star, itertools.izip(itertools.repeat(method), itertools.repeat(composition), args))
+            ret = pool.map(worker_star, itertools.izip(itertools.repeat(method),
+                                                       itertools.repeat(composition),
+                                                       itertools.repeat(periodic), args))
 
             ngood = 0
             for structure in ret:
@@ -518,7 +522,7 @@ class Structure:
 
         pool.close()
 
-        if best_structure is not None:
+        if best_structure is not None and periodic:
             # Analysis of the quality for the best structure
             rpos = best_structure.reduced
             for i, j in itertools.combinations(range(natom), 2):
@@ -534,9 +538,9 @@ class Structure:
     @staticmethod
     def random_cluster(composition, method='stretching', stabilization_number=20, nparal=5):
 
-        st = Structure.random_cell(composition, method='stretching', stabilization_number=20, nparal=5)
+        st = Structure.random_cell(composition=composition, method=method, stabilization_number=stabilization_number,
+                                   nparal=nparal, periodic=False)
         return Structure(symbols=st.symbols, positions=st.positions, periodicity=False)
-
 
     def adjust_reduced(self):
         for i in range(self.natom):
@@ -620,15 +624,14 @@ class Structure:
     def sort_sites_using_list(self, sorted_indices):
         self.symbols = list(np.array(self.symbols)[sorted_indices])
         self.positions = self.positions[sorted_indices]
-        self.reduced = self.reduced[sorted_indices]
+        if self.is_periodic:
+            self.reduced = self.reduced[sorted_indices]
         if self.vector_info is not None:
             for vi in self.vector_info:
                 if self.vector_info[vi] is not None:
                     self.vector_info[vi] = self.vector_info[vi][sorted_indices]
 
     def sort_sites(self):
-        # Only implemented for perfect structures
-        assert self.is_perfect
 
         # First: Sort sites using the distance to the origin
         sorted_indices = np.array([np.linalg.norm(self.positions[i]) for i in range(self.nsites)]).argsort()
@@ -639,6 +642,7 @@ class Structure:
         self.sort_sites_using_list(sorted_indices)
 
         # The sites are ordered by atomic number first and distance to the origin second
+        return sorted_indices
 
     def sort_axes(self):
         """
@@ -663,13 +667,24 @@ class Structure:
         self.set_cell(lattice.cell)
         self.reduced2positions()
 
+    def align_inertia_momenta(self):
+        I = self.inertia_matrix()
+        eigval, eigvec = np.linalg.eig(I)
+        eigvec = eigvec.T[eigval.argsort()[::-1]].T
+        inveigvec=np.linalg.inv(eigvec)
+        self.positions =  np.dot(inveigvec, self.positions.T).T
+
     def canonical_form(self):
 
+        if not self.is_periodic:
+            self.relocate_to_cm()
+            self.align_inertia_momenta()
         self.sort_sites()
-        self.sort_axes()
-        self.align_with_axis()
-        self.align_with_plane()
-        self.atoms_in_box()
+        if self.is_periodic:
+            self.sort_axes()
+            self.align_with_axis()
+            self.align_with_plane()
+            self.atoms_in_box()
 
     def supercell(self, size):
         """
@@ -738,34 +753,56 @@ class Structure:
     @property
     def to_dict(self):
 
-        ret = {'name': self.name,
-               'comment': self.comment,
-               'natom': self.natom,
+        ret = {'natom': self.natom,
                'symbols': self.symbols,
                'periodicity': self.periodicity,
-               'cell': self.cell.tolist(),
                'positions': self.positions.tolist(),
-               'reduced': self.reduced.tolist(),
-               'vector_info': self.vector_info,
                'nspecies': len(self.species),
-               'density': self.density,
-               'formula': self.formula,
-               'sites': list(self.sites),
-               'occupancies': list(self.occupancies)}
+               'formula': self.formula}
+        if self.is_periodic:
+            ret['cell'] = self.cell.tolist()
+            ret['reduced'] = self.reduced.tolist()
+            ret['density'] = self.density
+        if self.name is not None:
+            ret['name'] = self.name
+        if self.comment is not None:
+            ret['comment'] = self.comment
+        if self.sites != range(self.natom):
+            ret['sites'] = list(self.sites)
+        if self.occupancies != self.natom * [1.0]:
+            ret['occupancies'] = self.occupancies
+        #if len(self.vector_info) != 1 or self.vector_info['mag_moments'] is not None:
+        #    ret['vector_info'] = self.vector_info
         return ret
 
     @staticmethod
     def from_dict(structdict):
 
-        name = structdict['name']
-        comment = structdict['comment']
         natom = structdict['natom']
         symbols = unicode2string(structdict['symbols'])
         periodicity = structdict['periodicity']
-        cell = np.array(structdict['cell'])
         positions = np.array(structdict['positions'])
-        reduced = np.array(structdict['reduced'])
-        vector_info = structdict['vector_info']
+
+        if 'name' in structdict:
+            name = structdict['name']
+        else:
+            name = None
+        if 'comment' in structdict:
+            comment = structdict['comment']
+        else:
+            comment = None
+        if 'cell' in structdict:
+            cell = np.array(structdict['cell'])
+        else:
+            cell = None
+        if 'reduced' in structdict:
+            reduced = np.array(structdict['reduced'])
+        else:
+            reduced = None
+        if 'vector_info' in structdict:
+            vector_info = structdict['vector_info']
+        else:
+            vector_info = None
         if 'sites' in structdict:
             sites = structdict['sites']
         else:
@@ -838,7 +875,7 @@ class Structure:
 
         :return: bool
         """
-        return self.natom == self.nsites and min(self.occupancies) == 1
+        return self.natom == self.nsites and min(self.occupancies) == 1.0
 
     @property
     def is_periodic(self):
@@ -910,7 +947,12 @@ class Structure:
 
         :return: float
         """
-        return abs(np.linalg.det(self.cell))
+        if self.is_periodic:
+            return abs(np.linalg.det(self.cell))
+        else:
+            return (np.max(self.positions[:, 0])-np.min(self.positions[:, 0])) *\
+                   (np.max(self.positions[:, 1])-np.min(self.positions[:, 1])) *\
+                   (np.max(self.positions[:, 2])-np.min(self.positions[:, 2]))
 
     @property
     def species(self):
@@ -951,6 +993,34 @@ class Structure:
         while min(self.reduced.flatten()) < 0.0 or max(self.reduced.flatten()) > 1.0:
             self.reduced = (self.reduced + 1.0) % 1.0
             self.reduced2positions()
+
+    def moment_of_inertia(self, axis):
+
+        assert self.is_perfect
+        I = 0
+        for isite in self:
+            I += mass(isite.symbols[0]) * (sum(isite.position**2)-isite.position[axis]**2)
+        return I
+
+    def product_of_inertia(self, axis):
+
+        assert self.is_perfect
+        I = 0
+        for isite in self:
+            I += mass(isite.symbols[0]) * (np.prod(isite.position)/isite.position[axis])
+        return I
+
+    def inertia_matrix(self):
+
+        Ixx = self.moment_of_inertia(0)
+        Iyy = self.moment_of_inertia(1)
+        Izz = self.moment_of_inertia(2)
+        Ixy = self.product_of_inertia(2)
+        Ixz = self.product_of_inertia(1)
+        Iyz = self.product_of_inertia(0)
+
+        I = np.array([[Ixx, -Ixy, -Ixz], [-Ixy, Iyy, -Iyz], [-Ixz, -Iyz, Izz]])
+        return I
 
 
 def load_structure_json(filename):
@@ -1025,40 +1095,62 @@ def worker_star(x):
     return random_structure(*x)
 
 
-def random_structure(method, composition, best_volume=1E10):
+def random_structure(method, composition, periodic=True, best_volume=1E10):
     comp = Composition(composition)
     natom = comp.natom
     symbols = comp.symbols
+    np.random.seed(struct.unpack("<L", os.urandom(4))[0])
 
-    new_structure = None
-    if method == 'scaling':
-        lattice = Lattice.random_cell(comp)
-        # Random reduced positions
-        rpos = np.random.rand(natom, 3)
-        mins = [min(rpos[:, i]) for i in range(3)]
-        rpos -= mins
+    if periodic:
+        new_structure = None
 
-        new_lattice = lattice.scale(symbols, rpos, tolerance=1.0)
+        assert(method in ['scaling', 'stretching'])
 
-    elif method == 'stretching':
+        if method == 'scaling':
+            lattice = Lattice.random_cell(comp)
+            # Random reduced positions
+            rpos = np.random.rand(natom, 3)
+            mins = [min(rpos[:, i]) for i in range(3)]
+            rpos -= mins
 
-        lattice = Lattice.random_cell(comp)
-        # Random reduced positions
-        rpos = np.random.rand(natom, 3)
-        mins = [min(rpos[:, i]) for i in range(3)]
-        rpos -= mins
+            new_lattice = lattice.scale(symbols, rpos, tolerance=1.0)
+        else:
+            lattice = Lattice.random_cell(comp)
+            # Random reduced positions
+            rpos = np.random.rand(natom, 3)
+            mins = [min(rpos[:, i]) for i in range(3)]
+            rpos -= mins
 
-        new_lattice = lattice.stretch(symbols, rpos, tolerance=1.0, extra=0.1)
+            new_lattice = lattice.stretch(symbols, rpos, tolerance=1.0, extra=0.1)
 
-    if new_lattice.volume < best_volume:
-        test = True
-        for i in range(natom):
-            for j in range(i + 1, natom):
-                distance = new_lattice.minimal_distance(rpos[i], rpos[j])
-                covalent_dim = sum(covalent_radius([symbols[i], symbols[j]]))
-                if distance < covalent_dim:
-                    test = False
-        if test:
-            new_structure = Structure(symbols=symbols, reduced=rpos, cell=new_lattice.cell, periodicity=True)
+        if new_lattice.volume < best_volume:
+            test = True
+            for i in range(natom):
+                for j in range(i + 1, natom):
+                    distance = new_lattice.minimal_distance(rpos[i], rpos[j])
+                    covalent_dim = sum(covalent_radius([symbols[i], symbols[j]]))
+                    if distance < covalent_dim:
+                        test = False
+            if test:
+                new_structure = Structure(symbols=symbols, reduced=rpos, cell=new_lattice.cell, periodicity=True)
+            else:
+                new_structure = None
+    else:
+        pos = np.random.rand(natom, 3)
+        mindis = np.min((scipy.spatial.distance_matrix(pos, pos)+100*np.eye(len(pos))).flatten())
+        #print mindis
+        if mindis == 0:
+            raise ValueError("Distance too small")
+
+        max_cov = np.max(covalent_radius(symbols))
+        pos *= max_cov/mindis
+
+        current_volume = (max(pos[:, 0])-min(pos[:, 0]))*(max(pos[:, 1])-min(pos[:, 1]))*(max(pos[:, 2])-min(pos[:, 2]))
+
+        if current_volume < best_volume:
+            new_structure = Structure(symbols=symbols, positions=pos, periodicity=False)
+        else:
+            new_structure = None
+
     return new_structure
     # End of Worker

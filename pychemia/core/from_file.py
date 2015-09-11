@@ -1,15 +1,12 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import os
 import sys
 import pychemia
 from .structure import Structure
+from pychemia.code.vasp import read_poscar
+from pychemia.code.abinit import InputVariables
 
 
 def structure_from_file(structure_file):
-
-    from pychemia.code.vasp import read_poscar
-    from pychemia.code.abinit import InputVariables
 
     st = None
     if not os.path.isfile(structure_file):

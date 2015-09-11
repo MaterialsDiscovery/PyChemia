@@ -1,8 +1,4 @@
-__author__ = 'Guillermo Avendano Franco'
-
-# from _ase import AseEvaluator, AseObjectiveFunction
 from _function import FunctionEvaluator, FunctionObjectiveFunction
-
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 

@@ -1,10 +1,9 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import os
 import pymongo
 from pychemia import Structure
 import gridfs
 from pychemia.utils.computing import hashfile
+
 
 class PyChemiaQueue:
 
@@ -41,7 +40,7 @@ class PyChemiaQueue:
         for i in ['version', 'sysInfo', 'OpenSSLVersion']:
             print '%20s : %s' % (i, self._client.server_info()[i])
         self.db = self._client[name]
-        if user is not None and self.db.authenticate(user,passwd):
+        if user is not None and self.db.authenticate(user, passwd):
             print 'Authentication successful'
 
         self.set_minimal_schema()
@@ -70,7 +69,6 @@ class PyChemiaQueue:
             self.db.pychemia_entries.update({'_id': entry_id}, {'$addToSet': {location+'.files': {'file_id': file_id,
                                                                                                   'name': filename,
                                                                                                   'hash': hashcode}}})
-
 
     def add_input_file(self, entry_id, filename):
         self.add_file(entry_id, 'input', filename)
@@ -113,7 +111,7 @@ class PyChemiaQueue:
                                                      'deployed': False}}
         entry_id = self.db.pychemia_entries.insert(entry)
 
-        self.db.pychemia_entries.update({'_id': entry_id}, { '$currentDate': {'meta.CreationDate': True}})
+        self.db.pychemia_entries.update({'_id': entry_id}, {'$currentDate': {'meta.CreationDate': True}})
 
         if structure is not None:
             self.set_input_structure(entry_id, structure)
@@ -125,7 +123,7 @@ class PyChemiaQueue:
         return entry_id
 
     def set_job_settings(self, entry_id, nparal=None, queue=None, nhours=None, mail=None, task_name=None,
-                         task_settings=None, task_kind=None ):
+                         task_settings=None, task_kind=None):
         if nparal is not None:
             self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.nparal': nparal}})
         if queue is not None:

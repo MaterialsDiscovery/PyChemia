@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import os
 import math
 import socket
@@ -44,7 +42,7 @@ class EvaluatorDaemon:
             structure = pcdb.get_structure(entry_id)
             structure = structure.scale()
 
-            relaxer = Relaxation(structure, workdir, relaxator_params=relaxator_params,
+            relaxer = Relaxation(structure, relaxator_params=relaxator_params, workdir=workdir,
                                         target_forces=target_forces, waiting=True)
             relaxer.run()
             pcm_log.info('[%s]: Finished relaxation. Target forces: %7.3e' % (str(entry_id), target_forces))
@@ -52,7 +50,7 @@ class EvaluatorDaemon:
             filename = workdir + os.sep + 'detailed.out'
             if os.path.isfile(filename):
                 forces, stress, total_energy = relaxer.get_forces_stress_energy()
-                print 'Forces: ',np.apply_along_axis(np.linalg.norm, 1, forces)
+                print 'Forces: ', np.apply_along_axis(np.linalg.norm, 1, forces)
                 print 'Stress: ', np.max(np.abs(stress.flatten()))
                 if forces is None:
                     pcm_log.error('No forces found on %s' % filename)

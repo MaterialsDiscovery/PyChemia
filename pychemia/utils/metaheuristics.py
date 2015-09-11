@@ -1,5 +1,3 @@
-__author__ = 'macbook'
-
 import sys
 import numpy as np
 from abc import ABCMeta, abstractmethod

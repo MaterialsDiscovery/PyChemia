@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import numpy as np
 from pychemia.utils.mathematics import lcm, shortest_triple_set
 from pychemia import Structure

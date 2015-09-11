@@ -1,9 +1,3 @@
-"""
-Mathematical operations
-"""
-
-__author__ = 'Guillermo Avendano-Franco'
-
 import math
 import numpy as np
 import itertools as it
@@ -43,8 +37,7 @@ def length_vectors(m):
     >>> length_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
     array([  3.74165739,   8.77496439,  13.92838828,   1.        ,   2.        ])
     """
-    m = np.array(m)
-    return np.apply_along_axis(np.linalg.norm, 1, m)
+    return np.apply_along_axis(np.linalg.norm, 1, np.array(m))
 
 
 def unit_vector(v):
@@ -441,7 +434,11 @@ def shortest_triple_set(n):
         return list(factors)
 
 
-def rotation_matrix_axis_angle(axis, theta):
+def rotation_matrix_around_axis_angle(axis, theta):
+    """
+    Return the rotation matrix needed to rotate any vector
+    around the 'axis' an angle of 'theta' radians
+    """
     # Given a unit vector u = (ux, uy, uz), where ux**2 + uy**2 + uz**2 = 1,
     u = unit_vector(axis)
     # with ux is the cross product matrix
@@ -450,6 +447,26 @@ def rotation_matrix_axis_angle(axis, theta):
     uxu = np.tensordot(u, u.T, axes=0)
     # This is a matrix form of Rodrigues 'rotation formula'
     return np.cos(theta)*np.identity(3) + np.sin(theta)*ux + (1-np.cos(theta))*uxu
+
+def rotate_towards_axis(vector, axis, theta=None, fraction=None):
+
+    # If the vector is already parallel to the axis, do nothing
+    if angle_vector(vector, axis) < 1E-10:
+        return vector
+
+    # Create a unitary vector perpendicular to the plane created by vector and axis
+    uv = unit_vector(np.cross(vector, axis))
+
+    # Use the rodrigues formula to rotate around the vector perpendicular
+    if theta is not None:
+        m = rotation_matrix_around_axis_angle(uv, theta)
+        return np.dot(m, vector)
+
+    if fraction is not None:
+        theta = angle_vector(vector, axis)
+        m = rotation_matrix_around_axis_angle(uv, fraction * theta)
+        return np.dot(m, vector)
+
 
 
 def rotation_x(theta):
@@ -476,7 +493,7 @@ def apply_rotation(vector, theta_x, theta_y, theta_z):
 
 def rotation_matrix_weave(axis, theta, mat=None):
     if mat is None:
-        mat = np.eye(3,3)
+        mat = np.eye(3, 3)
 
     support = "#include <math.h>"
     code = """

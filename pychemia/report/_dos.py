@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano Franco'
-
 import sys
 import os
 import numpy as np

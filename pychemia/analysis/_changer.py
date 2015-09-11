@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano Franco'
-
 import random
 import itertools
 import numpy as np

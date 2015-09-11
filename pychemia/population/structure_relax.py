@@ -1,14 +1,7 @@
-"""
-Includes StructurePopulation
-"""
-
-__author__ = 'Guillermo Avendano-Franco'
-
 import uuid
 import random
 import numpy as np
 from fractions import gcd
-
 from pychemia import Composition, Structure, pcm_log
 from pychemia.db import USE_MONGO
 

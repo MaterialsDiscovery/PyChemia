@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano Franco'
-
 import os
 
 from _abifiles import AbiFiles
@@ -15,6 +13,8 @@ class AbinitJob(Codes):
         self.kpoints = None
         self.structure = None
         self.workdir = None
+        self.kind = None
+        self.exchange = None
         self.inp = InputVariables()
         self.stdout_filename = 'abinit.log'
         self.stdin_filename = 'abinit.files'
@@ -112,7 +112,8 @@ class AbinitJob(Codes):
         self.write_abifiles()
         self.write_abiinput()
 
-    def set_kpoints(self):
+    def set_kpoints(self, kpoints=None):
+        self.kpoints = kpoints
         if 'ngkpt' not in self.inp.variables.keys():
             if self.kpoints is None:
                 self.inp.set_value('kptrlen', 1)

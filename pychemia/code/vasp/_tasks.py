@@ -1,5 +1,3 @@
-__author__ = 'Guillermo Avendano Franco'
-
 import os
 import time
 import shutil
@@ -18,6 +16,7 @@ from pychemia import pcm_log
 from pychemia.code import Relaxator
 from pychemia.runner import Runner
 from pychemia import Structure
+
 
 class RelaxPopulation:
     def __init__(self, population, basedir, target_force=1E-2, target_stress=1E-2):
@@ -455,7 +454,8 @@ class Convergence:
         self.convergence_info = json.load(rf)
         rf.close()
 
-class StaticCalculation():
+
+class StaticCalculation:
 
     def __init__(self, structure, workdir='.', kpoints=None, binary='vasp', nparal=4, encut=1.3):
 
@@ -464,6 +464,8 @@ class StaticCalculation():
         self.binary = binary
         self.nparal = nparal
         self.encut = encut
+        self.forces = None
+        self.stress = None
         if kpoints is None:
             kp = KPoints()
             kp.set_optimized_grid(self.structure.lattice, density_of_kpoints=1E4, force_odd=True)
@@ -512,7 +514,6 @@ class StaticCalculation():
         vj.get_outputs()
         self.forces = list(vj.outcar.forces.flatten())
         self.stress = list(vj.outcar.stress.flatten())
-
 
     def plot(self, figname='static_calculation.pdf'):
         pass
@@ -989,8 +990,6 @@ class VaspRelaxator(Relaxator):
             except ValueError:
                 print 'Error reading CONTCAR'
         return structure
-
-
 
 def vasp_magmons():
 
