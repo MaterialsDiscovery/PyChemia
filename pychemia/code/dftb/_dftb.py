@@ -6,6 +6,7 @@ import numbers
 from pychemia.code import Codes
 from pychemia.dft import KPoints
 from pychemia import Structure, pcm_log
+from pychemia.serializer import generic_serializer
 
 
 class DFTBplus(Codes):
@@ -26,8 +27,9 @@ class DFTBplus(Codes):
         self.kpoints = None
         self.stdout_file = None
         self.output = None
+        self.kp_density = None
 
-    def initialize(self, workdir, structure, kpoints, binary='dftb+'):
+    def initialize(self, structure, workdir='.', kpoints=None, binary='dftb+', kp_density=10000):
         assert structure.is_crystal
         assert structure.is_perfect
         self.structure = structure
@@ -35,8 +37,12 @@ class DFTBplus(Codes):
         self.workdir = workdir
         if not os.path.lexists(workdir):
             os.mkdir(workdir)
-        self.kpoints = kpoints
         self.binary = binary
+        self.kp_density = kp_density
+        if kpoints is None:
+            kpoints = KPoints()
+            kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=self.kp_density, force_odd=True)
+        self.kpoints = kpoints
 
     def set_inputs(self):
         self.write_input(filename=self.workdir+os.sep+'dftb_in.hsd')
@@ -45,9 +51,10 @@ class DFTBplus(Codes):
     def get_outputs(self):
         self.output = read_detailed_out(filename=self.workdir+os.sep+'detailed.out')
 
-    def run(self, use_mpi=False, omp_max_threads=0, mpi_num_procs=1):
+    def run(self, use_mpi=False, omp_max_threads=4, mpi_num_procs=1):
         cwd = os.getcwd()
         os.chdir(self.workdir)
+        os.environ["OMP_NUM_THREADS"] = str(omp_max_threads)
         self.stdout_file = open('dftb_stdout.log', 'w')
         sp = subprocess.Popen(self.binary, stdout=self.stdout_file)
         os.chdir(cwd)
@@ -518,7 +525,7 @@ def read_detailed_out(filename='detailed.out'):
     else:
         total_energy = None
 
-    scc =  re.findall('iSCC Total electronic   Diff electronic      SCC error  \s*  ([\s\dE+-.]*)', data)
+    scc = re.findall('iSCC Total electronic   Diff electronic      SCC error  \s*  ([\s\dE+-.]*)', data)
     if len(scc)>0:
         ret['SCC'] = {}
         ret['SCC']['iSCC'] = int(scc[0].split()[0])
@@ -529,7 +536,6 @@ def read_detailed_out(filename='detailed.out'):
     ret['forces'] = forces
     ret['stress'] = stress
     ret['total_energy'] = total_energy
-
     return ret
 
 
@@ -544,79 +550,75 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
     :return:
     """
 
-    def yes_no_to_boolean(value):
-        if value == 'Yes':
-            return True
-        else:
-            return False
-
     rf = open(filename, 'r')
     data = rf.read()
-    booleans = {}
-    geom_optimization = {}
-    stats = {}
 
-    ionsteps = re.findall(r'Geometry step:', data)
-    nionsteps = 0
-    if ionsteps is not []:
-        nionsteps = len(ionsteps)
+    ret = {}
 
-    if nionsteps > 0:
-        self_consistent_charges = re.findall(r'Self consistent charges:\s*([\w]+)[\s\w]*', data)[0]
-        booleans['SelfConsistentCharges'] = yes_no_to_boolean(self_consistent_charges)
-        booleans['SpinPolarisation'] = yes_no_to_boolean(re.findall(r'Spin polarisation:\s*([\w]+)[\s\w]*', data)[0])
-        periodic_boundaries = re.findall(r'Periodic boundaries:\s*([\w]+)[\s\w]*', data)[0]
-        booleans['PeriodicBoundaries'] = yes_no_to_boolean(periodic_boundaries)
-        lattice_optimization = re.findall(r'Lattice optimisation:\s*([\w]+)[\s\w]*', data)
-        if lattice_optimization:
-            booleans['LatticeOptimisation'] = True
-        else:
-            booleans['LatticeOptimisation'] = False
-        # log.debug('Booleans : '+str(booleans))
-        pcm_log.info('LatticeOptimisation: ' + str(booleans['LatticeOptimisation']))
+    start_ini = re.findall(r'Starting initialization...[\s-]+([.\s\d\w\-:\(\),+]+)---', data)
+    if len(start_ini) == 1:
+        start_ini = start_ini[0].replace('\n  ', '  ').split('\n')
+        ret['Starting_Initialization'] = {}
+        for line in start_ini:
+            if len(line.split(':')) == 2:
+                left, right = line.split(':')
+            elif line[:3] != '---':
+                left = line[:29].replace(':', '')
+                right = line[29:]
+            ret['Starting_Initialization'][left.strip()] = parse_value(right.strip())
 
-    if nionsteps > 1:
-        scc_steps = re.findall(r'iSCC\s*Total electronic\s*Diff electronic\s*SCC error\s*([\.\-+E\d\s]*)\s*\n', data)
-        scc_steps = [np.array(x.split(), dtype=float).reshape((-1, 4))[:, 1:4] for x in scc_steps]
+            if left.strip() == 'K-points and weights':
+                right = right.replace(':', '')
+                right = np.array(right.split(), dtype=float).reshape((-1, 5))
+                ret['Starting_Initialization'][left.strip()] = {'kpoints': generic_serializer(right[:, 1:-1]),
+                                                                'weights': generic_serializer(right[:, -1])}
 
-        nscc_per_ionstep = [len(x) for x in scc_steps]
-        geom_optimization['nscc_per_ionstep'] = nscc_per_ionstep
-        pcm_log.info('SCC :' + str(nscc_per_ionstep))
+    geom_blocks = re.findall(r'Geometry step:([\^*.\s\d\w\-:\(\),+]+)Pa', data)
 
-        total_energy = re.findall(r'Total Energy:\s*([\.\-+\dE]+)\s*H\s*', data)
-        total_energy = np.array(total_energy, dtype=float)
-        geom_optimization['total_energy'] = total_energy
+    ret['Geometry_Steps'] = []
+    for iblock in geom_blocks:
+        ib = iblock.split('\n')
+        tmp = {'iter': int(ib[0]), 'scc': {}}
+        tmp['scc']['tot_electronic'] = []
+        tmp['scc']['diff_electronic'] = []
+        tmp['scc']['scc_error'] = []
+        for iline in ib[4:]:
+            fields = iline.split()
+            if len(fields)>0 and fields[0].strip().isdigit():
+                tmp['scc']['tot_electronic'].append(float(fields[1]))
+                tmp['scc']['diff_electronic'].append(float(fields[2]))
+                tmp['scc']['scc_error'].append(float(fields[3]))
+            elif len(iline.split(':')) == 2:
+                left, right = iline.split(':')
+                tmp[left.strip()] = {'value': float(right.split()[0]), 'units': right.split()[1]}
 
-        max_force = re.findall(r'Maximal force component:\s*([\.\-+\dE]+)\s*', data)
-        max_force = np.array(max_force, dtype=float)
-        geom_optimization['max_force'] = max_force
-
-        pcm_log.info('Forces [initial -> final] %10.3E -> %10.3E' %
-                     (geom_optimization['max_force'][0], geom_optimization['max_force'][-1]))
-
-        max_lattice_force = re.findall(r'Maximal Lattice force component:\s*([\.\-+\dE]+)\s*', data)
-        if max_lattice_force:
-            max_lattice_force = np.array(max_lattice_force, dtype=float)
-            geom_optimization['max_lattice_force'] = max_lattice_force
-            pcm_log.info('Stress [initial -> final] %10.3E -> %10.3E' %
-                         (geom_optimization['max_lattice_force'][0], geom_optimization['max_lattice_force'][-1]))
-
-        pcm_log.info('Energy [initial -> final] %10.3E -> %10.3E' %
-                     (geom_optimization['total_energy'][0], geom_optimization['total_energy'][-1]))
-
-        stats['mean_nscc'] = np.mean(nscc_per_ionstep)
-        stats['std_nscc'] = np.std(nscc_per_ionstep)
+        ret['Geometry_Steps'].append(tmp)
 
     if re.findall('Geometry did NOT converge', data):
         pcm_log.debug('Convergence not achieved!')
-        stats['ion_convergence'] = False
+        ret['ion_convergence'] = False
     else:
-        stats['ion_convergence'] = True
+        ret['ion_convergence'] = True
 
     if re.findall('Geometry converged', data):
         pcm_log.debug('Convergence achieved!')
-        stats['ion_convergence'] = True
+        ret['ion_convergence'] = True
     else:
-        stats['ion_convergence'] = False
+        ret['ion_convergence'] = False
+    return ret
 
-    return booleans, geom_optimization, stats
+
+def parse_value(value):
+    try:
+        ret = int(value)
+    except ValueError:
+        try:
+            ret = float(value)
+        except ValueError:
+            if value == 'Yes':
+                ret = True
+            elif value == 'No':
+                ret = False
+            else:
+                ret = value
+    return ret

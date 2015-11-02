@@ -126,6 +126,8 @@ class InputVariables:
         Write an input dictionary into a file
         the variables are sort by kind and written
         in their respective place
+
+        :param filename: (str) Filename for the octopus input that will be created
         """
         wfile = open(filename, 'w')
         wfile.write(self.__str__())

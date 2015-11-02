@@ -11,7 +11,7 @@ class Searcher:
     """
 
     def __init__(self, population, fraction_evaluated=1.0, generation_size=32, stabilization_limit=10,
-                 target_value=None):
+                 target_value=None, searcher_id=None):
         self.population = population
         self.generation_size = generation_size
         self.fraction_evaluated = fraction_evaluated
@@ -21,14 +21,20 @@ class Searcher:
         self.generation = {}
         self.sleep_time = 2
         self.delta_change = 0.2
+        self.lineage = {}
+        self.lineage_inv = {}
 
         self.old_actives = []
         self.old_nextgen = []
         self.pcdb = population.pcdb
+        if searcher_id is None:
+            self.searcher_id = self.population.tag
+        else:
+            self.searcher_id = searcher_id
 
     def recover(self):
         if self.pcdb is not None:
-            data = self.pcdb.db.searcher_info.find_one({'_id': self.population.tag})
+            data = self.pcdb.db.searcher_info.find_one({'_id': self.searcher_id})
             if data is not None:
                 self.fraction_evaluated = data['fraction_evaluated']
                 self.stabilization_limit = data['stabilization_limit']
@@ -38,8 +44,8 @@ class Searcher:
                 self.current_generation = 0
 
             for entry in self.get_all_generations():
-                if self.population.tag in entry:
-                    self.generation[entry['_id']] = entry[self.population.tag]
+                if self.searcher_id in entry:
+                    self.generation[entry['_id']] = entry[self.searcher_id]
                     if max(self.generation[entry['_id']]) > self.current_generation:
                         self.current_generation = max(self.generation[entry['_id']])
 
@@ -48,6 +54,7 @@ class Searcher:
         ret += ' Fraction evaluated:  %5.3f\n' % self.fraction_evaluated
         ret += ' Generation size:     %d\n' % self.generation_size
         ret += ' Stabilization limit: %d\n' % self.stabilization_limit
+        ret += ' Current Generation:  %d\n' % self.current_generation
         ret += ' Parameters: %s\n' % str(self.get_params())
         return ret
 
@@ -111,14 +118,8 @@ class Searcher:
             value = self.current_generation
         return [x for x in self.generation if value in self.generation[x]]
 
-    def pass_to_new_generation(self, entry_id, reason=None):
-        pcm_log.debug('Moving to new generation : %s' % str(entry_id))
-        change = {'change': 'promoted', 'reason': reason}
-        self.set_generation(entry_id, self.current_generation + 1)
-        self.write_change(entry_id, change)
-
     def print_status(self, level='DEBUG'):
-        if level=='DEBUG':
+        if level == 'DEBUG':
             pcm_log.debug(' %s (tag: %s)' % (self.population.name, self.population.tag))
             pcm_log.debug(' Current Generation             : %4d' % self.current_generation)
             pcm_log.debug(' Population (evaluated/total)   : %4d /%4d' % (len(self.population.evaluated),
@@ -155,6 +156,13 @@ class Searcher:
         self.old_actives = self.population.actives
         self.old_nextgen = self.get_generation(self.current_generation+1)
 
+    def pass_to_new_generation(self, entry_id, reason=None):
+        pcm_log.debug('Moving to new generation : %s' % str(entry_id))
+        change = {'change': 'promoted', 'reason': reason}
+        self.set_generation(entry_id, self.current_generation + 1)
+        self.write_change(entry_id, change)
+        self.advance_lineage(entry_id, entry_id)
+
     def replace_by_changed(self, entry_id_old, reason=None):
         entry_id_new = self.population.move_random(entry_id_old, factor=self.delta_change, in_place=False,
                                                    kind='change')
@@ -163,6 +171,7 @@ class Searcher:
         self.population.disable(entry_id_old)
         self.set_generation(entry_id_new, self.current_generation + 1)
         self.write_change(entry_id_old, change)
+        self.advance_lineage(entry_id_old, entry_id_new)
 
     def replace_by_other(self, entry_id_old, entry_id_new, reason=None):
         change = {'change': 'replace_by_other', 'to': entry_id_new, 'reason': reason}
@@ -170,23 +179,39 @@ class Searcher:
         self.population.disable(entry_id_old)
         self.set_generation(entry_id_new, self.current_generation + 1)
         self.write_change(entry_id_old, change)
+        self.advance_lineage(entry_id_old, entry_id_new)
 
-    def replace_by_random(self, entry_id, reason=None):
-        self.population.disable(entry_id)
-        new_member, origin = self.population.add_random()
-        pcm_log.debug('Replace by random  %s -> %s' % (str(entry_id), str(new_member)))
-        self.set_generation(new_member, self.current_generation + 1)
-        change = {'change': 'replace_by_random', 'to': new_member, 'reason': reason, 'origin': origin}
-        self.write_change(entry_id, change)
+    def replace_by_random(self, entry_id_old, reason=None):
+        self.population.disable(entry_id_old)
+        entry_id_new, origin = self.population.add_random()
+        pcm_log.debug('Replace by random  %s -> %s' % (str(entry_id_old), str(entry_id_new)))
+        self.set_generation(entry_id_new, self.current_generation + 1)
+        change = {'change': 'replace_by_random', 'to': entry_id_new, 'reason': reason, 'origin': origin}
+        self.write_change(entry_id_old, change)
+        self.advance_lineage(entry_id_old, entry_id_new)
+
+    def advance_lineage(self, father, son):
+        slot = self.lineage_inv[str(father)]
+        self.lineage[slot].append(None)
+        self.lineage[slot][self.current_generation+1] = son
+        self.lineage_inv[str(son)] = slot
 
     def save_generations(self):
         if self.pcdb is not None:
             for entry_id in sorted(self.generation):
                 info = self.generation[entry_id]
                 if self.pcdb.db.generations.find_one({'_id': entry_id}) is None:
-                    self.pcdb.db.generations.insert({'_id': entry_id, self.population.tag: info})
+                    self.pcdb.db.generations.insert({'_id': entry_id, self.searcher_id: info})
                 else:
-                    self.pcdb.db.generations.update({'_id': entry_id}, {'$set': {self.population.tag: info}})
+                    self.pcdb.db.generations.update({'_id': entry_id}, {'$set': {self.searcher_id: info}})
+
+            if self.pcdb.db.lineage.find_one({'_id': self.searcher_id}) is None:
+                self.pcdb.db.lineage.insert({'_id': self.searcher_id,
+                                             'lineage_inv': self.lineage_inv,
+                                             'lineage': self.lineage})
+            else:
+                self.pcdb.db.lineage.update({'_id': self.searcher_id}, {'$set': {'lineage': self.lineage}})
+                self.pcdb.db.lineage.update({'_id': self.searcher_id}, {'$set': {'lineage_inv': self.lineage_inv}})
 
     def set_generation(self, entry_id, value):
         if entry_id not in self.generation:
@@ -219,11 +244,30 @@ class Searcher:
         self.population.save_info()
         best_member = ''
 
+        # Fill the lineage for current generation
+        for i in range(self.generation_size):
+            if i not in self.lineage:
+                self.lineage[str(i)] = [None]
+            while len(self.lineage[str(i)]) < self.current_generation+1:
+                self.lineage[str(i)].append(None)
+
         while True:
             self.print_status(level='DEBUG')
 
             pcm_log.debug('[%s] Enforcing the size of generation: %d' % (self.searcher_name, self.generation_size))
             self.enforce_generation_size()
+
+            for entry_id in self.population.actives:
+                if entry_id in self.lineage_inv:
+                    slot = self.lineage_inv[-1]
+                    self.lineage[slot][self.current_generation] = entry_id
+            for entry_id in self.population.actives:
+                if str(entry_id) not in self.lineage_inv:
+                    for i in range(self.generation_size):
+                        if self.lineage[str(i)][self.current_generation] is None:
+                            self.lineage[str(i)][self.current_generation] = entry_id
+                            self.lineage_inv[str(entry_id)] = str(i)
+                            break
 
             pcm_log.debug('Setting generation...')
             for entry_id in self.population.actives:
@@ -252,13 +296,18 @@ class Searcher:
             pcm_log.info('Best candidate: [%s] %s' % (best_member, self.population.str_entry(best_member)))
             pcm_log.debug('[%s] Generations %s' % (str(best_member), str(self.generation[best_member])))
             if len(self.generation[best_member]) > self.stabilization_limit:
+                self.save_generations()
                 break
 
             if self.target_value is not None:
-                if self.population.value(best_member) < self.target_value:
+                if self.population.value(best_member) <= self.target_value:
+                    print 'Target value achieved: target=%9.3f best=%9.3f' % (self.population.value(best_member),
+                                                                              self.target_value)
+                    self.save_generations()
                     break
                 else:
-                    print 'Best value = %7.3f     target value = %7.3f' % (self.population.value(best_member), self.target_value)
+                    print 'Best value = %7.3f     target value = %7.3f' % (self.population.value(best_member),
+                                                                           self.target_value)
 
             pcm_log.debug('[%s] Removing not evaluated: %d' %
                           (self.searcher_name, len(self.population.actives_no_evaluated)))
@@ -299,7 +348,7 @@ class Searcher:
     def write_change(self, entry_id, change):
         if self.pcdb is not None:
             change['method'] = self.searcher_name
-            change['tag'] = self.population.tag
+            change['tag'] = self.searcher_name
             change['generation'] = self.current_generation
             change['from'] = entry_id
             self.pcdb.db.generation_changes.insert(change)
@@ -318,13 +367,20 @@ class Searcher:
 
     def save_info(self):
         if self.pcdb is not None:
-            data = self.pcdb.db.searcher_info.find_one({'_id': self.population.tag})
+            data = self.pcdb.db.searcher_info.find_one({'_id': self.searcher_id})
             if data is None:
                 data = self.to_dict
-                data['_id'] = self.population.tag
+                data['_id'] = self.searcher_id
                 self.pcdb.db.searcher_info.insert(data)
             else:
-                self.pcdb.db.searcher_info.update({'_id': self.population.tag}, self.to_dict)
+                self.pcdb.db.searcher_info.update({'_id': self.searcher_id}, self.to_dict)
+
+    def clean(self):
+        if self.pcdb is not None:
+            self.pcdb.db.searcher_info.drop()
+            self.pcdb.db.generations.drop()
+            self.pcdb.db.generation_changes.drop()
+            self.pcdb.db.lineage.drop()
 
     def replace_failed(self):
         self.pcdb.replace_failed()

@@ -15,6 +15,7 @@ import multiprocessing
 from bson.objectid import ObjectId
 from pychemia.utils.computing import get_int
 
+
 def usage(name):
     print """
 NAME
@@ -90,10 +91,10 @@ def listener(dbsettings, ip, port, workdir):
             print >>sys.stderr, 'sent %s bytes back to %s' % (sent, address)
         if data == 'GET':
             # Selectiong an entry not submitted for execution
-            entry = pcq.db.pychemia_entries.find_one({'meta.submitted': False}, {'_id':1})
+            entry = pcq.db.pychemia_entries.find_one({'meta.submitted': False}, {'_id': 1})
             if entry is not None:
                 entry_id = entry['_id']
-                pcq.db.pychemia_entries.update({'_id': entry_id}, {'$set': { 'meta.submitted': True}})
+                pcq.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'meta.submitted': True}})
                 deploy(entry_id, pcq, workdir)
             else:
                 entry_id=''
@@ -102,7 +103,7 @@ def listener(dbsettings, ip, port, workdir):
         if data.startswith('FINISHED:'):
             entry_id = ObjectId(data.split(':')[1])
             collect(entry_id, pcq, workdir)
-            pcq.db.pychemia_entries.update({'_id': entry_id}, {'$set': { 'meta.finished': True}})
+            pcq.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'meta.finished': True}})
             sent = sock.sendto('OK', address)
             print >>sys.stderr, 'sent %s bytes back to %s' % (sent, address)
 
@@ -118,24 +119,27 @@ def deploy(entry_id, pychemia_queue, basedir):
     job_settings = entry['job']
     print job_settings
 
-    wf = open(workdir+os.sep+'job.json','w')
-    json.dump(job_settings, wf)
-    wf.close()
+    if len(job_settings)>0:
+        wf = open(workdir+os.sep+'job.json', 'w')
+        json.dump(job_settings, wf)
+        wf.close()
 
     st = pychemia_queue.get_input_structure(entry_id)
     st.save_json(workdir+os.sep+'structure.json')
 
     inp = pychemia_queue.get_input_variables(entry_id)
-    wf = open(workdir+os.sep+'input.json', 'w')
-    json.dump(inp, wf)
-    wf.close()
+    if inp is not None:
+        wf = open(workdir+os.sep+'input.json', 'w')
+        json.dump(inp, wf)
+        wf.close()
+
 
 def collect(entry_id, pychemia_queue, workdir):
 
     destination = os.path.abspath(workdir)+os.sep+str(entry_id)
     if os.path.isfile(destination+os.sep+'results.json'):
         results = json.load(open(destination+os.sep+'results.json'))
-    pychemia_queue.db.pychemia_entries.update({'_id': entry_id}, {'$set': { 'output': results}})
+        pychemia_queue.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'output': results}})
 
 
 def main(argv):
@@ -195,7 +199,7 @@ def main(argv):
 
     if port is not None:
         print 'Using port : %s' % port
-        p = multiprocessing.Process(target=listener, args=(dbsettings,ip, port, workdir))
+        p = multiprocessing.Process(target=listener, args=(dbsettings, ip, port, workdir))
         p.start()
     else:
         old_port = 0
@@ -203,13 +207,13 @@ def main(argv):
         while True:
             lt = time.localtime()
             random.seed(lt.tm_yday*24+lt.tm_hour)
-            port = random.randint(10000,20000)
+            port = random.randint(10000, 20000)
             if port != old_port:
                 if p is not None and p.is_alive():
                     print 'Terminating listener on port : %s' % old_port
                     p.terminate()
                 print 'Using port : %s' % port
-                p = multiprocessing.Process(target=listener, args=(dbsettings,ip, port, workdir))
+                p = multiprocessing.Process(target=listener, args=(dbsettings, ip, port, workdir))
                 p.start()
                 old_port = port
             time.sleep(300)

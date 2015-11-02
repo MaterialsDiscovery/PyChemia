@@ -10,16 +10,17 @@ def load(filename):
     natom = len(symbols)
     periodicity = 3*[False]
 
-    struct = pychemia.core.Structure(symbols=symbols, positions=positions, periodicity=periodicity, natom=natom)
-    return struct
+    return pychemia.core.Structure(symbols=symbols, positions=positions, periodicity=periodicity, natom=natom)
 
 
-def save(struct, filename):
+def save(structure, filename):
 
-    xyz = str(struct.natom) + '\n\n'
-    for i in range(struct.natom):
-        xyz += " %2s %15.7f %15.7f %15.7f\n" % (struct.symbols[i], struct.positions[i, :0], struct.positions[i, :1],
-                                                struct.positions[i, :2])
+    xyz = str(structure.natom) + '\n\n'
+    for i in range(structure.natom):
+        xyz += " %2s %15.7f %15.7f %15.7f\n" % (structure.symbols[i],
+                                                structure.positions[i, 0],
+                                                structure.positions[i, 1],
+                                                structure.positions[i, 2])
     wf = open(filename, 'w')
     wf.write(xyz)
     wf.close()

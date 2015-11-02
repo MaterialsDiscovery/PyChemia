@@ -35,9 +35,9 @@ class Population:
         return len(self.members)
 
     def __str__(self):
-        ret = ' Population\n\n'
-        ret += ' Name:               %s\n' % self.name
-        ret += ' Tag:                %s\n' % self.tag
+        ret = ' Population Name:     %s\n' % self.name
+        ret += ' Tag:                 %s\n' % self.tag
+        ret += ' Members:             %s\n' % len(self)
         return ret
 
     def disable(self, entry_id):

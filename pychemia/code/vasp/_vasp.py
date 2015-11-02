@@ -30,7 +30,7 @@ class VaspJob(Codes):
         self.runner = None
         self.stdout_filename = 'vasp_stdout.log'
 
-    def initialize(self, workdir, structure, kpoints, binary='vasp'):
+    def initialize(self, structure, workdir='.', kpoints=None, binary='vasp'):
         self.workdir = workdir
         self.structure = structure
         self.set_kpoints(kpoints)
@@ -153,6 +153,7 @@ class VaspJob(Codes):
         pass
 
     def job_static(self):
+        print 'job static'
         inp = InputVariables()
         inp.set_minimum()
         self._check_workdir()

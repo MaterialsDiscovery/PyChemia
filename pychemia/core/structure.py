@@ -635,14 +635,13 @@ class Structure:
 
         # First: Sort sites using the distance to the origin
         sorted_indices = np.array([np.linalg.norm(self.positions[i]) for i in range(self.nsites)]).argsort()
+        #print sorted_indices
         self.sort_sites_using_list(sorted_indices)
 
         # Second: Sort again using the atomic number
-        sorted_indices = np.array([atomic_number(x) for x in self.symbols]).argsort()
-        self.sort_sites_using_list(sorted_indices)
-
-        # The sites are ordered by atomic number first and distance to the origin second
-        return sorted_indices
+        if len(self.species)>1:
+            sorted_indices = np.array([atomic_number(x) for x in self.symbols]).argsort()
+            self.sort_sites_using_list(sorted_indices)
 
     def sort_axes(self):
         """
@@ -720,14 +719,14 @@ class Structure:
                                 occupancies=self.occupancies)
         return copy_struct
 
-    def plot(self, figname='None', size=(300, 325), save=False):
+    def plot(self, figname=None, size=(300, 325), view=(30, 30)):
         from mayavi import mlab
 
         fig = mlab.figure(size=size)
         figure = mlab.gcf()
         fig.scene.disable_render = True
         figure.scene.background = (0.0, 0.0, 0.0)
-        mlab.view(30, 30)
+        mlab.view(0, 90, distance=1.0)
         assert (self.natom > 0)
 
         x = self.positions[:, 0]
@@ -735,7 +734,7 @@ class Structure:
         z = self.positions[:, 2]
         cr = covalent_radius(self.symbols)
 
-        mlab.points3d(x, y, z, cr, scale_factor=1)
+        mlab.points3d(x, y, z, cr, scale_factor=0.5, resolution=32, transparent=False)
 
         if self.is_crystal:
             frame, line1, line2, line3 = self.get_cell().get_path()
@@ -746,7 +745,7 @@ class Structure:
             mlab.plot3d(line3[:, 0], line3[:, 1], line3[:, 2], tube_radius=.02, color=(1, 1, 1))
 
         fig.scene.disable_render = False
-        if save:
+        if figname is not None:
             mlab.savefig(figname)
         return figure
 
@@ -834,7 +833,22 @@ class Structure:
         assert (isinstance(atom2, int))
         assert (atom1 < self.natom)
         assert (atom2 < self.natom)
-        return self.lattice.distance2(self.reduced[atom1], self.reduced[atom2])
+
+        if self.is_periodic:
+            return self.lattice.distance2(self.reduced[atom1], self.reduced[atom2])
+        else:
+            dm = scipy.spatial.distance_matrix(self.positions, self.positions)
+            return dm[atom1, atom2]
+
+    def distance_matrix(self):
+        if self.is_periodic:
+            dm = np.zeros(self.nsites, self.nsites)
+            for i in range(1, self.nsites-1):
+                for j in range(i+1, self.nsites):
+                    dm[i, j] = self.lattice.distance2(self.reduced[i], self.reduced[j])
+                    dm[j, i] = dm[i, j]
+        else:
+            return scipy.spatial.distance_matrix(self.positions, self.positions)
 
     def valence_electrons(self):
         ret = 0
@@ -950,9 +964,14 @@ class Structure:
         if self.is_periodic:
             return abs(np.linalg.det(self.cell))
         else:
-            return (np.max(self.positions[:, 0])-np.min(self.positions[:, 0])) *\
-                   (np.max(self.positions[:, 1])-np.min(self.positions[:, 1])) *\
-                   (np.max(self.positions[:, 2])-np.min(self.positions[:, 2]))
+            volume = (np.max(self.positions[:, 0])-np.min(self.positions[:, 0])) *\
+                     (np.max(self.positions[:, 1])-np.min(self.positions[:, 1])) *\
+                     (np.max(self.positions[:, 2])-np.min(self.positions[:, 2]))
+
+            if volume > 0.0:
+                return volume
+            else:
+                return 4.0/3.0*np.pi* np.max(self.positions.flatten())**3
 
     @property
     def species(self):
@@ -1137,8 +1156,8 @@ def random_structure(method, composition, periodic=True, best_volume=1E10):
                 new_structure = None
     else:
         pos = np.random.rand(natom, 3)
-        mindis = np.min((scipy.spatial.distance_matrix(pos, pos)+100*np.eye(len(pos))).flatten())
-        #print mindis
+
+        mindis = cluster_minimal_distance(pos)
         if mindis == 0:
             raise ValueError("Distance too small")
 
@@ -1154,3 +1173,10 @@ def random_structure(method, composition, periodic=True, best_volume=1E10):
 
     return new_structure
     # End of Worker
+
+
+def cluster_minimal_distance(pos):
+    pos = np.array(pos).reshape((-1, 3))
+    dismat = scipy.spatial.distance_matrix(pos, pos)
+    tmp = np.max(dismat.flatten())
+    return np.min((dismat+tmp*np.eye(len(pos))).flatten())

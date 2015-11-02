@@ -1,7 +1,6 @@
 import os
 from ._incar import InputVariables
 from ._poscar import write_poscar
-from pychemia import Structure
 
 
 def write_from_queue(queue, entry_id, destination=None):

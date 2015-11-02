@@ -1,6 +1,6 @@
-"""
-Routines to read and write KPOINTS file
-"""
+import os
+import numpy as _np
+import pychemia
 
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2014"
@@ -9,11 +9,6 @@ __maintainer__ = "Guillermo Avendano-Franco"
 __email__ = "gtux.gaf@gmail.com"
 __status__ = "Development"
 __date__ = "March 16, 2014"
-
-import os
-import numpy as _np
-
-import pychemia
 
 
 def read_kpoints(path='KPOINTS'):
@@ -33,6 +28,7 @@ def read_kpoints(path='KPOINTS'):
     # Reading the KPOINTS file
     rf = open(filename, 'r')
     comment = rf.readline()
+    del comment
     nkpt = int(rf.readline())
     mode = rf.readline()
     if nkpt > 0:

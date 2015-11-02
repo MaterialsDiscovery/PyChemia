@@ -16,4 +16,5 @@ if _pcm.HAS_SCIPY:
     from ._utils import psp_name
     from ._parser import parser
 
+import task
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

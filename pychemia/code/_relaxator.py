@@ -10,10 +10,6 @@ class Relaxator:
         self.target_forces = target_forces
 
     @abstractmethod
-    def set_params(self, params):
-        pass
-
-    @abstractmethod
     def run(self):
         pass
 

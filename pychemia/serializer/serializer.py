@@ -41,6 +41,8 @@ class PyChemiaJsonable(object):
     def save_to_file(self, filename):
         """
         Writes the json representation to a file.
+
+        :param filename: (str) Filename for the json that will be created
         """
         with open(filename, "w") as f:
             json.dump(self, f)

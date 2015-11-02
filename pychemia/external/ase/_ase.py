@@ -27,6 +27,11 @@ def cif2structure(filename, primitive=False, symprec=0.001):
     Read a given file  as a cif file, convert it into a
     ase atoms object and finally into a pychemia
     structure
+
+    :param filename: (str) Filename of the CIF file that will be read
+    :param primitive: (boolean) if primitive cell should be returned
+    :param symprec: (float) Desired precision for computing the primitive cell
+    :return:
     """
     aseatoms = ase.io.read(filename)
     if primitive:

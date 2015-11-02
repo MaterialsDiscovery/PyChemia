@@ -94,6 +94,7 @@ class Composition:
         :param value: (str) String representing a chemical formula
 
         :rtype: dict
+
         Examples:
         >>> import pychemia
         >>> import pprint
@@ -141,7 +142,9 @@ class Composition:
         and the number of formulas given by nunits
 
         :param formula: (str) Chemical formula as string
+
         :param nunits: (int) Number of formulas to apply
+
         :rtype : (list)
 
         Examples:
@@ -343,8 +346,8 @@ class Composition:
         Returns the volume occupied by a given formula
         assuming a 'cubes' packing or 'spheres' packing
 
-        :param packing: (str) The kind of packing could be
-                        'cubes' or 'spheres'
+        :param packing: (str) The kind of packing could be 'cubes' or 'spheres'
+
         :rtype : (float)
 
         >>> import pychemia

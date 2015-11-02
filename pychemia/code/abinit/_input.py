@@ -43,6 +43,9 @@ class InputVariables(collections.MutableMapping):
             get_atomic_structure =
     """
 
+    def __contains__(self, x):
+        pass
+
     def __init__(self, *args, **kwargs):
         """
         Creates a new input object, the input object

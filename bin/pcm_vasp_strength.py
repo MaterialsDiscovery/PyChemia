@@ -11,7 +11,7 @@ import numpy as np
 import pychemia
 import pandas
 from pychemia.utils.computing import get_int, get_float
-from pychemia.code.vasp import ConvergenceKPointGrid, ConvergenceCutOffEnergy, VaspRelaxator
+from pychemia.code.vasp.task import ConvergenceKPointGrid, ConvergenceCutOffEnergy, VaspRelaxator, IdealStregth
 
 
 def cleaner():
@@ -146,17 +146,6 @@ def main(argv):
     print " Structure           :\n"
     print structure
 
-    if os.path.isfile(output_file):
-        rf = open(output_file)
-        try:
-            data = json.load(rf)
-            ini_factor = data[-1]['factor']
-        except ValueError:
-            print 'Error: Corrupted datafile, starting from scratch'
-            data = []
-    else:
-        data = []        
-
     cleaner()
     print '\nConvergence of Cut-off Energy'
     print '-----------------------------\n'
@@ -179,7 +168,7 @@ def main(argv):
     if os.path.isfile('convergence_kpoints.json'):
         print 'A previous convergence study was found, loading...'
         ck.load()
-    if not ce.is_converge:
+    if not ck.is_converge:
         ck.run()
         ck.save()
         ck.plot()
@@ -187,60 +176,8 @@ def main(argv):
     kp_density = kp.get_density_of_kpoints(structure.lattice)
     print 'KPOINT GRID', kp.grid
 
-    for ifactor in np.arange(ini_factor, fin_factor+0.9*delta_factor, delta_factor):
-
-        lattice = structure.lattice
-        newlattice_params = tuple(np.concatenate((ifactor*np.array(expansion)*lattice.lengths + lattice.lengths,
-                                                  lattice.angles)))
-        newlattice = pychemia.Lattice.from_parameters_to_cell(*newlattice_params)
-        newst = pychemia.Structure(cell=newlattice.cell, symbols=structure.symbols, reduced=structure.reduced)
-
-        tmpkp = pychemia.dft.KPoints()
-        tmpkp.set_optimized_grid(newst.lattice, density_of_kpoints=kp_density, force_odd=True)
-
-        if ifactor < 0.0:
-            print '\nCompresing cell by %7.3f percent' % (ifactor*100)
-            print '-------------------\n'
-        elif ifactor > 0.0:
-            print '\nExpanding cell by %7.3f percent' % (ifactor*100)
-            print '-------------------\n'
-        else:
-            print '\nOriginal cell'
-            print '-------------\n'
-
-        print 'KP Density %d -> %d' % (kp_density, tmpkp.get_density_of_kpoints(newst.lattice))
-        print 'KP Grid %s -> %s' % (kp.grid, tmpkp.grid)
-
-        if np.prod(kp.grid) < np.prod(tmpkp.grid):
-
-            cleaner()
-            print '\nConvergence of K-Point Grid'
-            print '---------------------------\n'
-            ck = ConvergenceKPointGrid(newst, workdir='.', binary=binary, encut=encut, nparal=nparal,
-                                       energy_tolerance=energy_tol, recover=True)
-            ck.run()
-            ck.save('convergence_kpoints_%.3f.json' % ifactor)
-            ck.plot('convergence_kpoints_%.3f.pdf' % ifactor)
-            kp = ck.best_kpoints
-        else:
-            print 'The current grid is still good'
-
-        cleaner()
-        relax = VaspRelaxator(structure=newst, relaxator_params={'kp_grid': kp.grid, 'encut': encut,
-                                                                              'nparal': nparal, 'relax_cell': False},
-                              workdir='.', target_forces=target_forces, waiting=False, binary=binary)
-        relax.run()
-        
-        vo = pychemia.code.vasp.VaspOutput('OUTCAR')
-        relst = relax.get_final_geometry()
-        symm = pychemia.symm.StructureSymmetry(relst)
-
-        data.append({'factor': ifactor, 'volume': newst.volume, 'density': newst.density, 'grid': list(kp.grid),
-                     'output': vo.to_dict, 'spacegroup': symm.number()})
-
-        wf = open('IdealStrength.json', 'w')
-        json.dump(data, wf)
-        wf.close()
+    strenght = IdealStrenght(structure, ini_factor, fin_factor, delta_factor, kp, kp_density, expansion, encut,
+                             nparal, binary, target_forces, output_file)
 
     cleaner()
 

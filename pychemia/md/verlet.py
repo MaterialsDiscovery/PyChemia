@@ -19,16 +19,16 @@ class Verlet:
         x0 = self.x0
         x1 = self.x0 + self.v0 * self.delta + 0.5*self.accel_function(self.x0)*self.delta**2
         self.trajectory.append(x1)
-        iter = 0
+        iteration = 0
         while True:
             xn = 2*x1 - x0 + self.accel_function(x1)*self.delta**2
             self.trajectory.append(xn)
             x0 = x1
             x1 = xn
-            iter += 1
+            iteration += 1
 
             if self.niter is not None:
-                if iter == niter:
+                if iteration == niter:
                     break
 
             if self.min_vel is not None:

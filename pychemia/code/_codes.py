@@ -18,7 +18,7 @@ class Codes:
         self.workdir = None
 
     @abstractmethod
-    def initialize(self, workdir, structure, kpoints, binary):
+    def initialize(self, structure, workdir=None, kpoints=None, binary=None):
         pass
 
     @abstractmethod

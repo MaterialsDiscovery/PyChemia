@@ -35,10 +35,14 @@ pychemia.geometry and pychemia.repositories
 
    Structure.symbols: The set of symbols in the cell
                       Example [ 'Na', 'Cl']
+
    Structure.positions: Dimensional cartesian coordinates
+
    Structure.reduced: non-dimensional cell reduced coordinates
                       Example [[0,0],[0, 0.5]]
+
    Structure.natom: Number of atoms in the cell
+
    Structure.cell: The lattice vectors
 
 

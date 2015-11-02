@@ -17,7 +17,12 @@ def cif2structure(filename, primitive=False):
     Read a given file  as a cif file, convert it into a
     pymatgen structure and finally into a pychemia
     structure
+
+    :param filename: (str) Filename of CIF file that should be read
+    :param primitive: (boolean) If primitive cell must be returned
+    :return:
     """
+
     cifp = pymatgen.io.cif.CifParser(filename)
     pmg_structs = cifp.get_structures(primitive)
     ret = []

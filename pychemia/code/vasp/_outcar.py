@@ -93,21 +93,6 @@ class VaspOutput:
                 self.last_energy = i[2]
                 level1 = i[1]
 
-        # TODO: Check for magnetic cases
-        kpoints = re.findall(r'k-point\s*\d+\s*:\s*([-.\d\s]+)band', self.data)
-        kpoints = np.array([x.split() for x in kpoints], dtype=float)
-
-        if self.array_sizes['NKPTS'] < 1000:
-
-            if (len(kpoints) % (self.array_sizes['ISPIN'] * self.array_sizes['NKPTS'] * 3)) == 0:
-                print 'NKPTS', self.array_sizes['NKPTS']
-                print 'ISPIN', self.array_sizes['ISPIN']
-                print 'kpoints', len(kpoints)
-                kpoints.shape = (-1, self.array_sizes['ISPIN'], self.array_sizes['NKPTS'], 3)
-                self.kpoints = kpoints[0, 0, :, :]
-            else:
-                print 'The number of kpoints recorded is not consistent with NKPTS and ISPIN', len(kpoints)
-
         pattern = r"k-point([\s\d]+):([\d\s.+-]+)\s*band No.\s*band energies\s*occupation\s*\n([\d\w\s.+-]+)\n\n"
         bands = re.findall(pattern, self.data)
         bands_dict = {}
@@ -125,7 +110,11 @@ class VaspOutput:
         if 'NIONSTEPS' in self.array_sizes:
             if len(bands) != self.array_sizes['NBANDS'] * self.array_sizes['ISPIN'] * self.array_sizes['NKPTS'] \
                     * self.array_sizes['NIONSTEPS']:
-                pcm_log.error('Bad number of bands')
+                pcm_log.debug('Bad number of bands...')
+                pcm_log.debug('NBANDS   : %s' % self.array_sizes['NBANDS'])
+                pcm_log.debug('ISPIN    : %s' % self.array_sizes['ISPIN'])
+                pcm_log.debug('NKPTS    : %s' % self.array_sizes['NKPTS'])
+                pcm_log.debug('NIONSTEPS: %s' % self.array_sizes['NIONSTEPS'])
 
         # pcm_log.info('Bands : ' + str(bands))
 
@@ -152,7 +141,7 @@ class VaspOutput:
             charge = np.array([x.split() for x in charge], dtype=float)
             charge.shape = (len(charge), -1, 5)
             if len(charge) == 2:
-                if np.all(charge[0] != charge[1]):
+                if np.all(np.array(charge[0] != charge[1])):
                     pcm_log.error('Bad Charge')
             charge = charge[0, :, 1:]
             self.charge['s'] = list(charge[:, 0])
@@ -178,6 +167,11 @@ class VaspOutput:
             self.final_data['energy'] = {'free_energy': float(data_split[12]),
                                          'energy_without_entropy': float(data_split[17]),
                                          'energy(sigma->0)': float(data_split[20])}
+
+    @property
+    def energy(self):
+        if len(self.energies) > 0:
+            return self.energies[-1][-1]
 
     def iterations(self):
         # Capture the data for each iteration. The symbol '>' is not included on purpose to close
@@ -207,7 +201,7 @@ class VaspOutput:
 
             self.iteration_data[io_iter][scf_iter]['Free_Energy'] = {}
             for j in ['PSCENC', 'TEWEN', 'DENC', 'EXHF', 'XCENC', 'EENTRO', 'EBANDS', 'EATOM', 'TOTEN']:
-                iter_block=re.findall(j+r'\s*=\s*([\d\.-]*)[\s\w\d]*\n', i[2])
+                iter_block = re.findall(j+r'\s*=\s*([\d\.-]*)[\s\w\d]*\n', i[2])
                 if len(iter_block) > 0:
                     self.iteration_data[io_iter][scf_iter]['Free_Energy'][j] = float(iter_block[0])
 
@@ -260,12 +254,13 @@ class VaspOutput:
     def get_magnetization(self):
         ret = {}
         for mag_dir in ['x', 'y', 'z']:
-            mag = re.findall(r'magnetization\s*\(%s\)\s*#\s*of\s*ion\s*s\s*p\s*d\s*tot\s*-+([-.\s\d]+)\s--' % mag_dir, self.data)
+            mag = re.findall(r'magnetization\s*\(%s\)\s*#\s*of\s*ion\s*s\s*p\s*d\s*tot\s*-+([-.\s\d]+)\s--' % mag_dir,
+                             self.data)
             if mag:
                 mag = np.array([x.split() for x in mag], dtype=float)
                 mag.shape = (len(mag), -1, 5)
                 if len(mag) == 2:
-                    assert np.all(mag[0] == mag[1])
+                    assert np.all(np.array(mag[0] == mag[1]))
                 mag = mag[-1, :, 1:]
                 ret[mag_dir] = {}
                 ret[mag_dir]['s'] = [float(x) for x in mag[:, 0]]
@@ -278,7 +273,7 @@ class VaspOutput:
 
         ret = {}
         datablock = re.findall(r"total amount of memory used by VASP on root node([\w\s\d\.=:-]*)\n \n  ", self.data)
-        if len(datablock)!=1:
+        if len(datablock) != 1:
             return None
         else:
             datablock = datablock[0]

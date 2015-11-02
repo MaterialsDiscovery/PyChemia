@@ -448,10 +448,11 @@ def rotation_matrix_around_axis_angle(axis, theta):
     # This is a matrix form of Rodrigues 'rotation formula'
     return np.cos(theta)*np.identity(3) + np.sin(theta)*ux + (1-np.cos(theta))*uxu
 
+
 def rotate_towards_axis(vector, axis, theta=None, fraction=None):
 
     # If the vector is already parallel to the axis, do nothing
-    if angle_vector(vector, axis) < 1E-10:
+    if np.abs(angle_vector(vector, axis)) < 1E-10 or np.abs(angle_vector(vector, axis)-np.pi) < 1E-10:
         return vector
 
     # Create a unitary vector perpendicular to the plane created by vector and axis
@@ -466,7 +467,6 @@ def rotate_towards_axis(vector, axis, theta=None, fraction=None):
         theta = angle_vector(vector, axis)
         m = rotation_matrix_around_axis_angle(uv, fraction * theta)
         return np.dot(m, vector)
-
 
 
 def rotation_x(theta):

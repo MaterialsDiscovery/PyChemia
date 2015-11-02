@@ -14,6 +14,7 @@ import tarfile
 import time
 from pychemia.code.abinit import psp_name
 
+
 def get_rpath_psp(kind, exchange, atomicnumber=None):
     """
     Get the ftp path to get the PSP
@@ -79,7 +80,7 @@ def get_all_psps(basedir, exchange, kind):
             for item in tar:
                 if not os.path.exists(item.name):
                     tar.extract(item, path=directory)
-        except:
+        except tarfile.ReadError:
             name = os.path.basename(filename)
             print name[:name.rfind('.')], '<filename>'
 
@@ -87,14 +88,14 @@ def get_all_psps(basedir, exchange, kind):
         while True:
             succeed = True
             ftp = ftplib.FTP('ftp.abinit.org')  # connect to host, default port
-            ret = ftp.login()  # user anonymous, passwd anonymous@
-            ret = ftp.cwd('pub/abinitio/Psps/LDA_HGH/')
+            ftp.login()  # user anonymous, passwd anonymous@
+            ftp.cwd('pub/abinitio/Psps/LDA_HGH/')
             for filename in ftp.nlst():
                 if not os.path.exists(directory + '/' + filename) or os.path.getsize(directory + '/' + filename) == 0:
                     print 'Getting %s' % filename
                     try:
                         ftp.retrbinary('RETR ' + filename, open(directory + '/' + filename, 'wb').write)
-                    except:
+                    except ftplib.error_perm:
                         print 'Failed to get ', filename
                         succeed = False
             ftp.close()
@@ -132,7 +133,7 @@ def get_all_psps(basedir, exchange, kind):
                         nofile = False
                         if os.path.getsize(directory + '/' + filename) == 0:
                             os.remove(directory + '/' + filename)
-                    except:
+                    except ftplib.error_perm:
                         print('Could not download ' + retr)
                         missing_psps.append(i)
                         ftp.close()

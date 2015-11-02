@@ -13,16 +13,18 @@ import signal
 import pychemia
 import multiprocessing
 from pychemia.utils.computing import get_int
+import subprocess
+
 
 class TimedOutExc(Exception):
-  pass
+    pass
 
 
 def deadline(timeout, *args):
     def decorate(f):
         def handler(signum, frame):
-            print signum
-            print frame
+            print 'signum:', signum
+            print 'frame:', frame
             raise TimedOutExc()
 
         def new_f(*args):
@@ -66,8 +68,8 @@ def inquirer(ip, port):
 
     # Create a UDP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
     server_address = (ip, port)
+    print >>sys.stderr, 'Connecting to %s:%d' % (ip, port)
 
     try:
         message = 'COUNT'
@@ -109,16 +111,13 @@ def inquirer(ip, port):
 
     return workdir + os.sep + entry_id, entry_id
 
+
 def executor(workdir):
 
     print 'Work directory', workdir
-    for i in os.listdir(workdir):
-        print i
-    print 'Creating a fake results'
-    results = {'a': 1}
-    wf=open(workdir+os.sep+'results.json','w')
-    json.dump(results, wf)
-    wf.close()
+    os.chdir(workdir)
+    subprocess.call(['python', 'executor.py'])
+
 
 @deadline(60)
 def finisher(entry_id, ip, port):
@@ -176,18 +175,18 @@ def main(argv):
     while True:
         if port is not None:
             try:
-                workdir, entry_id = inquirer(ip,port)
+                workdir, entry_id = inquirer(ip, port)
             except TimedOutExc as e:
                 print "INQUIRER took too long"
         else:
             lt = time.localtime()
             random.seed(lt.tm_yday*24+lt.tm_hour)
-            rndport = random.randint(10000,20000)
+            rndport = random.randint(10000, 20000)
             print 'PyChemia Client using port : ', rndport
             try:
-                workdir, entry_id = inquirer(ip,rndport)
+                workdir, entry_id = inquirer(ip, rndport)
             except TimedOutExc as e:
-                print "took too long"
+                print "Error({0}): {1}".format(e, e.message)
 
         print 'We got the workdir: ', workdir
         print 'The entry_id is : ', entry_id
@@ -197,7 +196,6 @@ def main(argv):
                 print 'No entries to execute, taking a nap'
                 time.sleep(15)
             else:
-                print 'I will work on ', entry_id
                 break
         else:
             'Inquierer failed to get data, retry...'
@@ -209,15 +207,13 @@ def main(argv):
     else:
         lt = time.localtime()
         random.seed(lt.tm_yday*24+lt.tm_hour)
-        rndport = random.randint(10000,20000)
+        rndport = random.randint(10000, 20000)
         print 'PyChemia Client using port : ', rndport
 
         try:
             finisher(entry_id, ip, rndport)
         except TimedOutExc as e:
-            print "FINISHER took too long"
-
-
+            print "Error({0}): {1}".format(e, e.message)
 
 if __name__ == "__main__":
 

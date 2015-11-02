@@ -1,14 +1,20 @@
-import numpy as np
-from ._population import Population
-import pychemia
 import math
+import sys
+import time
+from multiprocessing import Pool
+import numpy as np
 import scipy.spatial
+import pychemia
+from ._population import Population
+from pychemia.utils.mathematics import unit_vector
+from pychemia.utils.periodic import covalent_radius, atomic_number
+from pychemia.code.lennardjones import lj_compact_evaluate
 
 
 class LJCluster(Population):
 
     def __init__(self, name, composition=None, tag='global', target_forces=1E-3, value_tol=1E-2,
-                 distance_tol=0.25):
+                 distance_tol=0.1, minimal_density=70.0, refine=True):
         if composition is not None:
             self.composition = pychemia.Composition(composition)
         else:
@@ -17,6 +23,8 @@ class LJCluster(Population):
         self.target_forces = target_forces
         self.value_tol = value_tol
         self.distance_tol = distance_tol
+        self.minimal_density = minimal_density
+        self.refine = refine
         Population.__init__(self, name, tag)
 
     def add_random(self):
@@ -77,18 +85,65 @@ class LJCluster(Population):
 
         return entry_id, entry_jd
 
-    def distance(self, entry_id, entry_jd):
+    def distance(self, entry_id, entry_jd, rcut=50):
+        """
+        Return a measure of the distance between two clusters by computing
+        a n-dimensional vector of the distances between each atom to the
+        origin and
 
-        entry_orig = self.get_entry(entry_id)
-        entry_dest = self.get_entry(entry_jd)
+        :param entry_id: The id of one population entry
+        :param entry_jd: The id of another population entry
+        :return: (int) The distance between two clusters
+        """
 
-        pos_orig = np.array(entry_orig['structure']['positions']).reshape((-1, 3))
-        pos_dest = np.array(entry_dest['structure']['positions']).reshape((-1, 3))
+        ids_pair = tuple(np.sort([entry_id, entry_jd]))
+        distance_entry = self.pcdb.db.distances.find_one({'pair': ids_pair})
 
-        dist_cm_orig = np.apply_along_axis(np.linalg.norm, 1, pos_orig)
-        dist_cm_dest = np.apply_along_axis(np.linalg.norm, 1, pos_dest)
+        if distance_entry is None:
+            fingerprints = {}
+            for entry_ijd in [entry_id, entry_jd]:
 
-        return np.linalg.norm(np.abs(dist_cm_dest-dist_cm_orig))
+                if self.pcdb.db.fingerprints.find_one({'_id': entry_ijd}) is None:
+                    structure = self.get_structure(entry_ijd)
+                    analysis = pychemia.analysis.ClusterAnalysis(structure)
+                    x, ys = analysis.discrete_radial_distribution_function()
+                    fingerprint = {'_id': entry_ijd}
+                    for k in ys:
+                        atomic_number1 = atomic_number(k[0])
+                        atomic_number2 = atomic_number(k[1])
+                        pair = '%06d' % min(atomic_number1 * 1000 + atomic_number2,
+                                            atomic_number2 * 1000 + atomic_number1)
+                        fingerprint[pair] = list(ys[k])
+
+                    if self.pcdb.db.fingerprints.find_one({'_id': entry_ijd}) is None:
+                        self.pcdb.db.fingerprints.insert(fingerprint)
+                    else:
+                        self.pcdb.db.fingerprints.update({'_id': entry_ijd}, fingerprint)
+                    fingerprints[entry_ijd] = fingerprint
+                else:
+                    fingerprints[entry_ijd] = self.pcdb.db.fingerprints.find_one({'_id': entry_ijd})
+
+            dij = []
+            for pair in fingerprints[entry_id]:
+                if pair in fingerprints[entry_jd] and pair != '_id':
+                    vect1 = fingerprints[entry_id][pair]
+                    vect2 = fingerprints[entry_jd][pair]
+                    if len(vect1) < len(vect2):
+                        tmp = np.zeros(len(vect2))
+                        tmp[:len(vect1)] = vect1
+                        vect1 = tmp
+                    elif len(vect1) > len(vect2):
+                        tmp = np.zeros(len(vect1))
+                        tmp[:len(vect2)] = vect2
+                        vect2 = tmp
+                    uvect1 = unit_vector(vect1)
+                    uvect2 = unit_vector(vect2)
+                    dij.append(0.5 * (1.0 - np.dot(uvect1, uvect2)))
+            distance = float(np.mean(dij))
+            self.pcdb.db.distances.insert({'pair': ids_pair, 'distance': distance})
+        else:
+            distance = distance_entry['distance']
+        return distance
 
     @property
     def to_dict(self):
@@ -104,8 +159,11 @@ class LJCluster(Population):
         selection = self.ids_sorted(ids)
         print 'Searching duplicates in %d structures' % len(selection)
         for i in range(len(selection)-1):
-            print i, 'of', len(selection)
+            ncomps = 0
             entry_id = selection[i]
+            if fast and entry_id in dupes_list:
+                    continue
+            sys.stdout.write(" %5d of %5d: " % (i, len(selection)))
             value_i = self.value(entry_id)
             for j in range(i+1, len(selection)):
                 entry_jd = selection[j]
@@ -113,6 +171,7 @@ class LJCluster(Population):
                     continue
                 value_j = self.value(entry_jd)
                 if abs(value_i-value_j) < self.value_tol:
+                    ncomps += 1
                     distance = self.distance(entry_id, entry_jd)
                     if distance < self.distance_tol:
                         if entry_id in dupes_dict:
@@ -120,9 +179,11 @@ class LJCluster(Population):
                         else:
                             dupes_dict[entry_id] = [entry_jd]
                         dupes_list.append(entry_jd)
+            sys.stdout.write(' comparisons: %d\n' % ncomps)
         return dupes_dict, [x for x in selection if x in dupes_list]
 
     def is_evaluated(self, entry_id):
+
         entry = self.get_entry(entry_id)
         if entry is not None and entry['properties'] is not None:
             properties = entry['properties']
@@ -149,58 +210,102 @@ class LJCluster(Population):
 
     def move(self, entry_id, entry_jd, factor=0.2, in_place=False):
 
-        entry_orig = self.get_entry(entry_id)
-        entry_dest = self.get_entry(entry_jd)
+        st_orig = self.get_structure(entry_id)
+        st_dest = self.get_structure(entry_jd)
 
-        pos_orig = np.array(entry_orig['structure']['positions']).reshape((-1, 3))
-        pos_dest = np.array(entry_dest['structure']['positions']).reshape((-1, 3))
+        cm = pychemia.analysis.ClusterMatch(st_orig, st_dest)
+        cm.match()
 
-        newpos = parametric_move(pos_orig, pos_dest, fraction=f)
+        #pos_orig = np.array(entry_orig['structure']['positions']).reshape((-1, 3))
+        #pos_dest = np.array(entry_dest['structure']['positions']).reshape((-1, 3))
+        pos_orig = cm.structure1.positions
+        pos_dest = cm.structure2.positions
 
-        new_structure = pychemia.Structure(positions=newpos,
-                                           symbols=symbols, # entry_orig['structure']['symbols'],
-                                           periodicity=False)
+        # Move to a position with negative energy
+        reduc = 1
+        new_positions = np.array(pos_orig)
+        while True:
+            new_positions = rotation_move(pos_orig, pos_dest, fraction=reduc*factor)
+            new_structure = pychemia.Structure(positions=new_positions,
+                                               symbols=st_orig.symbols,
+                                               periodicity=False)
+            lj = pychemia.code.LennardJones(new_structure)
+            if lj.get_energy() < 0.0:
+                print 'Effective factor reduced to %7.3f, original factor %7.3f' % (reduc*factor, factor)
+                break
+            reduc -= 0.05
+            if reduc <= 0.0:
+                # print 'No movement effective'
+                break
+
+        # Avoid condition with atoms too close
+        distance_matrix = scipy.spatial.distance_matrix(new_positions, new_positions)
+        tmp = np.max(distance_matrix.flatten())
+        # print 'Scaling by', tmp
+        minimal_distance = np.min((distance_matrix+tmp*np.eye(len(new_positions))).flatten())
+
+        if minimal_distance < 1E-8:
+            print "Null distance between different atoms, no moving"
+            new_positions = pos_orig
+
+        if tmp > 5:
+            # print 'Big scaling, better not to move'
+            new_positions = pos_orig
+        else:
+            max_cov = np.max(covalent_radius(st_orig.symbols))
+            new_positions *= max_cov/minimal_distance
+
+        new_structure = pychemia.Structure(positions=new_positions, symbols=st_orig.symbols, periodicity=False)
+        # print 'Density of cluster', new_structure.density
 
         if in_place:
-            structure, properties, relax = self.evaluate(new_structure)
-            return self.pcdb.update(entry_id, structure=structure, properties=properties)
+            return self.pcdb.update(entry_id, structure=new_structure, properties={})
         else:
             return self.new_entry(new_structure, active=False)
 
-    def evaluate(self, structure, gtol=None):
+    def evaluate(self, entry_id, gtol=None):
 
         if gtol is None:
             gtol = self.target_forces
-        lj = pychemia.code.LennardJones(structure)
-        relax = lj.local_minimization(gtol=gtol)
-        structure.set_positions(relax.x.reshape((-1, 3)))
+
+        print 'Evaluating', entry_id
+        structure = self.get_structure(entry_id)
+
+        positions, forces, energy = lj_compact_evaluate(structure, gtol, self.minimal_density)
+
+        structure.set_positions(positions)
         structure.relocate_to_cm()
-        structure.align_inertia_momenta()
+        if structure.natom > 2:
+            structure.align_inertia_momenta()
         sorted_indices = structure.sort_sites()
-        forces = relax.jac.reshape((-1, 3))[sorted_indices]
-        properties = {'forces': pychemia.serializer.generic_serializer(forces), 'energy': relax.fun}
-        return structure, properties, relax
+        forces = forces[sorted_indices]
+        properties = {'forces': pychemia.serializer.generic_serializer(forces), 'energy': energy}
+        return structure, properties, energy
 
     def refine(self, entry_id, gtol=None):
-        structure = self.get_structure(entry_id)
-        structure, properties, relax = self.evaluate(structure, gtol=gtol)
-        return self.pcdb.update(entry_id, structure=structure, properties=properties)
+        if self.refine:
+            structure, properties, relax = self.evaluate(entry_id, gtol=gtol)
+            return self.pcdb.update(entry_id, structure=structure, properties=properties)
 
     def maxforce(self, entry_id):
         return np.max(pychemia.utils.mathematics.length_vectors(self.get_forces(entry_id)))
 
     def refine_progressive(self, entry_id):
-        gtol = 10**math.ceil(math.log10(self.maxforce(entry_id)))
-        while True:
-            print 'Local minimization up to ', gtol
-            gtol /= 10
-            structure = self.get_structure(entry_id)
-            structure, properties, relax = self.evaluate(structure, gtol=gtol)
-            self.pcdb.update(entry_id, structure=structure, properties=properties)
-            if self.maxforce(entry_id) > gtol:
-                print 'The relaxation was not successful'
-                print relax
-                break
+
+        if self.refine:
+            inivalue = self.value(entry_id)
+            gtol = 10**math.ceil(math.log10(self.maxforce(entry_id)))
+            while True:
+                print 'Local minimization up to ', gtol
+                gtol /= 10
+                structure, properties, energy = self.evaluate(entry_id, gtol=gtol)
+                if energy/structure.natom < inivalue:
+                    self.pcdb.update(entry_id, structure=structure, properties=properties)
+                else:
+                    print 'Relaxation raise value', inivalue, '<', energy/structure.natom
+                if self.maxforce(entry_id) > gtol:
+                    print 'The relaxation was not successful'
+                    break
 
     def move_random(self, entry_id, factor=0.2, in_place=False, kind='move'):
 
@@ -211,17 +316,17 @@ class LJCluster(Population):
         new_pos = pychemia.serializer.generic_serializer(pos+factor*uv)
 
         structure = pychemia.Structure(positions=new_pos,
-                                               symbols=entry['structure']['symbols'],
-                                               periodicity=False)
+                                       symbols=entry['structure']['symbols'],
+                                       periodicity=False)
 
         if in_place:
-            structure, properties, relax = self.evaluate(structure)
-            return self.pcdb.db.pychemia_entries.update_one({'_id': entry_id}, {'$set':
-                                                        {'structure': structure.to_dict, 'properties': properties}})
+            return self.pcdb.db.pychemia_entries.update_one({'_id': entry_id},
+                                                            {'$set': {'structure': structure.to_dict,
+                                                                      'properties': {}}})
         else:
             structure = pychemia.Structure(positions=new_pos,
-                                               symbols=entry['structure']['symbols'],
-                                               periodicity=False)
+                                           symbols=entry['structure']['symbols'],
+                                           periodicity=False)
             return self.new_entry(structure, active=False)
 
     def get_structure(self, entry_id):
@@ -243,7 +348,7 @@ class LJCluster(Population):
 
     def new_entry(self, structure, active=True):
 
-        structure, properties, relax = self.evaluate(structure)
+        properties = {}
         status = {self.tag: active}
         entry_id = self.pcdb.insert(structure=structure, properties=properties, status=status)
         pychemia.pcm_log.debug('Added new entry: %s with tag=%s: %s' % (str(entry_id), self.tag, str(active)))
@@ -274,12 +379,12 @@ class LJCluster(Population):
 
 def rotation_move(pos_orig, pos_dest, fraction):
 
-    newpos = np.zeros(pos_orig.shape)
+    new_positions = np.zeros(pos_orig.shape)
     for i in range(len(pos_orig)):
-        newpos[i] = pychemia.utils.mathematics.rotate_towards_axis(pos_orig[i], pos_dest[i], fraction=fraction)
-        uv = newpos[i]/np.linalg.norm(newpos[i])
-        newpos[i] = fraction * np.linalg.norm(pos_dest[i]) * uv + (1-fraction) * np.linalg.norm(pos_orig[i]) * uv
-    return newpos
+        new_positions[i] = pychemia.utils.mathematics.rotate_towards_axis(pos_orig[i], pos_dest[i], fraction=fraction)
+        uv = new_positions[i]/np.linalg.norm(new_positions[i])
+        new_positions[i] = fraction * np.linalg.norm(pos_dest[i]) * uv + (1-fraction) * np.linalg.norm(pos_orig[i]) * uv
+    return new_positions
 
 
 def direct_move(pos_orig, pos_dest, fraction):
@@ -301,18 +406,18 @@ def movement_sweep(pos_orig, pos_dest, symbols, figname='figure.pdf'):
     xx = np.arange(0.0, 1.0+0.9*delta, delta)
 
     for f in xx:
-        newpos = direct_move(pos_orig, pos_dest, fraction=f)
+        new_positions = direct_move(pos_orig, pos_dest, fraction=f)
 
-        new_structure = pychemia.Structure(positions=newpos,
-                                           symbols=symbols, # entry_orig['structure']['symbols'],
+        new_structure = pychemia.Structure(positions=new_positions,
+                                           symbols=symbols,
                                            periodicity=False)
         lj = pychemia.code.LennardJones(new_structure)
         ee.append(lj.get_energy())
         ff.append(np.max(lj.get_magnitude_forces()))
         # Distance Matrix
-        dm = scipy.spatial.distance_matrix(newpos, newpos)
+        dm = scipy.spatial.distance_matrix(new_positions, new_positions)
         # Min distance
-        md = np.min((np.array(dm)+100*np.eye(len(pos_orig))).flatten())
+        md = np.min(np.array(np.array(dm)+100*np.eye(len(pos_orig))).flatten())
         dd.append(md)
 
     ax[0].plot(xx, ee)
@@ -325,7 +430,7 @@ def movement_sweep(pos_orig, pos_dest, symbols, figname='figure.pdf'):
     ax[0].plot(0, lj.get_energy(), 'ro')
     ax[1].semilogy(0, np.max(lj.get_magnitude_forces()), 'ro')
     dm = scipy.spatial.distance_matrix(lj.structure.positions, lj.structure.positions)
-    md = np.min((np.array(dm)+100*np.eye(len(pos_orig))).flatten())
+    md = np.min(np.array(np.array(dm)+100*np.eye(len(pos_orig))).flatten())
     ax[2].plot(0, md, 'ro')
 
     st = pychemia.Structure(positions=pos_dest, symbols=symbols, periodicity=False)
@@ -334,13 +439,13 @@ def movement_sweep(pos_orig, pos_dest, symbols, figname='figure.pdf'):
 
     ax[1].semilogy(1, np.max(lj.get_magnitude_forces()), 'ro')
     dm = scipy.spatial.distance_matrix(lj.structure.positions, lj.structure.positions)
-    md = np.min((np.array(dm)+100*np.eye(len(pos_orig))).flatten())
+    md = np.min(np.array(np.array(dm)+100*np.eye(len(pos_orig)).flatten()))
     ax[2].plot(1, md, 'ro')
 
     ax[2].set_xlim(-0.01, 1.01)
 
     ax[0].set_ylabel('Energy')
     ax[1].set_ylabel('Max Force')
-    ax[2].set_ylabel('Minimal interatomic distance')
+    ax[2].set_ylabel('Minimal inter atomic distance')
 
     plt.savefig(figname)

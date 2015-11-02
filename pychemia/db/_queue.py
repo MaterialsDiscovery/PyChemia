@@ -91,24 +91,28 @@ class PyChemiaQueue:
         assert(location in ['input', 'output'])
         self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {location+'.structure': structure.to_dict}})
 
-    def set_input(self, entry_id, code, input):
+    def set_input(self, entry_id, code, inputvar):
 
-        for i in input.variables.keys():
+        for i in inputvar.variables.keys():
             if i.startswith('$'):
-                value = input.variables.pop(i)
-                input.variables[i[1:]] = value
-        self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'input.variables': input.variables,
+                value = inputvar.variables.pop(i)
+                inputvar.variables[i[1:]] = value
+        self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'input.variables': inputvar.variables,
                                                                      'input.code': code.lower()}})
 
-    def new_entry(self, structure=None, variables=None, code=None, files=None, priority=0):
+    def new_entry(self, structure=None, variables=None, code=None, files=None, priority=0, dbname=None, db_id=None):
 
         if variables is not None and code is None:
             raise ValueError("Input variables requiere code name")
         if variables is None and code is not None:
             raise ValueError("Input variables requiere code name")
 
-        entry = {'input': {}, 'output': {}, 'meta': {'submitted': False, 'priority': priority, 'finished': False,
-                                                     'deployed': False}}
+        entry = {'input': {}, 'output': {}, 'job': {}, 'meta': {'submitted': False,
+                                                                'priority': priority,
+                                                                'finished': False,
+                                                                'deployed': False,
+                                                                'dbname': dbname,
+                                                                'db_id': db_id}}
         entry_id = self.db.pychemia_entries.insert(entry)
 
         self.db.pychemia_entries.update({'_id': entry_id}, {'$currentDate': {'meta.CreationDate': True}})
@@ -116,7 +120,7 @@ class PyChemiaQueue:
         if structure is not None:
             self.set_input_structure(entry_id, structure)
         if variables is not None and code is not None:
-            self.set_input(entry_id, code=code, input=variables)
+            self.set_input(entry_id, code=code, inputvar=variables)
         if files is not None:
             for ifile in files:
                 self.add_input_file(entry_id, filename=ifile)
@@ -147,7 +151,10 @@ class PyChemiaQueue:
 
     def get_input_variables(self, entry_id):
         entry = self.db.pychemia_entries.find_one({'_id': entry_id}, {'input.variables': 1})
-        return entry['input']['variables']
+        if 'variables' in entry['input']:
+            return entry['input']['variables']
+        else:
+            return None
 
     def get_structure(self, entry_id, location):
         """

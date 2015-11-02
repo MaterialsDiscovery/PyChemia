@@ -1,10 +1,10 @@
-import pymongo
-from multiprocessing import Pool
-from bson.objectid import ObjectId
-import numpy as np
 import socket
 import itertools
-
+import json
+import pymongo
+import numpy as np
+from multiprocessing import Pool
+from bson.objectid import ObjectId
 from pychemia.utils.periodic import atomic_symbols
 from pychemia import Structure
 
@@ -44,6 +44,19 @@ class PyChemiaDB:
         self.db = self._client[name]
         self.entries = self.db.pychemia_entries
         self.set_minimal_schema()
+
+    def __str__(self):
+        ret = ' Database Name:       %s\n' % self.name
+        ret += ' Host:                %s\n' % self.db_settings['host']
+        ret += ' Port:                %s\n' % self.db_settings['port']
+        ret += ' User:                %s\n' % self.db_settings['user']
+        ret += ' SSL:                 %s\n' % self.db_settings['ssl']
+        return ret
+
+    def save_json(self, filename='db_settings.json'):
+        wf = open(filename, 'w')
+        json.dump(self.db_settings, wf, sort_keys=True, indent=4, separators=(',', ': '))
+        wf.close()
 
     def insert(self, structure, properties=None, status=None):
         """
@@ -298,7 +311,7 @@ def create_user(name, admin_name, admin_passwd, user_name, user_passwd, host='lo
     :param ssl
     :return:
     """
-    mc = pymongo.MongoClient(host=host, port=port, ssl=ssl)
+    mc = pymongo.MongoClient(host=host, port=port, ssl=ssl, ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE)
     mc.admin.authenticate(admin_name, admin_passwd)
     mc[name].add_user(user_name, user_passwd)
     return PyChemiaDB(name=name, user=user_name, passwd=user_passwd, host=host, port=port, ssl=ssl)

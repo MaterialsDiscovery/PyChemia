@@ -6,11 +6,11 @@ __status__ = "Development"
 __date__ = "June 26, 2015"
 
 
-class version:
+class Version:
 
     @staticmethod
     def full_version():
-        return 'PyChemia version='+__version__+' from='+__date__
+        return 'PyChemia Version='+__version__+' from='+__date__
 
     def __init__(self):
         pass

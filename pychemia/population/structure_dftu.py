@@ -51,7 +51,7 @@ class PopulationDFTU(Population):
         ret += ' Tag:                %s\n' % self.tag
         ret += ' Formula:            %s\n' % self.structure.formula
         ret += ' natpawu:            %d\n' % self.natpawu
-        ret += ' connection:         %d\n' % self.connection
+        ret += ' connection:         %s\n' % self.connection
 
         ret += ' Members:            %d\n' % len(self.members)
         ret += ' Actives:            %d\n' % len(self.actives)

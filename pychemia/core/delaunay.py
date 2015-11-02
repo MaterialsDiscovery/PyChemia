@@ -9,11 +9,22 @@ def get_reduced_bases(cell, tolerance=1e-5):
     """
     This is an implementation of Delaunay reduction.
     Some information is found in International table.
+
+    :param cell: (numpy.ndarray) Cell parameters dimension 3x3
+    :param tolerance: (float) Tolerance used to reduce basis
+    :return: (numpy.ndarray) a new cell
     """
     return get_delaunay_reduction(cell, tolerance)
 
 
 def get_delaunay_reduction(lattice, tolerance):
+    """
+    Return a reduced cell using the delanuay reduction
+
+    :param lattice: (numpy.ndarray) the cell parameters
+    :param tolerance: (float) Tolerance used to reduce basis
+    :return: (numpy.ndarray) a new cell
+    """
     extended_bases = _np.zeros((4, 3), dtype=float)
     extended_bases[:3, :] = lattice
     extended_bases[3] = -_np.sum(lattice, axis=0)
@@ -31,6 +42,11 @@ def get_delaunay_reduction(lattice, tolerance):
 
 
 def reduce_bases(extended_bases, tolerance):
+    """
+    Reduces the basis with a given tolerance
+
+    :param tolerance: (float) Tolerance used by reduction algorithm
+    """
     metric = _np.dot(extended_bases, extended_bases.transpose())
     for i in range(4):
         for j in range(i + 1, 4):

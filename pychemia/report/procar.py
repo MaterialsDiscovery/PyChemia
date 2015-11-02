@@ -2104,7 +2104,7 @@ def scriptVector(args):
 
     from mayavi import mlab
 
-    fig = mlab.figure(bgcolor=(1, 1, 1))
+    mlab.figure(bgcolor=(1, 1, 1))
 
     for band in args.bands:
         # z = sx.bands[:,band]-args.fermi

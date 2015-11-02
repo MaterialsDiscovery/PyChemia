@@ -14,7 +14,8 @@ except ImportError:
 
 class Relaxation(Relaxator):
 
-    def __init__(self, structure, relaxator_params=None, workdir='.', kpoints=None, target_forces=1E-3, waiting=False):
+    def __init__(self, structure, relaxator_params=None, workdir='.', kpoints=None, target_forces=1E-3, waiting=False,
+                 kp_density=10000):
 
         self.workdir = workdir
         self.initial_structure = structure
@@ -31,7 +32,7 @@ class Relaxation(Relaxator):
         self.waiting = waiting
         if kpoints is None:
             self.kpoints = KPoints()
-            self.kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=10000)
+            self.kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=kp_density)
         else:
             self.kpoints = kpoints
 
@@ -67,8 +68,8 @@ class Relaxation(Relaxator):
         # calculation of raising too much the forces after symmetrization
         dftb.driver['MaxForceComponent'] = 0.5 * self.target_forces
         dftb.driver['ConvergentForcesOnly'] = True
-        dftb.driver['MaxSteps'] = 50
-        dftb.hamiltonian['MaxSCCIterations'] = 50
+        dftb.driver['MaxSteps'] = 100
+        dftb.hamiltonian['MaxSCCIterations'] = 20
         dftb.set_inputs()
         print 'Launching DFTB+ with target force of %9.2E ' % dftb.driver['MaxForceComponent']
         dftb.run()
@@ -77,12 +78,8 @@ class Relaxation(Relaxator):
         while True:
             if dftb.runner is not None and dftb.runner.poll() is not None:
                 pcm_log.info('Execution completed. Return code %d' % dftb.runner.returncode)
-                booleans, geom_optimization, stats=read_dftb_stdout()
-                print 'Converged: ', stats['ion_convergence']
-                print 'SCC:', geom_optimization['nscc_per_ionstep']
-                print 'Forces:', geom_optimization['max_force'][-1]
-                if 'max_lattice_force' in geom_optimization:
-                    print 'Stress:', geom_optimization['max_lattice_force'][-1]
+                stdo = read_dftb_stdout()
+                print 'Converged: ', stdo['ion_convergence']
 
                 filename = dftb.workdir + os.sep + 'detailed.out'
                 if not os.path.exists(filename):
@@ -96,7 +93,7 @@ class Relaxation(Relaxator):
                 else:
                     dftb.driver['ConvergentForcesOnly'] = True
 
-                score = self.quality(dftb, score)
+                score = self.quality(score)
                 pcm_log.debug('Present score : ' + str(score))
                 if score < 20:
 
@@ -177,55 +174,27 @@ class Relaxation(Relaxator):
                 pcm_log.debug('ID: %s' % os.path.basename(self.workdir))
                 filename = dftb.workdir + os.sep + 'dftb_stdout.log'
                 if os.path.exists(filename):
-                    read_dftb_stdout(filename=filename)
+                    stdo = read_dftb_stdout(filename=filename)
+                    print 'Number of steps:', len(stdo['Geometry_Steps'])
+                    if len(stdo['Geometry_Steps']) > 1:
+                        line = 'Energy behavior: '
+                        prev_energy = stdo['Geometry_Steps'][0]['Total Energy']['value']
+                        line += ' %7.3f ' % prev_energy
+                        for step in stdo['Geometry_Steps'][1:]:
+                            new_energy = step['Total Energy']['value']
+                            if prev_energy > new_energy:
+                                line += '>'
+                            else:
+                                line += '<'
+                            prev_energy = new_energy
+                        finene = stdo['Geometry_Steps'][-1]['Total Energy']['value']
+                        line += ' %7.3f' % finene
+                        print line
                 time.sleep(10)
-                # else:
-                # log.debug('Files: ' + str(os.listdir(dftb.workdir)))
-                #    break
 
-    def quality(self, dftb, score):
-
-        booleans, geom_optimization, stats = read_dftb_stdout(filename=dftb.workdir + os.sep + 'dftb_stdout.log')
-
+    def quality(self, score):
         # Increase the score on each iteration
         score += 1
-
-        if stats['ion_convergence']:
-            score += 0
-
-        if 'max_force' in geom_optimization:
-            max_force = geom_optimization['max_force'][-1]
-        else:
-            return score
-
-        if 'max_lattice_force' in geom_optimization:
-            max_lattice_force = geom_optimization['max_lattice_force'][-1]
-        else:
-            max_lattice_force = None
-
-        if max_lattice_force is not None and max_force < self.target_forces and max_lattice_force < self.target_forces:
-            pcm_log.debug('Target forces and stress achieved (score +100)')
-            # Increase for a high value to exit
-            score += 100
-
-        if 'max_force' in geom_optimization and geom_optimization['max_force'][-1] > self.target_forces:
-            # log.debug('Target forces not achieved (score +1)')
-            score += 0
-
-        if 'max_force' in geom_optimization and geom_optimization['max_force'][-1] < geom_optimization['max_force'][0]:
-            # log.debug('Forces are decreasing (score +1)')
-            score += 0
-
-        # Only for Lattice Optimization
-        if 'max_lattice_force' in geom_optimization:
-            if geom_optimization['max_lattice_force'][-1] > self.target_forces:
-                # log.debug('Target stress not achieved (score +1)')
-                score += 0
-
-            if geom_optimization['max_lattice_force'][-1] < geom_optimization['max_lattice_force'][0]:
-                # log.debug('Stress is decreasing (score +1)')
-                score += 0
-
         return score
 
     def get_forces_stress_energy(self):

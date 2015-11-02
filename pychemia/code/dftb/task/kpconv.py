@@ -93,7 +93,7 @@ class KPointConvergence:
 
     def save_json(self):
 
-        wf = open(self.output_file,'w')
+        wf = open(self.output_file, 'w')
         json.dump(self.results, wf, sort_keys=True, separators=(',\n', ': '))
         wf.close()
 

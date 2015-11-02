@@ -1,12 +1,14 @@
 import os
 import subprocess
-from pychemia import pcm_log
-from pychemia.code import Codes
-from pychemia.utils.periodic import atomic_number
+import numpy as np
+from .._codes import Codes
+from pychemia import pcm_log, Structure
+from pychemia.utils.periodic import atomic_number, atomic_symbol
+import re
 
 
 class FireBall(Codes):
-    def __init__(self):
+    def __init__(self, fdata_path=None):
         self.workdir = None
         # The five sections of Fireball
         self.option = {}
@@ -14,29 +16,63 @@ class FireBall(Codes):
         self.quench = {}
         self.tds = {}
         self.mesh = {}
+        self.output = {}
 
-        self.fdata_path = None
+        self.fdata_path = os.path.abspath(fdata_path)
         self.structure = None
         self.binary = 'fireball.x'
         self.runner = None
         self.kpoints = None
         Codes.__init__(self)
 
-    def initialize(self, workdir, structure, kpoints, binary='fireball.x'):
-        assert structure.is_crystal
+    @property
+    def to_dict(self):
+        ret={}
+        if self.option:
+            ret['option'] = self.option
+        if self.output:
+            ret['output'] = self.output
+        if self.quench:
+            ret['quench'] = self.quench
+        if self.mesh:
+            ret['mesh'] = self.mesh
+        if self.tds:
+            ret['tds'] = self.tds
+        return ret
+
+    @staticmethod
+    def from_dict(dictionary):
+        ret = FireBall()
+        if 'option' in dictionary:
+            ret.option = dictionary['option']
+        if 'output' in dictionary:
+            ret.option = dictionary['output']
+        if 'quench' in dictionary:
+            ret.option = dictionary['quench']
+        if 'mesh' in dictionary:
+            ret.option = dictionary['mesh']
+        if 'tds' in dictionary:
+            ret.option = dictionary['tds']
+        return ret
+
+    def initialize(self, structure, workdir=None, kpoints=None, binary='fireball.x'):
         assert structure.is_perfect
         self.structure = structure
-        self.workdir = workdir
-        if not os.path.lexists(workdir):
-            os.mkdir(workdir)
+        if workdir is not None:
+            self.workdir = workdir
+        else:
+            self.workdir = '.'
+        if not os.path.lexists(self.workdir):
+            os.mkdir(self.workdir)
         self.kpoints = kpoints
         self.binary = binary
 
     def set_inputs(self):
         self.write_input(filename=self.workdir + os.sep + 'fireball.in')
         self.write_basis(filename=self.workdir + os.sep + 'input.bas')
-        self.write_lattice(filename=self.workdir + os.sep + 'input.lvs')
-        self.write_kpoints(filename=self.workdir + os.sep + 'input.kpts')
+        if self.structure.is_periodic:
+            self.write_lattice(filename=self.workdir + os.sep + 'input.lvs')
+            self.write_kpoints(filename=self.workdir + os.sep + 'input.kpts')
         self.link_fdata()
 
     def get_outputs(self):
@@ -67,47 +103,56 @@ class FireBall(Codes):
     def write_input(self, filename='fireball.in'):
 
         wf = open(filename, 'w')
+        wf.write(str(self))
+        wf.close()
 
+    def __str__(self):
+        ret = ''
         if self.option:
-            wf.write('@OPTION\n')
-            for variable in self.option:
-                wf.write('%s = %s\n' % (variable, str(self.option[variable])))
-            wf.write('@END\n')
+            ret += '&OPTION\n'
+            for variable in sorted(self.option):
+                ret += '%s = %s\n' % (variable, str(self.option[variable]))
+            ret += '&END\n'
 
         if self.output:
-            wf.write('@OUTPUT\n')
-            for variable in self.output:
-                wf.write('%s = %s\n' % (variable, str(self.output[variable])))
-            wf.write('@END\n')
+            ret += '&OUTPUT\n'
+            for variable in sorted(self.output):
+                ret += '%s = %s\n' % (variable, str(self.output[variable]))
+            ret += '&END\n'
 
         if self.quench:
-            wf.write('@QUENCH\n')
-            for variable in self.quench:
-                wf.write('%s = %s\n' % (variable, str(self.quench[variable])))
-            wf.write('@END\n')
+            ret += '&QUENCH\n'
+            for variable in sorted(self.quench):
+                ret += '%s = %s\n' % (variable, str(self.quench[variable]))
+            ret += '&END\n'
 
         if self.mesh:
-            wf.write('@MESH\n')
-            for variable in self.mesh:
-                wf.write('%s = %s\n' % (variable, str(self.mesh[variable])))
-            wf.write('@END\n')
+            ret += '&MESH\n'
+            for variable in sorted(self.mesh):
+                ret += '%s = %s\n' % (variable, str(self.mesh[variable]))
+            ret += '&END\n'
 
         if self.tds:
-            wf.write('@TDS\n')
-            for variable in self.tds:
-                wf.write('%s = %s\n' % (variable, str(self.tds[variable])))
-            wf.write('@END\n')
+            ret += '&TDS\n'
+            for variable in sorted(self.tds):
+                ret += '%s = %s\n' % (variable, str(self.tds[variable]))
+            ret += '&END\n'
 
-        wf.close()
+        return ret
 
     def write_basis(self, filename='input.bas'):
 
         wf = open(filename, 'w')
         wf.write('%d\n' % self.structure.natom)
         for i in range(self.structure.natom):
-            x = self.structure.reduced[i, 0]
-            y = self.structure.reduced[i, 1]
-            z = self.structure.reduced[i, 2]
+            if self.structure.is_periodic:
+                x = self.structure.reduced[i, 0]
+                y = self.structure.reduced[i, 1]
+                z = self.structure.reduced[i, 2]
+            else:
+                x = self.structure.positions[i, 0]
+                y = self.structure.positions[i, 1]
+                z = self.structure.positions[i, 2]
             wf.write('%d %13.7f %13.7f %13.7f\n' % (atomic_number(self.structure.symbols[i]), x, y, z))
         wf.close()
 
@@ -123,12 +168,78 @@ class FireBall(Codes):
         pass
 
     def link_fdata(self):
-        linkpath = self.workdir + os.sep + 'Fdata'
-        if os.path.exists(linkpath):
-            os.remove(linkpath)
-        os.symlink(self.fdata_path, linkpath)
+        if self.fdata_path is not None:
+            linkpath = self.workdir + os.sep + 'Fdata'
+            if os.path.exists(linkpath):
+                os.remove(linkpath)
+            os.symlink(self.fdata_path, linkpath)
+
+    def cluster_relaxation(self):
+        self.option = {'basisfile': 'input.bas', 'nstepf': 5000, 'iquench': -3, 'icluster': 1, 'iqout': 3, 'dt': 0.25}
+        self.output = {'iwrtxyz': 1}
 
 
 def read_fireball_stdout(filename):
     rf = open(filename, 'r')
-    return rf
+    data = rf.read()
+
+    atom_data = re.findall(r'Atom Coordinates from Basis File:([\d\w\s=\-\.#]+)===\n', data)[0]
+
+    symbols = []
+    positions = []
+    for iline in atom_data.split('\n'):
+        #print iline
+        tmp = iline.split()
+        if len(tmp) == 6 and tmp[0].isdigit():
+            symbols.append(tmp[1])
+            positions.append([float(x) for x in tmp[2:5]])
+
+    natom = len(symbols)
+    initial_positions = np.array(positions)
+    # print symbols
+    # print initial_positions
+
+    forces_data = re.findall(r'The grand total force \(eV/A\):([\w\d\s\.\-=\+]*)Cartesian', data)
+    # print len(forces_data)
+
+    forces = np.zeros((len(forces_data), natom, 3))
+    # print forces.shape
+
+    iteration = 0
+    for idata in forces_data:
+        for iline in idata.split('\n'):
+            if 'iatom' in iline:
+                fields = iline.split()
+                forces[iteration, int(fields[2])-1] = np.array(fields[-3:], dtype=float)
+        iteration += 1
+
+    energy_data = re.findall(r'---------- T H E  T O T A L  E N E R G Y -----------([\s\w\d\.\-=/]+)--- \n', data)
+
+    energy = []
+    for idata in energy_data:
+        for iline in idata.split('\n'):
+            if 'Time step' in iline:
+                tmp = iline.split()
+                ienergy = {'Time_step': int(tmp[3]), 'SCF_step': int(tmp[7]), 'etot/atom': float(tmp[10])}
+            elif len(iline.split('=')) == 2:
+                tmp = iline.split('=')
+                ienergy[tmp[0].strip()] = float(tmp[1])
+        energy.append(ienergy)
+
+    ret = {'symbols': symbols, 'initial_positions': initial_positions, 'forces': forces, 'energy': energy}
+    return ret
+
+
+def read_geometry_bas(filename):
+    rf = open(filename, 'r')
+
+    natom = int(rf.readline())
+    symbols = []
+    positions = np.zeros((natom, 3))
+
+    for i in range(natom):
+        line = rf.readline().split()
+        symbols.append(atomic_symbol(int(line[0])))
+        positions[i] = np.array(line[1:])
+
+    return Structure(symbols=symbols, positions=positions, periodicity=False)

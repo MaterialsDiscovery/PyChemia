@@ -146,7 +146,8 @@ def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None
                     if os.path.isfile(pspfile):
                         break
                     else:
-                        print pspfile, 'is not present...'
+                        pass
+                        # print pspfile, 'is not present...'
             if not os.path.isfile(pspfile):
                 raise ValueError("File not found : " + pspfile)
             pspfiles.append(pspfile)

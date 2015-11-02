@@ -101,12 +101,12 @@ class FireFly(Searcher):
                     if new_selection[entry_id] is None:
                         new_selection[entry_id] = self.population.move(entry_id, entry_jd, factor=beta, in_place=False)
                         if self.alpha0 > 0:
-                            factor=self.alpha0*(self.delta**self.current_generation)
+                            factor = self.alpha0*(self.delta**self.current_generation)
                             self.population.move_random(new_selection[entry_id], factor=factor, in_place=True)
                     else:
                         self.population.move(new_selection[entry_id], entry_jd, factor=beta, in_place=True)
                         if self.alpha0 > 0:
-                            factor=self.alpha0*(self.delta**self.current_generation)
+                            factor = self.alpha0*(self.delta**self.current_generation)
                             self.population.move_random(new_selection[entry_id], factor=factor, in_place=True)
                     moves[entry_id] += 1
 

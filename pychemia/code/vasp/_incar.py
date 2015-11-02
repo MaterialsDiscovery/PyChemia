@@ -1,6 +1,6 @@
-"""
-Routines to read and write INCAR file
-"""
+import os
+import math
+from numbers import Number
 
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2014"
@@ -9,10 +9,6 @@ __maintainer__ = "Guillermo Avendano-Franco"
 __email__ = "gtux.gaf@gmail.com"
 __status__ = "Development"
 __date__ = "March 16, 2014"
-
-import os
-import math
-from numbers import Number
 
 
 def read_incar(filename='INCAR'):
@@ -129,9 +125,9 @@ class InputVariables:
                     newval = [int(val_splt[i])]
                 except ValueError:
                     try:
-                        newval= [round(float(val_splt[i]), 10)]
+                        newval = [round(float(val_splt[i]), 10)]
                     except ValueError:
-                        if '*' in val_splt[i] and len(val_splt[i].split('*'))==2:
+                        if '*' in val_splt[i] and len(val_splt[i].split('*')) == 2:
                             # print 'Trying this', val_splt[i]
                             newval = int(val_splt[i].split('*')[0])*[float(val_splt[i].split('*')[1])]
                         else:
@@ -325,12 +321,14 @@ class InputVariables:
         self.variables['ICHARG'] = 1
 
     def set_minimum(self, PREC='Normal', ISPIN=2, LREAL=False, ISMEAR=0, LORBIT=11):
+        print 'incar set_minimun'
         self.variables['PREC'] = PREC
         self.variables['LREAL'] = LREAL
         self.variables['ISMEAR'] = ISMEAR
         self.variables['ISPIN'] = ISPIN
         self.variables['LORBIT'] = LORBIT
         self.variables['NPAR'] = 2
+        self.variables['LASPH'] = True
 
     def set_density_for_restart(self):
         self.variables['ICHARG'] = 1

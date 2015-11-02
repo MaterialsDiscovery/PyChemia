@@ -6,6 +6,10 @@ class MyHTMLParser(HTMLParser):
     """
     Create a subclass and override the handler methods
     """
+
+    def error(self, message):
+        pass
+
     def handle_starttag(self, tag, attrs):
         sys.stdout.write("'")
 

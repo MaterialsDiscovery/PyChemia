@@ -49,13 +49,11 @@ class VaspDoscar:
 
     def _proj_dos_dict(self):
 
-        ret = []
-
+        ret = {}
         for i in range(self.nions):
-
-            proj = {'energy': self.doscar['projected'][i][:, 0]}
+            ret['proj'] = {'energy': self.doscar['projected'][i][:, 0]}
             if self.is_spin_polarized:
-                ncols = self.doscar['projected'][i].shape[1]
+                ret['ncols'] = self.doscar['projected'][i].shape[1]
         return ret
 
     @staticmethod

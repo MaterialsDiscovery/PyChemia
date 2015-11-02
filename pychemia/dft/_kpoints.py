@@ -263,9 +263,12 @@ class KPoints(PyChemiaJsonable):
                                   int(max(ceil(factor * rlattice.b), 1)),
                                   int(max(ceil(factor * rlattice.c), 1))])
 
+            #print self.grid, factor
+
+            # The volume in reciprocal space is the inverse of the volume in real space
             fin_density = float(np.prod(self.grid) * lattice.volume)
 
-            if fin_density > ini_density:
+            if fin_density > ini_density and factor > 0:
                 factor -= 1
             else:
                 break

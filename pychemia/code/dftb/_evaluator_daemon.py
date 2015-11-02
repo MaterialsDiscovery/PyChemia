@@ -153,7 +153,7 @@ class EvaluatorDaemon:
                     if procs[j] is None or not procs[j].is_alive():
                         if ids_running[j] is not None:
                             pcm_log.debug('%s is not alive. Exit code: %2d. Locked: %s' %
-                                      (str(ids_running[j]), procs[j].exitcode, str(pcdb.is_locked(ids_running[j]))))
+                                          (str(ids_running[j]), procs[j].exitcode, str(pcdb.is_locked(ids_running[j]))))
                         if self.is_evaluable(pcdb.entries.find_one({'_id': entry_id})):
                             pcm_log.debug('Evaluable: %s. Relaxing entry %d of %d' %
                                           (str(entry_id), index, len(to_relax)))

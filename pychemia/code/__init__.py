@@ -6,6 +6,8 @@ from _relaxator import Relaxator
 import vasp
 import dftb
 from lennardjones import LennardJones
+import fireball
+
 try:
     import scipy
     import abinit

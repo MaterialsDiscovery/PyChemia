@@ -16,6 +16,9 @@ if __name__ == '__main__':
 
 
 def test_bad_outcar():
+    """
+    Test with a corrupted VASP OUTCAR   :
+    """
 
-    vo = pychemia.code.vasp.VaspOutput('pychemia/test/data/VASP_04/OUTCAR')
-    assert not vo.is_finished
+    vo = pychemia.code.vasp.VaspOutput('pychemia/test/data/vasp_04/OUTCAR')
+    assert vo.is_finished

@@ -53,7 +53,6 @@ except ImportError:
 
 from .core import Structure, Composition, Lattice
 import analysis
-import calc
 import code
 import db
 import dft
@@ -69,8 +68,9 @@ import web
 import external
 import population
 import serializer
+from .core.from_file import structure_from_file
 
-from _info import __author__, __copyright__, __version__, __email__, __status__, __date__, version
+from _info import __author__, __copyright__, __version__, __email__, __status__, __date__, Version
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())
 
