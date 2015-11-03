@@ -120,21 +120,21 @@ def main(argv):
     data = json.load(open('results.json'))
     plt.figure(figsize=(11, 8.5))
 
-    EA = None
-    EB = None
+    energy_left = None
+    energy_right = None
 
     for idata in data:
         if idata['ratio'] == 0:
-            if EA is None or EA > idata['energy_pa']:
-                EA = idata['energy_pa']
-                print 'Energy per atom for %2s: %9.3f' % (idata['formula'], EA)
+            if energy_left is None or energy_left > idata['energy_pa']:
+                energy_left = idata['energy_pa']
+                print 'Energy per atom for %2s: %9.3f' % (idata['formula'], energy_left)
 
         elif idata['ratio'] == 1:
-            if EB is None or EB > idata['energy_pa']:
-                EB = idata['energy_pa']
-                print 'Energy per atom for %2s: %9.3f' % (idata['formula'], EB)
+            if energy_right is None or energy_right > idata['energy_pa']:
+                energy_right = idata['energy_pa']
+                print 'Energy per atom for %2s: %9.3f' % (idata['formula'], energy_right)
 
-    if EA is None or EB is None:
+    if energy_left is None or energy_right is None:
         print 'Pure elements not found, formation energy cannot be computed'
         sys.exit(1)
 
@@ -143,9 +143,9 @@ def main(argv):
         x = idata['ratio']
         spcgrp = idata['spcgrp']
         marker, color, lab, m, z, fs = spcgrp_props(spcgrp)
-        y = idata['energy_pa'] - (1-x)*EA - x*EB
+        y = idata['energy_pa'] - (1-x)*energy_left - x*energy_right
         plt.plot(x, y, marker=marker, ms=m, color=color, fillstyle=fs, zorder=z)
-        points.append([x, idata['energy_pa'] - (1-x)*EA - x*EB])
+        points.append([x, idata['energy_pa'] - (1-x)*energy_left - x*energy_right])
 
     points = np.array(points)
     hull = ConvexHull(points)

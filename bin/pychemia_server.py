@@ -56,10 +56,10 @@ def get_database(dbsettings):
 
     if 'user' not in dbsettings:
         pcq = pychemia.db.PyChemiaQueue(name=dbsettings['name'], host=dbsettings['host'], port=dbsettings['port'],
-                          ssl=dbsettings['ssl'])
+                                        ssl=dbsettings['ssl'])
     else:
         pcq = pychemia.db.PyChemiaQueue(name=dbsettings['name'], host=dbsettings['host'], port=dbsettings['port'],
-                          user=dbsettings['user'], passwd=dbsettings['passwd'], ssl=dbsettings['ssl'])
+                                        user=dbsettings['user'], passwd=dbsettings['passwd'], ssl=dbsettings['ssl'])
     return pcq
 
 
@@ -97,7 +97,7 @@ def listener(dbsettings, ip, port, workdir):
                 pcq.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'meta.submitted': True}})
                 deploy(entry_id, pcq, workdir)
             else:
-                entry_id=''
+                entry_id = ''
             sent = sock.sendto(str(entry_id), address)
             print >>sys.stderr, 'sent %s bytes back to %s' % (sent, address)
         if data.startswith('FINISHED:'):
@@ -119,7 +119,7 @@ def deploy(entry_id, pychemia_queue, basedir):
     job_settings = entry['job']
     print job_settings
 
-    if len(job_settings)>0:
+    if len(job_settings) > 0:
         wf = open(workdir+os.sep+'job.json', 'w')
         json.dump(job_settings, wf)
         wf.close()

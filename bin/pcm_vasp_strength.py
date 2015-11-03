@@ -149,12 +149,12 @@ def main(argv):
     cleaner()
     print '\nConvergence of Cut-off Energy'
     print '-----------------------------\n'
-    ce = ConvergenceCutOffEnergy(structure, energy_tolerance=energy_tol, nparal=nparal, binary=binary)
+    ce = ConvergenceCutOffEnergy(structure, energy_tolerance=energy_tol, binary=binary)
     if os.path.isfile('convergence_encut.json'):
         print 'A previous convergence study was found, loading...'
         ce.load()
     if not ce.is_converge:
-        ce.run()
+        ce.run(nparal)
         ce.save()
         ce.plot()
     encut = ce.best_encut
@@ -163,13 +163,13 @@ def main(argv):
     cleaner()
     print '\nConvergence of K-Point Grid'
     print '---------------------------\n'
-    ck = ConvergenceKPointGrid(structure, workdir='.', binary=binary, encut=encut, nparal=nparal,
+    ck = ConvergenceKPointGrid(structure, workdir='.', binary=binary, encut=encut,
                                energy_tolerance=energy_tol, recover=True)
     if os.path.isfile('convergence_kpoints.json'):
         print 'A previous convergence study was found, loading...'
         ck.load()
     if not ck.is_converge:
-        ck.run()
+        ck.run(nparal)
         ck.save()
         ck.plot()
     kp = ck.best_kpoints

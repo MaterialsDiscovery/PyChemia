@@ -59,11 +59,11 @@ def main(argv):
     print '\n'
     mech = mechanical_properties(tem)
     print " %20s %5s %12s %12s %12s" % ('Property'.ljust(20), 'Units', 'Voigt', 'Reuss', 'Average')
-    print ' '+ 65 *"-"
+    print ' ' + 65 * "-"
     for i in sorted(mech):
         print " %20s %5s %12.3f %12.3f %12.3f" % (i.ljust(20), mech[i]['units'], mech[i]['Voigt'], mech[i]['Reuss'],
                                                   0.5*(mech[i]['Voigt']+mech[i]['Reuss']))
-    print ' '+ 65 *"-"
+    print ' ' + 65 * "-"
 
 if __name__ == "__main__":
 

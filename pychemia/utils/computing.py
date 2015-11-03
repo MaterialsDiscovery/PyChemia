@@ -14,12 +14,13 @@ def unicode2string(value):
              are converted into strings
     :rtype : (str, list, dict)
 
-    >>> unicode2string(u'abc')
-    'abc'
-    >>> unicode2string([u'abc'])
-    ['abc']
-    >>> unicode2string({u'abc': u'def'})
-    {'abc': 'def'}
+    Example:
+>>> unicode2string(u'abc')
+'abc'
+>>> unicode2string([u'abc'])
+['abc']
+>>> unicode2string({u'abc': u'def'})
+{'abc': 'def'}
     """
     if isinstance(value, dict):
         ret = {}
@@ -45,9 +46,9 @@ def convert_color(s):
     :return: (tuple) With 3 floats representing the color in RGB
     :rtype : tuple
 
-    >>> import pychemia
-    >>> pychemia.utils.computing.convert_color('FF5500')
-    (1.0, 0.3333333333333333, 0.0)
+>>> import pychemia
+>>> pychemia.utils.computing.convert_color('FF5500')
+(1.0, 0.3333333333333333, 0.0)
     """
     return float(int(s[:2], 16))/255, float(int(s[2:4], 16))/255, float(int(s[4:6], 16))/255
 

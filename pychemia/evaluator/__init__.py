@@ -12,6 +12,10 @@ def execute(basedir, command, script):
     """
     Utility that copy a given script and execute the given
     command inside the directory
+
+    :param basedir: (str) Basedir of the directory with script
+    :param command: (str) Command to execute
+    :param script: (str) Script to call inside basedir
     """
     cwd = _os.getcwd()
     if not _os.path.isfile(basedir + '/' + _os.path.basename(script)):

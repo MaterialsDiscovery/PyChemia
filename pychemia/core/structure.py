@@ -82,22 +82,22 @@ class Structure:
 
         Examples:
 
-        >>> import pychemia
-        >>> a = pychemia.Structure()
-        >>> print a
-        Empty structure
-        >>> a = pychemia.Structure(symbols=['Xe'])
-        >>> print a.natom
-        1
-        >>> d = 1.104
-        >>> a = pychemia.Structure(symbols=['N', 'N'], positions=[[0, 0, 0], [0, 0, d]], periodicity=False)
-        >>> print a.natom
-        2
-        >>> a = 4.05
-        >>> b = a/2
-        >>> fcc = pychemia.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
-        >>> print fcc.natom
-        1
+>>> import pychemia
+>>> a = pychemia.Structure()
+>>> print a
+Empty structure
+>>> a = pychemia.Structure(symbols=['Xe'])
+>>> print a.natom
+1
+>>> d = 1.104
+>>> a = pychemia.Structure(symbols=['N', 'N'], positions=[[0, 0, 0], [0, 0, d]], periodicity=False)
+>>> print a.natom
+2
+>>> a = 4.05
+>>> b = a/2
+>>> fcc = pychemia.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
+>>> print fcc.natom
+1
         """
         self.vector_info = {}
         self.name = None

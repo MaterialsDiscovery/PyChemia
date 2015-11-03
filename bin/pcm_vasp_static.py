@@ -56,7 +56,7 @@ OPTIONS
 def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], "hs:o:n:b:e:", ["help", "structure=", "output=", "nparal=",
-                                                               "binary=", "energy_tol="])
+                                                             "binary=", "energy_tol="])
     except getopt.GetoptError:
         usage(argv[0])
         sys.exit(2)

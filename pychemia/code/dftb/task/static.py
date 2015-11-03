@@ -57,9 +57,9 @@ class StaticCalculation:
                     filename = dftb.workdir + os.sep + 'detailed.out'
                     ret = read_detailed_out(filename)
                     print 'Mixer= %10s  Total_energy= %9.3f  iSCC= %4d  SCC_error= %9.3E' % (mixer,
-                                                                                              ret['total_energy'],
-                                                                                              ret['SCC']['iSCC'],
-                                                                                              ret['SCC']['SCC_error'])
+                                                                                             ret['total_energy'],
+                                                                                             ret['SCC']['iSCC'],
+                                                                                             ret['SCC']['SCC_error'])
                     break
                 time.sleep(10)
 

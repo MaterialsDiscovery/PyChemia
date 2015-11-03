@@ -95,8 +95,10 @@ class FireFly(Searcher):
                     distance = self.population.distance(entry_id, entry_jd)
                     beta = self.beta0*math.exp(-self.gamma * distance * distance)
                     # The variation of attractiveness \beta with the distance r
-                    pcm_log.debug('[%s] Distance: %7.3f. Intensity: %7.3f. Atractiveness: %7.3f' %
-                              (str(entry_jd), distance, intensity[entry_jd], beta))
+                    pcm_log.debug('[%s] Distance: %7.3f. Intensity: %7.3f. Atractiveness: %7.3f' % (str(entry_jd),
+                                                                                                    distance,
+                                                                                                    intensity[entry_jd],
+                                                                                                    beta))
 
                     if new_selection[entry_id] is None:
                         new_selection[entry_id] = self.population.move(entry_id, entry_jd, factor=beta, in_place=False)

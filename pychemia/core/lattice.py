@@ -28,30 +28,30 @@ class Lattice:
         and  basic routines related to the cell
 
 
-        >>> import pychemia
-        >>> cubic = pychemia.Lattice()
-        >>> cubic.lengths
-        array([ 1.,  1.,  1.])
-        >>> cubic.angles
-        array([ 90.,  90.,  90.])
+>>> import pychemia
+>>> cubic = pychemia.Lattice()
+>>> cubic.lengths
+array([ 1.,  1.,  1.])
+>>> cubic.angles
+array([ 90.,  90.,  90.])
 
-        >>> ortho=pychemia.Lattice([1, 2, 3])
-        >>> ortho.lengths
-        array([ 1.,  2.,  3.])
-        >>> ortho.angles
-        array([ 90.,  90.,  90.])
+>>> ortho=pychemia.Lattice([1, 2, 3])
+>>> ortho.lengths
+array([ 1.,  2.,  3.])
+>>> ortho.angles
+array([ 90.,  90.,  90.])
 
-        >>> bcc = pychemia.Lattice([[0.5, 0.5, -0.5], [-0.5, 0.5, 0.5], [0.5, -0.5, 0.5]])
-        >>> bcc.angles
-        array([ 109.47122063,  109.47122063,  109.47122063])
-        >>> bcc.lengths
-        array([ 0.8660254,  0.8660254,  0.8660254])
+>>> bcc = pychemia.Lattice([[0.5, 0.5, -0.5], [-0.5, 0.5, 0.5], [0.5, -0.5, 0.5]])
+>>> bcc.angles
+array([ 109.47122063,  109.47122063,  109.47122063])
+>>> bcc.lengths
+array([ 0.8660254,  0.8660254,  0.8660254])
 
-        >>> fcc=pychemia.Lattice([[0.5, 0.5, 0], [0, 0.5, 0.5], [0.5, 0, 0.5]])
-        >>> fcc.lengths
-        array([ 0.70710678,  0.70710678,  0.70710678])
-        >>> fcc.angles
-        array([ 60.,  60.,  60.])
+>>> fcc=pychemia.Lattice([[0.5, 0.5, 0], [0, 0.5, 0.5], [0.5, 0, 0.5]])
+>>> fcc.lengths
+array([ 0.70710678,  0.70710678,  0.70710678])
+>>> fcc.angles
+array([ 60.,  60.,  60.])
         """
         if cell is None:
             cell = np.eye(3)
@@ -227,32 +227,31 @@ class Lattice:
                             set of points
         :param reduced2: Second set of points
 
-        Example
+        Example:
+>>> import numpy as np
+>>> import pychemia
 
-        >>> import numpy as np
-        >>> import pychemia
+>>> lattice = pychemia.Lattice.random_cell('C2')
+>>> r1 = np.random.rand(4, 3)
+>>> r2 = np.random.rand(4, 3)
+>>> dist, close_imgs = lattice.minimal_distances(r1, r2)
 
-        >>> lattice=pychemia.Lattice.random_cell('C2')
-        >>> r1 = np.random.rand(4, 3)
-        >>> r2 = np.random.rand(4, 3)
-        >>> dist, close_imgs = lattice.minimal_distances(r1, r2)
+>>> solution = np.zeros((len(r1), len(r2)))
 
-        >>> solution = np.zeros((len(r1), len(r2)))
+>>> for i in range(len(r1)):
+...        for j in range(len(r2)):
+...                reduced1 = r1[i]
+...                reduced2 = r2[j]+close_imgs[i, j]
+...                cartesian1 = lattice.reduced2cartesian(reduced1)
+...                cartesian2 = lattice.reduced2cartesian(reduced2)
+...                diff_vector = cartesian2 - cartesian1
+...                solution[i, j] = np.linalg.norm(diff_vector)
 
-        >>> for i in range(len(r1)):
-        ...        for j in range(len(r2)):
-        ...                reduced1 = r1[i]
-        ...                reduced2 = r2[j]+close_imgs[i, j]
-        ...                cartesian1 = lattice.reduced2cartesian(reduced1)
-        ...                cartesian2 = lattice.reduced2cartesian(reduced2)
-        ...                diff_vector = cartesian2 - cartesian1
-        ...                solution[i, j] = np.linalg.norm(diff_vector)
-
-        >>> solution - dist < 1E-5
-        array([[ True,  True,  True,  True],
-               [ True,  True,  True,  True],
-               [ True,  True,  True,  True],
-               [ True,  True,  True,  True]], dtype=bool)
+>>> solution - dist < 1E-5
+array([[ True,  True,  True,  True],
+       [ True,  True,  True,  True],
+       [ True,  True,  True,  True],
+       [ True,  True,  True,  True]], dtype=bool)
         """
         # Just in case of one single coordinate
         reduced1, reduced2 = np.atleast_2d(reduced1, reduced2)
@@ -372,12 +371,12 @@ class Lattice:
         points = scale * (points.reshape(-1, 3))
 
         index = 0
-        # triangles = index + _np.array(list(itertools.combinations(range(len(ws[0])), 3)))
+        # triangles = index + np.array(list(itertools.combinations(range(len(ws[0])), 3)))
         # scalars = _np.ones(len(ws[0]))
         # for i in ws[1:]:
         #     index += len(i)
-        #     triangles = _np.concatenate((triangles, index + _np.array(list(itertools.combinations(range(len(i)), 3)))))
-        #     scalars = _np.concatenate((scalars, _np.random.random() * _np.ones(len(i))))
+        #     triangles = np.concatenate((triangles, index + _np.array(list(itertools.combinations(range(len(i)), 3)))))
+        #     scalars = np.concatenate((scalars, _np.random.random() * _np.ones(len(i))))
         # scalars = _np.ones(len(ws[0]))
         scalars = None
         triangles = None

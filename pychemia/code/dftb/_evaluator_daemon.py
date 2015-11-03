@@ -98,11 +98,11 @@ class EvaluatorDaemon:
                             pcdb.db.fingerprints.update({'_id': entry_id}, fingerprint)
                     else:
                         pcm_log.debug('Original and new structures are very similar.')
-                        pcm_log.debug('Max diff cell: %10.3e' %
-                                  np.max(np.absolute((structure.cell - new_structure.cell).flatten())))
+                        pcm_log.debug('Max diff cell: %10.3e' % np.max(np.absolute((structure.cell -
+                                                                                    new_structure.cell).flatten())))
                         if structure.natom == new_structure.natom:
                             pcm_log.debug('Max diff reduced coordinates: %10.3e' %
-                                      np.max(np.absolute((structure.reduced - new_structure.reduced).flatten())))
+                                          np.max(np.absolute((structure.reduced - new_structure.reduced).flatten())))
 
                 else:
                     pcdb.entries.update({'_id': entry_id}, {'$set': {'status.relaxation': 'failed'}})

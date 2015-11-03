@@ -36,15 +36,15 @@ class StructureSymmetry(object):
 
         Example
 
-        >>> import pychemia
-        >>> a = 4.05
-        >>> b = a/2
-        >>> fcc = pychemia.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
-        >>> symm = pychemia.symm.StructureSymmetry(fcc)
-        >>> symm.number()
-        225
-        >>> symm.symbol()
-        u'Fm-3m'
+>>> import pychemia
+>>> a = 4.05
+>>> b = a/2
+>>> fcc = pychemia.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
+>>> symm = pychemia.symm.StructureSymmetry(fcc)
+>>> symm.number()
+225
+>>> symm.symbol()
+u'Fm-3m'
         """
         assert structure.is_crystal
         assert structure.is_perfect
@@ -189,23 +189,23 @@ class StructureSymmetry(object):
 
         Example:
 
-        >>> import pychemia
-        >>> import random
-        >>> a = 4.05
-        >>> b = a/2
-        >>> fcc = pychemia.Structure(symbols=['Au'],
-        ...       cell=[[0, b+1E-5, b-1E-5], [b+1E-5, 0, b-1E-5], [b+1E-5, b-1E-5, 0]], periodicity=True)
-        >>> symm = pychemia.symm.StructureSymmetry(fcc)
-        >>> symm.number()
-        2
-        >>> symm.symbol()
-        u'P-1'
-        >>> fcc2 = symm.refine_cell(symprec=1E-3)
-        >>> symm2 = pychemia.symm.StructureSymmetry(fcc2)
-        >>> symm2.number()
-        225
-        >>> symm2.symbol()
-        u'Fm-3m'
+>>> import pychemia
+>>> import random
+>>> a = 4.05
+>>> b = a/2
+>>> fcc = pychemia.Structure(symbols=['Au'],
+...       cell=[[0, b+1E-5, b-1E-5], [b+1E-5, 0, b-1E-5], [b+1E-5, b-1E-5, 0]], periodicity=True)
+>>> symm = pychemia.symm.StructureSymmetry(fcc)
+>>> symm.number()
+2
+>>> symm.symbol()
+u'P-1'
+>>> fcc2 = symm.refine_cell(symprec=1E-3)
+>>> symm2 = pychemia.symm.StructureSymmetry(fcc2)
+>>> symm2.number()
+225
+>>> symm2.symbol()
+u'Fm-3m'
         """
         natom = self.structure.natom
         cell = np.array(self.structure.cell.transpose(), dtype='double', order='C')

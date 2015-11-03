@@ -65,11 +65,11 @@ def get_all_psps(basedir, exchange, kind):
             file_size_dl = 0
             block_sz = 8192
             while True:
-                buffer = u.read(block_sz)
-                if not buffer:
+                readed_buffer = u.read(block_sz)
+                if not readed_buffer:
                     break
-                file_size_dl += len(buffer)
-                f.write(buffer)
+                file_size_dl += len(readed_buffer)
+                f.write(readed_buffer)
                 status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / file_size)
                 status += chr(8) * (len(status) + 1)
                 print status,

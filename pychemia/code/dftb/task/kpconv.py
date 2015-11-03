@@ -69,10 +69,8 @@ class KPointConvergence:
                         filename = dftb.workdir + os.sep + 'detailed.out'
                         if os.path.exists(filename):
                             ret = read_detailed_out(filename)
-                            print 'KPoint_grid= %15s  iSCC= %4d  Total_energy= %10.4f  SCC_error= %9.3E' % (grid,
-                                                                                    ret['SCC']['iSCC'],
-                                                                                    ret['total_energy'],
-                                                                                    ret['SCC']['SCC_error'])
+                            line = 'KPoint_grid= %15s  iSCC= %4d  Total_energy= %10.4f  SCC_error= %9.3E'
+                            print line % (grid, ret['SCC']['iSCC'], ret['total_energy'], ret['SCC']['SCC_error'])
                         else:
                             print 'detailed.out could not be found, exiting...'
                             return
@@ -82,9 +80,9 @@ class KPointConvergence:
                     time.sleep(10)
 
                 self.results.append({'kp_grid': grid,
-                                    'iSCC': ret['SCC']['iSCC'],
-                                    'Total_energy': ret['total_energy'],
-                                    'SCC_error': ret['SCC']['SCC_error']})
+                                     'iSCC': ret['SCC']['iSCC'],
+                                     'Total_energy': ret['total_energy'],
+                                     'SCC_error': ret['SCC']['SCC_error']})
             else:
                 n += 2
 

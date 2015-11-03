@@ -8,7 +8,7 @@ __author__ = 'Guillermo Avendano-Franco'
 def cluster_worker(db_settings):
     while True:
         pcdb = pychemia.db.get_database(db_settings)
-        population=pychemia.population.LJCluster(pcdb)
+        population = pychemia.population.LJCluster(pcdb)
 
         entry = population.pcdb.db.pychemia_entries.find_one({'status.'+population.tag: True,
                                                               'status.lock': {'$exists': False},

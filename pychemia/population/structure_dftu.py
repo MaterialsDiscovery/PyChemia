@@ -135,7 +135,7 @@ class PopulationDFTU(Population):
             entry_i = self.get_entry(ids[i])
             for j in range(i+1, len(ids)):
                 entry_j = self.get_entry(ids[j])
-                if self.distance(ids[i], ids[j])<1E-3:
+                if self.distance(ids[i], ids[j]) < 1E-3:
                     if entry_i in ret:
                         ret[entry_i].append(entry_j)
                     else:

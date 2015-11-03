@@ -112,7 +112,8 @@ class ClusterMatch:
             maxdis = np.max(dm.flatten())
             for i in range(len(pos1)):
                 match = dm[i, :].argmin()
-                # print " %3s %3d %9.3f %9.3f %9.3f" % (ispecie, match, np.linalg.norm(pos1[i]), np.linalg.norm(pos1[match]), dm[i,match])
+                # print " %3s %3d %9.3f %9.3f %9.3f" % (ispecie, match, np.linalg.norm(pos1[i]),
+                # np.linalg.norm(pos1[match]), dm[i,match])
                 match_list[i] = match
                 dm[:, match] = maxdis + 1
 

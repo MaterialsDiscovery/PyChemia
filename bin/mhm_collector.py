@@ -116,7 +116,7 @@ def main(argv):
                 ratio = float(st.composition[specie1])/(st.composition[specie2]+st.composition[specie1])
 
             print " %30s SPCGRP: %4d   ENERGY_PA: %9.3f   MAXFORCE: %9.2E" % ((idir+os.sep+idir2).ljust(30),
-                                                                         space_group, energy/st.natom, maxforce)
+                                                                              space_group, energy/st.natom, maxforce)
 
             ret.append({'formula': formula,
                         'spcgrp': space_group,

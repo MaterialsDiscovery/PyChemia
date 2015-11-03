@@ -123,19 +123,19 @@ class Searcher:
             pcm_log.debug(' %s (tag: %s)' % (self.population.name, self.population.tag))
             pcm_log.debug(' Current Generation             : %4d' % self.current_generation)
             pcm_log.debug(' Population (evaluated/total)   : %4d /%4d' % (len(self.population.evaluated),
-                                                                    len(self.population.members)))
+                                                                          len(self.population.members)))
             pcm_log.debug(' Actives (evaluated/total)      : %4d /%4d' % (len(self.population.actives_evaluated),
-                                                                    len(self.population.actives)))
+                                                                          len(self.population.actives)))
             pcm_log.debug(' Size of Generation (this/next) : %4d /%4d' % (len(self.get_generation()),
-                                                                len(self.get_generation(self.current_generation+1))))
+                                                                          len(self.get_generation(self.current_generation+1))))
         else:
             print '-'
             pcm_log.info(' %s (tag: %s)' % (self.population.name, self.population.tag))
             pcm_log.info(' Current Generation             : %4d' % self.current_generation)
             pcm_log.info(' Population (evaluated/total)   : %4d /%4d' % (len(self.population.evaluated),
-                                                                    len(self.population.members)))
+                                                                         len(self.population.members)))
             pcm_log.info(' Actives (evaluated/total)      : %4d /%4d' % (len(self.population.actives_evaluated),
-                                                                    len(self.population.actives)))
+                                                                         len(self.population.actives)))
             pcm_log.info(' Size of Generation (this/next) : %4d /%4d' % (len(self.get_generation()),
                                                                 len(self.get_generation(self.current_generation+1))))
 
