@@ -1,3 +1,6 @@
+import pychemia
+from pyspglib import spglib
+
 """
 Interface with the Atomic Simulation Environment (ASE)
 Convert ase Atoms objects into pymatdis crystal objects
@@ -11,8 +14,6 @@ __email__ = "gtux.gaf@gmail.com"
 __status__ = "Development"
 __date__ = "March 31, 2014"
 
-import pychemia
-from pyspglib import spglib
 
 try:
     import ase.atoms

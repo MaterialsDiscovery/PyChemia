@@ -317,7 +317,7 @@ class InputVariables:
         self.variables['NPAR'] = 2
 
     def set_mit_settings(self):
-        self.set_minimum(PREC='Accurate', ISPIN=2, LREAL='Auto', ISMEAR=-5, LORBIT=11)
+        self.set_minimum(PREC='Accurate', ISPIN=2, LREAL=None, ISMEAR=-5, LORBIT=11)
         self.set_electron_scf(NELM=100, NELMIN=6, EDIFF=5E-5, IALGO=48)
         self.set_ion_relax(NSW=99, ISIF=3, IBRION=2, EDIFFG=-1E-3)
         self.variables['LWAVE'] = False
@@ -329,7 +329,10 @@ class InputVariables:
     def set_minimum(self, PREC='Normal', ISPIN=2, LREAL=False, ISMEAR=0, LORBIT=11):
         print 'incar set_minimun'
         self.variables['PREC'] = PREC
-        self.variables['LREAL'] = LREAL
+        if LREAL is not None:
+            self.variables['LREAL'] = LREAL
+        else:
+            self.variables['LREAL'] = 'Auto'
         self.variables['ISMEAR'] = ISMEAR
         self.variables['ISPIN'] = ISPIN
         self.variables['LORBIT'] = LORBIT

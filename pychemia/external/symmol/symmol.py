@@ -1,9 +1,9 @@
-__author__ = 'Guillermo'
-
 import os
 import re
 import subprocess
 import numpy as np
+
+__author__ = 'Guillermo Avendano Franco'
 
 
 def get_point_group(st):

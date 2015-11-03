@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
+import os
+import sys
+import pychemia
+
 """
 Computes the hardness of a given structure
 """
 
 __author__ = 'Guillermo Avendano Franco'
 
-import os
-import sys
-
-import pychemia
 
 
 def helper():

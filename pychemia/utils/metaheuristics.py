@@ -47,7 +47,8 @@ class Sphere(OptimizationTestFunction):
 
     @staticmethod
     def function(x):
-        return np.sum(np.array(x).T**2, axis=-1).T
+        x = np.array(x)
+        return np.sum(x.T * x.T, axis=-1).T
 
     def minimum(self, ndim):
         return np.zeros(ndim)
@@ -61,7 +62,7 @@ class Ackley(OptimizationTestFunction):
     @staticmethod
     def function(x):
         n = len(x)
-        exp1 = np.exp(-0.2 * np.sqrt(1.0/n*np.sum(x**2)))
+        exp1 = np.exp(-0.2 * np.sqrt(1.0/n*np.sum(x*x)))
         exp2 = np.exp(1.0/n*np.sum((np.cos(2*np.pi*x)).T, axis=-1).T)
         return -20 * exp1 - exp2 + np.e + 20
 

@@ -81,7 +81,6 @@ class Structure:
         comment    : Free text to identify structure
 
         Examples:
-
 >>> import pychemia
 >>> a = pychemia.Structure()
 >>> print a
@@ -1060,6 +1059,7 @@ class SiteSet:
 
         self.structure = structure
         self.sitelist = []
+        reduced = None
 
         for isite in range(structure.nsites):
             if structure.sites.count(isite) > 1:
@@ -1078,8 +1078,6 @@ class SiteSet:
                 position = structure.positions[isite]
                 if self.structure.is_periodic:
                     reduced = structure.reduced[isite]
-                else:
-                    reduced = None
             self.sitelist.append(Site(symbols=symbols, occupancies=occupancies, position=position, reduced=reduced))
 
     def __iter__(self):

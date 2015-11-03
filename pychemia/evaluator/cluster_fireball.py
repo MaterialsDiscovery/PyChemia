@@ -1,9 +1,9 @@
-__author__ = 'Guillermo Avendano-Franco'
-
 import os
 import time
 from multiprocessing import Pool, Process
 import pychemia
+
+__author__ = 'Guillermo Avendano-Franco'
 
 
 def cluster_fb_worker(db_settings):

@@ -119,6 +119,10 @@ def deflection(dirname, iteration=None):
 def magnitude_velocity(dirname, iteration=None):
     """
     Magnitude of velocity for each atom
+
+    :param dirname: (str) Directory to analyse velocities
+    :param iteration: (int) Number of iteration to use
+    :return:
     """
 
     if iteration is None:

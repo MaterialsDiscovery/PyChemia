@@ -1,4 +1,13 @@
-#!/usr/bin/env python
+import os as _os
+import numpy as np
+import collections
+from pychemia.utils.periodic import atomic_symbol, covalent_radius, atomic_number
+from pychemia.utils.constants import bohr_angstrom, angstrom_bohr
+from pychemia.utils.mathematics import unit_vectors
+from ._abifiles import AbiFiles
+from ._parser import parser
+from ._output import netcdf2dict
+from pychemia.core import Structure
 
 """
 Definition of the class input to read
@@ -13,17 +22,6 @@ __maintainer__ = "Guillermo Avendano-Franco"
 __email__ = "guillermo.avendano@uclouvain.be"
 __status__ = "Development"
 __date__ = "Aug 5, 2015"
-
-import os as _os
-import numpy as np
-import collections
-from pychemia.utils.periodic import atomic_symbol, covalent_radius, atomic_number
-from pychemia.utils.constants import bohr_angstrom, angstrom_bohr
-from pychemia.utils.mathematics import unit_vectors
-from ._abifiles import AbiFiles
-from ._parser import parser
-from ._output import netcdf2dict
-from pychemia.core import Structure
 
 
 class InputVariables(collections.MutableMapping):

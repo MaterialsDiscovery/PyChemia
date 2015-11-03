@@ -215,14 +215,14 @@ class EuclideanPopulation(Population):
 
     def move_random(self, imember, factor=0.2, in_place=False, kind='move'):
 
-        x = self.db[imember]['x']
+        x = np.array(self.db[imember]['x'])
         newx = x
         outside = True
         while outside:
             dx = 2*np.random.random_sample(self.ndim) - 1
             # print 'Random movement', dx, factor
             dx = unit_vector(dx)
-            newx = np.array(x + factor*dx)
+            newx = x + factor*dx
             outside = not self.is_inside(newx)
 
         if not in_place:

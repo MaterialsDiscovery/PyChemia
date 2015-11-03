@@ -10,13 +10,13 @@ from .._dftb import DFTBplus, read_detailed_out
 class StaticCalculation:
 
     def __init__(self, structure, workdir, slater_path, waiting=False, kpoints=None, output_file='results.json',
-                 MaxSCCIterations=50):
+                 max_scc_iterations=50):
 
         self.structure = structure
         self.workdir = workdir
         self.slater_path = slater_path
         self.waiting = waiting
-        self.MaxSCCIterations = MaxSCCIterations
+        self.MaxSCCIterations = max_scc_iterations
         if isinstance(slater_path, basestring):
             self.slater_path = [slater_path]
         self.results = []

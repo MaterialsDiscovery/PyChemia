@@ -43,7 +43,7 @@ class EvaluatorDaemon:
             structure = structure.scale()
 
             relaxer = Relaxation(structure, relaxator_params=relaxator_params, workdir=workdir,
-                                        target_forces=target_forces, waiting=True)
+                                 target_forces=target_forces, waiting=True)
             relaxer.run()
             pcm_log.info('[%s]: Finished relaxation. Target forces: %7.3e' % (str(entry_id), target_forces))
 

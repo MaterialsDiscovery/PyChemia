@@ -1,3 +1,6 @@
+from math import sqrt as _sqrt
+import pychemia.utils.constants as _pc
+
 """
 A syntactic parser for ABINIT input files ".in"
 """
@@ -9,10 +12,6 @@ __maintainer__ = "Guillermo Avendano-Franco"
 __email__ = "guillermo.avendano@uclouvain.be"
 __status__ = "Development"
 __date__ = "Aug 27, 2012"
-
-from math import sqrt as _sqrt
-
-import pychemia.utils.constants as _pc
 
 
 def __isnumber(word):

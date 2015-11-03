@@ -4,13 +4,13 @@ import numpy as np
 from fractions import gcd
 from pychemia import Composition, Structure, pcm_log
 from pychemia.db import USE_MONGO
-
-if USE_MONGO:
-    from pychemia.db import get_database
 from pychemia.analysis import StructureAnalysis, StructureChanger, StructureMatch
 from pychemia.utils.mathematics import unit_vector
 from pychemia.utils.periodic import atomic_number, covalent_radius
 from _population import Population
+
+if USE_MONGO:
+    from pychemia.db import get_database
 
 
 class StructurePopulation(Population):
@@ -105,8 +105,8 @@ class StructurePopulation(Population):
         comp = self.composition.composition.copy()
         rnd = random.random()
         natom_limit = self.max_comp_mult*self.composition.natom/self.composition.gcd
-        condition={'structure.nspecies': self.composition.nspecies,
-                   'structure.natom': {'$lte': natom_limit}}
+        condition = {'structure.nspecies': self.composition.nspecies,
+                     'structure.natom': {'$lte': natom_limit}}
 
         if self.pcdb_source is None or self.pcdb_source.entries.find(condition).count() <= len(self.source_blacklist):
             rnd = 0

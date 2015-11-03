@@ -141,7 +141,7 @@ class VaspOutput:
             charge = np.array([x.split() for x in charge], dtype=float)
             charge.shape = (len(charge), -1, 5)
             if len(charge) == 2:
-                if np.all(np.array(charge[0] != charge[1])):
+                if np.all(charge[0] != charge[1]):
                     pcm_log.error('Bad Charge')
             charge = charge[0, :, 1:]
             self.charge['s'] = list(charge[:, 0])

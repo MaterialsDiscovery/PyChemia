@@ -1,3 +1,6 @@
+from _searcher import Searcher
+from pychemia import pcm_log
+
 """
 Implementation of Genetic Algorithms
 This is the abstract layer
@@ -6,9 +9,6 @@ This module should be general enough even for stock market prediction!
 """
 
 __author__ = 'Guillermo Avendano-Franco'
-
-from _searcher import Searcher
-from pychemia import pcm_log
 
 
 class GeneticAlgorithm(Searcher):

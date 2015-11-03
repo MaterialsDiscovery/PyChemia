@@ -119,7 +119,7 @@ class BeeAlgorithm(Searcher):
                     self.scouts_others.remove(j)
                     dead_bees += 1
             scouts_others_alive = self.population.ids_sorted(self.scouts_others)
-            if len(scouts_others_alive)>0:
+            if len(scouts_others_alive) > 0:
                 best_scout = scouts_others_alive[0]
                 worst_best = self.population.ids_sorted(self.scouts_best)[-1]
                 if self.population.value(best_scout) < self.population.value(worst_best):

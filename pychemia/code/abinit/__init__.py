@@ -7,6 +7,7 @@ ABINIT '_OUT.nc' output files
 
 """
 import pychemia as _pcm
+import task
 
 if _pcm.HAS_SCIPY:
     from ._abifiles import AbiFiles
@@ -16,5 +17,4 @@ if _pcm.HAS_SCIPY:
     from ._utils import psp_name
     from ._parser import parser
 
-import task
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

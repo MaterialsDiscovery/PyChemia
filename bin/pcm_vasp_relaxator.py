@@ -171,10 +171,9 @@ def main(argv):
     cleaner()
     print '\nIonic Relaxation'
     print '----------------\n'
-    vr = IonRelaxation(structure=structure,
-                       relaxator_params={'encut': encut, 'kp_grid': kp.grid, 'nparal': nparal}, workdir=workdir,
+    vr = IonRelaxation(structure=structure, encut= encut, kp_grid= kp.grid, workdir=workdir,
                        target_forces=10*target_forces)
-    vr.run()
+    vr.run(nparal)
 
     structure = vr.get_final_geometry()
     structure.save_json(workdir+os.sep+'structure_phase1.json')
@@ -193,8 +192,8 @@ def main(argv):
     cleaner()
     print '\nConvergence of K-Point Grid'
     print '---------------------------\n'
-    ck = ConvergenceKPointGrid(st, encut=encut, nparal=nparal, energy_tolerance=energy_tol, recover=True)
-    ck.run()
+    ck = ConvergenceKPointGrid(st, encut=encut, energy_tolerance=energy_tol, recover=True)
+    ck.run(nparal)
     ck.save()
     ck.plot()
     kp = ck.best_kpoints
@@ -207,8 +206,8 @@ def main(argv):
     cleaner()
     print '\nConvergence of Cut-off Energy'
     print '-----------------------------\n'
-    ce = ConvergenceCutOffEnergy(st, energy_tolerance=energy_tol, nparal=nparal, kpoints=kp)
-    ce.run()
+    ce = ConvergenceCutOffEnergy(st, energy_tolerance=energy_tol, kpoints=kp)
+    ce.run(nparal)
     ce.save()
     ce.plot()
     encut = ce.best_encut
@@ -226,10 +225,8 @@ def main(argv):
     cleaner()
     print '\nIonic Relaxation'
     print '----------------\n'
-    vr = IonRelaxation(structure=st, workdir='.',
-                       relaxator_params={'encut': encut, 'kp_grid': kp.grid, 'nparal': nparal},
-                       target_forces=target_forces)
-    vr.run()
+    vr = IonRelaxation(structure=st, workdir='.', encut=encut, kp_grid= kp.grid, target_forces=target_forces)
+    vr.run(nparal)
 
     structure = vr.get_final_geometry()
     structure.save_json(workdir+os.sep+'structure_phase2.json')

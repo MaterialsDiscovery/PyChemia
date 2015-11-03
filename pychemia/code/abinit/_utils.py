@@ -1,10 +1,13 @@
-#!/usr/bin/env python
+import os
+import numpy as np
+from scipy.io import netcdf_file
+from pychemia.utils.periodic import atomic_symbol
+from _htmlparser import MyHTMLParser
 
 """
 This module provides general routines used by abipython
 but not requiring the abipython classes
 """
-from _htmlparser import MyHTMLParser
 
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2012"
@@ -13,11 +16,6 @@ __maintainer__ = "Guillermo Avendano-Franco"
 __email__ = "guillermo.avendano@uclouvain.be"
 __status__ = "Development"
 __date__ = "Aug 27, 2012"
-
-import os
-import numpy as np
-from scipy.io import netcdf_file
-from pychemia.utils.periodic import atomic_symbol
 
 
 def netcdf2dict(filename):

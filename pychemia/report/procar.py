@@ -1776,7 +1776,7 @@ def scriptBandsplot(args):
         if args.human is True:
             print "WARNING: `--human` option given without atoms list!"
             print "--human will be set to False (ignored)\n "
-            agrs.human = False
+            args.human = False
     if args.orbitals is None:
         args.orbitals = [-1]
 

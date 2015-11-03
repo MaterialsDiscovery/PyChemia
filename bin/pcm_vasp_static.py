@@ -118,8 +118,8 @@ def main(argv):
     cleaner()
     print '\nConvergence of Cut-off Energy'
     print '-----------------------------\n'
-    ce = ConvergenceCutOffEnergy(structure, energy_tolerance=energy_tol, nparal=nparal)
-    ce.run()
+    ce = ConvergenceCutOffEnergy(structure, energy_tolerance=energy_tol)
+    ce.run(nparal)
     ce.save()
     ce.plot()
     encut = ce.best_encut
@@ -132,8 +132,8 @@ def main(argv):
     cleaner()
     print '\nConvergence of K-Point Grid'
     print '---------------------------\n'
-    ck = ConvergenceKPointGrid(structure, encut=encut, nparal=nparal, energy_tolerance=energy_tol)
-    ck.run()
+    ck = ConvergenceKPointGrid(structure, encut=encut, energy_tolerance=energy_tol)
+    ck.run(nparal)
     ck.save()
     ck.plot()
     kp = ck.best_kpoints

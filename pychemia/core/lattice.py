@@ -35,7 +35,7 @@ array([ 1.,  1.,  1.])
 >>> cubic.angles
 array([ 90.,  90.,  90.])
 
->>> ortho=pychemia.Lattice([1, 2, 3])
+>>> ortho = pychemia.Lattice([1, 2, 3])
 >>> ortho.lengths
 array([ 1.,  2.,  3.])
 >>> ortho.angles
@@ -47,7 +47,7 @@ array([ 109.47122063,  109.47122063,  109.47122063])
 >>> bcc.lengths
 array([ 0.8660254,  0.8660254,  0.8660254])
 
->>> fcc=pychemia.Lattice([[0.5, 0.5, 0], [0, 0.5, 0.5], [0.5, 0, 0.5]])
+>>> fcc = pychemia.Lattice([[0.5, 0.5, 0], [0, 0.5, 0.5], [0.5, 0, 0.5]])
 >>> fcc.lengths
 array([ 0.70710678,  0.70710678,  0.70710678])
 >>> fcc.angles
@@ -265,7 +265,7 @@ array([[ True,  True,  True,  True],
 
         diff_vectors = cartesian2[None, :, :, :] - cartesian1[:, None, None, :]
 
-        distances = np.sum(diff_vectors ** 2, axis=3)
+        distances = np.sum(diff_vectors * diff_vectors, axis=3)
 
         close_images = np.zeros((len(reduced1), len(reduced2), 3))
         for i in range(len(reduced1)):

@@ -116,6 +116,11 @@ class PyChemiaDB:
         where one and only one between A or B is fixed and the numbers
         amounts n and m are both fixed
 
+        :param specie_a: (str) atom symbol for the first specie
+        :param specie_b: (str) atom symbol for the second specie
+        :param n: number of atoms for specie 'a'
+        :param m: number of atoms for specie 'b'
+        :return:
         :return: (list) List of ids for all the structures that fulfill
                  the conditions
         """

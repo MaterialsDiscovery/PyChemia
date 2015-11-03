@@ -34,8 +34,7 @@ class StructureSymmetry(object):
 
         :param structure:
 
-        Example
-
+        Example:
 >>> import pychemia
 >>> a = 4.05
 >>> b = a/2
@@ -119,6 +118,11 @@ u'Fm-3m'
         """
         Return space group in international table symbol and number
         as a string.
+
+        :param symprec: (float) Symmetry precision
+        :param angle_tolerance: (float) angle tolerance for spglib internal routine
+        :param symbol_type: (int)
+        :return:
         """
 
         dataset = self.get_symmetry_dataset(symprec=symprec, angle_tolerance=angle_tolerance)

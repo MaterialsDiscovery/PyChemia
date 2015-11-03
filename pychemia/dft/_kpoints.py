@@ -1,6 +1,11 @@
+import numpy as np
+from math import sqrt, ceil
+from pychemia.serializer import PyChemiaJsonable, generic_serializer
+
 """
 Definition of the set of k-points in reciprocal space
 """
+
 
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2014"
@@ -9,11 +14,6 @@ __maintainer__ = "Guillermo Avendano-Franco"
 __email__ = "gtux.gaf@gmail.com"
 __status__ = "Development"
 __date__ = "November 5, 2014"
-
-import numpy as np
-from math import sqrt, ceil
-
-from pychemia.serializer import PyChemiaJsonable, generic_serializer
 
 
 class KPoints(PyChemiaJsonable):

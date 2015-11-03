@@ -139,7 +139,7 @@ class PopulationDFTU(Population):
                     if entry_i in ret:
                         ret[entry_i].append(entry_j)
                     else:
-                        ret[entry_i]=[entry_j]
+                        ret[entry_i] = [entry_j]
 
     def distance(self, entry_id, entry_jd):
         entry_i = self.get_entry(entry_id)
@@ -228,7 +228,7 @@ def get_pattern(params, ndim):
 
     I = np.array(params['I'], dtype=int).reshape((-1, ndim))
 
-    pattern=np.zeros((natpawu, natpawu))
+    pattern = np.zeros((natpawu, natpawu))
     for i in range(natpawu):
         for j in range(i, natpawu):
 

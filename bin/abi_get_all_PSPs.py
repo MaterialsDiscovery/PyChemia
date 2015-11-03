@@ -18,6 +18,11 @@ from pychemia.code.abinit import psp_name
 def get_rpath_psp(kind, exchange, atomicnumber=None):
     """
     Get the ftp path to get the PSP
+
+    :param kind: (str) Source of Pseudopotentials
+    :param exchange: (str) 'LDA' or 'GGA'
+    :param atomicnumber: (int) Atomic Number
+    :return:
     """
     rpath = None
     if kind == 'FHI' and exchange == 'LDA':

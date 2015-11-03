@@ -27,7 +27,7 @@ class FireBall(Codes):
 
     @property
     def to_dict(self):
-        ret={}
+        ret = {}
         if self.option:
             ret['option'] = self.option
         if self.output:

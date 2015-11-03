@@ -28,10 +28,10 @@ class Verlet:
             iteration += 1
 
             if self.niter is not None:
-                if iteration == niter:
+                if iteration == self.niter:
                     break
 
             if self.min_vel is not None:
-                vel = (x1 - x0) / self.delta
+                vel = np.array((x1 - x0) / self.delta)
                 if np.max(np.apply_along_axis(np.linalg.norm, 1, vel)) > self.min_vel:
                     break
