@@ -1,10 +1,10 @@
+import json
 import os
 import time
-import json
-import numpy as np
-from .._dftb import DFTBplus, read_detailed_out
-from pychemia.dft import KPoints
+
 from pychemia import pcm_log
+from pychemia.dft import KPoints
+from .._dftb import DFTBplus, read_detailed_out
 
 
 class StaticCalculation:

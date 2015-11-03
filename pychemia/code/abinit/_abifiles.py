@@ -72,6 +72,8 @@ class AbiFiles:
         """
         Write the file 'filename' with the format of an
         usual '.files'
+
+        :param filename: (str) Filename to write the 'abinit.files' file
         """
         wf = open(filename, 'w')
         wf.write(self.__str__())

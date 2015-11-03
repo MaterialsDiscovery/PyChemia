@@ -83,6 +83,11 @@ class PyChemiaDB:
         """
         Update
 
+        :param entry_id: (ObjectID, str)
+        :param structure: (pychemia.Structure) Structure to update
+        :param properties: (dict) Dictionary of properties to update
+        :param status: (dict) Status dictionary
+        :return:
         :rtype : ObjectId
         """
         entry_id = object_id(entry_id)

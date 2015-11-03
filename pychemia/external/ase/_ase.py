@@ -61,6 +61,9 @@ def ase2pychemia(aseatoms):
 def pychemia2ase(structure):
     """
     Converts an pychemia structure into a ase atoms object
+
+    :param structure: (pychemia.Structure) PyChemia Structure to convert into a ASE Atoms object
+    :return:
     """
     cell = structure.cell
     scaled_positions = structure.reduced

@@ -13,6 +13,9 @@ import pychemia
 def get_last_iteration(dirname):
     """
     Get the last "td.xxxxxxx" found in dirname
+
+    :param dirname: (str) Directory to take last information
+    :return:
     """
     return sorted([int(x[3:]) for x in os.listdir(dirname) if x[:3] == 'td.' and x[-1].isdigit()])[-1]
 

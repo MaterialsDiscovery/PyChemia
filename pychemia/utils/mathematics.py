@@ -1,9 +1,9 @@
-import math
-import numpy as np
 import itertools as it
+import math
 from fractions import gcd
 from math import cos, sin, sqrt
-import numpy.random as nr
+
+import numpy as np
 from scipy import weave
 
 

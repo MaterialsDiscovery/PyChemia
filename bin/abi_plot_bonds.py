@@ -16,6 +16,11 @@ def compute_bonds(typat, xcart, znucl):
     Compute the bond lengths of all the atoms
     inside the unitary box (NEEDS EXTENSION TO
     OUTSIDE THE BOX)
+
+    :param typat: (int, list) Type of atoms
+    :param xcart: (numpy.ndarray) Cartesian positions
+    :param znucl: (int, list) Atomic number for atoms in typat
+    :return:
     """
 
     npxcart = np.array(xcart).reshape((-1, 3))

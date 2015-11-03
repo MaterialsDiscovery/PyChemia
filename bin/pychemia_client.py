@@ -2,18 +2,16 @@
 
 __author__ = 'Guillermo Avendano-Franco'
 
-import os
-import sys
-import json
-import socket
 import getopt
-import time
+import os
 import random
 import signal
-import pychemia
-import multiprocessing
-from pychemia.utils.computing import get_int
+import socket
 import subprocess
+import sys
+import time
+
+from pychemia.utils.computing import get_int
 
 
 class TimedOutExc(Exception):

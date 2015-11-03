@@ -1,7 +1,8 @@
 import os
-import pychemia
-import random
+
 import numpy as np
+
+import pychemia
 from _population import Population
 from pychemia import pcm_log
 

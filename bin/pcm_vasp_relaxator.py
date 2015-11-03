@@ -7,7 +7,7 @@ import sys
 import json
 import getopt
 import pychemia
-from pychemia.code.vasp import ConvergenceKPointGrid, VaspRelaxator, read_poscar, ConvergenceCutOffEnergy
+from pychemia.code.vasp.task import ConvergenceKPointGrid, IonRelaxation, ConvergenceCutOffEnergy
 from pychemia.utils.computing import get_float, get_int
 
 try:
@@ -129,12 +129,12 @@ def main(argv):
     cleaner()
     print '\nConvergence of Cut-off Energy'
     print '-----------------------------\n'
-    ce = ConvergenceCutOffEnergy(structure, energy_tolerance=energy_tol, nparal=nparal)
+    ce = ConvergenceCutOffEnergy(structure, energy_tolerance=energy_tol)
     if os.path.isfile('convergence_encut.json'):
         print 'A previous convergence study was found, loading...'
         ce.load()
     if not ce.is_converge:
-        ce.run()
+        ce.run(nparal)
         ce.save()
         ce.plot()
     encut = ce.best_encut
@@ -147,12 +147,12 @@ def main(argv):
     cleaner()
     print '\nConvergence of K-Point Grid'
     print '---------------------------\n'
-    ck = ConvergenceKPointGrid(structure, encut=encut, nparal=nparal, energy_tolerance=energy_tol)
+    ck = ConvergenceKPointGrid(structure, encut=encut, energy_tolerance=energy_tol)
     if os.path.isfile('convergence_kpoints.json'):
         print 'A previous convergence study was found, loading...'
         ce.load()
     if not ce.is_converge:
-        ce.run()
+        ce.run(nparal)
         ce.save()
         ce.plot()
     kp = ck.best_kpoints
@@ -171,7 +171,7 @@ def main(argv):
     cleaner()
     print '\nIonic Relaxation'
     print '----------------\n'
-    vr = VaspRelaxator(structure=structure,
+    vr = IonRelaxation(structure=structure,
                        relaxator_params={'encut': encut, 'kp_grid': kp.grid, 'nparal': nparal}, workdir=workdir,
                        target_forces=10*target_forces)
     vr.run()
@@ -226,7 +226,7 @@ def main(argv):
     cleaner()
     print '\nIonic Relaxation'
     print '----------------\n'
-    vr = VaspRelaxator(structure=st, workdir='.',
+    vr = IonRelaxation(structure=st, workdir='.',
                        relaxator_params={'encut': encut, 'kp_grid': kp.grid, 'nparal': nparal},
                        target_forces=target_forces)
     vr.run()

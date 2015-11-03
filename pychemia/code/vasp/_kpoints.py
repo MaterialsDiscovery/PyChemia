@@ -16,6 +16,9 @@ def read_kpoints(path='KPOINTS'):
     Load the file KPOINTS in the directory 'path' or
     read directly the file 'path' and return a kpoints
     object for pychemia
+
+    :param path: (str) File path for KPOINTS file
+    :return:
     """
     if os.path.isfile(path):
         filename = path

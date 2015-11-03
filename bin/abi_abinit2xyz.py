@@ -2,7 +2,7 @@
 
 import os
 import sys
-import numpy as _np
+import numpy as np
 
 import pychemia.code.abinit
 from pychemia.utils.constants import bohr_angstrom
@@ -33,8 +33,8 @@ def input2xyz(abivar, basename, datasets):
 
 
 def write_one(time, nchist, wf, natom, struct):
-    xcart = nchist['xcart'][time]
-    atom_pos = _np.array(bohr_angstrom * xcart)
+    xcart = np.array(nchist['xcart'][time])
+    atom_pos = bohr_angstrom * xcart
     wf.write(str(natom) + '\n\n')
     for iatom in range(natom):
         wf.write('%s %16.8f %16.8f %16.8f\n' % (struct['atom_names'][iatom], atom_pos[iatom, 0], atom_pos[iatom, 1],

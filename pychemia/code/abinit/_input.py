@@ -419,6 +419,7 @@ class InputVariables(collections.MutableMapping):
         """
         Set input variables for a given structure
 
+        :param structure: (pychemia.Structure) Structure to set ABINIT input variables
         :return:
         """
         natom = structure.natom
@@ -542,6 +543,10 @@ def merge(abi_into, abi_from, filename=None):
        merge('abinit.in','abinit_xo_OUT.nc')
 
     It will update the abinit input with the values of the output
+
+    :param abi_into: (str) Merge abinit variables using this destination
+    :param abi_from:  (str) and this source
+    :param filename: (str) Storing the final input variables on file
 
     """
     abinit_into = InputVariables(abi_into)

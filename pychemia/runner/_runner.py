@@ -27,6 +27,8 @@ class Runner:
         """
         Utility that copy a given script and execute the given
         command inside the directory
+
+        :param dirpath: (str) Directory to execute runner
         """
         if not os.path.isdir(dirpath):
             os.mkdir(dirpath)

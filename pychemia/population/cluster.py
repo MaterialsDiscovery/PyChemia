@@ -1,14 +1,12 @@
 import math
 import sys
-import time
-from multiprocessing import Pool
 import numpy as np
 import scipy.spatial
 import pychemia
-from ._population import Population
+from pychemia.code.lennardjones import lj_compact_evaluate
 from pychemia.utils.mathematics import unit_vector
 from pychemia.utils.periodic import covalent_radius, atomic_number
-from pychemia.code.lennardjones import lj_compact_evaluate
+from ._population import Population
 
 
 class LJCluster(Population):

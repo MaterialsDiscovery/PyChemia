@@ -11,7 +11,7 @@ import numpy as np
 import pychemia
 import pandas
 from pychemia.utils.computing import get_int, get_float
-from pychemia.code.vasp.task import ConvergenceKPointGrid, ConvergenceCutOffEnergy, VaspRelaxator, IdealStregth
+from pychemia.code.vasp.task import ConvergenceKPointGrid, ConvergenceCutOffEnergy, IdealStrength
 
 
 def cleaner():
@@ -176,7 +176,7 @@ def main(argv):
     kp_density = kp.get_density_of_kpoints(structure.lattice)
     print 'KPOINT GRID', kp.grid
 
-    strenght = IdealStrenght(structure, ini_factor, fin_factor, delta_factor, kp, kp_density, expansion, encut,
+    strenght = IdealStrength(structure, ini_factor, fin_factor, delta_factor, kp, kp_density, expansion, encut,
                              nparal, binary, target_forces, output_file)
 
     cleaner()

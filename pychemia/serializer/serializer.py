@@ -23,6 +23,9 @@ class PyChemiaJsonable(object):
         This implements a default from_dict method which supports all
         classes that simply try to recreate an object using the keys
         as arguments for the creation of the new object.
+
+        :param json_dict: Recreate an object from its serialize form
+        :return:
         """
         argstring = ''
         for key in json_dict:

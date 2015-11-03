@@ -2,17 +2,17 @@
 
 __author__ = 'Guillermo Avendano-Franco'
 
-import os
-import sys
-import json
-import socket
 import getopt
-import time
-import bson
-import random
-import pychemia
+import json
 import multiprocessing
+import os
+import random
+import socket
+import sys
+import time
 from bson.objectid import ObjectId
+
+import pychemia
 from pychemia.utils.computing import get_int
 
 

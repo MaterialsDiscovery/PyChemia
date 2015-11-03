@@ -13,6 +13,10 @@ def execute(basedir, num_threads=1, num_procs=2):
     """
     Call octopus in parallel with a given number of threads and
     MPI process
+
+    :param basedir: (str) Working directory for execution
+    :param num_threads: (int) Number of OpenMP Threads to use
+    :param num_procs: (int) Number of MPI processes to create
     """
     wfile = open('script.sh', 'w')
     wfile.write('export OMP_NUM_THREADS=' + str(num_threads) + '\n')

@@ -69,10 +69,13 @@ class UtilsProcar:
         self.log.debug("UtilsProcar()...done")
         return
 
-    def OpenFile(self, FileName=None):
+    def OpenFile(self, filename=None):
         """
         Tries to open a File, it has suitable values for PROCAR and can
         handle gzipped files
+
+        :param filename: (str) Filename to open the PROCAR file
+        :return:
 
         Example:
 
@@ -92,38 +95,38 @@ Tries to open a gzipped file "PROCAR-spd.gz"
         import gzip
 
         self.log.debug("OpenFile()")
-        self.log.debug("Filename :" + FileName)
+        self.log.debug("Filename :" + filename)
 
-        if FileName is None:
-            FileName = "PROCAR"
-            self.log.debug("Input was None, now is: " + FileName)
+        if filename is None:
+            filename = "PROCAR"
+            self.log.debug("Input was None, now is: " + filename)
 
         # checking if fileName is just a path and needs a "PROCAR to " be
         # appended
-        elif os.path.isdir(FileName):
+        elif os.path.isdir(filename):
             self.log.info("The filename is a directory")
-            if FileName[-1] != r"/":
-                FileName += "/"
-            FileName += "PROCAR"
-            self.log.debug("I will try  to open :" + FileName)
+            if filename[-1] != r"/":
+                filename += "/"
+            filename += "PROCAR"
+            self.log.debug("I will try  to open :" + filename)
 
         # checking that the file exist
-        if os.path.isfile(FileName):
+        if os.path.isfile(filename):
             self.log.debug("The File does exist")
             # Checking if compressed
-            if FileName[-2:] == "gz":
+            if filename[-2:] == "gz":
                 self.log.info("A gzipped file found")
-                inFile = gzip.open(FileName, "r")
+                inFile = gzip.open(filename, "r")
             else:
                 self.log.debug("A normal file found")
-                inFile = open(FileName, "r")
+                inFile = open(filename, "r")
             return inFile
 
         # otherwise a gzipped version may exist
-        elif os.path.isfile(FileName + ".gz"):
+        elif os.path.isfile(filename + ".gz"):
             self.log.info("File not found, however a .gz version does exist and will"
                           " be used")
-            inFile = gzip.open(FileName + ".gz")
+            inFile = gzip.open(filename + ".gz")
 
         else:
             self.log.debug("File not exist, neither a gzipped version")
@@ -384,7 +387,7 @@ class ProcarParser:
         """
         self.log.debug("readKpoints")
         if not self.fileStr:
-            log.warning("You should invoke `procar.readFile()` instead. Returning")
+            self.log.warning("You should invoke `procar.readFile()` instead. Returning")
             return
 
         # finding all the K-points headers
@@ -462,7 +465,7 @@ class ProcarParser:
         The occupation numbers are discarded (are they useful?)"""
         self.log.debug("readBands")
         if not self.fileStr:
-            log.warning("You should invoke `procar.read()` instead. Returning")
+            self.log.warning("You should invoke `procar.read()` instead. Returning")
             return
 
         # finding all bands
@@ -535,7 +538,7 @@ class ProcarParser:
         """
         self.log.debug("readOrbital")
         if not self.fileStr:
-            log.warning("You should invoke `procar.readFile()` instead. Returning")
+            self.log.warning("You should invoke `procar.readFile()` instead. Returning")
             return
 
         # finding all orbital headers
@@ -1503,6 +1506,19 @@ class FermiSurface:
         return
 
 
+def _q_mult(q1, q2):
+    """
+    Multiplication of quaternions, it doesn't fit in any other place
+    """
+    w1, x1, y1, z1 = q1
+    w2, x2, y2, z2 = q2
+    w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
+    x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
+    y = w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2
+    z = w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2
+    return np.array((w, x, y, z))
+
+
 class ProcarSymmetry:
     def __init__(self, kpoints, bands, character=None, sx=None, sy=None,
                  sz=None, loglevel=logging.WARNING):
@@ -1541,18 +1557,6 @@ class ProcarSymmetry:
         self.log.debug("ProcarSymmetry.__init__: ...Done")
 
         return
-
-    def _q_mult(self, q1, q2):
-        """
-        Multiplication of quaternions, it doesn't fit in any other place
-        """
-        w1, x1, y1, z1 = q1
-        w2, x2, y2, z2 = q2
-        w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
-        x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
-        y = w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2
-        z = w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2
-        return np.array((w, x, y, z))
 
     def GeneralRotation(self, angle, rotAxis=None, store=True):
         """Apply a rotation defined by an angle and an axis.
@@ -1598,8 +1602,8 @@ class ProcarSymmetry:
         w = np.zeros((len(self.kpoints), 1))
         qvectors = np.column_stack((w, self.kpoints)).transpose()
         self.log.debug("Kpoints-> quaternions (transposed):\n" + str(qvectors.transpose()))
-        qvectors = self._q_mult(qRot, qvectors)
-        qvectors = self._q_mult(qvectors, qRotI).transpose()
+        qvectors = _q_mult(qRot, qvectors)
+        qvectors = _q_mult(qvectors, qRotI).transpose()
         kpoints = qvectors[:, 1:]
         self.log.debug("Rotated kpoints :\n" + str(qvectors))
 
@@ -1611,8 +1615,8 @@ class ProcarSymmetry:
         qvectors = (0 * self.sx.flatten(), self.sx.flatten(),
                     self.sy.flatten(), self.sz.flatten())
         self.log.debug("Spin vector quaternions: \n" + str(qvectors))
-        qvectors = self._q_mult(qRot, qvectors)
-        qvectors = self._q_mult(qvectors, qRotI)
+        qvectors = _q_mult(qRot, qvectors)
+        qvectors = _q_mult(qvectors, qRotI)
         self.log.debug("Spin quaternions after rotation:\n" + str(qvectors))
         sx, sy, sz = qvectors[1], qvectors[2], qvectors[3]
         sx.shape, sy.shape, sz.shape = sxShape, syShape, szShape

@@ -35,6 +35,9 @@ def pymatgen2pychemia(pmg_struct):
     """
     Converts a pymatgen structure object into a pychemia
     structure object
+
+    :param pmg_struct: (pymatgen.Structure) Structure from pymatgen that will be converted
+    :return:
     """
 
     # if not pmg_struct.is_ordered:
@@ -61,6 +64,9 @@ def pymatgen2pychemia(pmg_struct):
 def pychemia2pymatgen(structure):
     """
     Converts an pychemia structure into a pymatgen structure object
+
+    :param structure: (pychemia.Structure) Structure to convert into pymatgen Structure object
+    :return:
     """
     lattice = structure.cell
     coords = structure.reduced

@@ -16,6 +16,9 @@ def read_incar(filename='INCAR'):
     Load the file INCAR in the directory 'path' or
     read directly the file 'path' and return an object
     'inputvars' for pychemia
+
+    :param filename: (str) Filename of a INCAR file format
+    :return:
     """
     if os.path.isfile(filename):
         filename = filename
@@ -34,6 +37,9 @@ def write_incar(iv, filepath='INCAR'):
     Takes an object inputvars from pychemia and
     save the file INCAR in the directory 'path' or
     save the file 'path' as a VASP INCAR file
+
+    :param iv: (InputVariables) VASP Input variables
+    :param filepath: (str) File path to write the INCAR file
     """
 
     if os.path.isdir(filepath):

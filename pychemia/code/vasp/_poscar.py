@@ -86,6 +86,10 @@ def write_poscar(structure, filepath='POSCAR', newformat=True):
     """
     Takes an structure from pychemia and save the file
     POSCAR for VASP.
+
+    :param structure: (pychemia.Structure) Structure to write POSCAR
+    :param filepath: (str) Filename of POSCAR file to create
+    :param newformat: (bool) If the new VASP format is used to create the POSCAR
     """
     ret = ''
     comp = structure.get_composition()

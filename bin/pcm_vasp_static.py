@@ -7,7 +7,7 @@ import sys
 import json
 import getopt
 import pychemia
-from pychemia.code.vasp import ConvergenceKPointGrid, VaspRelaxator, read_poscar, ConvergenceCutOffEnergy
+from pychemia.code.vasp.task import ConvergenceKPointGrid, ConvergenceCutOffEnergy
 from pychemia.utils.computing import get_float, get_int
 
 try:

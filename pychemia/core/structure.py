@@ -467,6 +467,13 @@ Empty structure
                     and stretching their bonds until the distance between any
                     two atoms is always greater than the sum of covalent radius.
 
+        :param composition: (pychemia.Composition)
+        :param method: (str)
+        :param stabilization_number: (int)
+        :param nparal: (int)
+        :param periodic: (bool)
+        :return:
+
         Examples:
         >>> import pychemia
         >>> import os
