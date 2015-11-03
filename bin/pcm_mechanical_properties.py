@@ -1,10 +1,11 @@
 import logging
-logging.basicConfig(level=logging.DEBUG)
 import os
 import sys
 import getopt
 import numpy as np
 from pychemia.code.vasp.task.elastic import mechanical_properties, elastic_moduli
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def usage(name):

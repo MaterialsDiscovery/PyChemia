@@ -31,6 +31,8 @@ class AbinitJob(Codes):
         """
         Initialize the mandatory variables for a AbinitJob
 
+        :param psp_kind: (str) Source of Pseudopotentials
+        :param psp_exchange: (str) 'LDA' or 'GGA'
         :param workdir: (str) The directory where the input files will be
         :param structure: (pychemia.Structure) A pychemia structure for the input
         :param input_file: (str) Input file for ABINIT

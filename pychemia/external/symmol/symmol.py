@@ -25,10 +25,6 @@ def get_point_group(st):
     ans = re.findall('Schoenflies symbol =([\d\w\s]+)CSM', data)
     rf.close()
     if len(ans) != 1:
-        #print st
-        #print data
-        rf = open('symmol.out')
-        #print rf.read()
         pg = 'x'
     else:
         pg = ans[0].strip()

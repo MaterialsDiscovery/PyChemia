@@ -179,8 +179,6 @@ class InputVariables(collections.MutableMapping):
         Args:
             varname:
                 The name of the input variable
-            wf:
-                The file object where the 'abinit.in' is been written
         """
 
         ret = ''
@@ -573,7 +571,6 @@ def xyz2input(filename):
     natom = int(rf.readline())
     typat = []
     znucl = []
-    xcart = []
     xangst = []
 
     ntypat = 0

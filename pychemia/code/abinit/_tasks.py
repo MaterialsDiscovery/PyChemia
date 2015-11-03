@@ -5,7 +5,6 @@ import time
 import numpy as np
 from pychemia import pcm_log
 from pychemia.dft import KPoints
-from pychemia.code.dftb import DFTBplus
 try:
     from pychemia.symm import symmetrize
 except ImportError:

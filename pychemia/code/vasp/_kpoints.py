@@ -72,6 +72,9 @@ def write_kpoints(kp, filepath='KPOINTS'):
     Takes an object kpoints from pychemia and
     save the file KPOINTS in the directory 'path' or
     save the file 'path' as a VASP KPOINTS file
+
+    :param kp: Kpoints object
+    :param filepath: (str) Filename where the KPOINTS file is created
     """
 
     if os.path.isdir(filepath):

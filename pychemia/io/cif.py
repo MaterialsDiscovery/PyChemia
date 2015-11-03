@@ -92,6 +92,10 @@ def get_singlecifs(dirname, verbose=False):
     for .cif files, determines if they are single
     or multi-structure, expand those multi and
     return a list of single-strcuture cif files
+
+    :param dirname: (str) Directory to read CIFS
+    :param verbose: (bool) Verbosity of routine
+    :return:
     """
 
     single_cifs = []

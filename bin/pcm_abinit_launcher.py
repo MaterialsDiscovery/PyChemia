@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
 import os
 import sys
 import json
@@ -9,6 +8,8 @@ import time
 import getopt
 import pychemia
 from pychemia.utils.computing import get_int
+
+logging.basicConfig(level=logging.DEBUG)
 
 try:
     from pychemia.symm import symmetrize

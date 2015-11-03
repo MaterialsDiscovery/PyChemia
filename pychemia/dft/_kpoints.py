@@ -226,6 +226,10 @@ class KPoints(PyChemiaJsonable):
         Returns the maximal grid of kpoints allowed during the
         kpoints convergence test. Based on the routine used in
         pymatgen.
+
+        :param structure: (pychemia.Structure) The structure to compute the maximal grid
+        :param kpoints_per_atom: (int) number of kpoints per atom
+        :return:
         """
 
         lengths = [sqrt(sum(map(lambda y: y ** 2, structure.cell[i]))) for i in xrange(3)]

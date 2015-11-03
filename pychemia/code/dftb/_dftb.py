@@ -78,20 +78,19 @@ class DFTBplus(Codes):
         self.stdout_file.close()
 
     @staticmethod
-    def read_input(filepath):
+    def read_input(filepath='dftb_in.hsd'):
         """
         Read an Input for DFTB+
         Support a very restricted subset of
         Human-readable Structured Data (HSD)
 
+        :param filepath: (str) Filename to read as DFTB+ input
         :return: (dict)
         """
         rf = open(filepath, 'r')
         ret = []
         gen_format = False
         value = None
-        leftside = None
-        rightside = None
         level = 0
         current_container = ret
         tree_pos = [ret]
@@ -123,8 +122,6 @@ class DFTBplus(Codes):
             elif line.strip() == '}':
                 if gen_format:
                     current_container['value'] = value
-                    leftside = None
-                    rightside = None
                     value = None
                     gen_format = False
                 tree_pos = tree_pos[:-1]

@@ -11,6 +11,9 @@ import pychemia
 def read_poscar(path='POSCAR'):
     """
     Load a POSCAR file and return a pychemia structure object
+
+    :param path: (str) Filename of the POSCAR to read
+    :return:
     """
 
     if os.path.isfile(path):

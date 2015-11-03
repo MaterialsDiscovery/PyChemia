@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
-
 import os
 import sys
 import json
@@ -12,6 +10,8 @@ import pychemia
 import pandas
 from pychemia.utils.computing import get_int, get_float
 from pychemia.code.vasp.task import ConvergenceKPointGrid, ConvergenceCutOffEnergy, IdealStrength
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def cleaner():
@@ -178,6 +178,9 @@ def main(argv):
 
     strenght = IdealStrength(structure, ini_factor, fin_factor, delta_factor, kp, kp_density, expansion, encut,
                              nparal, binary, target_forces, output_file)
+
+    strenght.run(nparal)
+    strenght.save()
 
     cleaner()
 

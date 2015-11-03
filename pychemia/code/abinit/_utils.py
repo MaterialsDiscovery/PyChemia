@@ -43,6 +43,11 @@ def psp_name(atomicnumber, exchange, kind):
     Return the filename of a certain PSP given the
     atomic number, exchange ('LDA' or 'GGA')
     and kind ('FHI','TM')
+
+    :param atomicnumber: (int) Atomic number
+    :param exchange: (str) 'LDA' or 'GGA'
+    :param kind: (str) Source of Pseudopotentials
+    :return:
     """
     atom_symbol = str(atomic_symbol(atomicnumber))
     if kind == 'FHI' and exchange == 'LDA':

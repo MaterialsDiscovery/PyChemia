@@ -412,9 +412,12 @@ Empty structure
         a partial list of atoms can be used to compute
         the center, but all the atoms are moved to the
         computed center
+
+        :param list_of_atoms: (list) List of atoms that will be considered for computing the center of mass
+                              by default all atoms are included
         """
         cm = self.center_mass(list_of_atoms)
-        self.positions = self.positions - cm
+        self.positions += -cm
 
     def get_distance(self, iatom, jatom, with_periodicity=True, tolerance=1e-5):
         """
@@ -560,9 +563,9 @@ Empty structure
         """
         Set the vectors defining the cell
 
-        Args:
-            cell: A matrix with the 3 unit cell
-            vectors
+        :param cell: A matrix with the 3 unit cell
+                     vectors
+        :return:
         """
         npcell = np.array(cell)
         if npcell.shape == () or npcell.shape == (1,):
@@ -621,9 +624,8 @@ Empty structure
         This contains adimensional values
         relative to cell vectors
 
-        Args:
-            positions: A array of 3 vectors
-            with adimensional coordinates
+        :param positions: A array of 3 vectors with adimensional coordinates
+        :return:
         """
         self.reduced = np.array(reduced).reshape([-1, 3])
 

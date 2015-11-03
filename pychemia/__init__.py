@@ -7,6 +7,23 @@ Dynamical such as minima hoping method (MHM)
 import logging
 pcm_log = logging.getLogger(__name__)
 pcm_log.addHandler(logging.NullHandler())
+from .core import Structure, Composition, Lattice
+import analysis
+import db
+import dft
+import dm
+import gui
+import io
+import report
+import runner
+import searcher
+import symm
+import utils
+import web
+import external
+import serializer
+from _info import __author__, __copyright__, __version__, __email__, __status__, __date__, Version
+
 
 try:
     import pymongo
@@ -50,30 +67,9 @@ try:
 except ImportError:
     HAS_GRIDFS = False
 
-
-from .core import Structure, Composition, Lattice
-import analysis
 import code
-import db
-import dft
-import dm
-import gui
-import io
-import report
-import runner
-import searcher
-import symm
-import utils
-import web
-import external
 import population
-import serializer
 from .core.from_file import structure_from_file
-
-from _info import __author__, __copyright__, __version__, __email__, __status__, __date__, Version
-
-# __all__ = filter(lambda s: not s.startswith('_'), dir())
-
 
 def info():
 

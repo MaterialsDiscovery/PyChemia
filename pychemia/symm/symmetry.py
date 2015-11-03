@@ -184,17 +184,15 @@ u'Fm-3m'
         Refine a pychemia Structure using the tolerances and return a new structure in a Bravais lattice
 
         :param symprec: (float) Tolerance of distance between atomic positions and between lengths of lattice vectors
-        to be tolerated in the symmetry finding.
+                        to be tolerated in the symmetry finding.
         :param angle_tolerance: (float) Tolerance of angle between lattice vectors in degrees to be tolerated in the
-        symmetry finding.
-
+                                symmetry finding.
         :return: A new pychemia Structure in a Bravais lattice
         :rtype : (pychemia.Structure)
 
         Example:
 
 >>> import pychemia
->>> import random
 >>> a = 4.05
 >>> b = a/2
 >>> fcc = pychemia.Structure(symbols=['Au'],

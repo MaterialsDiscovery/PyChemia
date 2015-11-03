@@ -138,6 +138,10 @@ def magnitude_velocity(dirname, iteration=None):
 def change_kinetic_energy(dirname, iteration=None):
     """
     Change of Kinetic energy respect to initial value
+
+    :param dirname: (str) Directory to read
+    :param iteration: (int) Iteration number to read
+    :return:
     """
     if iteration is None:
         iteration = get_last_iteration(dirname)
@@ -151,6 +155,13 @@ def value_in_sphere(dirname, keys, iteration=None, radius=4.5, spin=None):
     """
     Compute the value of a certain scalar quantity inside a sphere of a
     given radius
+
+    :param dirname: (str) Directory to read
+    :param keys: (list) Variables to read the scalar quantity
+    :param iteration: (int) Number of iteration to read
+    :param radius: (float) Radius of the sphere to integrate
+    :param spin: (int) Spin contribution to read
+    :return:
     """
     if iteration is None:
         iteration = get_last_iteration(dirname)
@@ -213,6 +224,13 @@ def charge_in_sphere(dirname, iteration=None, radius=4.5, spin=None):
     """
     Get the value at a given index of the
     data stored in the NetCDF file
+
+    :param dirname: (str) Directory to read
+    :param iteration: (int) Number of iteration to read
+    :param radius: (float) Radius of the sphere to integrate
+    :param spin: (int) Spin contribution to read
+    :return:
+
     """
 
     keys = ['radeff', 'densit']
@@ -224,6 +242,13 @@ def dipolx_in_sphere(dirname, iteration=None, radius=4.5, spin=None):
     """
     Get the value at a given index of the
     data stored in the NetCDF file
+
+    :param dirname: (str) Directory to read
+    :param iteration: (int) Number of iteration to read
+    :param radius: (float) Radius of the sphere to integrate
+    :param spin: (int) Spin contribution to read
+    :return:
+
     """
 
     keys = ['radeff', 'dipolX']

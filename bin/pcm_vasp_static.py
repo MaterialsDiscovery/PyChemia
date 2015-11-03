@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
 import os
 import sys
 import json
@@ -9,6 +8,8 @@ import getopt
 import pychemia
 from pychemia.code.vasp.task import ConvergenceKPointGrid, ConvergenceCutOffEnergy
 from pychemia.utils.computing import get_float, get_int
+
+logging.basicConfig(level=logging.DEBUG)
 
 try:
     from pychemia.symm import symmetrize
@@ -66,7 +67,6 @@ def main(argv):
         sys.exit(2)
 
     # Default Values
-    workdir = '.'
     structure_file = 'POSCAR'
     output_file = 'static_calculation.json'
     nparal = 2

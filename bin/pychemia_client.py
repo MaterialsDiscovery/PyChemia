@@ -1,7 +1,5 @@
 #!/usr/bin/env python 
 
-__author__ = 'Guillermo Avendano-Franco'
-
 import getopt
 import os
 import random
@@ -10,8 +8,9 @@ import socket
 import subprocess
 import sys
 import time
-
 from pychemia.utils.computing import get_int
+
+__author__ = 'Guillermo Avendano-Franco'
 
 
 class TimedOutExc(Exception):
@@ -175,7 +174,7 @@ def main(argv):
             try:
                 workdir, entry_id = inquirer(ip, port)
             except TimedOutExc as e:
-                print "INQUIRER took too long"
+                print "INQUIRER took too long: %s", e.message
         else:
             lt = time.localtime()
             random.seed(lt.tm_yday*24+lt.tm_hour)

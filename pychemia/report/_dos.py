@@ -159,7 +159,6 @@ def plot_many_dos(doslist, minenergy=None, maxenergy=None, figwidth=16, figheigh
     :param maxenergy: (float) maximal energy to display
     :param figheight: (float) Height of figure
     :param figwidth: (float) Width of figure
-    :param figname: (string) Path to the figure file
     """
     ndos = len(doslist)
     if minenergy is None:

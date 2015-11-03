@@ -173,8 +173,6 @@ class InputVariables:
         Args:
             varname:
                 The name of the input variable
-            wf:
-                The file object where the 'abinit.in' is been written
         """
         ret = (varname.ljust(15)) + " =  "
         if varname not in self.variables:

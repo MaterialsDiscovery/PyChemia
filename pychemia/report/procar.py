@@ -215,9 +215,8 @@ Tries to open a gzipped file "PROCAR-spd.gz"
         """Just finds all E-fermi fields in the outcar file and keeps the
         last one (if more than one found).
 
-        Args:
-        -filename: the file name of the outcar to be readed
-
+        :param filename: the file name of the outcar to be readed
+        :return:
         """
         self.log.debug("FermiOutcar(): ...")
         self.log.debug("Input filename : " + filename)
@@ -1071,10 +1070,10 @@ class ProcarSelect:
 
         Examples
 
-        >>> foo = ProcarParser()
-        >>> foo.readFile("PROCAR")
-        >>> bar = ProcarSelect(foo)
-        >>> bar.selectIspin([0])  # just the density
+>>> foo = ProcarParser()
+>>> foo.readFile("PROCAR")
+>>> bar = ProcarSelect(foo)
+>>> bar.selectIspin([0])  # just the density
         """
         # all kpoint, all bands, VALUE spin, all the rest
         self.log.debug("selectIspin: ...")
@@ -1103,11 +1102,11 @@ class ProcarSelect:
 
         Examples
 
-        >>> foo = ProcarParser()
-        >>> foo.readFile("PROCAR")
-        >>> bar = ProcarSelect(foo)
-        >>> bar.selectIspin([...])
-        >>> bar.selectAtoms([0, 1, 2])  # atom0+atom1+atom2
+>>> foo = ProcarParser()
+>>> foo.readFile("PROCAR")
+>>> bar = ProcarSelect(foo)
+>>> bar.selectIspin([...])
+>>> bar.selectAtoms([0, 1, 2])  # atom0+atom1+atom2
 
         Note: this method should be called after select.Ispin
         """
@@ -1140,12 +1139,12 @@ class ProcarSelect:
 
         Examples
 
-        >>> foo = ProcarParser()
-        >>> foo.readFile("PROCAR")
-        >>> bar = ProcarSelect(foo)
-        >>> bar.selectIspin([...])
-        >>> bar.selectAtoms([...])
-        >>> bar.selectOrbital([-1])  # the last (`tot`) field
+>>> foo = ProcarParser()
+>>> foo.readFile("PROCAR")
+>>> bar = ProcarSelect(foo)
+>>> bar.selectIspin([...])
+>>> bar.selectAtoms([...])
+>>> bar.selectOrbital([-1])  # the last (`tot`) field
 
         to select "p" orbitals just change the argument in the last line
         to [2,3,4] or as needed

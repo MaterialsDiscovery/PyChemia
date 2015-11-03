@@ -9,11 +9,10 @@ from scipy import weave
 
 def length_vector(v):
     """
-    Returns the length of a vector 'v'
-    Arbitrary number of dimensions
+    Returns the length of a vector 'v' in arbitrary number of dimensions
 
-    :param v: list, numpy.ndarray
-    :rtype : float
+    :param v: (list, numpy.ndarray) Vector to compute length
+    :rtype : (float) The lenght of the vector
 
     Example:
 >>> length_vector([1, 2, 3])

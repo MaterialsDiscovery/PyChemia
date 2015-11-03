@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 
-__author__ = 'Guillermo Avendano-Franco'
-
+import os
 import getopt
 import json
 import multiprocessing
-import os
 import random
 import socket
 import sys
 import time
 from bson.objectid import ObjectId
-
 import pychemia
 from pychemia.utils.computing import get_int
+
+__author__ = 'Guillermo Avendano-Franco'
 
 
 def usage(name):

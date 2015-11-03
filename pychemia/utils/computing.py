@@ -4,8 +4,7 @@ import hashlib
 
 def unicode2string(value):
     """
-    Recursively convert the unicode elements of a python object into
-    python strings.
+    Recursively convert the unicode elements of a python object into python strings.
     Use with care for objects that could not be converted properly to string
     This is safe for things like Atom names and symbols
 

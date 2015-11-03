@@ -4,7 +4,7 @@ Set of classes and functions to manipulate
 OCTOPUS 'inp' input files
 
 """
-
+import numpy as np
 from _input import *
 try:
     import scipy
