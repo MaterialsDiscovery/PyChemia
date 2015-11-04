@@ -15,4 +15,3 @@ from _vasp import VaspJob, VaspAnalyser
 from _doscar import VaspDoscar
 from _queue import write_from_queue
 import task
-

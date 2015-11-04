@@ -127,7 +127,8 @@ class Searcher:
             pcm_log.debug(' Actives (evaluated/total)      : %4d /%4d' % (len(self.population.actives_evaluated),
                                                                           len(self.population.actives)))
             pcm_log.debug(' Size of Generation (this/next) : %4d /%4d' % (len(self.get_generation()),
-                                                                          len(self.get_generation(self.current_generation+1))))
+                                                                          len(self.get_generation(
+                                                                              self.current_generation + 1))))
         else:
             print '-'
             pcm_log.info(' %s (tag: %s)' % (self.population.name, self.population.tag))
@@ -137,9 +138,10 @@ class Searcher:
             pcm_log.info(' Actives (evaluated/total)      : %4d /%4d' % (len(self.population.actives_evaluated),
                                                                          len(self.population.actives)))
             pcm_log.info(' Size of Generation (this/next) : %4d /%4d' % (len(self.get_generation()),
-                                                                len(self.get_generation(self.current_generation+1))))
+                                                                         len(self.get_generation(
+                                                                             self.current_generation + 1))))
 
-        if len(self.get_generation(self.current_generation+1)) + len(self.population.actives) != self.generation_size:
+        if len(self.get_generation(self.current_generation + 1)) + len(self.population.actives) != self.generation_size:
             pcm_log.debug('Change in generations')
             for i in self.old_actives:
                 if i not in self.population.actives:
@@ -148,13 +150,13 @@ class Searcher:
                 if i not in self.old_actives:
                     pcm_log.debug('This active appeared: %s' % str(i))
             for i in self.old_nextgen:
-                if i not in self.get_generation(self.current_generation+1):
+                if i not in self.get_generation(self.current_generation + 1):
                     pcm_log.debug('This nextgen disappeared: %s' % str(i))
-            for i in self.get_generation(self.current_generation+1):
+            for i in self.get_generation(self.current_generation + 1):
                 if i not in self.old_nextgen:
                     pcm_log.debug('This nextgen appeared: %s' % str(i))
         self.old_actives = self.population.actives
-        self.old_nextgen = self.get_generation(self.current_generation+1)
+        self.old_nextgen = self.get_generation(self.current_generation + 1)
 
     def pass_to_new_generation(self, entry_id, reason=None):
         pcm_log.debug('Moving to new generation : %s' % str(entry_id))
@@ -193,7 +195,7 @@ class Searcher:
     def advance_lineage(self, father, son):
         slot = self.lineage_inv[str(father)]
         self.lineage[slot].append(None)
-        self.lineage[slot][self.current_generation+1] = son
+        self.lineage[slot][self.current_generation + 1] = son
         self.lineage_inv[str(son)] = slot
 
     def save_generations(self):
@@ -248,7 +250,7 @@ class Searcher:
         for i in range(self.generation_size):
             if i not in self.lineage:
                 self.lineage[str(i)] = [None]
-            while len(self.lineage[str(i)]) < self.current_generation+1:
+            while len(self.lineage[str(i)]) < self.current_generation + 1:
                 self.lineage[str(i)].append(None)
 
         while True:
@@ -274,7 +276,7 @@ class Searcher:
                 self.set_generation(entry_id, self.current_generation)
 
             self.old_actives = self.population.actives
-            self.old_nextgen = self.get_generation(self.current_generation+1)
+            self.old_nextgen = self.get_generation(self.current_generation + 1)
 
             self.print_status()
 

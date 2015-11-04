@@ -3,7 +3,6 @@ import numpy as np
 
 
 class BandStructure:
-
     def __init__(self, structure, filename='PROCAR'):
         self.structure = structure
         rcell = self.structure.lattice.reciprocal().cell
@@ -14,7 +13,6 @@ class BandStructure:
         self.data = procar.ProcarSelect(self.procarFile, deepCopy=True)
 
     def SimpleBands(self):
-
         self.data.selectIspin([0])
         self.data.selectAtoms([-1])
         self.data.selectOrbital([-1])

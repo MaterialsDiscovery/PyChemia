@@ -209,12 +209,12 @@ def parser(filename):
     keyword = cleanlist[0]
     result, kind = __parse_word(keyword)
     if kind != 'word':
-        raise ValueError('ERROR(parser): The first element', keyword, 'should be a keyword\n'+filename)
+        raise ValueError('ERROR(parser): The first element', keyword, 'should be a keyword\n' + filename)
     varlist = []
     for word in cleanlist[1:]:
         value, kind = __parse_word(word)
         if kind == 'word':
-            assert(isinstance(value, str))
+            assert (isinstance(value, str))
             value = str(value)
             # It could be:
             # new keyword such as ntime

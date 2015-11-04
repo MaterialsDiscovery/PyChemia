@@ -100,7 +100,7 @@ class VaspOutput:
             try:
                 ikpt = int(iband[0])
                 kpt_pos = [float(x) for x in iband[1].split()]
-                kpt_eigenvals = np.array([float(x) for x in iband[2].split()[:3*self.array_sizes['NBANDS']]])
+                kpt_eigenvals = np.array([float(x) for x in iband[2].split()[:3 * self.array_sizes['NBANDS']]])
                 kpt_eigenvals.reshape((-1, 3))
                 bands_dict[ikpt] = {'position': kpt_pos, 'eigenvalues': kpt_eigenvals}
             except ValueError:
@@ -121,7 +121,7 @@ class VaspOutput:
         stress = re.findall(r'in\s+kB ([-*.\s\d]+)external', self.data)
         # Converted from kBar to GPa
         if stress:
-            stress = 0.1 * np.array([x.split() if '*' not in x else 6*[float('nan')] for x in stress], dtype=float)
+            stress = 0.1 * np.array([x.split() if '*' not in x else 6 * [float('nan')] for x in stress], dtype=float)
             stress.reshape((-1, 6))
             nionsteps = len(stress)
             self.stress = np.zeros((nionsteps, 3, 3))
@@ -178,8 +178,8 @@ class VaspOutput:
         # the capture close to "energy(sigma->0)..."
         subdata = re.findall(r'-+ Iteration\s*(\d+)\(\s*(\d+)\)\s*-+\s*([\s\d\w:.,\-=()/+\*]*)energy', self.data)
         for i in subdata:
-            io_iter = int(i[0])-1
-            scf_iter = int(i[1])-1
+            io_iter = int(i[0]) - 1
+            scf_iter = int(i[1]) - 1
             # print io_iter, scf_iter
             while len(self.iteration_data) <= io_iter:
                 self.iteration_data.append([])
@@ -188,7 +188,7 @@ class VaspOutput:
             self.iteration_data[io_iter][scf_iter] = {}
             self.iteration_data[io_iter][scf_iter]['Timing'] = {}
             for j in ['POTLOK', 'SETDIJ', 'EDDIAG', 'RMM-DIIS', 'ORTHCH', 'DOS', 'CHARGE', 'MIXING', 'LOOP']:
-                iter_block = re.findall(j+r':([\d\w:. ]*)\n', i[2])
+                iter_block = re.findall(j + r':([\d\w:. ]*)\n', i[2])
                 if len(iter_block) > 0:
                     iter_block_split = iter_block[0].split()
                     try:
@@ -201,7 +201,7 @@ class VaspOutput:
 
             self.iteration_data[io_iter][scf_iter]['Free_Energy'] = {}
             for j in ['PSCENC', 'TEWEN', 'DENC', 'EXHF', 'XCENC', 'EENTRO', 'EBANDS', 'EATOM', 'TOTEN']:
-                iter_block = re.findall(j+r'\s*=\s*([\d\.-]*)[\s\w\d]*\n', i[2])
+                iter_block = re.findall(j + r'\s*=\s*([\d\.-]*)[\s\w\d]*\n', i[2])
                 if len(iter_block) > 0:
                     self.iteration_data[io_iter][scf_iter]['Free_Energy'][j] = float(iter_block[0])
 

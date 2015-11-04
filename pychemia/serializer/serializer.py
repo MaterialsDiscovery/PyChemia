@@ -29,10 +29,10 @@ class PyChemiaJsonable(object):
         """
         argstring = ''
         for key in json_dict:
-            argstring += key+'='+str(json_dict[key])+', '
+            argstring += key + '=' + str(json_dict[key]) + ', '
         argstring = argstring[:-2]
-        print str(cls)+'('+argstring+')'
-        return eval(str(cls)+'('+argstring+')')
+        print str(cls) + '(' + argstring + ')'
+        return eval(str(cls) + '(' + argstring + ')')
 
     @property
     def to_json(self):

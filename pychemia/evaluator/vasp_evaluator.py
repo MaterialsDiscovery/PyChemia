@@ -251,8 +251,3 @@ class RelaxPopulation:
 
         self.create_dirs(clean=True)
         self.create_inputs(density_of_kpoints=density_of_kpoints, encut=encut)
-
-
-
-
-

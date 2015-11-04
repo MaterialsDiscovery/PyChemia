@@ -1,12 +1,10 @@
 import os
-
 from _abifiles import AbiFiles
 from _input import InputVariables
 from pychemia.code import Codes
 
 
 class AbinitJob(Codes):
-
     def __init__(self):
         Codes.__init__(self)
         self.abifile = None
@@ -131,7 +129,7 @@ class AbinitJob(Codes):
         self.inp.set_value('ecut', ecut)
 
     def write_abiinput(self):
-        self.inp.write(self.workdir+os.sep+'abinit.in')
+        self.inp.write(self.workdir + os.sep + 'abinit.in')
 
     def write_abifiles(self):
         self.abifile.create()

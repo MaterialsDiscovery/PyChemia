@@ -1,6 +1,5 @@
 import json
 from abc import ABCMeta, abstractmethod
-
 import numpy as np
 from pychemia.db import USE_MONGO
 
@@ -41,10 +40,10 @@ class Population:
         return ret
 
     def disable(self, entry_id):
-        self.pcdb.entries.update({'_id': entry_id}, {'$set': {'status.'+self.tag: False}})
+        self.pcdb.entries.update({'_id': entry_id}, {'$set': {'status.' + self.tag: False}})
 
     def enable(self, entry_id):
-        self.pcdb.entries.update({'_id': entry_id}, {'$set': {'status.'+self.tag: True}})
+        self.pcdb.entries.update({'_id': entry_id}, {'$set': {'status.' + self.tag: True}})
 
     def get_values(self, selection):
         ret = {}

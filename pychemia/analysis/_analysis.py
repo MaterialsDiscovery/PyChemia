@@ -3,7 +3,6 @@ import sys
 import itertools
 import numpy as np
 import numpy.linalg
-
 from pychemia import Structure, pcm_log
 from pychemia.utils.periodic import atomic_number, covalent_radius, valence
 from pychemia.utils.mathematics import integral_gaussian
@@ -421,24 +420,24 @@ class StructureAnalysis:
 
             ei = valence(self.structure.symbols[i1]) / covalent_radius(self.structure.symbols[i1])
             ej = valence(self.structure.symbols[i2]) / covalent_radius(self.structure.symbols[i2])
-            #print 'bond ->', sqrt(ei * ej), (coordination[i1] * coordination[i2]), all_distances[i]['distance']
+            # print 'bond ->', sqrt(ei * ej), (coordination[i1] * coordination[i2]), all_distances[i]['distance']
 
             sij = math.sqrt(ei * ej) / (coordination[i1] * coordination[i2]) / all_distances[i]['distance']
             num_i_j_bonds = len([j for j in diff_bonds if i1 in all_distances[j]['pair'] and
                                  i2 in all_distances[j]['pair']])
-            #print 'sij', sij
-            #print 'num_i_j_bonds', num_i_j_bonds
+            # print 'sij', sij
+            # print 'num_i_j_bonds', num_i_j_bonds
             tot += num_i_j_bonds
             x *= sij
-            #print 'x', x
+            # print 'x', x
 
         vol = self.structure.volume
         if verbose:
             print "Structure volume:", vol
-            #print("f:", f)
-            #print("x:", x)
+            # print("f:", f)
+            # print("x:", x)
 
-        #print 'len_bonds', len(diff_bonds
+        # print 'len_bonds', len(diff_bonds
         hardness_value = c_hard / vol * (len(diff_bonds) * x ** (1. / (len(diff_bonds)))) * math.exp(-sigma * f)
 
         return round(hardness_value, 3), cutoff_radius, coordination

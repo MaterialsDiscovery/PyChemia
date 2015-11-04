@@ -13,7 +13,6 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class StaticCalculation(Task):
-
     def __init__(self, structure, workdir='.', binary='vasp', encut=1.3, kpoints=None, kp_density=1E4):
 
         self.encut = encut
@@ -105,15 +104,16 @@ class StaticCalculation(Task):
 
     def report(self, file_format='html'):
         from lxml.builder import ElementMaker, E
-        self.plot(figname=self.report_dir+os.sep+'static.jpg')
+        self.plot(figname=self.report_dir + os.sep + 'static.jpg')
 
         element_maker = ElementMaker(namespace=None, nsmap={None: "http://www.w3.org/1999/xhtml"})
         html = element_maker.html(E.head(E.title("VASP Static Calculation")),
                                   E.body(E.h1("VASP Static Calculation"),
-                                  E.h2('Structure'),
-                                  E.pre(str(self.structure)),
-                                  E.h2('Self Consistent Field Convergence'),
-                                  E.p(E.img(src='static.jpg', width="800", height="600", alt="Static Calculation"))
-                                  ))
+                                         E.h2('Structure'),
+                                         E.pre(str(self.structure)),
+                                         E.h2('Self Consistent Field Convergence'),
+                                         E.p(E.img(src='static.jpg', width="800", height="600",
+                                                   alt="Static Calculation"))
+                                         ))
 
         return self.report_end(html, file_format)

@@ -4,7 +4,6 @@ import os
 import scipy.io
 from mayavi import mlab
 import numpy as np
-
 import pychemia
 import pychemia.io.xyz
 
@@ -80,7 +79,7 @@ def oct_visualize(path='static',
         r, p = _read_netcdf(path + '/density.ncdf')
         rdata.append(r)
         pos.append(p)
-        b = list(rdata.shape)
+        b = list(np.array(rdata).shape)
     else:
         if spin[0]:
             r, p = _read_netcdf(path + '/density-sp1.ncdf')

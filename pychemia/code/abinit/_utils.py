@@ -116,7 +116,7 @@ def plot_simple(variables, varname):
             y = np.array([variables['etotal' + str(x + 1)][0] for x in range(ndtset)])
         elif lens[0] % 3 == 0:
             y = np.array([mean(apply_along_axis(linalg.norm, 1, variables['fcart' + str(x + 1)].reshape((-1, 3))))
-                        for x in range(ndtset)])
+                          for x in range(ndtset)])
         else:
             y = np.array([sqrt(sum(variables['fcart' + str(x + 1)] ** 2)) for x in range(ndtset)])
     ax.plot(x, y, 'ro')

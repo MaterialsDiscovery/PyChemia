@@ -2,7 +2,6 @@ import itertools as it
 import math
 from fractions import gcd
 from math import cos, sin, sqrt
-
 import numpy as np
 from scipy import weave
 
@@ -332,21 +331,21 @@ def round_small(number, ndigits=0):
 
 def sieve_atkin(limit):
     ret = [2, 3]
-    sieve = [False]*(limit+1)
-    for x in range(1, int(math.sqrt(limit))+1):
-        for y in range(1, int(math.sqrt(limit))+1):
-            n = 4*x*x + y*y
+    sieve = [False] * (limit + 1)
+    for x in range(1, int(math.sqrt(limit)) + 1):
+        for y in range(1, int(math.sqrt(limit)) + 1):
+            n = 4 * x * x + y * y
             if n <= limit and (n % 12 == 1 or n % 12 == 5):
                 sieve[n] = not sieve[n]
-            n = 3*x*x+y*y
+            n = 3 * x * x + y * y
             if n <= limit and n % 12 == 7:
                 sieve[n] = not sieve[n]
-            n = 3*x*x - y*y
+            n = 3 * x * x - y * y
             if x > y and n <= limit and n % 12 == 11:
                 sieve[n] = not sieve[n]
     for x in range(5, int(math.sqrt(limit))):
         if sieve[x]:
-            for y in range(x*x, limit+1, x*x):
+            for y in range(x * x, limit + 1, x * x):
                 sieve[y] = False
     for p in range(5, limit):
         if sieve[p]:
@@ -365,11 +364,11 @@ def trial_division(n):
     """
     if n == 1:
         return [1]
-    primes = sieve_atkin(int(n**0.5) + 1)
+    primes = sieve_atkin(int(n ** 0.5) + 1)
     prime_factors = []
 
     for p in primes:
-        if p*p > n:
+        if p * p > n:
             break
         while n % p == 0:
             prime_factors.append(p)
@@ -390,7 +389,7 @@ def lcm(a, b):
 
     :rtype : (int)
     """
-    return a*b/gcd(a, b)
+    return a * b / gcd(a, b)
 
 
 def shortest_triple_set(n):
@@ -411,7 +410,7 @@ def shortest_triple_set(n):
     elif len(prime_factors) < 3:
         # If there are less than 3 complete the set with ones
         while len(prime_factors) % 3 != 0:
-            prime_factors = [1]+prime_factors
+            prime_factors = [1] + prime_factors
         return prime_factors
     else:
         factors = np.array(prime_factors)
@@ -421,9 +420,9 @@ def shortest_triple_set(n):
             while len(factors) % 6 != 0:
                 factors = np.concatenate(([1], factors))
             # Take the first half
-            low = factors[:len(factors)/2]
+            low = factors[:len(factors) / 2]
             # take the second half and invert the order
-            high = factors[len(factors)/2:][::-1]
+            high = factors[len(factors) / 2:][::-1]
             # Sum both arrays and sort them before reenter
             factors = np.sort(low * high)
         return list(factors)
@@ -441,13 +440,12 @@ def rotation_matrix_around_axis_angle(axis, theta):
     # uxu is the tensor product of u
     uxu = np.tensordot(u, u.T, axes=0)
     # This is a matrix form of Rodrigues 'rotation formula'
-    return np.cos(theta)*np.identity(3) + np.sin(theta)*ux + (1-np.cos(theta))*uxu
+    return np.cos(theta) * np.identity(3) + np.sin(theta) * ux + (1 - np.cos(theta)) * uxu
 
 
 def rotate_towards_axis(vector, axis, theta=None, fraction=None):
-
     # If the vector is already parallel to the axis, do nothing
-    if np.abs(angle_vector(vector, axis)) < 1E-10 or np.abs(angle_vector(vector, axis)-np.pi) < 1E-10:
+    if np.abs(angle_vector(vector, axis)) < 1E-10 or np.abs(angle_vector(vector, axis) - np.pi) < 1E-10:
         return vector
 
     # Create a unitary vector perpendicular to the plane created by vector and axis
@@ -467,7 +465,7 @@ def rotate_towards_axis(vector, axis, theta=None, fraction=None):
 def rotation_x(theta):
     return np.array([[1, 0, 0],
                      [0, np.cos(theta), -np.sin(theta)],
-                     [0, np.sin(theta),  np.cos(theta)]])
+                     [0, np.sin(theta), np.cos(theta)]])
 
 
 def rotation_y(theta):
@@ -478,7 +476,7 @@ def rotation_y(theta):
 
 def rotation_z(theta):
     return np.array([[np.cos(theta), -np.sin(theta), 0],
-                     [np.sin(theta),  np.cos(theta), 0],
+                     [np.sin(theta), np.cos(theta), 0],
                      [0, 0, 1]])
 
 
@@ -519,23 +517,22 @@ def rotation_matrix_weave(axis, theta, mat=None):
 def rotation_matrix_numpy(axis, theta):
     mat = np.eye(3, 3)
     axis /= sqrt(np.dot(axis, axis))
-    a = cos(theta/2.)
-    b, c, d = -axis*sin(theta/2.)
+    a = cos(theta / 2.)
+    b, c, d = -axis * sin(theta / 2.)
 
-    return np.array([[a*a+b*b-c*c-d*d, 2*(b*c-a*d), 2*(b*d+a*c)],
-                     [2*(b*c+a*d), a*a+c*c-b*b-d*d, 2*(c*d-a*b)],
-                     [2*(b*d-a*c), 2*(c*d+a*b), a*a+d*d-b*b-c*c]])
+    return np.array([[a * a + b * b - c * c - d * d, 2 * (b * c - a * d), 2 * (b * d + a * c)],
+                     [2 * (b * c + a * d), a * a + c * c - b * b - d * d, 2 * (c * d - a * b)],
+                     [2 * (b * d - a * c), 2 * (c * d + a * b), a * a + d * d - b * b - c * c]])
 
 
 def projector(u, v):
-    return np.dot(v, u)/np.dot(u, u) * u
+    return np.dot(v, u) / np.dot(u, u) * u
 
 
 def gram_smith(v):
-
     ret = np.zeros((len(v[0]), len(v[0])))
 
-    ret[0] = v[0]/np.linalg.norm(v[0])
+    ret[0] = v[0] / np.linalg.norm(v[0])
     print ret[0]
 
     for k in range(1, len(v[0])):

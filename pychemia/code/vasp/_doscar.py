@@ -3,7 +3,6 @@ import numpy as np
 
 
 class VaspDoscar:
-
     def __init__(self, filename='DOSCAR'):
 
         if not os.path.isfile(filename):
@@ -30,7 +29,6 @@ class VaspDoscar:
         self.total_dos = self._dos_dict()
 
         if self.has_projected:
-
             self.projected_dos = self._proj_dos_dict()
 
     def _dos_dict(self):
@@ -76,7 +74,7 @@ class VaspDoscar:
         ndos = int(header[2])
         iline += 1
 
-        total_dos = [[float(x) for x in y.split()] for y in data[iline:iline+ndos]]
+        total_dos = [[float(x) for x in y.split()] for y in data[iline:iline + ndos]]
         total_dos = np.array(total_dos)
 
         iline += ndos
@@ -90,7 +88,7 @@ class VaspDoscar:
                 header = [float(x) for x in data[iline].strip().split()]
                 ndos = int(header[2])
                 iline += 1
-                tmp_dos = [[float(x) for x in y.split()] for y in data[iline:iline+ndos]]
+                tmp_dos = [[float(x) for x in y.split()] for y in data[iline:iline + ndos]]
                 projected_dos.append(tmp_dos)
                 iline += ndos
 

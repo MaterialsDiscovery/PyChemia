@@ -5,7 +5,6 @@ from scipy.io import netcdf_file
 
 
 class AbinitOutput:
-
     def __init__(self, filename='abinit.out'):
 
         self.filename = filename
@@ -43,9 +42,9 @@ class AbinitOutput:
 
         ret = []
         n = len(occs)
-        if 2*len(atoms) == len(spins) and len(spins) == n:
+        if 2 * len(atoms) == len(spins) and len(spins) == n:
             for i in range(n):
-                atom = atoms[(i+1)/2+(i+1) % 2-1]
+                atom = atoms[(i + 1) / 2 + (i + 1) % 2 - 1]
                 spin = spins[i]
                 occ_matrix = [float(x) for x in occs[i].strip().split()]
                 ret.append({'atom': atom, 'spin': spin, 'occ_matrix': occ_matrix})
@@ -56,7 +55,7 @@ class AbinitOutput:
         min_atom = min([x['atom'] for x in om])
         max_atom = max([x['atom'] for x in om])
         ret = []
-        for i in range(min_atom, max_atom+1):
+        for i in range(min_atom, max_atom + 1):
             for iom in om:
                 if iom['atom'] == i and iom['spin'] == 1:
                     ret.append(iom['occ_matrix'])

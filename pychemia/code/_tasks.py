@@ -22,7 +22,7 @@ class Task:
         self.success = False
         self.started = False
         self.output = {}
-        self.report_dir = self.workdir+os.sep+'REPORT'
+        self.report_dir = self.workdir + os.sep + 'REPORT'
         if not os.path.isdir(self.report_dir):
             os.mkdir(self.report_dir)
 
@@ -47,7 +47,7 @@ class Task:
             filename = self.workdir + os.sep + 'task.json'
         wf = open(filename, 'w')
         ret = {'task_params': self.task_params, 'output': self.output}
-        json.dump(ret, wf,  sort_keys=True, indent=4, separators=(',', ': '))
+        json.dump(ret, wf, sort_keys=True, indent=4, separators=(',', ': '))
         wf.close()
 
     def status(self):
@@ -71,7 +71,7 @@ class Task:
                                 method='xml',
                                 pretty_print=True)
 
-        wf = open(self.report_dir+os.sep+'index.html', 'w')
+        wf = open(self.report_dir + os.sep + 'index.html', 'w')
         wf.write(result)
 
         if file_format != 'html':
@@ -79,7 +79,7 @@ class Task:
             os.chdir(self.report_dir)
             stderr = open('pandoc_out.log', 'w')
             stdout = open('pandoc_err.log', 'w')
-            sp = subprocess.Popen(['pandoc', 'index.html', '-o', 'report.'+file_format], stderr=stderr, stdout=stdout)
+            sp = subprocess.Popen(['pandoc', 'index.html', '-o', 'report.' + file_format], stderr=stderr, stdout=stdout)
             os.chdir(cwd)
             stderr.close()
             stdout.close()

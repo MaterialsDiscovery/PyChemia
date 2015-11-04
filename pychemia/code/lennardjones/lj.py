@@ -5,7 +5,6 @@ import scipy.spatial
 
 
 class LennardJones:
-
     def __init__(self, structure, ljparams=None, cp=0.0):
         self.initial_structure = structure
         self.structure = structure.copy()
@@ -14,7 +13,7 @@ class LennardJones:
             ljparams = {}
             for i in self.structure.species:
                 for j in self.structure.species:
-                    ljparams[i+'-'+j] = {'sigma': 1.0, 'epsilon': 1.0}
+                    ljparams[i + '-' + j] = {'sigma': 1.0, 'epsilon': 1.0}
         self.ljparams = ljparams
         self.cp = cp
         self.sigmas = np.zeros((structure.natom, structure.natom))
@@ -34,11 +33,11 @@ class LennardJones:
         while np.max(self.get_magnitude_forces()) > tolerance:
             for i in range(self.structure.natom):
                 mass = pychemia.utils.periodic.mass(self.structure.symbols[i])
-                self.structure.positions[i] += 0.5*forces[i]/mass * dt**2
+                self.structure.positions[i] += 0.5 * forces[i] / mass * dt ** 2
 
             forces = self.get_forces()
             maxforce = np.max(self.get_magnitude_forces())
-            dt = max(100.0/maxforce, 1.0)
+            dt = max(100.0 / maxforce, 1.0)
             print 'Steepest Descent maxforce= %9.3E   density=%7.4f dt=%7.3f' % (maxforce, self.structure.density, dt)
 
     def get_sigma_epsilon(self, i, j):
@@ -47,8 +46,8 @@ class LennardJones:
         sort_species = [specie1, specie2]
         sort_species.sort()
 
-        sigma = self.ljparams[sort_species[0]+'-'+sort_species[1]]['sigma']
-        epsilon = self.ljparams[sort_species[0]+'-'+sort_species[1]]['epsilon']
+        sigma = self.ljparams[sort_species[0] + '-' + sort_species[1]]['sigma']
+        epsilon = self.ljparams[sort_species[0] + '-' + sort_species[1]]['epsilon']
 
         return float(sigma), float(epsilon)
 
@@ -62,7 +61,7 @@ class LennardJones:
             options = {'maxiter': 100, 'disp': False}
         else:
             jac = lj_gradient
-            options = {'gtol': 0.1*gtol, 'disp': False}
+            options = {'gtol': 0.1 * gtol, 'disp': False}
 
         x0 = self.structure.positions.flatten()
 
@@ -89,8 +88,8 @@ class LennardJones:
                     print 'Anomalous condition, maxforce= %9.3E gtol= %9.3E' % (maxforce, gtol)
                     pos = np.array(x0).reshape((-1, 3))
                     mindis = np.min(np.array(np.array(scipy.spatial.distance_matrix(pos, pos)) +
-                                             100*np.eye(len(pos))).flatten())
-                    x0 = np.array(1.0/mindis * pos).flatten()
+                                             100 * np.eye(len(pos))).flatten())
+                    x0 = np.array(1.0 / mindis * pos).flatten()
                     soft_call = 1
                 if hard_call > hard_max_ncalls:
                     print 'Could not reach target forces, maxforce= %9.3E gtol= %9.3E' % (maxforce, gtol)
@@ -110,14 +109,14 @@ def lj_forces(pos, sigmas, epsilons, cp=0.0):
     pos = np.array(pos).reshape((-1, 3))
     n = len(pos)
     ret = np.zeros((n, 3))
-    for i in range(n-1):
-        for j in range(i+1, n):
+    for i in range(n - 1):
+        for j in range(i + 1, n):
             vector = pos[j] - pos[i]
             distance = np.linalg.norm(vector)
-            sr6 = (sigmas[i, j]/distance)**6
-            magnitude = 24*epsilons[i, j]/distance * (2.0*sr6**2 - sr6)
-            ret[i] -= magnitude*vector/distance
-            ret[j] += magnitude*vector/distance
+            sr6 = (sigmas[i, j] / distance) ** 6
+            magnitude = 24 * epsilons[i, j] / distance * (2.0 * sr6 ** 2 - sr6)
+            ret[i] -= magnitude * vector / distance
+            ret[j] += magnitude * vector / distance
     if cp > 0.0:
         for i in range(n):
             ret[i] -= cp * pos[i]
@@ -132,23 +131,22 @@ def lj_energy(pos, sigmas, epsilons, cp=0.0):
     pos = np.array(pos).reshape((-1, 3))
     ret = 0
     n = len(pos)
-    for i in range(n-1):
-        for j in range(i+1, n):
+    for i in range(n - 1):
+        for j in range(i + 1, n):
             vector = pos[j] - pos[i]
             distance = np.linalg.norm(vector)
             if distance > 1E-10:
-                sr6 = (sigmas[i, j]/distance)**6
+                sr6 = (sigmas[i, j] / distance) ** 6
             else:
                 sr6 = 0
-            ret += 4*epsilons[i, j]*(sr6**2 - sr6)
+            ret += 4 * epsilons[i, j] * (sr6 ** 2 - sr6)
     if cp > 0.0:
         for i in range(n):
-            ret += 0.5 * cp * np.linalg.norm(pos[i])**2
+            ret += 0.5 * cp * np.linalg.norm(pos[i]) ** 2
     return ret
 
 
 def lj_compact_evaluate(structure, gtol, minimal_density):
-
     k = 1
     while structure.density < minimal_density:
         iniden = structure.density

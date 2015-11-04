@@ -14,7 +14,6 @@ __email__ = "gtux.gaf@gmail.com"
 __status__ = "Development"
 __date__ = "March 31, 2014"
 
-
 try:
     import ase.atoms
     import ase.io

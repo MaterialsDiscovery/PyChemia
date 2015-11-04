@@ -4,7 +4,6 @@ from ._poscar import write_poscar
 
 
 def write_from_queue(queue, entry_id, destination=None):
-
     if destination is None:
         dest = '.'
     elif os.path.isfile(destination):

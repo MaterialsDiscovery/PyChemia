@@ -10,7 +10,6 @@ from pychemia.serializer import generic_serializer
 
 
 class DFTBplus(Codes):
-
     def __init__(self):
         Codes.__init__(self)
         self.workdir = None
@@ -45,11 +44,11 @@ class DFTBplus(Codes):
         self.kpoints = kpoints
 
     def set_inputs(self):
-        self.write_input(filename=self.workdir+os.sep+'dftb_in.hsd')
+        self.write_input(filename=self.workdir + os.sep + 'dftb_in.hsd')
         self.link_slater_koster()
 
     def get_outputs(self):
-        self.output = read_detailed_out(filename=self.workdir+os.sep+'detailed.out')
+        self.output = read_detailed_out(filename=self.workdir + os.sep + 'detailed.out')
 
     def run(self, use_mpi=False, omp_max_threads=4, mpi_num_procs=1):
         cwd = os.getcwd()
@@ -101,7 +100,7 @@ class DFTBplus(Codes):
             print 'return->', ret
             # print 'container',current_container
             # print 'tree_pos',tree_pos
-            print 80*'-'
+            print 80 * '-'
             if line.strip() == '':
                 continue
             elif '=' in line and line.strip()[-1] == '{':
@@ -142,11 +141,11 @@ class DFTBplus(Codes):
                     level += 1
             if line.strip()[-2:] == '{}':
                 if level == 0:
-                    ret. append({line.split()[0]: '{}'})
+                    ret.append({line.split()[0]: '{}'})
                 else:
-                    raise ValueError('Line not parsed correctly: '+line)
+                    raise ValueError('Line not parsed correctly: ' + line)
             else:
-                raise ValueError('Line not parsed correctly: '+line)
+                raise ValueError('Line not parsed correctly: ' + line)
         return ret
 
     def get_geometry(self):
@@ -214,7 +213,7 @@ class DFTBplus(Codes):
             self.hamiltonian['SlaterKosterFiles'] = {}
             for i in self.structure.species:
                 for j in self.structure.species:
-                    self.hamiltonian['SlaterKosterFiles'][i+'-'+j] = '"' + i + '-' + j + '.skf' + '"'
+                    self.hamiltonian['SlaterKosterFiles'][i + '-' + j] = '"' + i + '-' + j + '.skf' + '"'
 
         self.hamiltonian['MaxAngularMomentum'] = {}
         max_angular_momentum = self.get_max_angular_momentum()
@@ -323,20 +322,20 @@ class DFTBplus(Codes):
         self.slater_koster = []
         for ispecie in self.structure.species:
             for jspecie in self.structure.species:
-                pair = ispecie+'-'+jspecie
+                pair = ispecie + '-' + jspecie
                 pair_found = False
-                path = self.workdir+os.sep+pair+'.skf'
+                path = self.workdir + os.sep + pair + '.skf'
                 if os.path.exists(path):
                     self.slater_koster.append(path)
                     pair_found = True
                 else:
                     for ipath in search_paths:
-                        path = ipath+os.sep+pair+'.skf'
-                        if os.path.exists(ipath+os.sep+ispecie+'-'+jspecie+'.skf'):
+                        path = ipath + os.sep + pair + '.skf'
+                        if os.path.exists(ipath + os.sep + ispecie + '-' + jspecie + '.skf'):
                             self.slater_koster.append(path)
                             pair_found = True
                 if pair_found:
-                    #print 'Slater-Koster %7s : %s' % (pair, path)
+                    # print 'Slater-Koster %7s : %s' % (pair, path)
                     pcm_log.debug('Slater-Koster %7s : %s' % (pair, path))
                 else:
                     pcm_log.debug('ERROR: Slater_Koster for ' + pair + ' not found')
@@ -348,7 +347,7 @@ class DFTBplus(Codes):
         Create symbolic links to Slater-Koster files not already on the workdir
         """
         for i in self.slater_koster:
-            filename = self.workdir+os.sep+os.path.basename(i)
+            filename = self.workdir + os.sep + os.path.basename(i)
             if os.path.exists(filename):
                 pass
             elif os.path.lexists(filename):
@@ -463,7 +462,7 @@ def read_geometry_gen(filename):
         line = rf.readline()
         coords[i, :] = np.array([float(x) for x in line.split()[2:]])
         # The indices for atoms on a gen file are in the second col [1] and start in 1
-        symbols.append(species[int(line.split()[1])-1])
+        symbols.append(species[int(line.split()[1]) - 1])
     if periodic:
         line = rf.readline()
         coords_origin = np.array(line.split())
@@ -506,24 +505,24 @@ def read_detailed_out(filename='detailed.out'):
 
     if forces:
         forces = np.array(forces[0].split(), dtype=float).reshape((-1, 3))
-        #pcm_log.debug('Forces :\n'+str(forces))
+        # pcm_log.debug('Forces :\n'+str(forces))
     else:
         forces = None
 
     if stress:
         stress = np.array(stress[0].split(), dtype=float).reshape((3, 3))
-        #pcm_log.debug('Stress :\n' + str(stress))
+        # pcm_log.debug('Stress :\n' + str(stress))
     else:
         stress = None
 
     if total_energy:
         total_energy = float(total_energy[0])
-        #pcm_log.debug('Energy :' + str(total_energy))
+        # pcm_log.debug('Energy :' + str(total_energy))
     else:
         total_energy = None
 
     scc = re.findall('iSCC Total electronic   Diff electronic      SCC error  \s*  ([\s\dE+-.]*)', data)
-    if len(scc)>0:
+    if len(scc) > 0:
         ret['SCC'] = {}
         ret['SCC']['iSCC'] = int(scc[0].split()[0])
         ret['SCC']['Total_electronic'] = float(scc[0].split()[1])
@@ -581,7 +580,7 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
         tmp['scc']['scc_error'] = []
         for iline in ib[4:]:
             fields = iline.split()
-            if len(fields)>0 and fields[0].strip().isdigit():
+            if len(fields) > 0 and fields[0].strip().isdigit():
                 tmp['scc']['tot_electronic'].append(float(fields[1]))
                 tmp['scc']['diff_electronic'].append(float(fields[2]))
                 tmp['scc']['scc_error'].append(float(fields[3]))

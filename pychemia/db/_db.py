@@ -10,7 +10,6 @@ from pychemia import Structure
 
 
 class PyChemiaDB:
-
     def __init__(self, name='pychemiadb', host='localhost', port=27017, user=None, passwd=None, ssl=False):
         """
         Creates a MongoDB client to 'host' with 'port' and connect it to the database 'name'.
@@ -30,7 +29,7 @@ class PyChemiaDB:
         if user is not None:
             uri += user
             if passwd is not None:
-                uri += ':'+str(passwd)
+                uri += ':' + str(passwd)
             uri += '@'
         uri += host + ':' + str(port)
         if user is not None:
@@ -249,7 +248,7 @@ class PyChemiaDB:
     def create_static(self, field):
 
         for entry in self.entries.find({}):
-            entry[field+'_static'] = entry[field]
+            entry[field + '_static'] = entry[field]
             self.db.pychemia_entries.update({'_id': entry['_id']}, entry)
 
     def map_to_all(self, function, nparal=6):
@@ -285,7 +284,6 @@ class PyChemiaDB:
 
 
 def get_database(db_settings):
-
     if 'host' not in db_settings:
         db_settings['host'] = 'localhost'
     if 'port' not in db_settings:

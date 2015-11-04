@@ -72,8 +72,8 @@ class EvaluatorDaemon:
                                                   'properties.forces': generic_serializer(forces),
                                                   'properties.stress': generic_serializer(stress),
                                                   'properties.energy': te,
-                                                  'properties.energy_pa': te/new_structure.natom,
-                                                  'properties.energy_pf': te/new_structure.get_composition().gcd,
+                                                  'properties.energy_pa': te / new_structure.natom,
+                                                  'properties.energy_pf': te / new_structure.get_composition().gcd,
                                                   'properties.spacegroup': symmetry.number()}})
 
                     # Fingerprint

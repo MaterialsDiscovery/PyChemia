@@ -96,4 +96,4 @@ class HarmonySearch(Searcher):
         for entry_id in selection[-self.tail:]:
             pcm_log.debug('[HS](%s) Tail entry: discarded' % entry_id)
             self.replace_by_random(entry_id, reason='Tail %d' % self.tail)
-        # assert(len(self.get_generation(self.current_generation+1)) == self.generation_size)
+            # assert(len(self.get_generation(self.current_generation+1)) == self.generation_size)

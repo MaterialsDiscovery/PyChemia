@@ -4,7 +4,6 @@ from _searcher import Searcher
 
 
 class FireFly(Searcher):
-
     def __init__(self, population, params=None, fraction_evaluated=1.0, generation_size=32,
                  stabilization_limit=10, target_value=None):
         """
@@ -93,7 +92,7 @@ class FireFly(Searcher):
                     entry_jd = selection[j]
 
                     distance = self.population.distance(entry_id, entry_jd)
-                    beta = self.beta0*math.exp(-self.gamma * distance * distance)
+                    beta = self.beta0 * math.exp(-self.gamma * distance * distance)
                     # The variation of attractiveness \beta with the distance r
                     pcm_log.debug('[%s] Distance: %7.3f. Intensity: %7.3f. Atractiveness: %7.3f' % (str(entry_jd),
                                                                                                     distance,
@@ -103,12 +102,12 @@ class FireFly(Searcher):
                     if new_selection[entry_id] is None:
                         new_selection[entry_id] = self.population.move(entry_id, entry_jd, factor=beta, in_place=False)
                         if self.alpha0 > 0:
-                            factor = self.alpha0*(self.delta**self.current_generation)
+                            factor = self.alpha0 * (self.delta ** self.current_generation)
                             self.population.move_random(new_selection[entry_id], factor=factor, in_place=True)
                     else:
                         self.population.move(new_selection[entry_id], entry_jd, factor=beta, in_place=True)
                         if self.alpha0 > 0:
-                            factor = self.alpha0*(self.delta**self.current_generation)
+                            factor = self.alpha0 * (self.delta ** self.current_generation)
                             self.population.move_random(new_selection[entry_id], factor=factor, in_place=True)
                     moves[entry_id] += 1
 
@@ -117,13 +116,13 @@ class FireFly(Searcher):
                 distances = [self.population.distance(entry_id, entry_jd) for entry_jd in selection[:i]]
                 distance = min(distances)
                 target = selection[distances.index(distance)]
-                beta = self.beta0*math.exp(-self.gamma * distance * distance)
+                beta = self.beta0 * math.exp(-self.gamma * distance * distance)
                 # The variation of attractiveness \beta with the distance r
                 pcm_log.debug('[%s] Distance: %7.3f. Intensity: %7.3f. Atractiveness: %7.3f' %
-                          (str(entry_jd), distance, intensity[entry_jd], beta))
+                              (str(entry_jd), distance, intensity[entry_jd], beta))
 
                 new_selection[entry_id] = self.population.move(entry_id, target, factor=beta, in_place=False)
-                factor = self.alpha0*(self.delta**self.current_generation)
+                factor = self.alpha0 * (self.delta ** self.current_generation)
                 self.population.move_random(new_selection[entry_id], factor=factor, in_place=True)
                 moves[entry_id] += 1
 

@@ -1,14 +1,12 @@
 import json
 import os
 import time
-
 from pychemia import pcm_log
 from pychemia.dft import KPoints
 from .._dftb import DFTBplus, read_detailed_out
 
 
 class StaticCalculation:
-
     def __init__(self, structure, workdir, slater_path, waiting=False, kpoints=None, output_file='results.json',
                  max_scc_iterations=50):
 

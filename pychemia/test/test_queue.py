@@ -46,5 +46,6 @@ def test_queue():
 
     shutil.rmtree(destination)
 
+
 if __name__ == '__main__':
     test_queue()

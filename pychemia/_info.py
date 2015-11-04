@@ -7,10 +7,9 @@ __date__ = "June 26, 2015"
 
 
 class Version:
-
     @staticmethod
     def full_version():
-        return 'PyChemia Version='+__version__+' from='+__date__
+        return 'PyChemia Version=' + __version__ + ' from=' + __date__
 
     def __init__(self):
         pass

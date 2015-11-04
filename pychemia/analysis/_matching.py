@@ -5,7 +5,6 @@ import itertools
 
 
 class StructureMatch:
-
     def __init__(self, structure1, structure2):
         """
         Creates a structure match between 2 structures
@@ -17,8 +16,8 @@ class StructureMatch:
         :param structure1: (Structure)
         :param structure2: (Structure)
         """
-        assert(isinstance(structure1, Structure))
-        assert(isinstance(structure2, Structure))
+        assert (isinstance(structure1, Structure))
+        assert (isinstance(structure2, Structure))
         assert structure1.is_perfect
         assert structure2.is_perfect
         self.structure1 = structure1.copy()
@@ -33,11 +32,11 @@ class StructureMatch:
         gcd1 = self.structure1.get_composition().gcd
         gcd2 = self.structure2.get_composition().gcd
 
-        sts = np.array(shortest_triple_set(lcm(gcd1, gcd2)/gcd1))
+        sts = np.array(shortest_triple_set(lcm(gcd1, gcd2) / gcd1))
         supercell_multiples = sts[self.structure1.lattice.lengths.argsort()[::-1]]
         self.structure1 = self.structure1.supercell(supercell_multiples)
 
-        sts = np.array(shortest_triple_set(lcm(gcd1, gcd2)/gcd2))
+        sts = np.array(shortest_triple_set(lcm(gcd1, gcd2) / gcd2))
         supercell_multiples = sts[self.structure2.lattice.lengths.argsort()[::-1]]
         self.structure2 = self.structure2.supercell(supercell_multiples)
 
@@ -45,7 +44,7 @@ class StructureMatch:
 
         self.structure1.canonical_form()
         self.structure2.canonical_form()
-        assert(self.structure1.symbols == self.structure2.symbols)
+        assert (self.structure1.symbols == self.structure2.symbols)
 
     def match_atoms(self):
 
@@ -99,9 +98,9 @@ class StructureMatch:
 
     def reduced_displacement(self):
 
-        assert(self.structure1.symbols == self.structure2.symbols)
-        assert(self.structure1.nsites == self.structure2.nsites)
-        assert(self.structure1.natom == self.structure2.natom)
+        assert (self.structure1.symbols == self.structure2.symbols)
+        assert (self.structure1.nsites == self.structure2.nsites)
+        assert (self.structure1.natom == self.structure2.natom)
         ret = np.zeros((self.structure1.nsites, 3))
 
         distance_matrix, close_images = self.base_lattice.minimal_distances(self.structure1.reduced,
@@ -110,7 +109,7 @@ class StructureMatch:
         for i in range(self.structure1.nsites):
             x1 = self.structure1.reduced[i]
             x2 = self.structure2.reduced[i] + close_images[i, i]
-            ret[i] = x2-x1
+            ret[i] = x2 - x1
 
         return ret
 

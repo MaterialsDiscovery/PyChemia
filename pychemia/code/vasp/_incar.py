@@ -135,7 +135,7 @@ class InputVariables:
                     except ValueError:
                         if '*' in val_splt[i] and len(val_splt[i].split('*')) == 2:
                             # print 'Trying this', val_splt[i]
-                            newval = int(val_splt[i].split('*')[0])*[float(val_splt[i].split('*')[1])]
+                            newval = int(val_splt[i].split('*')[0]) * [float(val_splt[i].split('*')[1])]
                         else:
                             newval = [val_splt[i]]
                 ret += newval
@@ -223,7 +223,7 @@ class InputVariables:
                 prev = self.variables[varname][0]
                 for i in self.variables[varname][1:]:
                     if i == prev:
-                        tmp[-1] = (i, tmp[-1][1]+1)
+                        tmp[-1] = (i, tmp[-1][1] + 1)
                     else:
                         tmp.append((i, 1))
                     prev = i
@@ -234,13 +234,13 @@ class InputVariables:
                     if j[1] > 3:
                         if real:
                             if compact:
-                                ret += (" %d*%g" % (j[1]-j[1] % 3, j[0])).rjust(8)
+                                ret += (" %d*%g" % (j[1] - j[1] % 3, j[0])).rjust(8)
                             else:
-                                ret += " %d*%g" % (j[1]-j[1] % 3, j[0])
+                                ret += " %d*%g" % (j[1] - j[1] % 3, j[0])
                         elif integer:
-                            ret += " %d*%d" % (j[1]-j[1] % 3, j[0])
+                            ret += " %d*%d" % (j[1] - j[1] % 3, j[0])
                         else:
-                            ret += " %d*%s" % (j[1]-j[1] % 3, j[0])
+                            ret += " %d*%s" % (j[1] - j[1] % 3, j[0])
 
                         if j[1] % 3 != 0:
                             for i in range(j[1] % 3):
@@ -294,7 +294,7 @@ class InputVariables:
                 self.variables['ENCUT'] = int(math.ceil(ENCUT * maxvalue))
             else:
                 self.variables['ENCUT'] = maxvalue
-        # pcm_log.debug('ENCUT: %7.3f' % self.variables['ENCUT'])
+                # pcm_log.debug('ENCUT: %7.3f' % self.variables['ENCUT'])
 
     def set_ion_relax(self, NSW=50, ISIF=2, IBRION=2, EDIFFG=-1E-3):
         self.variables['IBRION'] = IBRION
@@ -350,5 +350,3 @@ class InputVariables:
             value = [value]
 
         return value
-
-

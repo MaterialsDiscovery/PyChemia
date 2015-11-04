@@ -3,7 +3,6 @@ from pychemia import pcm_log
 
 
 class BeeAlgorithm(Searcher):
-
     def __init__(self, population, params=None, fraction_evaluated=0.95, generation_size=32, stabilization_limit=10):
         """
         Implementation fo the Firefly algorithm for global minimization
@@ -15,12 +14,12 @@ class BeeAlgorithm(Searcher):
         """
         Searcher.__init__(self, population, fraction_evaluated, generation_size, stabilization_limit)
         # Parameters
-        self.ne = None   # Number of elite scout bees
+        self.ne = None  # Number of elite scout bees
         self.nre = None  # Number of elite foragers
-        self.nb = None   # Number of best scout bees (excluding elites)
+        self.nb = None  # Number of best scout bees (excluding elites)
         self.nrb = None  # Number of best foragers
-        self.ns = None   # Number of scouts (include elites,  best and others)
-        self.n = None    # Number of bees (size of colony n=ne*nre + nb*nrb + ns )
+        self.ns = None  # Number of scouts (include elites,  best and others)
+        self.n = None  # Number of bees (size of colony n=ne*nre + nb*nrb + ns )
         self.set_params(params)
         self.scouts_elite = None
         self.scouts_best = None
@@ -35,12 +34,12 @@ class BeeAlgorithm(Searcher):
 
         :param params:
         """
-        self.n = self.generation_size    # Number of bees (size of colony n=ne*nre + nb*nrb + ns )
-        self.ne = 3   # Number of elite scout bees
+        self.n = self.generation_size  # Number of bees (size of colony n=ne*nre + nb*nrb + ns )
+        self.ne = 3  # Number of elite scout bees
         self.nre = 3  # Number of elite foragers
-        self.nb = 2   # Number of best scout bees (excluding elites)
+        self.nb = 2  # Number of best scout bees (excluding elites)
         self.nrb = 2  # Number of best foragers
-        self.ns = self.n - self.ne*self.nre - self.nb*self.nrb  # Number of scouts (include elites,  best and others)
+        self.ns = self.n - self.ne * self.nre - self.nb * self.nrb  # Number of scouts (include elites,  best and others)
         if params is None:
             params = {}
         if 'nb' in params:
@@ -51,7 +50,7 @@ class BeeAlgorithm(Searcher):
             self.ne = params['ne']
         if 'nre' in params:
             self.nre = params['nre']
-        assert(self.ns < self.n)
+        assert (self.ns < self.n)
 
     def get_params(self):
         return {'nb': self.nb, 'ne': self.ne, 'nrb': self.nrb, 'nre': self.nre}
@@ -68,8 +67,8 @@ class BeeAlgorithm(Searcher):
             # scouts for the next iterations
             if len(selection) >= self.ns:
                 self.scouts_elite = list(selection[:self.ne])
-                self.scouts_best = list(selection[self.ne:self.ne+self.nb])
-                self.scouts_others = list(selection[self.ne+self.nb:self.ns-self.ne+self.nb])
+                self.scouts_best = list(selection[self.ne:self.ne + self.nb])
+                self.scouts_others = list(selection[self.ne + self.nb:self.ns - self.ne + self.nb])
                 # Disable extra scouts (from an initial population)
                 for entry_id in selection[self.ns:]:
                     self.population.disable(entry_id)
@@ -87,10 +86,10 @@ class BeeAlgorithm(Searcher):
                     self.create_foragers(entry_id, self.nrb)
                 self.print_status()
 
-                for u in range(self.generation_size - len(self.get_generation(self.current_generation+1))):
+                for u in range(self.generation_size - len(self.get_generation(self.current_generation + 1))):
                     ident, origin = self.population.add_random()
                     self.population.disable(ident)
-                    self.generation[ident]=[self.current_generation+1]
+                    self.generation[ident] = [self.current_generation + 1]
                     self.scouts_others.append(ident)
                     print 'Added to other scouts', ident
                 self.print_status()
@@ -146,10 +145,10 @@ class BeeAlgorithm(Searcher):
             self.print_status()
 
             # for i in range(self.ns - self.ne - self.nb):
-            for u in range(self.generation_size - len(self.get_generation(self.current_generation+1))):
+            for u in range(self.generation_size - len(self.get_generation(self.current_generation + 1))):
                 ident, origin = self.population.add_random()
                 self.population.disable(ident)
-                self.generation[ident] = [self.current_generation+1]
+                self.generation[ident] = [self.current_generation + 1]
                 self.scouts_others.append(ident)
                 print 'Added to other scouts', ident
 
@@ -161,13 +160,13 @@ class BeeAlgorithm(Searcher):
             forager = self.population.move_random(scout, factor=self.delta_change, in_place=False, kind='move')
             print 'For scout:', scout, ' new forager: ', forager
             self.population.disable(forager)
-            self.generation[forager] = [self.current_generation+1]
+            self.generation[forager] = [self.current_generation + 1]
             if scout not in self.foragers:
                 self.foragers[scout] = [forager]
             else:
                 self.foragers[scout].append(forager)
-            # change={'to': scout}
-            # self.write_change(forager, change)
+                # change={'to': scout}
+                # self.write_change(forager, change)
 
     def process_scouts(self, scouts, selection):
         # Removing dead bees from log
@@ -196,4 +195,3 @@ class BeeAlgorithm(Searcher):
                 else:
                     for i in foragers_alive[:]:
                         self.population.disable(i)
-

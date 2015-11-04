@@ -11,6 +11,7 @@ def test_incar():
     rf = open('pychemia/test/data/vasp_05/INCAR_chk')
     assert (str(vi) == rf.read())
 
+
 if __name__ == '__main__':
     test_incar()
 

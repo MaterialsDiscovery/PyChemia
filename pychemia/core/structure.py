@@ -12,7 +12,6 @@ import itertools
 from math import sin, cos
 import scipy.spatial
 import struct
-
 from pychemia import pcm_log
 from pychemia.core.lattice import Lattice
 from pychemia.core.delaunay import get_reduced_bases
@@ -20,7 +19,6 @@ from pychemia.core.composition import Composition
 from pychemia.utils.computing import unicode2string
 from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence, atomic_symbols
 from multiprocessing import Pool
-
 
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2014"
@@ -257,7 +255,7 @@ Empty structure
             self.sites = range(self.natom)
 
         if self.occupancies is None:
-            self.occupancies = self.natom*[1.0]
+            self.occupancies = self.natom * [1.0]
 
     def _check(self):
         check = True
@@ -539,7 +537,7 @@ Empty structure
                 covalent_distance = sum(covalent_radius([symbols[i], symbols[j]]))
                 if distance < covalent_distance:
                     pcm_log.debug('Covalent distance: %7.4f  Minimal distance: %7.4f  Difference: %7.3e' %
-                              (covalent_distance, distance, covalent_distance - distance))
+                                  (covalent_distance, distance, covalent_distance - distance))
 
         best_structure.canonical_form()
         return best_structure
@@ -643,11 +641,11 @@ Empty structure
 
         # First: Sort sites using the distance to the origin
         sorted_indices = np.array([np.linalg.norm(self.positions[i]) for i in range(self.nsites)]).argsort()
-        #print sorted_indices
+        # print sorted_indices
         self.sort_sites_using_list(sorted_indices)
 
         # Second: Sort again using the atomic number
-        if len(self.species)>1:
+        if len(self.species) > 1:
             sorted_indices = np.array([atomic_number(x) for x in self.symbols]).argsort()
             self.sort_sites_using_list(sorted_indices)
 
@@ -678,8 +676,8 @@ Empty structure
         I = self.inertia_matrix()
         eigval, eigvec = np.linalg.eig(I)
         eigvec = eigvec.T[eigval.argsort()[::-1]].T
-        inveigvec=np.linalg.inv(eigvec)
-        self.positions =  np.dot(inveigvec, self.positions.T).T
+        inveigvec = np.linalg.inv(eigvec)
+        self.positions = np.dot(inveigvec, self.positions.T).T
 
     def canonical_form(self):
 
@@ -778,7 +776,7 @@ Empty structure
             ret['sites'] = list(self.sites)
         if self.occupancies != self.natom * [1.0]:
             ret['occupancies'] = self.occupancies
-        #if len(self.vector_info) != 1 or self.vector_info['mag_moments'] is not None:
+        # if len(self.vector_info) != 1 or self.vector_info['mag_moments'] is not None:
         #    ret['vector_info'] = self.vector_info
         return ret
 
@@ -851,8 +849,8 @@ Empty structure
     def distance_matrix(self):
         if self.is_periodic:
             dm = np.zeros(self.nsites, self.nsites)
-            for i in range(1, self.nsites-1):
-                for j in range(i+1, self.nsites):
+            for i in range(1, self.nsites - 1):
+                for j in range(i + 1, self.nsites):
                     dm[i, j] = self.lattice.distance2(self.reduced[i], self.reduced[j])
                     dm[j, i] = dm[i, j]
         else:
@@ -972,14 +970,14 @@ Empty structure
         if self.is_periodic:
             return abs(np.linalg.det(self.cell))
         else:
-            volume = (np.max(self.positions[:, 0])-np.min(self.positions[:, 0])) *\
-                     (np.max(self.positions[:, 1])-np.min(self.positions[:, 1])) *\
-                     (np.max(self.positions[:, 2])-np.min(self.positions[:, 2]))
+            volume = (np.max(self.positions[:, 0]) - np.min(self.positions[:, 0])) * \
+                     (np.max(self.positions[:, 1]) - np.min(self.positions[:, 1])) * \
+                     (np.max(self.positions[:, 2]) - np.min(self.positions[:, 2]))
 
             if volume > 0.0:
                 return volume
             else:
-                return 4.0/3.0*np.pi* np.max(self.positions.flatten())**3
+                return 4.0 / 3.0 * np.pi * np.max(self.positions.flatten()) ** 3
 
     @property
     def species(self):
@@ -1026,7 +1024,7 @@ Empty structure
         assert self.is_perfect
         I = 0
         for isite in self:
-            I += mass(isite.symbols[0]) * (sum(isite.position**2)-isite.position[axis]**2)
+            I += mass(isite.symbols[0]) * (sum(isite.position ** 2) - isite.position[axis] ** 2)
         return I
 
     def product_of_inertia(self, axis):
@@ -1034,7 +1032,7 @@ Empty structure
         assert self.is_perfect
         I = 0
         for isite in self:
-            I += mass(isite.symbols[0]) * (np.prod(isite.position)/isite.position[axis])
+            I += mass(isite.symbols[0]) * (np.prod(isite.position) / isite.position[axis])
         return I
 
     def inertia_matrix(self):
@@ -1130,7 +1128,7 @@ def random_structure(method, composition, periodic=True, best_volume=1E10):
     if periodic:
         new_structure = None
 
-        assert(method in ['scaling', 'stretching'])
+        assert (method in ['scaling', 'stretching'])
 
         if method == 'scaling':
             lattice = Lattice.random_cell(comp)
@@ -1169,9 +1167,10 @@ def random_structure(method, composition, periodic=True, best_volume=1E10):
             raise ValueError("Distance too small")
 
         max_cov = np.max(covalent_radius(symbols))
-        pos *= max_cov/mindis
+        pos *= max_cov / mindis
 
-        current_volume = (max(pos[:, 0])-min(pos[:, 0]))*(max(pos[:, 1])-min(pos[:, 1]))*(max(pos[:, 2])-min(pos[:, 2]))
+        current_volume = (max(pos[:, 0]) - min(pos[:, 0])) * (max(pos[:, 1]) - min(pos[:, 1])) * (
+            max(pos[:, 2]) - min(pos[:, 2]))
 
         if current_volume < best_volume:
             new_structure = Structure(symbols=symbols, positions=pos, periodicity=False)
@@ -1186,4 +1185,4 @@ def cluster_minimal_distance(pos):
     pos = np.array(pos).reshape((-1, 3))
     dismat = scipy.spatial.distance_matrix(pos, pos)
     tmp = np.max(dismat.flatten())
-    return np.min((dismat+tmp*np.eye(len(pos))).flatten())
+    return np.min((dismat + tmp * np.eye(len(pos))).flatten())

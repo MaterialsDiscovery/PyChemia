@@ -1,6 +1,5 @@
 import os
 import json
-
 from _poscar import write_poscar, write_potcar, read_poscar
 from _kpoints import write_kpoints, read_kpoints
 from _incar import write_incar, InputVariables, read_incar
@@ -12,7 +11,6 @@ from pychemia.utils.computing import unicode2string
 
 
 class VaspJob(Codes):
-
     def __init__(self):
 
         Codes.__init__(self)
@@ -46,16 +44,16 @@ class VaspJob(Codes):
     def write_poscar(self):
 
         self._check_workdir()
-        assert(isinstance(self.structure, Structure))
+        assert (isinstance(self.structure, Structure))
 
-        write_poscar(self.structure, filepath=self.workdir+os.sep+'POSCAR')
+        write_poscar(self.structure, filepath=self.workdir + os.sep + 'POSCAR')
 
     def write_potcar(self):
 
         self._check_workdir()
-        assert(isinstance(self.structure, Structure))
+        assert (isinstance(self.structure, Structure))
 
-        pspfiles = write_potcar(self.structure, filepath=self.workdir+os.sep+'POTCAR', pspdir=self.potcar_pspdir,
+        pspfiles = write_potcar(self.structure, filepath=self.workdir + os.sep + 'POTCAR', pspdir=self.potcar_pspdir,
                                 options=self.potcar_setup, pspfiles=self.potcar_pspfiles)
 
         self.potcar_pspfiles = pspfiles
@@ -68,21 +66,21 @@ class VaspJob(Codes):
     def write_kpoints(self):
 
         self._check_workdir()
-        assert(isinstance(self.structure, Structure))
+        assert (isinstance(self.structure, Structure))
 
-        write_kpoints(self.kpoints, filepath=self.workdir+os.sep+'KPOINTS')
+        write_kpoints(self.kpoints, filepath=self.workdir + os.sep + 'KPOINTS')
 
     def write_incar(self):
 
         self._check_workdir()
-        assert(isinstance(self.input_variables, InputVariables))
+        assert (isinstance(self.input_variables, InputVariables))
 
-        write_incar(self.input_variables, filepath=self.workdir+os.sep+'INCAR')
+        write_incar(self.input_variables, filepath=self.workdir + os.sep + 'INCAR')
 
     def set_input_variables(self, input_variables):
 
         self._check_workdir()
-        assert(isinstance(input_variables, InputVariables))
+        assert (isinstance(input_variables, InputVariables))
         self.input_variables = input_variables
 
     def set_inputs(self):
@@ -91,7 +89,7 @@ class VaspJob(Codes):
         self.write_kpoints()
         self.write_poscar()
         self.write_potcar()
-        self.save_json(self.workdir+os.sep+'vaspjob.json')
+        self.save_json(self.workdir + os.sep + 'vaspjob.json')
 
     @property
     def variables(self):
@@ -131,17 +129,17 @@ class VaspJob(Codes):
         filep.close()
 
     def read_incar(self):
-        self.input_variables = read_incar(self.workdir+os.sep+'INCAR')
+        self.input_variables = read_incar(self.workdir + os.sep + 'INCAR')
 
     def read_kpoints(self):
-        self.kpoints = read_kpoints(self.workdir+os.sep+'KPOINTS')
+        self.kpoints = read_kpoints(self.workdir + os.sep + 'KPOINTS')
 
     def read_poscar(self):
-        self.structure = read_poscar(self.workdir+os.sep+'POSCAR')
+        self.structure = read_poscar(self.workdir + os.sep + 'POSCAR')
 
     def get_outputs(self):
-        if os.path.isfile(self.workdir+os.sep+'OUTCAR'):
-            self.outcar = VaspOutput(self.workdir+os.sep+'OUTCAR')
+        if os.path.isfile(self.workdir + os.sep + 'OUTCAR'):
+            self.outcar = VaspOutput(self.workdir + os.sep + 'OUTCAR')
 
     def update(self):
         self.read_incar()
@@ -158,18 +156,17 @@ class VaspJob(Codes):
         inp.set_minimum()
         self._check_workdir()
         self.write_potcar()
-        inp.set_encut(ENCUT=1.3, POTCAR=self.workdir+os.sep+'POTCAR')
+        inp.set_encut(ENCUT=1.3, POTCAR=self.workdir + os.sep + 'POTCAR')
         inp.set_electron_scf()
         self.set_input_variables(inp)
 
     def clean(self):
         for i in ['OUTCAR', 'WAVECAR']:
-            if os.path.isfile(self.workdir+os.sep+i):
-                os.remove(self.workdir+os.sep+i)
+            if os.path.isfile(self.workdir + os.sep + i):
+                os.remove(self.workdir + os.sep + i)
 
 
 class VaspAnalyser:
-
     def __init__(self, workdir):
         self.workdir = workdir
 

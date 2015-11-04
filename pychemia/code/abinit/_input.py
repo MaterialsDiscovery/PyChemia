@@ -226,9 +226,9 @@ class InputVariables(collections.MutableMapping):
                 if len(varlist) % i == 0:
                     for j in range(len(varlist) / i):
                         if j == 0:
-                            ret += (i*'%17.10E '+'\n') % tuple(varlist[j*i:j*i+i])
+                            ret += (i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
                         else:
-                            ret += (17*' '+i*'%17.10E '+'\n') % tuple(varlist[j*i:j*i+i])
+                            ret += (17 * ' ' + i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
         else:
 
             for j in range(len(varlist)):
@@ -390,8 +390,8 @@ class InputVariables(collections.MutableMapping):
             xred = xred.reshape((natom, 3))
             xcart = np.zeros((natom, 3))
 
-            #print rprimd
-            #print xred
+            # print rprimd
+            # print xred
 
             for i in range(natom):
                 xcart[i] = xred[i, 0] * rprimd[0] + xred[i, 1] * rprimd[1] + xred[i, 2] * rprimd[2]

@@ -14,7 +14,6 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class Convergence:
-
     def __init__(self, energy_tolerance):
 
         self.convergence_info = []
@@ -33,7 +32,7 @@ class Convergence:
             return False
 
         energies = [x['free_energy'] for x in self.convergence_info]
-        if len(energies) > 2 and abs(max(energies[-3:])-min(energies[-3:])) >= self.energy_tolerance:
+        if len(energies) > 2 and abs(max(energies[-3:]) - min(energies[-3:])) >= self.energy_tolerance:
             return False
         else:
             return True
@@ -53,8 +52,8 @@ class Convergence:
         plt.clf()
         plt.plot(x, y, 'rd-')
         dy = self.energy_tolerance
-        sup_dy = min(y[-3:])+dy
-        low_dy = max(y[-3:])-dy
+        sup_dy = min(y[-3:]) + dy
+        low_dy = max(y[-3:]) - dy
         xlims = plt.xlim()
         plt.plot(xlims, [sup_dy, sup_dy], '0.5')
         plt.plot(xlims, [low_dy, low_dy], '0.5')
@@ -95,7 +94,6 @@ class Convergence:
 
 
 class ConvergenceCutOffEnergy(Task, Convergence):
-
     def __init__(self, structure, workdir='.', kpoints=None, binary='vasp', energy_tolerance=1E-3,
                  increment_factor=0.2, initial_encut=1.3):
 
@@ -130,7 +128,7 @@ class ConvergenceCutOffEnergy(Task, Convergence):
             vj.clean()
             vj.job_static()
             vj.input_variables.set_density_for_restart()
-            vj.input_variables.set_encut(ENCUT=x, POTCAR=self.workdir+os.sep+'POTCAR')
+            vj.input_variables.set_encut(ENCUT=x, POTCAR=self.workdir + os.sep + 'POTCAR')
             vj.set_inputs()
             encut = vj.input_variables.variables['ENCUT']
             print 'Testing ENCUT = %7.3f' % encut
@@ -145,7 +143,7 @@ class ConvergenceCutOffEnergy(Task, Convergence):
                         scf_energies = [i[2] for i in vasp_stdout['data']]
                         energy_str = ' %7.3f' % scf_energies[1]
                         for i in range(1, len(scf_energies)):
-                            if scf_energies[i] < scf_energies[i-1]:
+                            if scf_energies[i] < scf_energies[i - 1]:
                                 energy_str += ' >'
                             else:
                                 energy_str += ' <'
@@ -167,10 +165,10 @@ class ConvergenceCutOffEnergy(Task, Convergence):
             print 'encut= %7.3f  free_energy: %9.6f' % (encut, free_energy)
             self.convergence_info.append({'free_energy': free_energy, 'encut': encut, 'factor': x})
             energies.append(free_energy)
-            if len(energies) > 2 and abs(max(energies[-3:])-min(energies[-3:])) < self.energy_tolerance:
+            if len(energies) > 2 and abs(max(energies[-3:]) - min(energies[-3:])) < self.energy_tolerance:
                 self.success = True
                 break
-            x = round(x + x*self.increment_factor, 2)
+            x = round(x + x * self.increment_factor, 2)
         self.output = {'convergence': self.convergence_info, 'best_encut': self.best_encut}
         self.finished = True
 
@@ -200,17 +198,16 @@ class ConvergenceCutOffEnergy(Task, Convergence):
         element_maker = ElementMaker(namespace=None, nsmap={None: "http://www.w3.org/1999/xhtml"})
         html = element_maker.html(E.head(E.title("VASP Energy cut-off Convergence")),
                                   E.body(E.h1("VASP Energy cut-off Convergence"),
-                                  E.h2('Structure'),
-                                  E.pre(str(self.structure)),
-                                  E.h2('Convergence'),
-                                  E.p(E.img(src='convergence.jpg', width="800", height="600", alt="Forces")),
-                                  ))
+                                         E.h2('Structure'),
+                                         E.pre(str(self.structure)),
+                                         E.h2('Convergence'),
+                                         E.p(E.img(src='convergence.jpg', width="800", height="600", alt="Forces")),
+                                         ))
 
         return self.report_end(html, file_format)
 
 
 class ConvergenceKPointGrid(Task, Convergence):
-
     def __init__(self, structure, workdir='.', binary='vasp', energy_tolerance=1E-3, recover=False, encut=1.3):
 
         self.structure = structure
@@ -226,13 +223,13 @@ class ConvergenceKPointGrid(Task, Convergence):
         Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, binary=binary)
 
     def recover(self):
-        kpoints_file = self.workdir+os.sep+'KPOINTS'
-        poscar_file = self.workdir+os.sep+'POSCAR'
+        kpoints_file = self.workdir + os.sep + 'KPOINTS'
+        poscar_file = self.workdir + os.sep + 'POSCAR'
         if os.path.isfile(kpoints_file) and os.path.isfile(poscar_file):
             structure = read_poscar(poscar_file)
             kpoints = read_kpoints(kpoints_file)
             density = kpoints.get_density_of_kpoints(structure.lattice)
-            self.initial_number = int(density ** (1.0/3.0)) - 1
+            self.initial_number = int(density ** (1.0 / 3.0)) - 1
 
     def run(self, nparal=4):
 
@@ -248,7 +245,7 @@ class ConvergenceKPointGrid(Task, Convergence):
             n = self.convergence_info[-3]['kp_n']
         self.convergence_info = []
         while True:
-            density = n**3
+            density = n ** 3
             kp.set_optimized_grid(self.structure.lattice, density_of_kpoints=density, force_odd=True)
             pcm_log.debug('Trial density: %d  Grid: %s' % (density, kp.grid))
             if np.sum(grid) != np.sum(kp.grid):
@@ -257,7 +254,7 @@ class ConvergenceKPointGrid(Task, Convergence):
                 vj.clean()
                 vj.job_static()
                 vj.input_variables.set_density_for_restart()
-                vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir+os.sep+'POTCAR')
+                vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir + os.sep + 'POTCAR')
                 vj.set_inputs()
                 vj.run(use_mpi=True, mpi_num_procs=nparal)
                 while True:
@@ -269,7 +266,7 @@ class ConvergenceKPointGrid(Task, Convergence):
                             scf_energies = [i[2] for i in vasp_stdout['data']]
                             energy_str = ' %7.3f' % scf_energies[1]
                             for i in range(1, len(scf_energies)):
-                                if scf_energies[i] < scf_energies[i-1]:
+                                if scf_energies[i] < scf_energies[i - 1]:
                                     energy_str += ' >'
                                 else:
                                     energy_str += ' <'
@@ -293,7 +290,7 @@ class ConvergenceKPointGrid(Task, Convergence):
                                               'kp_grid': list(grid),
                                               'kp_density': density,
                                               'kp_n': n})
-                if len(energies) > 2 and abs(max(energies[-3:])-min(energies[-3:])) < self.energy_tolerance:
+                if len(energies) > 2 and abs(max(energies[-3:]) - min(energies[-3:])) < self.energy_tolerance:
                     self.success = True
                     break
             n += 2
@@ -335,10 +332,10 @@ class ConvergenceKPointGrid(Task, Convergence):
         element_maker = ElementMaker(namespace=None, nsmap={None: "http://www.w3.org/1999/xhtml"})
         html = element_maker.html(E.head(E.title("VASP K-point grid Convergence")),
                                   E.body(E.h1("VASP K-point grid Convergence"),
-                                  E.h2('Structure'),
-                                  E.pre(str(self.structure)),
-                                  E.h2('Convergence'),
-                                  E.p(E.img(src='convergence.jpg', width="800", height="600", alt="Forces")),
-                                  ))
+                                         E.h2('Structure'),
+                                         E.pre(str(self.structure)),
+                                         E.h2('Convergence'),
+                                         E.p(E.img(src='convergence.jpg', width="800", height="600", alt="Forces")),
+                                         ))
 
         return self.report_end(html, file_format)

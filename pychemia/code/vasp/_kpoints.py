@@ -87,7 +87,7 @@ def write_kpoints(kp, filepath='KPOINTS'):
     wf.write('\n')
     if kp.kmode == 'cartesian' or kp.kmode == 'reciprocal':
         wf.write(str(kp.nkpt) + '\n')
-        wf.write(kp.kmode.title()+'\n')
+        wf.write(kp.kmode.title() + '\n')
         for i in range(kp.nkpt):
             wf.write(" %15.7f %15.7f %15.7f %20.7f\n"
                      % (kp.kpoints_list[i, 0],
@@ -96,7 +96,7 @@ def write_kpoints(kp, filepath='KPOINTS'):
                         kp.weights[i]))
     elif kp.kmode == 'gamma' or kp.kmode == 'monkhorst-pack':
         wf.write('0\n')
-        wf.write(kp.kmode.title()+'\n')
+        wf.write(kp.kmode.title() + '\n')
         wf.write(" %7d %7d %7d\n" % tuple(kp.grid))
         wf.write(" %7.4f %7.4f %7.4f\n" % tuple(kp.shifts))
 

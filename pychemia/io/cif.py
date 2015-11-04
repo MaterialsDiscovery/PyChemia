@@ -101,13 +101,13 @@ def get_singlecifs(dirname, verbose=False):
     single_cifs = []
     lst = [x for x in _os.listdir(dirname) if x[-3:] == 'cif']
     if verbose:
-        print('Found '+str(len(lst))+' cifs')
+        print('Found ' + str(len(lst)) + ' cifs')
 
     for cif in lst:
         path = dirname + '/' + cif
         if is_multistructure(path):
             if verbose:
-                print(path+' is multistructure')
+                print(path + ' is multistructure')
             cifdir = cif_expand(path)
             sublst = [x for x in _os.listdir(cifdir) if x[-3:] == 'cif']
             for subcif in sublst:

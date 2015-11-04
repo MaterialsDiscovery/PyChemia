@@ -6,7 +6,6 @@ from pychemia.serializer import PyChemiaJsonable, generic_serializer
 Definition of the set of k-points in reciprocal space
 """
 
-
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2014"
 __version__ = "1.1"
@@ -258,7 +257,7 @@ class KPoints(PyChemiaJsonable):
             vol = 1.0 / lattice.volume
             density_of_kpoints = number_of_kpoints / vol
 
-        factor = int(density_of_kpoints**0.3333333333)
+        factor = int(density_of_kpoints ** 0.3333333333)
 
         while True:
             ini_density = density_of_kpoints
@@ -267,7 +266,7 @@ class KPoints(PyChemiaJsonable):
                                   int(max(ceil(factor * rlattice.b), 1)),
                                   int(max(ceil(factor * rlattice.c), 1))])
 
-            #print self.grid, factor
+            # print self.grid, factor
 
             # The volume in reciprocal space is the inverse of the volume in real space
             fin_density = float(np.prod(self.grid) * lattice.volume)
@@ -284,6 +283,6 @@ class KPoints(PyChemiaJsonable):
 
     def get_density_of_kpoints(self, lattice):
 
-        assert(self.kmode in ['gamma', 'monkhorst-pack'])
+        assert (self.kmode in ['gamma', 'monkhorst-pack'])
         vol = 1.0 / lattice.volume
         return self.number_of_kpoints / vol

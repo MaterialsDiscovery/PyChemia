@@ -3,7 +3,6 @@ from _searcher import Searcher
 
 
 class ParticleSwarm(Searcher):
-
     def __init__(self, population, params=None, fraction_evaluated=0.90, generation_size=32, stabilization_limit=10):
         """
         Implementation fo the Particle Swarm Optimization algorithm for global minimization
@@ -70,7 +69,7 @@ class ParticleSwarm(Searcher):
             pcm_log.debug('Moving %d %s. Intensity: %7.3f' % (i, str(entry_id), intensity[entry_id]))
 
             new_selection[entry_id] = self.population.move(entry_id, selection[0], factor=self.beta0, in_place=False)
-            factor = self.alpha0*(self.delta**self.current_generation)
+            factor = self.alpha0 * (self.delta ** self.current_generation)
             self.population.move_random(new_selection[entry_id], factor=factor, in_place=True)
 
         for entry_id in selection:

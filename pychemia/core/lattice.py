@@ -3,7 +3,6 @@ import random
 import itertools
 import numpy as np
 from math import ceil, sqrt, cos, sin, radians, acos
-
 from pychemia.utils.mathematics import length_vectors, angle_vectors, wrap2_pmhalf, \
     unit_vector, rotation_matrix_around_axis_angle, angle_vector
 from .composition import Composition
@@ -58,9 +57,9 @@ array([ 60.,  60.,  60.])
         else:
             cell = np.array(cell)
         if cell.shape == (3,):
-            cell = cell*np.eye(3)
+            cell = cell * np.eye(3)
         elif cell.shape == ():
-            cell = cell*np.eye(3)
+            cell = cell * np.eye(3)
 
         self._periodicity = None
         self.set_periodicity(periodicity)
@@ -610,7 +609,7 @@ array([[ True,  True,  True,  True],
 
             covalent_distance = sum(covalent_radius([symbols[i], symbols[j]]))
             if mindist < tolerance * covalent_distance:
-                factor = (tolerance+extra) * covalent_distance / mindist
+                factor = (tolerance + extra) * covalent_distance / mindist
                 v1, v2, v3 = vector_set_perpendicular(eigv)
                 matrix_a = matrix_from_eig(v1, v2, v3, factor, 1, 1)
                 lattice = Lattice(np.dot(matrix_a, lattice.cell))

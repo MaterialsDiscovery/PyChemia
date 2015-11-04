@@ -3,8 +3,10 @@ from pychemia import Structure
 
 try:
     import pyspglib
+
     try:
         import pyspglib.spglib
+
         if 'primitive' not in pyspglib.spglib.__dict__ and 'primitive' in pyspglib.spglib.spg.__dict__:
             USE_SPGLIB = True
         else:
@@ -56,7 +58,7 @@ u'Fm-3m'
 
         # Get a list of indices for each atom in structure
         # Indices starting in 1
-        self._numbers = np.array([structure.species.index(x)+1 for x in structure.symbols], dtype='intc')
+        self._numbers = np.array([structure.species.index(x) + 1 for x in structure.symbols], dtype='intc')
 
     @property
     def transposed(self):
@@ -224,7 +226,7 @@ u'Fm-3m'
 
         cell = np.array(cell.T, dtype='double', order='C')
         reduced = np.array(pos[:natom_bravais], dtype='double', order='C')
-        symbols = [self.structure.species[x] for x in (numbers[:natom_bravais]-1)]
+        symbols = [self.structure.species[x] for x in (numbers[:natom_bravais] - 1)]
 
         return Structure(cell=cell, symbols=symbols, reduced=reduced)
 
@@ -247,7 +249,7 @@ u'Fm-3m'
         numbers = np.array(self._numbers, dtype='intc')
 
         natom_prim = pyspglib.spglib.spg.primitive(cell, reduced, numbers, symprec, angle_tolerance)
-        symbols = [self.structure.species[x] for x in (numbers[:natom_prim]-1)]
+        symbols = [self.structure.species[x] for x in (numbers[:natom_prim] - 1)]
         reduced = reduced[:natom_prim]
 
         if natom_prim > 0:
@@ -257,7 +259,6 @@ u'Fm-3m'
 
 
 def symmetrize(structure, initial_symprec=0.01, final_symprec=0.1, delta_symprec=0.01):
-
     if structure.natom == 1:
         return structure.copy()
     sym = StructureSymmetry(structure)

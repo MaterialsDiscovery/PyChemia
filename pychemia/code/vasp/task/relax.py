@@ -19,7 +19,6 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class IonRelaxation(Relaxator, Task):
-
     def __init__(self, structure, workdir='.', target_forces=1E-3, waiting=False, binary='vasp',
                  encut=1.3, kp_grid=None, kp_density=1E4, relax_cell=True, max_calls=10):
 
@@ -119,9 +118,9 @@ class IonRelaxation(Relaxator, Task):
         # How to change EDIFFG
         if max_force > self.target_forces or max_stress > self.target_forces:
             if self.relax_cell:
-                vj.input_variables.variables['EDIFFG'] = round_small(-0.01*max(max_force, max_stress))
+                vj.input_variables.variables['EDIFFG'] = round_small(-0.01 * max(max_force, max_stress))
             else:
-                vj.input_variables.variables['EDIFFG'] = round_small(-0.01*max_force)
+                vj.input_variables.variables['EDIFFG'] = round_small(-0.01 * max_force)
 
         pcm_log.debug('Current Values: ISIF: %2d   IBRION: %2d   EDIFF: %7.1E \tEDIFFG: %7.1E' %
                       (vj.input_variables.variables['ISIF'],
@@ -131,7 +130,7 @@ class IonRelaxation(Relaxator, Task):
 
         # How to change EDIFF
         if vj.input_variables.variables['EDIFF'] > -0.01 * vj.input_variables.variables['EDIFFG']:
-            vj.input_variables.variables['EDIFF'] = round_small(-0.01*vj.input_variables.variables['EDIFFG'])
+            vj.input_variables.variables['EDIFF'] = round_small(-0.01 * vj.input_variables.variables['EDIFFG'])
         else:
             vj.input_variables.variables['EDIFF'] = 1E-4
 
@@ -227,19 +226,19 @@ class IonRelaxation(Relaxator, Task):
                     vasp_stdout = read_vasp_stdout(filename=filename)
                     if len(vasp_stdout['iterations']) > 0:
                         pcm_log.debug('[%s] SCF: %s' % (os.path.basename(self.workdir), str(vasp_stdout['iterations'])))
-                    # if len(vasp_stdout['energies']) > 2:
-                    #     energy_str = ' %9.3E' % vasp_stdout['energies'][0]
-                    #     for i in range(1, len(vasp_stdout['energies'])):
-                    #         if vasp_stdout['energies'][i] < vasp_stdout['energies'][i-1]:
-                    #             energy_str += ' >'
-                    #         else:
-                    #             energy_str += ' <'
-                    #     pcm_log.debug(energy_str)
+                        # if len(vasp_stdout['energies']) > 2:
+                        #     energy_str = ' %9.3E' % vasp_stdout['energies'][0]
+                        #     for i in range(1, len(vasp_stdout['energies'])):
+                        #         if vasp_stdout['energies'][i] < vasp_stdout['energies'][i-1]:
+                        #             energy_str += ' >'
+                        #         else:
+                        #             energy_str += ' <'
+                        #     pcm_log.debug(energy_str)
 
                 time.sleep(10)
 
         outcars = sorted([x for x in os.listdir(self.workdir) if x.startswith('OUTCAR')])[::-1]
-        vo = VaspOutput(self.workdir+os.sep+outcars[0])
+        vo = VaspOutput(self.workdir + os.sep + outcars[0])
         forces = vo.forces
         stress = vo.stress
         if len(outcars) > 1:
@@ -327,13 +326,13 @@ class IonRelaxation(Relaxator, Task):
         element_maker = ElementMaker(namespace=None, nsmap={None: "http://www.w3.org/1999/xhtml"})
         html = element_maker.html(E.head(E.title("VASP Ion Relaxation")),
                                   E.body(E.h1("VASP Ion Relaxation"),
-                                  E.h2('Initial Structure'),
-                                  E.pre(str(self.structure)),
-                                  E.h2('Forces Minimization'),
-                                  E.p(E.img(src='forces.jpg', width="800", height="600", alt="Forces")),
-                                  E.h2('Stress Minimization'),
-                                  E.p(E.img(src='stress.jpg', width="800", height="600", alt="Stress"))
-                                  ))
+                                         E.h2('Initial Structure'),
+                                         E.pre(str(self.structure)),
+                                         E.h2('Forces Minimization'),
+                                         E.p(E.img(src='forces.jpg', width="800", height="600", alt="Forces")),
+                                         E.h2('Stress Minimization'),
+                                         E.p(E.img(src='stress.jpg', width="800", height="600", alt="Stress"))
+                                         ))
 
         return self.report_end(html, file_format)
 

@@ -12,7 +12,6 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class GeneticAlgorithm(Searcher):
-
     def __init__(self, population, params=None, fraction_evaluated=0.95, generation_size=32, stabilization_limit=10):
         Searcher.__init__(self, population, fraction_evaluated, generation_size, stabilization_limit)
         self.nelite = None

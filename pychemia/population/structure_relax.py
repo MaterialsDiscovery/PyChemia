@@ -14,7 +14,6 @@ if USE_MONGO:
 
 
 class StructurePopulation(Population):
-
     def __init__(self, name, composition=None, tag='global', target_forces=1E-3, value_tol=1E-2,
                  distance_tol=0.3, min_comp_mult=2, max_comp_mult=8, pcdb_source=None):
         """
@@ -104,7 +103,7 @@ class StructurePopulation(Population):
             raise ValueError('No composition associated to this population')
         comp = self.composition.composition.copy()
         rnd = random.random()
-        natom_limit = self.max_comp_mult*self.composition.natom/self.composition.gcd
+        natom_limit = self.max_comp_mult * self.composition.natom / self.composition.gcd
         condition = {'structure.nspecies': self.composition.nspecies,
                      'structure.natom': {'$lte': natom_limit}}
 
@@ -132,11 +131,11 @@ class StructurePopulation(Population):
                 if entry is not None:
                     origin = entry['_id']
                     structure = self.pcdb_source.get_structure(entry['_id'])
-                    factor = covalent_radius(self.composition.species[0])/covalent_radius(structure.species[0])
+                    factor = covalent_radius(self.composition.species[0]) / covalent_radius(structure.species[0])
                     print 'From source: %s Spacegroup: %d Scaling: %7.3f' % (structure.formula,
                                                                              entry['properties']['spacegroup'],
                                                                              factor)
-                    structure.set_cell(np.dot(factor*np.eye(3), structure.cell))
+                    structure.set_cell(np.dot(factor * np.eye(3), structure.cell))
                     structure.symbols = structure.natom * self.composition.species
                     self.source_blacklist.append(entry['_id'])
                     break
@@ -168,7 +167,7 @@ class StructurePopulation(Population):
             idiff = diffs[i]
             if idiff < self.value_tol:
                 ident1 = selection[i]
-                ident2 = selection[i+1]
+                ident2 = selection[i + 1]
                 pcm_log.debug('Testing distances between %s and %s' % (str(ident1), str(ident2)))
                 distance = self.distance(ident1, ident2)
                 # print 'Distance = ', distance
@@ -184,16 +183,16 @@ class StructurePopulation(Population):
         dupes_list = []
         selection = self.ids_sorted(ids)
         print 'Searching duplicates in %d structures' % len(selection)
-        for i in range(len(selection)-1):
+        for i in range(len(selection) - 1):
             print i, 'of', len(selection)
             entry_id = selection[i]
             value_i = self.value(entry_id)
-            for j in range(i+1, len(selection)):
+            for j in range(i + 1, len(selection)):
                 entry_jd = selection[j]
                 if fast and entry_jd in dupes_list:
                     continue
                 value_j = self.value(entry_jd)
-                if abs(value_i-value_j) < self.value_tol:
+                if abs(value_i - value_j) < self.value_tol:
                     distance = self.distance(entry_id, entry_jd)
                     if distance < self.distance_tol:
                         if entry_id in dupes_dict:
@@ -212,7 +211,7 @@ class StructurePopulation(Population):
 
         ret = np.zeros((len(ids), len(ids)))
 
-        for i in range(len(ids)-1):
+        for i in range(len(ids) - 1):
             for j in range(i, len(ids)):
                 ret[i, j] = self.distance(ids[i], ids[j])
                 ret[j, i] = ret[i, j]

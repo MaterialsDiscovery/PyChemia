@@ -8,7 +8,6 @@ from pychemia import pcm_log, Structure
 
 
 class KPointConvergence:
-
     def __init__(self, structure, workdir='.', slater_path='.', waiting=False, energy_tolerance=1E-3,
                  output_file='results.json'):
 
@@ -46,7 +45,7 @@ class KPointConvergence:
         energies = []
 
         while True:
-            density = n**3
+            density = n ** 3
             kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=density, force_odd=True)
             if np.sum(grid) != np.sum(kpoints.grid):
                 pcm_log.debug('Trial density: %d  Grid: %s' % (density, kpoints.grid))
@@ -86,7 +85,7 @@ class KPointConvergence:
             else:
                 n += 2
 
-            if len(energies) > 2 and abs(max(energies[-3:])-min(energies[-3:])) < self.energy_tolerance:
+            if len(energies) > 2 and abs(max(energies[-3:]) - min(energies[-3:])) < self.energy_tolerance:
                 break
 
     def save_json(self):
@@ -97,7 +96,6 @@ class KPointConvergence:
 
 
 def kpoint_convergence():
-
     st = Structure.load_json('structure.json')
     job = KPointConvergence(st)
     job.run()

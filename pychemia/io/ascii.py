@@ -8,7 +8,6 @@ This code was originally created for ASE
 """
 
 import re as _re
-
 from pychemia.utils.constants import bohr_angstrom
 from pychemia.core import Structure
 

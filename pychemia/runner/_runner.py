@@ -93,7 +93,7 @@ class Runner:
                 errf.close()
                 outf.close()
 
-            p = Process(target=worker, args=(dirpath, ))
+            p = Process(target=worker, args=(dirpath,))
             p.start()
             p.join()
 
@@ -156,4 +156,3 @@ class Runner:
 
         proc = Process(target=superworker, args=(workdirs, worker, checker))
         proc.start()
-

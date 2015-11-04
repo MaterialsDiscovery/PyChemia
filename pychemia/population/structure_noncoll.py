@@ -1,14 +1,11 @@
 import os
-
 import numpy as np
-
 import pychemia
 from _population import Population
 from pychemia import pcm_log
 
 
 class PopulationNonColl(Population):
-
     def __init__(self, name, source_dir='.', mag_atoms=None):
         Population.__init__(self, name, 'global')
         if not os.path.isfile(source_dir + os.sep + 'INCAR'):

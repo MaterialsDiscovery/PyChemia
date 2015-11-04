@@ -2,11 +2,9 @@ import os
 import time
 import numpy as np
 from threading import Thread
-
 from ase.calculators.lj import LennardJones
 from ase.optimize import QuasiNewton
 from ase.constraints import FixAtoms, UnitCellFilter
-
 import pychemia
 import pychemia.external.ase
 from pychemia.serializer import generic_serializer

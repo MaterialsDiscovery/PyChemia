@@ -10,7 +10,6 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class Polarization(Task):
-
     def report(self):
         pass
 

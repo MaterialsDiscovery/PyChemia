@@ -4,7 +4,6 @@ Routines to read and write POSCAR file
 
 import os
 import numpy as _np
-
 import pychemia
 
 
@@ -19,7 +18,7 @@ def read_poscar(path='POSCAR'):
     if os.path.isfile(path):
         poscarfile = path
         if os.path.dirname(path) != '':
-            potcarfile = os.path.dirname(path)+os.sep+'POTCAR'
+            potcarfile = os.path.dirname(path) + os.sep + 'POTCAR'
         else:
             potcarfile = 'POTCAR'
     elif os.path.isdir(path) and os.path.isfile(path + os.sep + 'POSCAR'):
@@ -97,17 +96,17 @@ def write_poscar(structure, filepath='POSCAR', newformat=True):
     ret = ''
     comp = structure.get_composition()
     for i in comp.species:
-        ret += ' '+i
+        ret += ' ' + i
     ret += '\n'
     ret += '1.0\n'
     for i in range(3):
         ret += ' %20.16f %20.16f %20.16f\n' % tuple(structure.cell[i])
     if newformat:
         for i in comp.species:
-            ret += ' '+i
+            ret += ' ' + i
         ret += '\n'
     for i in comp.values:
-        ret += ' '+str(i)
+        ret += ' ' + str(i)
     ret += '\n'
     ret += 'Direct\n'
     for i in range(structure.natom):
@@ -128,28 +127,27 @@ def get_species(path):
 
 
 def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None, pspfiles=None):
-
     comp = structure.get_composition()
     ret = ''
-    psppath = os.getenv('HOME') + '/.vasp/PP-VASP/'+pspdir
+    psppath = os.getenv('HOME') + '/.vasp/PP-VASP/' + pspdir
     if not os.path.exists(psppath):
-        raise ValueError("The path for VASP Pseudo-potentials does not exists: "+psppath)
+        raise ValueError("The path for VASP Pseudo-potentials does not exists: " + psppath)
 
     if pspfiles is None:
         pspfiles = []
         for i in comp.species:
             if options is not None and i in options:
                 if isinstance(options[i], basestring):
-                    pspfile = psppath+os.sep+i+'_'+options[i]+'/POTCAR'
+                    pspfile = psppath + os.sep + i + '_' + options[i] + '/POTCAR'
                 elif isinstance(options[i], list):
                     for j in options[i]:
-                        pspfile = psppath+os.sep+i+'_'+options[i][j]+'/POTCAR'
+                        pspfile = psppath + os.sep + i + '_' + options[i][j] + '/POTCAR'
                         if os.path.isfile(psppath):
                             break
 
             else:
                 for j in ['', '_sv']:
-                    pspfile = psppath+os.sep+i+j+'/POTCAR'
+                    pspfile = psppath + os.sep + i + j + '/POTCAR'
                     if os.path.isfile(pspfile):
                         break
                     else:

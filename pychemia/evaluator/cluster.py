@@ -10,7 +10,7 @@ def cluster_worker(db_settings):
         pcdb = pychemia.db.get_database(db_settings)
         population = pychemia.population.LJCluster(pcdb)
 
-        entry = population.pcdb.db.pychemia_entries.find_one({'status.'+population.tag: True,
+        entry = population.pcdb.db.pychemia_entries.find_one({'status.' + population.tag: True,
                                                               'status.lock': {'$exists': False},
                                                               'properties': {}}, {'_id': 1})
         if entry is not None:
@@ -27,7 +27,7 @@ def cluster_evaluator(db_settings, nparal):
     population = pychemia.population.LJCluster(pcdb)
     print 'Staring evaluator for ', population.name
     while True:
-        entry = population.pcdb.db.pychemia_entries.find_one({'status.'+population.tag: True,
+        entry = population.pcdb.db.pychemia_entries.find_one({'status.' + population.tag: True,
                                                               'status.lock': {'$exists': False},
                                                               'properties': {}}, {'_id': 1})
 
@@ -39,7 +39,7 @@ def cluster_evaluator(db_settings, nparal):
 
         if create_pool:
             pool = Pool(processes=nparal)
-            pool.map(cluster_worker, nparal*[db_settings])
+            pool.map(cluster_worker, nparal * [db_settings])
             pool.close()
             pool.join()
 

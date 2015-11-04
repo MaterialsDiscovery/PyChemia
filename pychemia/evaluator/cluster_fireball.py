@@ -11,7 +11,7 @@ def cluster_fb_worker(db_settings):
         pcdb = pychemia.db.get_database(db_settings)
         population = pychemia.population.LJCluster(pcdb)
 
-        entry = population.pcdb.db.pychemia_entries.find_one({'status.'+population.tag: True,
+        entry = population.pcdb.db.pychemia_entries.find_one({'status.' + population.tag: True,
                                                               'status.lock': {'$exists': False},
                                                               'properties': {}}, {'_id': 1})
         if entry is not None:
@@ -24,11 +24,11 @@ def cluster_fb_worker(db_settings):
             fb.set_inputs()
             sp = fb.run()
             sp.wait()
-            so = pychemia.code.fireball.read_fireball_stdout(fb.workdir+os.sep+'fireball.log')
+            so = pychemia.code.fireball.read_fireball_stdout(fb.workdir + os.sep + 'fireball.log')
             forces = pychemia.serializer.generic_serializer(so['forces'][-1])
             energy = so['energy'][-1]['ETOT']
             properties = {'forces': forces, 'energy': energy}
-            structure = pychemia.code.fireball.read_geometry_bas(fb.workdir+os.sep+'answer.bas')
+            structure = pychemia.code.fireball.read_geometry_bas(fb.workdir + os.sep + 'answer.bas')
             population.pcdb.update(entry['_id'], structure=structure, properties=properties)
             population.pcdb.unlock(entry['_id'])
         else:
@@ -40,7 +40,7 @@ def cluster_fb_evaluator(db_settings, nparal):
     population = pychemia.population.LJCluster(pcdb)
     print 'Staring evaluator for ', population.name
     while True:
-        entry = population.pcdb.db.pychemia_entries.find_one({'status.'+population.tag: True,
+        entry = population.pcdb.db.pychemia_entries.find_one({'status.' + population.tag: True,
                                                               'status.lock': {'$exists': False},
                                                               'properties': {}}, {'_id': 1})
 
@@ -52,7 +52,7 @@ def cluster_fb_evaluator(db_settings, nparal):
 
         if create_pool:
             pool = Pool(processes=nparal)
-            pool.map(cluster_fb_worker, nparal*[db_settings])
+            pool.map(cluster_fb_worker, nparal * [db_settings])
             pool.close()
             pool.join()
 

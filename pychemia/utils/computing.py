@@ -49,7 +49,7 @@ def convert_color(s):
 >>> pychemia.utils.computing.convert_color('FF5500')
 (1.0, 0.3333333333333333, 0.0)
     """
-    return float(int(s[:2], 16))/255, float(int(s[2:4], 16))/255, float(int(s[4:6], 16))/255
+    return float(int(s[:2], 16)) / 255, float(int(s[2:4], 16)) / 255, float(int(s[4:6], 16)) / 255
 
 
 def get_int(value):

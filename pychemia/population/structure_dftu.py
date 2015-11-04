@@ -8,7 +8,6 @@ from pychemia.utils.mathematics import gram_smith_qr
 
 
 class PopulationDFTU(Population):
-
     def __init__(self, name, abinit_input='abinit.in', natpawu=None, oxidations=None):
 
         Population.__init__(self, name, 'global')
@@ -43,7 +42,7 @@ class PopulationDFTU(Population):
 
     @property
     def ndim(self):
-        return 2*self.maxlpawu+1
+        return 2 * self.maxlpawu + 1
 
     def __str__(self):
         ret = ' Population LDA+U\n\n'
@@ -80,7 +79,7 @@ class PopulationDFTU(Population):
             nelect = self.oxidations[0]
         val = [x for x in list(itertools.product(range(2), repeat=self.ndim)) if sum(x) == nelect]
         ii = val[np.random.randint(len(val))]
-        dd = 0.0*np.random.random_sample((self.ndim,))
+        dd = 0.0 * np.random.random_sample((self.ndim,))
         I[0] = ii
         D[0] = dd
         I[3] = ii
@@ -93,7 +92,7 @@ class PopulationDFTU(Population):
             nelect = self.oxidations[1]
         val = [x for x in list(itertools.product(range(2), repeat=self.ndim)) if sum(x) == nelect]
         ii = val[np.random.randint(len(val))]
-        dd = 0.0*np.random.random_sample((self.ndim,))
+        dd = 0.0 * np.random.random_sample((self.ndim,))
         I[1] = ii
         D[1] = dd
         I[2] = ii
@@ -133,7 +132,7 @@ class PopulationDFTU(Population):
         ret = {}
         for i in range(len(ids)):
             entry_i = self.get_entry(ids[i])
-            for j in range(i+1, len(ids)):
+            for j in range(i + 1, len(ids)):
                 entry_j = self.get_entry(ids[j])
                 if self.distance(ids[i], ids[j]) < 1E-3:
                     if entry_i in ret:
@@ -146,10 +145,10 @@ class PopulationDFTU(Population):
         entry_j = self.get_entry(entry_jd)
         dmat_i = entry_i['properties']['P']
         dmat_j = entry_j['properties']['P']
-        dist_P = np.linalg.norm(dmat_j-dmat_i)
+        dist_P = np.linalg.norm(dmat_j - dmat_i)
         dmat_i = entry_i['properties']['d']
         dmat_j = entry_j['properties']['d']
-        dist_d = np.linalg.norm(dmat_j-dmat_i)
+        dist_d = np.linalg.norm(dmat_j - dmat_i)
         return dist_d + dist_P
 
     def move_random(self, entry_id, factor=0.2, in_place=False, kind='move'):
@@ -164,7 +163,7 @@ class PopulationDFTU(Population):
         dmat_i = np.array(entry_i['properties']['P'])
         entry_j = self.get_entry(entry_jd)
         dmat_j = np.array(entry_j['properties']['P'])
-        dmat_i += factor*(dmat_j-dmat_i)
+        dmat_i += factor * (dmat_j - dmat_i)
 
     def recover(self):
         pass
@@ -204,7 +203,6 @@ def params2dmatpawu(params, ndim):
 
 
 def dmatpawu2params(dmatpawu, ndim):
-
     dm = np.array(dmatpawu).reshape((-1, ndim, ndim))
     eigval = np.array([np.linalg.eigh(x)[0] for x in dm])
     iii = np.array(np.round(eigval), dtype=int)
@@ -218,13 +216,12 @@ def dmatpawu2params(dmatpawu, ndim):
 
 
 def get_pattern(params, ndim):
-
     eigvec = np.array(params['eigvec']).reshape((-1, ndim, ndim))
     natpawu = len(eigvec)
     connection = np.zeros((natpawu, natpawu, ndim, ndim))
 
     bb = np.dot(eigvec[0], np.linalg.inv(eigvec[3]))
-    #connection = np.array(np.round(np.diagonal(bb)), dtype=int)
+    # connection = np.array(np.round(np.diagonal(bb)), dtype=int)
 
     iii = np.array(params['I'], dtype=int).reshape((-1, ndim))
 

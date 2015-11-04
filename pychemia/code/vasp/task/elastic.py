@@ -14,7 +14,6 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class ElasticModuli(Task):
-
     def __init__(self, structure, workdir='.', binary='vasp', encut=1.3, kpoints=None, kp_density=1E4):
 
         self.encut = encut
@@ -88,7 +87,7 @@ class ElasticModuli(Task):
         for i in range(len(data)):
             for j in range(len(data[i])):
                 if data[i, j] > 1E-10:
-                    if data[i, j] > 0.75*np.max(data.flatten()):
+                    if data[i, j] > 0.75 * np.max(data.flatten()):
                         color = 'white'
                     else:
                         color = 'black'
@@ -108,7 +107,7 @@ class ElasticModuli(Task):
         for i in range(len(data)):
             for j in range(len(data[i])):
                 if np.abs(data[i, j]) > 1E-10:
-                    if np.abs(data[i, j]) > 0.75*maxdata:
+                    if np.abs(data[i, j]) > 0.75 * maxdata:
                         color = 'white'
                     else:
                         color = 'black'
@@ -137,7 +136,7 @@ class ElasticModuli(Task):
 
     def report(self, file_format='html'):
         from lxml.builder import ElementMaker, E
-        self.plot(filedir=self.workdir+os.sep+'REPORT', file_format='jpg')
+        self.plot(filedir=self.workdir + os.sep + 'REPORT', file_format='jpg')
 
         style = """
 table {
@@ -173,19 +172,20 @@ table#t01 th	{
         element_maker = ElementMaker(namespace=None, nsmap={None: "http://www.w3.org/1999/xhtml"})
         html = element_maker.html(E.head(E.title("VASP Elastic Moduli"), E.style(style)),
                                   E.body(E.h1("VASP Elastic Moduli"),
-                                  E.h2('Structure'),
-                                  E.pre(str(self.structure)),
-                                  E.h2('Elastic Moduli'),
-                                  E.p(E.img(src='elastic.jpg', width="900", height="500", alt="Static Calculation")),
-                                  E.table(E.tr(E.th('Property'), E.th('Units'), E.th('Voigt'), E.th('Reuss'),
-                                               E.th('Average')), E.tr(*tuple(table)), id="t01"), E.br()
-                                  ))
+                                         E.h2('Structure'),
+                                         E.pre(str(self.structure)),
+                                         E.h2('Elastic Moduli'),
+                                         E.p(E.img(src='elastic.jpg', width="900", height="500",
+                                                   alt="Static Calculation")),
+                                         E.table(E.tr(E.th('Property'), E.th('Units'), E.th('Voigt'), E.th('Reuss'),
+                                                      E.th('Average')), E.tr(*tuple(table)), id="t01"), E.br()
+                                         ))
 
         return self.report_end(html, file_format)
 
     def get_elastic_moduli(self):
 
-        if not os.path.isfile(self.workdir+os.sep+'OUTCAR'):
+        if not os.path.isfile(self.workdir + os.sep + 'OUTCAR'):
             print 'OUTCAR file not found'
             return
 
@@ -201,7 +201,6 @@ table#t01 th	{
 
 
 def elastic_moduli(filename='OUTCAR'):
-
     ret = {}
     rf = open(filename)
     data = rf.read()
@@ -217,7 +216,6 @@ def elastic_moduli(filename='OUTCAR'):
 
 
 def mechanical_properties(elastic_moduli):
-
     elastic_moduli = np.array(elastic_moduli)
 
     # Forcing the matrix to be symmetric
@@ -226,31 +224,31 @@ def mechanical_properties(elastic_moduli):
     elastic_moduli_inv = np.linalg.inv(elastic_moduli)
 
     # Voigt
-    Kv = np.trace(elastic_moduli[:3, :3])/90.0 + 2*np.sum(np.triu(elastic_moduli[:3, :3], 1))/90.0
+    Kv = np.trace(elastic_moduli[:3, :3]) / 90.0 + 2 * np.sum(np.triu(elastic_moduli[:3, :3], 1)) / 90.0
     Gv = np.trace(elastic_moduli[:3, :3]) - np.sum(np.triu(elastic_moduli[:3, :3], 1)) + \
-                  3*np.trace(elastic_moduli[3:6, 3:6])
+         3 * np.trace(elastic_moduli[3:6, 3:6])
     Gv /= 150
 
-    Ev = 1.0/3.0/Gv+1.0/9.0/Kv
-    Ev = 1.0/Ev
+    Ev = 1.0 / 3.0 / Gv + 1.0 / 9.0 / Kv
+    Ev = 1.0 / Ev
 
-    vv = 3.0*Gv/(3.0*Kv+Gv)
-    vv = 1.0-vv
+    vv = 3.0 * Gv / (3.0 * Kv + Gv)
+    vv = 1.0 - vv
     vv /= 2
 
     # Reuss
-    Kr = np.trace(elastic_moduli_inv[:3, :3]) + 2*np.sum(np.triu(elastic_moduli_inv[:3, :3], 1))
-    Kr = 0.1/Kr
+    Kr = np.trace(elastic_moduli_inv[:3, :3]) + 2 * np.sum(np.triu(elastic_moduli_inv[:3, :3], 1))
+    Kr = 0.1 / Kr
 
-    Gr = 4 * np.trace(elastic_moduli_inv[:3, :3]) - 4*np.sum(np.triu(elastic_moduli_inv[:3, :3], 1)) + \
-         3*np.trace(elastic_moduli_inv[3:6, 3:6])
-    Gr = 1.5/Gr
+    Gr = 4 * np.trace(elastic_moduli_inv[:3, :3]) - 4 * np.sum(np.triu(elastic_moduli_inv[:3, :3], 1)) + \
+         3 * np.trace(elastic_moduli_inv[3:6, 3:6])
+    Gr = 1.5 / Gr
 
-    Er = 1.0/3.0/Gr+1.0/9.0/Kr
-    Er = 1.0/Er
+    Er = 1.0 / 3.0 / Gr + 1.0 / 9.0 / Kr
+    Er = 1.0 / Er
 
-    vr = 3.0*Gr/(3.0*Kr+Gr)
-    vr = 1.0-vr
+    vr = 3.0 * Gr / (3.0 * Kr + Gr)
+    vr = 1.0 - vr
     vr /= 2
 
     ret = {'Bulk modulus': {'units': 'GPa', 'Voigt': Kv, 'Reuss': Kr},

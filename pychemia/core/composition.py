@@ -1,7 +1,6 @@
 from numpy import array, argsort
 from fractions import gcd as _gcd
 from math import pi
-
 from pychemia.utils.periodic import atomic_symbols, electronegativity, atomic_number, covalent_radius
 
 
@@ -64,8 +63,8 @@ class Composition:
         :rtype: None
         """
         for i in value:
-            assert(i in atomic_symbols)
-            assert(isinstance(value[i], int))
+            assert (i in atomic_symbols)
+            assert (isinstance(value[i], int))
         self._composition = value.copy()
 
     @property
@@ -111,12 +110,12 @@ class Composition:
             if jump > 0:  # This char belongs to the current atom, move on
                 jump -= 1
             elif value[i].isupper():  # Atom Name starts with Uppercase
-                if i+1 < len(value) and value[i+1].islower():  # Atom name has more than 1 char
-                    if i+2 < len(value) and value[i+2].islower():  # Atom name has more than 2 chars
-                        specie = value[i:i+3]
+                if i + 1 < len(value) and value[i + 1].islower():  # Atom name has more than 1 char
+                    if i + 2 < len(value) and value[i + 2].islower():  # Atom name has more than 2 chars
+                        specie = value[i:i + 3]
                         jump = 2
                     else:
-                        specie = value[i:i+2]
+                        specie = value[i:i + 2]
                         jump = 1
                 else:
                     specie = value[i]
@@ -124,8 +123,8 @@ class Composition:
                 j = 1
                 number = ''
                 while True:
-                    if i+jump+j < len(value) and value[i+jump+j].isdigit():
-                        number += value[i+jump+j]
+                    if i + jump + j < len(value) and value[i + jump + j].isdigit():
+                        number += value[i + jump + j]
                         j += 1
                     else:
                         break
@@ -171,7 +170,7 @@ class Composition:
             else:
                 n = int(m.group(2))
 
-            for j in range(n*nunits):
+            for j in range(n * nunits):
                 composition.append(m.group(1))
 
         return composition
@@ -318,19 +317,19 @@ True
     def species_bin(self):
         spec_bin = 0L
         for i in atomic_number(self.species):
-            spec_bin += 2**i
+            spec_bin += 2 ** i
         return spec_bin
 
     def species_hex(self):
         spec_hex = 0L
         i = 0
         for atom_number in sorted(atomic_number(self.species)):
-            spec_hex += atom_number*(256**i)
+            spec_hex += atom_number * (256 ** i)
             i += 1
         return spec_hex
 
     def __repr__(self):
-        return 'Composition('+str(self.composition)+')'
+        return 'Composition(' + str(self.composition) + ')'
 
     def __str__(self):
         ret = ''
@@ -369,6 +368,5 @@ True
         for specie in self:
             number_atoms_specie = self.composition[specie]
             # Pack each atom in a cube (2*r)^3
-            volume += factor*number_atoms_specie*covalent_radius(specie)**3
+            volume += factor * number_atoms_specie * covalent_radius(specie) ** 3
         return volume
-

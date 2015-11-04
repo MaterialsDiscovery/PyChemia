@@ -1,8 +1,6 @@
 import os
 import subprocess
-
 import pychemia
-
 
 path = 'pychemia/test/data'
 

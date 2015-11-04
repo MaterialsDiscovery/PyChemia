@@ -5,4 +5,3 @@ import task
 
 if USE_MONGO and USE_SPGLIB:
     from _evaluator_daemon import EvaluatorDaemon
-

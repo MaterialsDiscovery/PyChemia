@@ -6,7 +6,6 @@ from _population import Population
 
 
 class EuclideanPopulation(Population):
-
     def __init__(self, function, ndim, limits, local_minimization=False):
         """
         Creates a simple population of points in R^N with
@@ -60,7 +59,7 @@ class EuclideanPopulation(Population):
 
     def add_random(self):
         x = np.random.random_sample(self.ndim)
-        x = x*(self.limits[:, 1]-self.limits[:, 0])+self.limits[:, 0]
+        x = x * (self.limits[:, 1] - self.limits[:, 0]) + self.limits[:, 0]
         return self.new_entry(x), None
 
     def check_duplicates(self, ids):
@@ -69,7 +68,7 @@ class EuclideanPopulation(Population):
             return ret
         for i in range(len(ids)):
             ident1 = ids[i]
-            for j in range(i+1, len(ids)):
+            for j in range(i + 1, len(ids)):
                 ident2 = ids[j]
                 distance = self.distance(ident1, ident2)
                 if distance < 1E-2:
@@ -84,13 +83,13 @@ class EuclideanPopulation(Population):
         parent1 = self.coordinate(ids[0])
         parent2 = self.coordinate(ids[1])
         if self.ndim == 1:
-            son1 = 0.5*(parent1 + parent2)
+            son1 = 0.5 * (parent1 + parent2)
             son2 = np.abs(parent1 - parent2)
         elif self.ndim == 2:
             son1 = np.array([parent1[0], parent2[1]])
             son2 = np.array([parent2[0], parent1[1]])
         else:
-            split = np.random.randint(1, self.ndim-1)
+            split = np.random.randint(1, self.ndim - 1)
             son1 = np.concatenate((parent1[:split], parent2[split:]))
             son2 = np.concatenate((parent2[:split], parent1[split:]))
 
@@ -98,7 +97,7 @@ class EuclideanPopulation(Population):
         # The trivial metric
         x1 = self.db[imember]['x']
         x2 = self.db[jmember]['x']
-        return np.linalg.norm(x2-x1)
+        return np.linalg.norm(x2 - x1)
 
     def enable(self, ident):
         if ident not in self.actives:
@@ -161,7 +160,7 @@ class EuclideanPopulation(Population):
         ret = '('
         for i in range(self.ndim):
             ret += '%5.2f' % self.db[imember]['x'][i]
-            if i < self.ndim-1:
+            if i < self.ndim - 1:
                 ret += ', '
             else:
                 ret += ') -> '
@@ -185,7 +184,7 @@ class EuclideanPopulation(Population):
 
         x1 = self.db[imember]['x']
         x2 = self.db[jmember]['x']
-        newx = x1 + factor*(x2-x1)
+        newx = x1 + factor * (x2 - x1)
         if not in_place:
             new_ident = self.new_identifier()
             self.actives.append(new_ident)
@@ -199,7 +198,7 @@ class EuclideanPopulation(Population):
             self.moves[new_ident] = np.vstack((x1, newx))
         else:
             # print 'With previous'
-            self.moves[new_ident]=np.vstack((self.moves[new_ident], newx))
+            self.moves[new_ident] = np.vstack((self.moves[new_ident], newx))
         # print self.moves[new_ident]
         self.db[new_ident] = {'x': newx, 'fx': None}
         self.evaluate_entry(new_ident)
@@ -219,10 +218,10 @@ class EuclideanPopulation(Population):
         newx = x
         outside = True
         while outside:
-            dx = 2*np.random.random_sample(self.ndim) - 1
+            dx = 2 * np.random.random_sample(self.ndim) - 1
             # print 'Random movement', dx, factor
             dx = unit_vector(dx)
-            newx = x + factor*dx
+            newx = x + factor * dx
             outside = not self.is_inside(newx)
 
         if not in_place:
@@ -278,9 +277,9 @@ class EuclideanPopulation(Population):
     def write_change(self, change):
         # print 'Write Change', change
         if change['change'] == 'promoted':
-            self.db[change['from']]['from']=change['from']
+            self.db[change['from']]['from'] = change['from']
         else:
-            self.db[change['to']]['from']=change['from']
+            self.db[change['to']]['from'] = change['from']
 
     @property
     def actives(self):

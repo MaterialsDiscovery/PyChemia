@@ -7,7 +7,6 @@ from pychemia.code.abinit import InputVariables
 
 
 def structure_from_file(structure_file):
-
     st = None
     if not os.path.isfile(structure_file):
         print "ERROR: Could not open file '%s'" % structure_file

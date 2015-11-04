@@ -1,7 +1,6 @@
 import os as _os
 import shutil as _shutil
 import subprocess as _subprocess
-
 from _function import FunctionEvaluator, FunctionObjectiveFunction
 from abc import ABCMeta, abstractmethod, abstractproperty
 from cluster import cluster_worker, cluster_evaluator, cluster_launcher

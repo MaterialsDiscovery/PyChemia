@@ -13,7 +13,6 @@ except ImportError:
 
 
 class Relaxation(Relaxator):
-
     def __init__(self, structure, relaxator_params=None, workdir='.', kpoints=None, target_forces=1E-3, waiting=False,
                  kp_density=10000):
 
@@ -39,7 +38,7 @@ class Relaxation(Relaxator):
         Relaxator.__init__(self, target_forces)
 
     def set_params(self, params):
-        assert(isinstance(params, dict))
+        assert (isinstance(params, dict))
         if 'slater_path' not in params:
             params['slater_path'] = '.'
         if isinstance(params['slater_path'], basestring):

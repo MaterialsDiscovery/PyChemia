@@ -9,6 +9,7 @@ from pychemia import Structure
 
 try:
     import pyspglib
+
     try:
         import pyspglib.spglib
         from pychemia.symm.symmetry import StructureSymmetry
@@ -29,7 +30,6 @@ try:
 except ImportError:
     print 'SPGLIB not found, symmetry module disabled'
     USE_SPGLIB = False
-
 
 if USE_SPGLIB:
     from .symmetry import StructureSymmetry, symmetrize

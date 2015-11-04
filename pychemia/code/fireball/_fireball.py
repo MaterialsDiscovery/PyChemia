@@ -188,7 +188,7 @@ def read_fireball_stdout(filename):
     symbols = []
     positions = []
     for iline in atom_data.split('\n'):
-        #print iline
+        # print iline
         tmp = iline.split()
         if len(tmp) == 6 and tmp[0].isdigit():
             symbols.append(tmp[1])
@@ -210,7 +210,7 @@ def read_fireball_stdout(filename):
         for iline in idata.split('\n'):
             if 'iatom' in iline:
                 fields = iline.split()
-                forces[iteration, int(fields[2])-1] = np.array(fields[-3:], dtype=float)
+                forces[iteration, int(fields[2]) - 1] = np.array(fields[-3:], dtype=float)
         iteration += 1
 
     energy_data = re.findall(r'---------- T H E  T O T A L  E N E R G Y -----------([\s\w\d\.\-=/]+)--- \n', data)

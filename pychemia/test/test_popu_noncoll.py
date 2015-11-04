@@ -17,5 +17,6 @@ def test_popu_noncoll():
     assert len(popu) == 32
     popu.pcdb.clean()
 
+
 if __name__ == '__main__':
     test_popu_noncoll()

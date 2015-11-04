@@ -5,7 +5,6 @@ Routines anc Classes to manipulate Octopus Inputs
 import os as _os
 import gzip as _gzip
 import numpy as _np
-
 import pychemia
 
 

@@ -1,12 +1,10 @@
 import random
 import itertools
 import numpy as np
-
 from pychemia.utils.mathematics import apply_rotation
 
 
 class StructureChanger:
-
     def __init__(self, structure):
 
         self.old_structure = structure
@@ -23,7 +21,7 @@ class StructureChanger:
 
     def random_permutator(self, forbidden_list=None):
 
-        assert(self.old_structure.nspecies > 1)
+        assert (self.old_structure.nspecies > 1)
         pairs = list(itertools.combinations(self.old_structure.species, 2))
 
         if forbidden_list is None:
@@ -59,7 +57,7 @@ class StructureChanger:
     def random_deform_cell(self, diag=True, nondiag=True, maxdelta=0.01):
 
         # 6 random numbers between -maxdelta and maxdelta
-        stress_eps = np.random.random(6)*2*maxdelta-maxdelta
+        stress_eps = np.random.random(6) * 2 * maxdelta - maxdelta
 
         if diag:
             stress_eps[:3] = 0
@@ -77,7 +75,7 @@ class StructureChanger:
 
     def random_move_one_atom(self, mu=0.1, sigma=0.01):
 
-        index = random.randint(0, len(self.old_structure)-1)
+        index = random.randint(0, len(self.old_structure) - 1)
         radius = np.abs(np.random.normal(mu, sigma))
         theta_x = 2 * np.pi * np.random.random_sample()
         theta_y = 2 * np.pi * np.random.random_sample()

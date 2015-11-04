@@ -14,11 +14,10 @@ import sys
 import shutil
 import tempfile
 import subprocess
-
 import pychemia
+
 if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
     import pychemia.code.abinit as pa
-
 
 path = 'pychemia/test/data'
 
@@ -103,7 +102,7 @@ def datamining(filep):
     if os.path.isfile(filep + os.sep + 'abinit-o_OUT.nc'):
         data = pa.netcdf2dict(filep + os.sep + 'abinit-o_OUT.nc')
     else:
-        data = pa.netcdf2dict(path + os.sep +'abinit_04' + os.sep + 'abinit-o_OUT.nc')
+        data = pa.netcdf2dict(path + os.sep + 'abinit_04' + os.sep + 'abinit-o_OUT.nc')
     print(data)
     print(data['ecut'], data['etotal'])
     return data['ecut'], data['etotal']

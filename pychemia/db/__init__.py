@@ -4,6 +4,7 @@ Routines related to Metadata info and Repositories
 
 try:
     import pymongo
+
     if pymongo.version_tuple[0] < 3:
         print 'Pymongo version is too old for PyChemia, install pymongo 3+'
         USE_MONGO = False
@@ -16,6 +17,7 @@ except ImportError:
 
 try:
     import gridfs
+
     USE_GRIDFS = True
 except ImportError:
     gridfs = None
@@ -24,6 +26,7 @@ except ImportError:
 
 if USE_MONGO:
     from _db import PyChemiaDB, get_database, object_id, create_user, create_database
+
     if USE_GRIDFS:
         from _queue import PyChemiaQueue
 

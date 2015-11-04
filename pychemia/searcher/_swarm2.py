@@ -4,7 +4,6 @@ from _searcher import Searcher
 
 
 class ParticleSwarm(Searcher):
-
     def __init__(self, population, params=None, fraction_evaluated=0.95, generation_size=32, stabilization_limit=10):
         """
         Implementation fo the Firefly algorithm for global minimization
@@ -36,8 +35,8 @@ class ParticleSwarm(Searcher):
             self.gamma = 0.1
             self.elites = 3
         else:
-            assert('gamma' in params)
-            assert(params['gamma'] >= 0.0)
+            assert ('gamma' in params)
+            assert (params['gamma'] >= 0.0)
             self.gamma = params['gamma']
             if 'elites' in params:
                 self.elites = params['elites']
@@ -91,4 +90,3 @@ class ParticleSwarm(Searcher):
             else:
                 pcm_log.debug('Promoted to new generation ')
                 self.pass_to_new_generation(entry_id, reason='No other firefly is more attractive')
-

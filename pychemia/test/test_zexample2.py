@@ -14,8 +14,8 @@ import shutil
 import json
 import tempfile
 import subprocess
-
 import pychemia
+
 if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
     import pychemia.code.abinit
 
@@ -28,17 +28,17 @@ def test_example2():
         return
 
     path = 'pychemia/test/data'
-    assert(os.path.isdir(path))
+    assert (os.path.isdir(path))
 
     if which('abinit') is None:
         print('The executable "abinit" is not in the PATH')
         print('Using the results of a previous calc')
-        check_results(path+os.sep+'abinit_04')
+        check_results(path + os.sep + 'abinit_04')
         return
 
     workdir = tempfile.mkdtemp()
     print("Work directory: %s" % workdir)
-    assert(os.path.isfile(path + '/abinit_04/t44.in'))
+    assert (os.path.isfile(path + '/abinit_04/t44.in'))
     av = pychemia.code.abinit.InputVariables(path + '/abinit_04/t44.in')
     print 'Original input:\n%s' % av
     abifiles = pychemia.code.abinit.AbiFiles(workdir)
@@ -74,11 +74,10 @@ def test_example2():
 
 
 def check_results(workdir):
-
-    res = json.load(open(workdir+os.sep+'results.json'))
-    assert (res[0]['etotal']+4.19954643154 < 1E-6)
-    assert (res[1]['etotal']+4.19954643154 < 1E-6)
-    assert (res[2]['etotal']+4.19954643154 < 1E-6)
+    res = json.load(open(workdir + os.sep + 'results.json'))
+    assert (res[0]['etotal'] + 4.19954643154 < 1E-6)
+    assert (res[1]['etotal'] + 4.19954643154 < 1E-6)
+    assert (res[2]['etotal'] + 4.19954643154 < 1E-6)
 
 
 def which(program):

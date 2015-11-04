@@ -6,7 +6,6 @@ from pychemia.utils.computing import hashfile
 
 
 class PyChemiaQueue:
-
     def __init__(self, name='Queue', host='localhost', port=27017, user=None, passwd=None, ssl=False, replicaset=None):
         """
         Creates a MongoDB client to 'host' with 'port' and connect it to the database 'name'.
@@ -26,7 +25,7 @@ class PyChemiaQueue:
         if user is not None:
             uri += user
             if passwd is not None:
-                uri += ':'+str(passwd)
+                uri += ':' + str(passwd)
             uri += '@'
         uri += host + ':' + str(port)
         print 'URI:', uri
@@ -48,7 +47,7 @@ class PyChemiaQueue:
 
     def add_file(self, entry_id, location, filepath):
 
-        assert(os.path.isfile(filepath))
+        assert (os.path.isfile(filepath))
         hashcode = hashfile(filepath)
         rf = open(filepath, 'rb')
         filename = os.path.basename(filepath)
@@ -60,15 +59,15 @@ class PyChemiaQueue:
 
             file_id = self.fs.put(rf, filename=os.path.basename(filename), hash=hashcode)
             print 'New file ', file_id
-            self.db.pychemia_entries.update({'_id': entry_id}, {'$addToSet': {location+'.files': {'file_id': file_id,
-                                                                                                  'name': filename,
-                                                                                                  'hash': hashcode}}})
+            self.db.pychemia_entries.update({'_id': entry_id}, {'$addToSet': {location + '.files': {'file_id': file_id,
+                                                                                                    'name': filename,
+                                                                                                    'hash': hashcode}}})
         else:
             file_id = existing['_id']
             print 'File already present ', file_id
-            self.db.pychemia_entries.update({'_id': entry_id}, {'$addToSet': {location+'.files': {'file_id': file_id,
-                                                                                                  'name': filename,
-                                                                                                  'hash': hashcode}}})
+            self.db.pychemia_entries.update({'_id': entry_id}, {'$addToSet': {location + '.files': {'file_id': file_id,
+                                                                                                    'name': filename,
+                                                                                                    'hash': hashcode}}})
 
     def add_input_file(self, entry_id, filename):
         self.add_file(entry_id, 'input', filename)
@@ -88,8 +87,8 @@ class PyChemiaQueue:
             self.db.pychemia_entries.update({'_id': entry['_id']}, {'$set': {'job': {}}})
 
     def set_structure(self, entry_id, location, structure):
-        assert(location in ['input', 'output'])
-        self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {location+'.structure': structure.to_dict}})
+        assert (location in ['input', 'output'])
+        self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {location + '.structure': structure.to_dict}})
 
     def set_input(self, entry_id, code, inputvar):
 
@@ -162,7 +161,7 @@ class PyChemiaQueue:
 
         :rtype : Structure
         """
-        assert(location in ['input', 'output'])
+        assert (location in ['input', 'output'])
         entry = self.db.pychemia_entries.find_one({'_id': entry_id}, {location: 1})
         return Structure.from_dict(entry[location]['structure'])
 

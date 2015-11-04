@@ -9,7 +9,6 @@ __author__ = "Guillermo Avendano-Franco"
 
 
 class ClusterAnalysis:
-
     def __init__(self, structure):
         """
         Cluster Analysis provides routines to compute Structure Analysis
@@ -81,7 +80,6 @@ class ClusterAnalysis:
 
 
 class ClusterMatch:
-
     def __init__(self, structure1, structure2):
 
         assert not structure1.is_periodic
@@ -104,8 +102,8 @@ class ClusterMatch:
         num = 0
         for ispecie in species:
 
-            pos1 = self.structure1.positions[np.array(self.structure1.symbols)==ispecie]
-            pos2 = self.structure2.positions[np.array(self.structure2.symbols)==ispecie]
+            pos1 = self.structure1.positions[np.array(self.structure1.symbols) == ispecie]
+            pos2 = self.structure2.positions[np.array(self.structure2.symbols) == ispecie]
             dm = scipy.spatial.distance_matrix(pos1, pos2)
 
             match_list = np.zeros(len(pos1))
@@ -118,8 +116,8 @@ class ClusterMatch:
                 dm[:, match] = maxdis + 1
 
             match_list += num
-            permutation[num:num+len(pos1)] = match_list
+            permutation[num:num + len(pos1)] = match_list
             num += len(pos1)
 
-        #print permutation
+        # print permutation
         self.structure2.sort_sites_using_list(list(permutation))
