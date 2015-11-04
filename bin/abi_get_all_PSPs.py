@@ -153,6 +153,7 @@ def get_all_psps(basedir, exchange, kind):
         if len(missing_psps) > 0:
             print "kind == '%s' and exchange == '%s' and i in %s" % (kind, exchange, missing_psps)
 
+
 if __name__ == '__main__':
 
     home = os.environ['HOME']
@@ -162,7 +163,7 @@ if __name__ == '__main__':
         os.mkdir(basedir)
 
     for exchange in ['LDA', 'GGA', 'DEN']:
-        print '=> '+exchange
+        print '=> ' + exchange
         lista = []
         if exchange == 'LDA':
             lista = ['FHI', 'TM', 'GTH', 'PAW', 'CORE', 'HGH']

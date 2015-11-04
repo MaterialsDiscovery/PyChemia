@@ -36,4 +36,4 @@ The PyChemiaQueue is used to fill the role of a meta-queue for structures and
 jobs that need to be computed. 
 
 .. automodule:: pychemia.db
-   :members:
+:members:

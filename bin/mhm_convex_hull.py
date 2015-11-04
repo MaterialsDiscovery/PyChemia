@@ -5,6 +5,7 @@ import sys
 import json
 import numpy as np
 import matplotlib
+
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull
@@ -94,7 +95,7 @@ def main(argv):
         usage(argv[0])
         sys.exit(2)
 
-    #if len(opts) == 0:
+    # if len(opts) == 0:
     #    usage(argv[0])
     #    sys.exit(2)
 
@@ -143,9 +144,9 @@ def main(argv):
         x = idata['ratio']
         spcgrp = idata['spcgrp']
         marker, color, lab, m, z, fs = spcgrp_props(spcgrp)
-        y = idata['energy_pa'] - (1-x)*energy_left - x*energy_right
+        y = idata['energy_pa'] - (1 - x) * energy_left - x * energy_right
         plt.plot(x, y, marker=marker, ms=m, color=color, fillstyle=fs, zorder=z)
-        points.append([x, idata['energy_pa'] - (1-x)*energy_left - x*energy_right])
+        points.append([x, idata['energy_pa'] - (1 - x) * energy_left - x * energy_right])
 
     points = np.array(points)
     hull = ConvexHull(points)
@@ -175,6 +176,7 @@ def main(argv):
     plt.xlabel(r'Composition balance')
     plt.ylabel(r'Formation Energy [eV]')
     plt.savefig(output_file)
+
 
 if __name__ == "__main__":
     main(sys.argv)

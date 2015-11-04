@@ -30,23 +30,22 @@ Search for suitable directories for relaxation
 
 
 def find_structures(basedir, filename='to_relax'):
-
     ret = []
     if filename in os.listdir(basedir):
         ret.append(basedir)
-    for i in [x for x in os.listdir(basedir) if os.path.isdir(basedir+os.sep+x)]:
-        ret += find_structures(basedir+os.sep+i)
+    for i in [x for x in os.listdir(basedir) if os.path.isdir(basedir + os.sep + x)]:
+        ret += find_structures(basedir + os.sep + i)
     return ret
 
 
 def get_structure_file(basedir):
-
     files = os.listdir(basedir)
     for ifile in ['structure_phase2.json', 'structure_phase1.json', 'structure2.json',
                   'structure1.json', 'structure.json', 'POSCAR']:
         if ifile in files:
             return ifile
     return None
+
 
 if __name__ == '__main__':
 
@@ -100,7 +99,7 @@ if __name__ == '__main__':
     ret = find_structures(path)
 
     for i in ret:
-        if os.path.isfile(i+os.sep+'lock'):
+        if os.path.isfile(i + os.sep + 'lock'):
             print "Locked:    %s" % i
         elif os.path.basename(i) in jobs:
             print 'Submitted: %s' % i

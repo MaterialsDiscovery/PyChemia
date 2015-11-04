@@ -2,13 +2,12 @@ import sys
 import math
 import numpy as np
 from scipy.io import netcdf_file as _netcdf_file
-
 import matplotlib
+
 matplotlib.use('agg')
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-
 from pychemia.code.abinit import InputVariables, AbiFiles
 from pychemia.utils.periodic import covalent_radius
 from pychemia.utils.constants import bohr_angstrom, angstrom_bohr

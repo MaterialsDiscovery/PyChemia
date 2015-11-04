@@ -3,7 +3,6 @@
 import os
 import sys
 import numpy as np
-
 import pychemia.code.abinit
 from pychemia.utils.constants import bohr_angstrom
 

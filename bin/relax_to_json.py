@@ -16,23 +16,23 @@ dirs = [x for x in os.listdir('.') if os.path.isdir(x)]
 
 ret = []
 for idir in dirs:
-    if os.path.isfile(idir+'/POSCAR'):
+    if os.path.isfile(idir + '/POSCAR'):
         try:
-            st = pychemia.code.vasp.read_poscar(idir+'/POSCAR')
+            st = pychemia.code.vasp.read_poscar(idir + '/POSCAR')
         except ValueError:
-            print 'Bad POSCAR\n\n' + open(idir+'/POSCAR').read()
+            print 'Bad POSCAR\n\n' + open(idir + '/POSCAR').read()
             continue
         # shutil.copy2(idir+'/POSCAR',idir+'_POSCAR')
         print idir, st.natom
     else:
-        st = pychemia.Structure.load_json(idir+'/structure.json')
+        st = pychemia.Structure.load_json(idir + '/structure.json')
         # shutil.copy2(idir+'/structure.json',idir+'_structure.json')
         print 'ERROR:', idir, st.natom
         continue
 
-    if os.path.isfile(idir+'/OUTCAR'):
+    if os.path.isfile(idir + '/OUTCAR'):
         try:
-            vo = pychemia.code.vasp.VaspOutput(idir+'/OUTCAR')
+            vo = pychemia.code.vasp.VaspOutput(idir + '/OUTCAR')
         except ValueError:
             print 'Error reading Vasp Output @ ' + idir + '/OUTCAR'
             continue
@@ -44,7 +44,7 @@ for idir in dirs:
         continue
 
     spacegroup = pychemia.symm.StructureSymmetry(st).number()
-    energy_pa = vo.final_data['energy']['free_energy']/st.natom
+    energy_pa = vo.final_data['energy']['free_energy'] / st.natom
 
     data = {'id': idir, 'energy_pa': energy_pa, 'natom': st.natom, 'spacegroup': spacegroup,
             'forces': vo.relaxation_info()['avg_force'],

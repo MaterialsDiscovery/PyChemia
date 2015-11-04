@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
-
 import pychemia.code.abinit
-
 
 if __name__ == '__main__':
 
@@ -13,7 +11,7 @@ if __name__ == '__main__':
         sys.exit()
 
     filename = sys.argv[1]
-    assert(os.path.isfile(filename))
+    assert (os.path.isfile(filename))
     iv = pychemia.code.abinit.xyz2input(filename)
     av = pychemia.code.abinit.InputVariables()
     av.variables = iv.variables

@@ -173,11 +173,11 @@ def main(argv):
     print '\nIonic Relaxation'
     print '----------------\n'
     vr = IonRelaxation(structure=structure, encut=encut, kp_grid=kp.grid, workdir=workdir,
-                       target_forces=10*target_forces)
+                       target_forces=10 * target_forces)
     vr.run(nparal)
 
     structure = vr.get_final_geometry()
-    structure.save_json(workdir+os.sep+'structure_phase1.json')
+    structure.save_json(workdir + os.sep + 'structure_phase1.json')
 
     data['output'] = {'1R_structure': structure.to_dict}
     wf = open(output_file, 'w')
@@ -230,7 +230,7 @@ def main(argv):
     vr.run(nparal)
 
     structure = vr.get_final_geometry()
-    structure.save_json(workdir+os.sep+'structure_phase2.json')
+    structure.save_json(workdir + os.sep + 'structure_phase2.json')
 
     data['output'] = {'2R_structure': structure.to_dict}
 
@@ -240,6 +240,6 @@ def main(argv):
 
     cleaner()
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     main(sys.argv)

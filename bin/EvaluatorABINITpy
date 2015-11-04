@@ -127,12 +127,12 @@ if __name__ == '__main__':
                 os.mkdir(path)
                 inputvar = InputVariables(base_input)
                 inputvar.set_value('dmatpawu', entry['properties']['dmatpawu'])
-                inputvar.write(path+os.sep+'abinit.in')
-                wf = open(path+os.sep+'abinit.files', 'w')
+                inputvar.write(path + os.sep + 'abinit.in')
+                wf = open(path + os.sep + 'abinit.files', 'w')
                 wf.write('abinit.in\nabinit.out\nabiniti\nabinito\nabinit\n')
                 for i in psps:
                     shutil.copy(i, path)
-                    wf.write(os.path.basename(i)+'\n')
+                    wf.write(os.path.basename(i) + '\n')
                 wf.close()
         print 'Sleeping...'
         time.sleep(30)

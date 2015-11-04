@@ -45,7 +45,6 @@ OPTIONS
 
 
 def get_database(dbsettings):
-
     if 'host' not in dbsettings:
         dbsettings['host'] = 'localhost'
     if 'port' not in dbsettings:
@@ -63,31 +62,30 @@ def get_database(dbsettings):
 
 
 def listener(dbsettings, ip, port, workdir):
-
     # Create a TCP/IP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     # Bind the socket to the port
     server_address = (ip, port)
-    print >>sys.stderr, 'starting up on %s port %s' % server_address
+    print >> sys.stderr, 'starting up on %s port %s' % server_address
     sock.bind(server_address)
 
     pcq = get_database(dbsettings)
 
     while True:
-        print >>sys.stderr, '\nwaiting to receive message'
+        print >> sys.stderr, '\nwaiting to receive message'
         data, address = sock.recvfrom(4096)
 
-        print >>sys.stderr, 'received %s bytes from %s' % (len(data), address)
-        print >>sys.stderr, data
+        print >> sys.stderr, 'received %s bytes from %s' % (len(data), address)
+        print >> sys.stderr, data
 
         if data == 'COUNT':
             ans = str(pcq.db.pychemia_entries.count())
             sent = sock.sendto(ans, address)
-            print >>sys.stderr, 'sent %s bytes back to %s' % (sent, address)
+            print >> sys.stderr, 'sent %s bytes back to %s' % (sent, address)
         if data == 'WORKDIR':
             sent = sock.sendto(workdir, address)
-            print >>sys.stderr, 'sent %s bytes back to %s' % (sent, address)
+            print >> sys.stderr, 'sent %s bytes back to %s' % (sent, address)
         if data == 'GET':
             # Selectiong an entry not submitted for execution
             entry = pcq.db.pychemia_entries.find_one({'meta.submitted': False}, {'_id': 1})
@@ -98,18 +96,17 @@ def listener(dbsettings, ip, port, workdir):
             else:
                 entry_id = ''
             sent = sock.sendto(str(entry_id), address)
-            print >>sys.stderr, 'sent %s bytes back to %s' % (sent, address)
+            print >> sys.stderr, 'sent %s bytes back to %s' % (sent, address)
         if data.startswith('FINISHED:'):
             entry_id = ObjectId(data.split(':')[1])
             collect(entry_id, pcq, workdir)
             pcq.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'meta.finished': True}})
             sent = sock.sendto('OK', address)
-            print >>sys.stderr, 'sent %s bytes back to %s' % (sent, address)
+            print >> sys.stderr, 'sent %s bytes back to %s' % (sent, address)
 
 
 def deploy(entry_id, pychemia_queue, basedir):
-
-    workdir = os.path.abspath(basedir)+os.sep+str(entry_id)
+    workdir = os.path.abspath(basedir) + os.sep + str(entry_id)
     if not os.path.exists(workdir):
         os.mkdir(workdir)
     pychemia_queue.write_input_files(entry_id, destination=workdir)
@@ -119,25 +116,24 @@ def deploy(entry_id, pychemia_queue, basedir):
     print job_settings
 
     if len(job_settings) > 0:
-        wf = open(workdir+os.sep+'job.json', 'w')
+        wf = open(workdir + os.sep + 'job.json', 'w')
         json.dump(job_settings, wf)
         wf.close()
 
     st = pychemia_queue.get_input_structure(entry_id)
-    st.save_json(workdir+os.sep+'structure.json')
+    st.save_json(workdir + os.sep + 'structure.json')
 
     inp = pychemia_queue.get_input_variables(entry_id)
     if inp is not None:
-        wf = open(workdir+os.sep+'input.json', 'w')
+        wf = open(workdir + os.sep + 'input.json', 'w')
         json.dump(inp, wf)
         wf.close()
 
 
 def collect(entry_id, pychemia_queue, workdir):
-
-    destination = os.path.abspath(workdir)+os.sep+str(entry_id)
-    if os.path.isfile(destination+os.sep+'results.json'):
-        results = json.load(open(destination+os.sep+'results.json'))
+    destination = os.path.abspath(workdir) + os.sep + str(entry_id)
+    if os.path.isfile(destination + os.sep + 'results.json'):
+        results = json.load(open(destination + os.sep + 'results.json'))
         pychemia_queue.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'output': results}})
 
 
@@ -205,7 +201,7 @@ def main(argv):
         p = None
         while True:
             lt = time.localtime()
-            random.seed(lt.tm_yday*24+lt.tm_hour)
+            random.seed(lt.tm_yday * 24 + lt.tm_hour)
             port = random.randint(10000, 20000)
             if port != old_port:
                 if p is not None and p.is_alive():
@@ -219,5 +215,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-
     main(sys.argv)

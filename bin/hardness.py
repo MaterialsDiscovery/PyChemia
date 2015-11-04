@@ -11,7 +11,6 @@ Computes the hardness of a given structure
 __author__ = 'Guillermo Avendano Franco'
 
 
-
 def helper():
     print """
 Computes the hardness of one or several files
@@ -19,6 +18,7 @@ Computes the hardness of one or several files
 Use:
     hardness.py POSCAR1 [POSCAR2 ...]
 """
+
 
 if __name__ == '__main__':
 
@@ -35,9 +35,9 @@ if __name__ == '__main__':
         structure = pychemia.code.vasp.read_poscar(filename)
         analysis = pychemia.analysis.StructureAnalysis(structure, supercell=(2, 2, 2))
         print 'File : ', filename
-        print 40*'='+' structure '+40*'='
+        print 40 * '=' + ' structure ' + 40 * '='
         print structure
-        print 40*'='+' structure '+40*'='
+        print 40 * '=' + ' structure ' + 40 * '='
 
         print 'Mass density:', structure.density
 

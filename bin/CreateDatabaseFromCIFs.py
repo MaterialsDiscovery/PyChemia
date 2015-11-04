@@ -19,6 +19,7 @@ def help_info():
 
    """)
 
+
 version = 0.1
 
 if __name__ == '__main__':
@@ -85,7 +86,7 @@ if __name__ == '__main__':
 
     for i in cifs:
         pcm_log.info('Reading CIF         : %s' % i)
-        structs = cif2structure(path+os.sep+i)
+        structs = cif2structure(path + os.sep + i)
         pcm_log.info('Number of structures: %d' % len(structs))
         for j in structs:
             if j.is_perfect:

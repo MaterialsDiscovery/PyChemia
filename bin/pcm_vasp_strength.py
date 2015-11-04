@@ -82,7 +82,7 @@ def main(argv):
     if len(opts) == 0:
         usage(argv[0])
         sys.exit(2)
-        
+
     # Default Values
     structure_file = 'POSCAR'
     delta_factor = 0.01
@@ -94,35 +94,35 @@ def main(argv):
     target_forces = 1E-3
     binary = 'vasp'
     expansion = 111
-    
+
     for opt, arg in opts:
-        if opt in ("-h", "--help"):      
-            usage(argv[0])                     
-            sys.exit()                  
-        elif opt in ("-s", "--structure"):                
-            structure_file = arg               
-        elif opt in ("-o", "--output"):                
-            output_file = arg               
-        elif opt in ("-i", "--ini_factor"):                
-            ini_factor = get_float(arg)               
-        elif opt in ("-f", "--fin_factor"):                
-            fin_factor = get_float(arg)               
-        elif opt in ("-d", "--delta_factor"):                
-            delta_factor = get_float(arg)               
-        elif opt in ("-n", "--nparal"):                
-            nparal = get_int(arg)  
-        elif opt in ("-b", "--binary"):                
-            binary = arg               
-        elif opt in ("-e", "--energy_tol"):                
+        if opt in ("-h", "--help"):
+            usage(argv[0])
+            sys.exit()
+        elif opt in ("-s", "--structure"):
+            structure_file = arg
+        elif opt in ("-o", "--output"):
+            output_file = arg
+        elif opt in ("-i", "--ini_factor"):
+            ini_factor = get_float(arg)
+        elif opt in ("-f", "--fin_factor"):
+            fin_factor = get_float(arg)
+        elif opt in ("-d", "--delta_factor"):
+            delta_factor = get_float(arg)
+        elif opt in ("-n", "--nparal"):
+            nparal = get_int(arg)
+        elif opt in ("-b", "--binary"):
+            binary = arg
+        elif opt in ("-e", "--energy_tol"):
             energy_tol = get_float(arg)
-        elif opt in ("-t", "--target_forces"):                
+        elif opt in ("-t", "--target_forces"):
             target_forces = get_float(arg)
-        elif opt in ("-x", "--expansion"):                
+        elif opt in ("-x", "--expansion"):
             expansion = get_int(arg)
-        elif opt in ("-s", "--structure"):                
+        elif opt in ("-s", "--structure"):
             structure_file = get_int(arg)
 
-    expansion = [int(expansion/100), int(expansion/10) % 10, expansion % 10]
+    expansion = [int(expansion / 100), int(expansion / 10) % 10, expansion % 10]
     if len(expansion) == 0:
         print " ERROR: ini_factor, fin_factor and delta_factor are not creating a finite range of values"
         sys.exit(2)
@@ -137,7 +137,7 @@ def main(argv):
 
     print "\n PyChemia Ideal Strenght"
     print " =======================\n"
-    print " Scaling factors     : ", str(np.arange(ini_factor, fin_factor+0.9*delta_factor, delta_factor))
+    print " Scaling factors     : ", str(np.arange(ini_factor, fin_factor + 0.9 * delta_factor, delta_factor))
     print " Executable          : ", binary
     print " Energy tolerance    : ", energy_tol
     print " Target forces       : ", target_forces
@@ -186,17 +186,17 @@ def main(argv):
 
 
 def plot_strain(filename):
-
     import matplotlib.pyplot as plt
     a = json.load(open(filename))
     df = pandas.DataFrame(a)
 
     def trace(x):
         return np.trace(np.array(x['stress'])[0])
+
     df['stress'] = df['output'].map(trace)
     plt.plot(df['factor'], df['stress'])
-    plt.savefig(filename+'.pdf')
+    plt.savefig(filename + '.pdf')
+
 
 if __name__ == "__main__":
-
     main(sys.argv)

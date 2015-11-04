@@ -5,6 +5,7 @@ import itertools
 from multiprocessing import Pool
 import pychemia
 from pychemia.utils.periodic import atomic_symbol
+
 try:
     from qmpy import Entry
 except ImportError:
@@ -82,7 +83,6 @@ def run_one(a):
 
 
 def getter(entry_ids, db_settings, current, start=0):
-
     pcdb = pychemia.db.get_database(db_settings)
 
     ret = []
@@ -90,8 +90,8 @@ def getter(entry_ids, db_settings, current, start=0):
     index = 0
     n = 0
 
-    initial = start*jump
-    final = min(start*jump+jump, len(entry_ids))
+    initial = start * jump
+    final = min(start * jump + jump, len(entry_ids))
     print 'Process: %2d Processing from %6d to %6d' % (start, initial, final)
 
     for a_id in entry_ids[initial:final]:
@@ -102,7 +102,7 @@ def getter(entry_ids, db_settings, current, start=0):
         else:
             index = current.index(a_id)
             # Removing duplicated entries
-            if index < len(current) and current[index+1] == a_id:
+            if index < len(current) and current[index + 1] == a_id:
                 print 'We found at least one duplicate!'
                 duplicate = False
                 for entry in pcdb.db.pychemia_entries.find({'properties.oqmd.entry_id': a_id}):
@@ -117,7 +117,6 @@ def getter(entry_ids, db_settings, current, start=0):
 
 
 def setter(pcdb, to_insert):
-
     for entry_id in to_insert:
         a = Entry.objects.get(id=entry_id)
         structure, properties = run_one(a)
@@ -203,7 +202,7 @@ if __name__ == '__main__':
     pool = Pool(processes=6)
 
     argus = []
-    a_args = range(len(entry_ids)/jump)
+    a_args = range(len(entry_ids) / jump)
 
     ret = pool.map(getter_star, itertools.izip(itertools.repeat(entry_ids),
                                                itertools.repeat(db_settings),

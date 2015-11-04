@@ -63,9 +63,9 @@ def main(argv):
     print ' ' + 65 * "-"
     for i in sorted(mech):
         print " %20s %5s %12.3f %12.3f %12.3f" % (i.ljust(20), mech[i]['units'], mech[i]['Voigt'], mech[i]['Reuss'],
-                                                  0.5*(mech[i]['Voigt']+mech[i]['Reuss']))
+                                                  0.5 * (mech[i]['Voigt'] + mech[i]['Reuss']))
     print ' ' + 65 * "-"
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     main(sys.argv)

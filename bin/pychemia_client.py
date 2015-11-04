@@ -31,6 +31,7 @@ def deadline(timeout, *args):
 
         new_f.__name__ = f.__name__
         return new_f
+
     return decorate
 
 
@@ -62,55 +63,53 @@ OPTIONS
 
 @deadline(60)
 def inquirer(ip, port):
-
     # Create a UDP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_address = (ip, port)
-    print >>sys.stderr, 'Connecting to %s:%d' % (ip, port)
+    print >> sys.stderr, 'Connecting to %s:%d' % (ip, port)
 
     try:
         message = 'COUNT'
         # Send data
-        print >>sys.stderr, 'sending "%s"' % message
+        print >> sys.stderr, 'sending "%s"' % message
         sent = sock.sendto(message, server_address)
 
         # Receive response
-        print >>sys.stderr, 'waiting to receive'
+        print >> sys.stderr, 'waiting to receive'
         data, server = sock.recvfrom(4096)
-        print >>sys.stderr, 'received "%s"' % data
+        print >> sys.stderr, 'received "%s"' % data
         nentries = int(data)
 
         message = 'WORKDIR'
         # Send data
-        print >>sys.stderr, 'sending "%s"' % message
+        print >> sys.stderr, 'sending "%s"' % message
         sent = sock.sendto(message, server_address)
 
         # Receive response
-        print >>sys.stderr, 'waiting to receive'
+        print >> sys.stderr, 'waiting to receive'
         data, server = sock.recvfrom(4096)
-        print >>sys.stderr, 'received "%s"' % data
+        print >> sys.stderr, 'received "%s"' % data
         workdir = data
 
         message = 'GET'
         # Send data
-        print >>sys.stderr, 'sending "%s"' % message
+        print >> sys.stderr, 'sending "%s"' % message
         sent = sock.sendto(message, server_address)
 
         # Receive response
-        print >>sys.stderr, 'waiting to receive'
+        print >> sys.stderr, 'waiting to receive'
         data, server = sock.recvfrom(4096)
-        print >>sys.stderr, 'received "%s"' % data
+        print >> sys.stderr, 'received "%s"' % data
         entry_id = data
 
     finally:
-        print >>sys.stderr, 'closing socket'
+        print >> sys.stderr, 'closing socket'
         sock.close()
 
     return workdir + os.sep + entry_id, entry_id
 
 
 def executor(workdir):
-
     print 'Work directory', workdir
     os.chdir(workdir)
     subprocess.call(['python', 'executor.py'])
@@ -118,25 +117,24 @@ def executor(workdir):
 
 @deadline(60)
 def finisher(entry_id, ip, port):
-
     # Create a UDP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     server_address = (ip, port)
 
     try:
-        message = 'FINISHED:'+str(entry_id)
+        message = 'FINISHED:' + str(entry_id)
         # Send data
-        print >>sys.stderr, 'sending "%s"' % message
+        print >> sys.stderr, 'sending "%s"' % message
         sent = sock.sendto(message, server_address)
 
         # Receive response
-        print >>sys.stderr, 'waiting to receive'
+        print >> sys.stderr, 'waiting to receive'
         data, server = sock.recvfrom(4096)
-        print >>sys.stderr, 'received "%s"' % data
+        print >> sys.stderr, 'received "%s"' % data
 
     finally:
-        print >>sys.stderr, 'closing socket'
+        print >> sys.stderr, 'closing socket'
         sock.close()
 
 
@@ -177,7 +175,7 @@ def main(argv):
                 print "INQUIRER took too long: %s", e.message
         else:
             lt = time.localtime()
-            random.seed(lt.tm_yday*24+lt.tm_hour)
+            random.seed(lt.tm_yday * 24 + lt.tm_hour)
             rndport = random.randint(10000, 20000)
             print 'PyChemia Client using port : ', rndport
             try:
@@ -203,7 +201,7 @@ def main(argv):
         finisher(entry_id, ip, port)
     else:
         lt = time.localtime()
-        random.seed(lt.tm_yday*24+lt.tm_hour)
+        random.seed(lt.tm_yday * 24 + lt.tm_hour)
         rndport = random.randint(10000, 20000)
         print 'PyChemia Client using port : ', rndport
 
@@ -212,6 +210,6 @@ def main(argv):
         except TimedOutExc as e:
             print "Error({0}): {1}".format(e, e.message)
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     main(sys.argv)

@@ -2,7 +2,6 @@
 
 import os
 import sys
-
 import matplotlib
 
 matplotlib.use('Agg')
@@ -19,6 +18,7 @@ def helper():
                    [--help ]
                    file1.dat file2.dat ...
    """)
+
 
 if __name__ == '__main__':
 
