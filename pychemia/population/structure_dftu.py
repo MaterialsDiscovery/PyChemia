@@ -181,22 +181,22 @@ class PopulationDFTU(Population):
 
 
 def params_reshaped(params, ndim):
-    I = np.array(params['I'], dtype=int).reshape((-1, ndim))
-    D = np.array(params['D']).reshape((-1, ndim))
+    iii = np.array(params['I'], dtype=int).reshape((-1, ndim))
+    ddd = np.array(params['D']).reshape((-1, ndim))
     eigvec = np.array(params['eigvec']).reshape((-1, ndim, ndim))
-    return I, D, eigvec
+    return iii, ddd, eigvec
 
 
 def params2dmatpawu(params, ndim):
-    I, D, eigvec = params_reshaped(params, ndim)
+    iii, ddd, eigvec = params_reshaped(params, ndim)
 
-    eigval = np.array(I, dtype=float)
+    eigval = np.array(iii, dtype=float)
     for i in range(len(eigval)):
         for j in range(ndim):
-            if I[i, j] == 0:
-                eigval[i, j] += D[i, j]
+            if iii[i, j] == 0:
+                eigval[i, j] += ddd[i, j]
             else:
-                eigval[i, j] -= D[i, j]
+                eigval[i, j] -= ddd[i, j]
     dm = np.zeros((len(eigvec), ndim, ndim))
     for i in range(len(eigvec)):
         dm[i] = np.dot(eigvec[i], np.dot(np.diag(eigval[i]), np.linalg.inv(eigvec[i])))
@@ -207,12 +207,12 @@ def dmatpawu2params(dmatpawu, ndim):
 
     dm = np.array(dmatpawu).reshape((-1, ndim, ndim))
     eigval = np.array([np.linalg.eigh(x)[0] for x in dm])
-    I = np.array(np.round(eigval), dtype=int)
-    D = np.abs(eigval - I)
+    iii = np.array(np.round(eigval), dtype=int)
+    ddd = np.abs(eigval - iii)
     eigvec = np.array([np.linalg.eigh(x)[1] for x in dm])
 
-    params = {'I': list(I.flatten()),
-              'D': list(D.flatten()),
+    params = {'I': list(iii.flatten()),
+              'D': list(ddd.flatten()),
               'eigvec': list(eigvec.flatten())}
     return params
 
@@ -226,7 +226,7 @@ def get_pattern(params, ndim):
     bb = np.dot(eigvec[0], np.linalg.inv(eigvec[3]))
     #connection = np.array(np.round(np.diagonal(bb)), dtype=int)
 
-    I = np.array(params['I'], dtype=int).reshape((-1, ndim))
+    iii = np.array(params['I'], dtype=int).reshape((-1, ndim))
 
     pattern = np.zeros((natpawu, natpawu))
     for i in range(natpawu):
@@ -236,7 +236,7 @@ def get_pattern(params, ndim):
             connection[i, j] = bb
             connection[j, i] = bb
 
-            if np.all(I[i] == I[j]):
+            if np.all(iii[i] == iii[j]):
                 pattern[i, j] = 1
                 pattern[j, i] = 1
             else:

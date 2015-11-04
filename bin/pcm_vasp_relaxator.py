@@ -172,7 +172,7 @@ def main(argv):
     cleaner()
     print '\nIonic Relaxation'
     print '----------------\n'
-    vr = IonRelaxation(structure=structure, encut= encut, kp_grid= kp.grid, workdir=workdir,
+    vr = IonRelaxation(structure=structure, encut=encut, kp_grid=kp.grid, workdir=workdir,
                        target_forces=10*target_forces)
     vr.run(nparal)
 
@@ -226,7 +226,7 @@ def main(argv):
     cleaner()
     print '\nIonic Relaxation'
     print '----------------\n'
-    vr = IonRelaxation(structure=st, workdir='.', encut=encut, kp_grid= kp.grid, target_forces=target_forces)
+    vr = IonRelaxation(structure=st, workdir='.', encut=encut, kp_grid=kp.grid, target_forces=target_forces)
     vr.run(nparal)
 
     structure = vr.get_final_geometry()

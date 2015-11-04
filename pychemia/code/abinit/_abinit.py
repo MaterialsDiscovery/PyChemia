@@ -56,8 +56,8 @@ class AbinitJob(Codes):
         self.kind = psp_kind
         self.exchange = psp_exchange
 
-    def job_ion_relaxation(self, internal_opt=True, external_opt=True, ionmov=2, nstep=20, ntime=30,
-                           tolmxf=1E-7, tolrff=1E-3, dilatmx=1.05):
+    def job_ion_relax(self, internal_opt=True, external_opt=True, ionmov=2, nstep=20, ntime=30,
+                      tolmxf=1E-7, tolrff=1E-3, dilatmx=1.05):
 
         self.inp.clean()
         self.inp.from_structure(self.structure)
@@ -135,3 +135,7 @@ class AbinitJob(Codes):
 
     def write_abifiles(self):
         self.abifile.create()
+
+    def write_all(self):
+        self.write_abifiles()
+        self.write_abiinput()

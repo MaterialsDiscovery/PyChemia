@@ -180,7 +180,7 @@ class IonRelaxation(Relaxator, Task):
             if i[:5] in ['INCAR', 'POSCA', 'OUTCA', 'vaspr']:
                 os.remove(self.workdir + os.sep + i)
 
-    def run(self, nparal=4):
+    def run(self, nparal=1):
 
         self.started = True
         self.cleaner()

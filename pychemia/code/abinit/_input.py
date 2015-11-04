@@ -366,7 +366,7 @@ class InputVariables(collections.MutableMapping):
         if rprim is None:
             rprim = np.identity(3)
         else:
-            rprim = rprim.reshape(3, 3)
+            rprim = np.array(rprim).reshape((3, 3))
         if acell is None:
             acell = np.ones(3)
 
@@ -486,7 +486,7 @@ class InputVariables(collections.MutableMapping):
         color = ['r', 'g', 'b']
         j = 0
 
-        structure = self.get_crystal()
+        structure = self.get_structure()
 
         for i in structure.cell:
             ax[0].plot([0, i[0]], [0, i[1]], color[j] + '-', lw=3)

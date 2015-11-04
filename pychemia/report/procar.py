@@ -69,7 +69,7 @@ class UtilsProcar:
         self.log.debug("UtilsProcar()...done")
         return
 
-    def OpenFile(self, filename=None):
+    def open_file(self, filename=None):
         """
         Tries to open a File, it has suitable values for PROCAR and can
         handle gzipped files
@@ -79,14 +79,14 @@ class UtilsProcar:
 
         Example:
 
->>> foo = UtilsProcar.Openfile()
+>>> foo = UtilsProcar.open_file()
 Tries to open "PROCAR", then "PROCAR.gz"
 
->>> foo = UtilsProcar.Openfile("../bar")
+>>> foo = UtilsProcar.open_file(filename="../bar")
 Tries to open "../bar". If it is a directory, it will try to open
 "../bar/PROCAR" and if fails again "../bar/PROCAR.gz"
 
->>> foo = UtilsProcar.Openfile("PROCAR-spd.gz")
+>>> foo = UtilsProcar.open_file(filename="PROCAR-spd.gz")
 Tries to open a gzipped file "PROCAR-spd.gz"
 
         If unable to open a file, it raises a "IOError" exception.
@@ -94,7 +94,7 @@ Tries to open a gzipped file "PROCAR-spd.gz"
         import os
         import gzip
 
-        self.log.debug("OpenFile()")
+        self.log.debug("open_file()")
         self.log.debug("Filename :" + filename)
 
         if filename is None:
@@ -116,26 +116,26 @@ Tries to open a gzipped file "PROCAR-spd.gz"
             # Checking if compressed
             if filename[-2:] == "gz":
                 self.log.info("A gzipped file found")
-                inFile = gzip.open(filename, "r")
+                in_file = gzip.open(filename, "r")
             else:
                 self.log.debug("A normal file found")
-                inFile = open(filename, "r")
-            return inFile
+                in_file = open(filename, "r")
+            return in_file
 
         # otherwise a gzipped version may exist
         elif os.path.isfile(filename + ".gz"):
             self.log.info("File not found, however a .gz version does exist and will"
                           " be used")
-            inFile = gzip.open(filename + ".gz")
+            in_file = gzip.open(filename + ".gz")
 
         else:
             self.log.debug("File not exist, neither a gzipped version")
             raise IOError("File not found")
 
         self.log.debug("OpenFile()...done")
-        return inFile
+        return in_file
 
-    def MergeFiles(self, inFiles, outFile, gzipOut=False):
+    def MergeFiles(self, in_files, out_file, gzipOut=False):
         """
         Concatenate two or more PROCAR files. This methods
         takes care of the k-indexes.
@@ -156,12 +156,12 @@ Tries to open a gzipped file "PROCAR-spd.gz"
         import gzip
 
         self.log.debug("MergeFiles()")
-        self.log.debug("infiles: " " ,".join(inFiles))
+        self.log.debug("infiles: " " ,".join(in_files))
 
-        inFiles = [self.OpenFile(x) for x in inFiles]
-        header = [x.readline() for x in inFiles]
+        in_files = [self.open_file(x) for x in in_files]
+        header = [x.readline() for x in in_files]
         self.log.debug("All the input headers are: \n" + "".join(header))
-        metas = [x.readline() for x in inFiles]
+        metas = [x.readline() for x in in_files]
         self.log.debug("All the input metalines are:\n " + "".join(metas))
         # parsing metalines
 
@@ -182,12 +182,12 @@ Tries to open a gzipped file "PROCAR-spd.gz"
 
         if gzipOut:
             self.log.debug("gzipped output")
-            outFile = gzip.open(outFile, 'w')
+            out_file = gzip.open(out_file, 'w')
         else:
             self.log.debug("normal output")
-            outFile = open(outFile, 'w')
-        outFile.write(header[0])
-        outFile.write(newMeta)
+            out_file = open(out_file, 'w')
+        out_file.write(header[0])
+        out_file.write(newMeta)
 
         # embedded function to change old k-point indexes by the correct
         # ones. The `kreplace.k` syntax is for making the variable 'static'
@@ -200,14 +200,14 @@ Tries to open a gzipped file "PROCAR-spd.gz"
 
         kreplace.k = 0
         self.log.debug("Going to replace K-points indexes")
-        for inFile in inFiles:
+        for inFile in in_files:
             lines = inFile.read()
             kreplace.localCounter = 0
             lines = re.sub('(\s+k-point\s*\d+\s*:)', kreplace, lines)
-            outFile.write(lines)
+            out_file.write(lines)
 
         self.log.debug("Closing output file")
-        outFile.close()
+        out_file.close()
         self.log.debug("MergeFiles()...done")
         return
 
@@ -264,7 +264,7 @@ Tries to open a gzipped file "PROCAR-spd.gz"
         But as I found new stupid errors they should be fixed here.
         """
         self.log.debug("ProcarRepair(): ...")
-        infile = self.OpenFile(infilename)
+        infile = self.open_file(infilename)
         fileStr = infile.read()
         infile.close()
 
@@ -671,7 +671,7 @@ class ProcarParser:
         self.recLattice = recLattice
 
         self.log.debug("Opening file: '" + str(procar) + "'")
-        f = self.utils.OpenFile(procar)
+        f = self.utils.open_file(procar)
         # Line 1: PROCAR lm decomposed
         f.readline()  # throwaway
         # Line 2: # of k-points:  816   # of bands:  52   # of ions:   8
@@ -718,7 +718,7 @@ class ProcarFileFilter:
     -To group the "s", "p" y "d" orbitals from the file PROCAR and write
      them in PROCAR-spd:
 
-     >>> a = procar.ProcarFileFilter("PROCAR", "PROCAR-new")
+     >>> a = ProcarFileFilter("PROCAR", "PROCAR-new")
      >>> a.FilterOrbitals([[0], [1, 2, 3], [4, 5, 6, 7, 8]], ['s', 'p', 'd'])
 
          The PROCAR-new will have just 3+1 columns (orbitals are colum-wise
@@ -728,13 +728,13 @@ class ProcarFileFilter:
     -To group the atoms 1,2,5,6 and 3,4,7,8 from PROCAR and write them
      in PROCAR-new (note the 0-based indexes):
 
-     >>> a = procar.ProcarFileFilter("PROCAR", "PROCAR-new")
+     >>> a = ProcarFileFilter("PROCAR", "PROCAR-new")
      >>> a.FilterAtoms([[0, 1, 4, 5], [2, 3, 6, 7]])
 
      -To select just the total density (ie: ignoring the spin-resolved stuff,
       if any)from PROCAR and write it in PROCAR-new:
 
-     >>> a = procar.ProcarFileFilter("PROCAR", "PROCAR-new")
+     >>> a = ProcarFileFilter("PROCAR", "PROCAR-new")
      >>> a.FilterSpin([0])
 
     """
@@ -803,7 +803,7 @@ class ProcarFileFilter:
         # open the files
         fout = open(self.outfile, 'w')
         fopener = UtilsProcar()
-        fin = fopener.OpenFile(self.infile)
+        fin = fopener.open_file(self.infile)
         for line in fin:
             if re.match(r"\s*ion\s*", line):
                 # self.log.debug("orbital line found: " + line)
@@ -852,7 +852,7 @@ class ProcarFileFilter:
         # open the files
         fout = open(self.outfile, 'w')
         fopener = UtilsProcar()
-        with fopener.OpenFile(self.infile) as fin:
+        with fopener.open_file(self.infile) as fin:
             # I need to change the numbers of ions, it will needs the second
             # line. The first one is not needed
             fout.write(fin.readline())
@@ -923,7 +923,7 @@ class ProcarFileFilter:
         # open the files
         fout = open(self.outfile, 'w')
         fopener = UtilsProcar()
-        fin = fopener.OpenFile(self.infile)
+        fin = fopener.open_file(self.infile)
 
         # I need to change the numbers of kpoints, it will needs the second
         # line. The first one is not needed
@@ -975,7 +975,7 @@ class ProcarFileFilter:
         # open the files
         fout = open(self.outfile, 'w')
         fopener = UtilsProcar()
-        with fopener.OpenFile(self.infile) as fin:
+        with fopener.open_file(self.infile) as fin:
             counter = 0
             for line in fin:
                 # if any data found
@@ -1977,7 +1977,7 @@ def scriptFermi2D(args):
                 print "Fermi energy found in outcar file = " + str(args.fermi)
         args.rec_basis = outcarparser.RecLatOutcar(args.outcar)
     # Reciprocal lattices are needed!
-    elif arg.rec_basis is None and args.outcar is None:
+    elif args.rec_basis is None and args.outcar is None:
         print "ERORR: Reciprocal Lattice is needed, use --rec_basis or --outcar"
         raise RuntimeError("Reciprocal Lattice not found")
 
@@ -2127,7 +2127,7 @@ def scriptVector(args):
     mlab.show()
 
 
-def scriptRepair(args):
+def script_repair(args):
     if args.quiet is False:
         print "Input File    : ", args.infile
         print "Output File   : ", args.outfile
@@ -2567,7 +2567,7 @@ if __name__ == "__main__":
     VerbRepair.add_argument("-v", "--verbose", action="count", default=0)
     VerbRepair.add_argument("-q", "--quiet", action="store_true")
 
-    parserRepair.set_defaults(func=scriptRepair)
+    parserRepair.set_defaults(func=script_repair)
 
     args = parser.parse_args()
     args.func(args)

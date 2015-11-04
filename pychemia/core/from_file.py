@@ -1,6 +1,6 @@
 import os
 import sys
-import pychemia
+from pychemia import HAS_PYMATGEN
 from .structure import Structure
 from pychemia.code.vasp import read_poscar
 from pychemia.code.abinit import InputVariables
@@ -14,7 +14,7 @@ def structure_from_file(structure_file):
         sys.exit(1)
     if structure_file[-4:].lower() == 'json':
         st = Structure.load_json(structure_file)
-    elif structure_file[-3:].lower() == 'cif' and pychemia.HAS_PYMATGEN:
+    elif structure_file[-3:].lower() == 'cif' and HAS_PYMATGEN:
         import pychemia.external.pymatgen
         st = pychemia.external.pymatgen.cif2structure(structure_file)[0]
     elif structure_file[-6:].lower() == 'poscar':
