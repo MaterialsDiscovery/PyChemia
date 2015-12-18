@@ -1,6 +1,7 @@
 import os
 import math
 from numbers import Number
+import numpy as np
 
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2014"
@@ -296,6 +297,13 @@ class InputVariables:
                 self.variables['ENCUT'] = maxvalue
                 # pcm_log.debug('ENCUT: %7.3f' % self.variables['ENCUT'])
 
+    def set_ismear(self, kpoints):
+        if np.prod(kpoints.grid) > 27:
+            self.variables['ISMEAR'] = -5
+        else:
+            self.variables['ISMEAR'] = 0
+
+
     def set_ion_relax(self, NSW=50, ISIF=2, IBRION=2, EDIFFG=-1E-3):
         self.variables['IBRION'] = IBRION
         self.variables['NSW'] = NSW
@@ -325,7 +333,6 @@ class InputVariables:
         self.variables['ICHARG'] = 1
 
     def set_minimum(self, PREC='Normal', ISPIN=2, LREAL=False, ISMEAR=0, LORBIT=11):
-        print 'incar set_minimun'
         self.variables['PREC'] = PREC
         if LREAL is not None:
             self.variables['LREAL'] = LREAL

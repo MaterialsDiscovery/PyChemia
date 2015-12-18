@@ -222,20 +222,6 @@ class StructureEntry:
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def signature(self):
-        comp = self.structure.get_composition()
-        gcd = self.structure.get_composition().gcd
-        ret = '%02X_%020X_%02X_' % (self.structure.valence_electrons() / gcd, comp.species_hex(), gcd)
-
-        formula = "%s" % comp.sorted_formula(sortby='electroneg')
-        formula += (20 - len(formula)) * '_'
-        ret += formula
-
-        if self.structure.is_crystal:
-            ret += "_%5.3f" % self.structure.density
-        return ret
-
-
 class PropertiesEntry:
     """
     Defines one calc in the Execution Repository

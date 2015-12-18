@@ -6,7 +6,7 @@ import sys
 import json
 import getopt
 import pychemia
-from pychemia.code.vasp.task import ConvergenceKPointGrid, ConvergenceCutOffEnergy
+from pychemia.code.vasp.task import ConvergenceKPointGrid, ConvergenceCutOffEnergy, StaticCalculation
 from pychemia.utils.computing import get_float, get_int
 
 logging.basicConfig(level=logging.DEBUG)
@@ -39,7 +39,7 @@ OPTIONS
     --structure, -s <string> (Default: 'POSCAR')
         Structure for which the strength will be computed
 
-    --output, -o <string> (Default: 'IdealStrength.json')
+    --output, -o <string> (Default: 'static_calculation.json')
         File in JSON format where the results are stored
 
     --nparal, -n <int> (Default: 2)
@@ -106,45 +106,50 @@ def main(argv):
     print " MPI number of procs : ", nparal
     print " Structure           :\n"
     print structure
-
-    wf = open(output_file, 'w')
-    data = {'input': {'binary': binary,
-                      'energy_tol': energy_tol,
-                      'nparal': nparal,
-                      'structure': structure.to_dict}}
-    json.dumps(data, wf)
-    wf.close()
+    data = {}
 
     cleaner()
     print '\nConvergence of Cut-off Energy'
     print '-----------------------------\n'
-    ce = ConvergenceCutOffEnergy(structure, energy_tolerance=energy_tol)
+    ce = ConvergenceCutOffEnergy(structure, energy_tolerance=energy_tol, binary=binary)
     ce.run(nparal)
     ce.save()
     ce.plot()
     encut = ce.best_encut
 
-    data['output'] = {'ENCUT': encut}
+    cvg = json.load(open('task.json'))
+    data['Convergece Cut-off'] = cvg
     wf = open(output_file, 'w')
-    json.dumps(data, wf)
+    json.dump(data, wf)
     wf.close()
 
     cleaner()
     print '\nConvergence of K-Point Grid'
     print '---------------------------\n'
-    ck = ConvergenceKPointGrid(structure, encut=encut, energy_tolerance=energy_tol)
+    ck = ConvergenceKPointGrid(structure, encut=encut, energy_tolerance=energy_tol, binary=binary)
     ck.run(nparal)
     ck.save()
     ck.plot()
     kp = ck.best_kpoints
 
-    data['output'] = {'KPOINTS': list(kp.grid)}
+    cvg = json.load(open('task.json'))
+    data['Convergece KPoints'] = cvg
     wf = open(output_file, 'w')
-    json.dumps(data, wf)
+    json.dump(data, wf)
     wf.close()
 
     cleaner()
 
+    job = StaticCalculation(structure, encut=encut, kpoints=kp, binary=binary)
+    job.run(nparal)
+    job.save()
+    cvg = json.load(open('task.json'))
+    data['Static'] = cvg
+    wf = open(output_file, 'w')
+    json.dump(data, wf)
+    wf.close()
+
+    cleaner()
 
 if __name__ == "__main__":
     main(sys.argv)

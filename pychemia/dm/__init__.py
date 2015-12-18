@@ -1,7 +1,9 @@
 """
 Routines related to Data mining
 """
-
-from network import NetworkAnalysis
+try:
+    from network import NetworkAnalysis
+except ImportError:
+    print 'Networkx not present'
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

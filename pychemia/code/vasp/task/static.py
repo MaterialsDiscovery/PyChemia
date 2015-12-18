@@ -33,6 +33,9 @@ class StaticCalculation(Task):
         vj.job_static()
         vj.input_variables.set_density_for_restart()
         vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir + os.sep + 'POTCAR')
+        vj.input_variables.set_ismear(self.kpoints)
+        vj.input_variables.variables['SIGMA'] = 0.2
+        vj.input_variables.variables['ISPIN'] = 2
         vj.set_inputs()
         self.encut = vj.input_variables.variables['ENCUT']
         vj.run(use_mpi=True, mpi_num_procs=nparal)
@@ -66,7 +69,8 @@ class StaticCalculation(Task):
         vj.get_outputs()
 
         self.output = {'forces': generic_serializer(vj.outcar.forces), 'stress': generic_serializer(vj.outcar.stress),
-                       'energy': vj.outcar.energy, 'energies': generic_serializer(vj.outcar.energies)}
+                       'energy': vj.outcar.energy, 'energies': generic_serializer(vj.outcar.energies),
+                       'INCAR': vj.input_variables.variables}
         if vj.outcar.is_finished:
             self.finished = True
 

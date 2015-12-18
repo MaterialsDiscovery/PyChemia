@@ -151,7 +151,6 @@ class VaspJob(Codes):
         pass
 
     def job_static(self):
-        print 'job static'
         inp = InputVariables()
         inp.set_minimum()
         self._check_workdir()

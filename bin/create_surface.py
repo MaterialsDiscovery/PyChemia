@@ -46,10 +46,13 @@ if __name__ == "__main__":
 
     structure = pychemia.code.vasp.read_poscar(inputfile)
     surf = pychemia.analysis.create_surface(structure, h, k, l, layers)
+
+    print surf
+
     pychemia.code.vasp.write_poscar(surf, outputfile)
 
     symmetry = pychemia.symm.StructureSymmetry(structure)
-    print 'Original spacegroup: ', symmetry.number()
+    print 'SpaceGroup (Original): ', symmetry.number()
 
     symmetry = pychemia.symm.StructureSymmetry(surf)
-    print 'Final spacegroup: ', symmetry.number()
+    print 'SpaceGroup (Final)   : ', symmetry.number()

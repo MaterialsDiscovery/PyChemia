@@ -23,8 +23,6 @@ class Task:
         self.started = False
         self.output = {}
         self.report_dir = self.workdir + os.sep + 'REPORT'
-        if not os.path.isdir(self.report_dir):
-            os.mkdir(self.report_dir)
 
     @abstractmethod
     def run(self):

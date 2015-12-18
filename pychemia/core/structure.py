@@ -120,7 +120,7 @@ Empty structure
         if 'natom' in kwargs:
             self.natom = int(kwargs['natom'])
         if 'symbols' in kwargs:
-            self.symbols = kwargs['symbols']
+            self.symbols = list(kwargs['symbols'])
         if 'periodicity' in kwargs:
             periodicity = kwargs['periodicity']
             self.set_periodicity(periodicity)
@@ -690,6 +690,7 @@ Empty structure
             self.align_with_axis()
             self.align_with_plane()
             self.atoms_in_box()
+            self.sort_sites()
 
     def supercell(self, size):
         """
@@ -698,7 +699,7 @@ Empty structure
         size=(nx,ny,nz) times
         """
         new_natom = np.prod(size) * self.natom
-        new_symbols = np.prod(size) * self.symbols
+        new_symbols = []
         new_positions = np.zeros((new_natom, 3))
 
         index = 0
@@ -706,6 +707,7 @@ Empty structure
             for j in range(size[1]):
                 for k in range(size[2]):
                     for n in range(self.natom):
+                        new_symbols.append(self.symbols[n])
                         new_positions[index] = self.positions[n] + (
                             i * self.cell[0] + j * self.cell[1] + k * self.cell[2])
                         index += 1
@@ -713,6 +715,7 @@ Empty structure
         new_cell[0] = size[0] * self.cell[0]
         new_cell[1] = size[1] * self.cell[1]
         new_cell[2] = size[2] * self.cell[2]
+        print 'Supercell', size
         return Structure(symbols=new_symbols, positions=new_positions, cell=new_cell)
 
     def copy(self):
@@ -1046,6 +1049,19 @@ Empty structure
 
         I = np.array([[Ixx, -Ixy, -Ixz], [-Ixy, Iyy, -Iyz], [-Ixz, -Iyz, Izz]])
         return I
+
+    def signature(self):
+        comp = self.get_composition()
+        gcd = self.get_composition().gcd
+        ret = '%02X_%014X_%02X_' % (self.valence_electrons() / gcd, comp.species_hex(), gcd)
+
+        formula = "%s" % comp.sorted_formula(sortby='electroneg')
+        formula += (17 - len(formula)) * '_'
+        ret += formula
+
+        return ret
+
+
 
 
 def load_structure_json(filename):
