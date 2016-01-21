@@ -129,7 +129,7 @@ class ConvergenceCutOffEnergy(Task, Convergence):
             vj.job_static()
             vj.input_variables.set_density_for_restart()
             vj.input_variables.set_encut(ENCUT=x, POTCAR=self.workdir + os.sep + 'POTCAR')
-            vj.input_variables.variables['NBANDS'] = 30 + self.structure.valence_electrons()
+            vj.input_variables.variables['NBANDS'] = nparal * ((30 + self.structure.valence_electrons()) / nparal + 1)
             vj.input_variables.set_ismear(self.kpoints)
             vj.input_variables.variables['SIGMA'] = 0.2
             vj.input_variables.variables['ISPIN'] = 2
@@ -197,6 +197,8 @@ class ConvergenceCutOffEnergy(Task, Convergence):
 
     def report(self, file_format='html'):
 
+        from lxml.builder import ElementMaker, E
+
         if not os.path.isdir(self.report_dir):
             os.mkdir(self.report_dir)
 
@@ -262,7 +264,8 @@ class ConvergenceKPointGrid(Task, Convergence):
                 vj.job_static()
                 vj.input_variables.set_density_for_restart()
                 vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir + os.sep + 'POTCAR')
-                vj.input_variables.variables['NBANDS'] = 30 + self.structure.valence_electrons()
+                vj.input_variables.variables['NBANDS'] = nparal * (
+                (30 + self.structure.valence_electrons()) / nparal + 1)
                 vj.input_variables.set_ismear(kp)
                 vj.input_variables.variables['SIGMA'] = 0.2
                 vj.input_variables.variables['ISPIN'] = 2
@@ -340,7 +343,6 @@ class ConvergenceKPointGrid(Task, Convergence):
 
         if not os.path.isdir(self.report_dir):
             os.mkdir(self.report_dir)
-
 
         self.plot(filedir=self.report_dir, file_format='jpg')
 

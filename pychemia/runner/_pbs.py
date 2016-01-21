@@ -67,7 +67,7 @@ class PBSRunner:
             wf.write("#PBS -M %s\n" % self.mail)
         if self.queue is not None:
             wf.write("#PBS -q %s\n" % self.queue)
-        wf.write('\ncd %s\n' % os.path.abspath(self.workdir))
+        wf.write('\ncd $PBS_O_WORKDIR\n')
 
         if self.template is not None:
             wf.write("%s\n" % self.template)

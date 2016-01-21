@@ -25,7 +25,7 @@ class HarmonySearch(Searcher):
                                    Once this ratio is fulfilled the generation is considered sufficient to start a cycle
         """
         # Mandatory objects
-        Searcher.__init__(population, fraction_evaluated, generation_size, stabilization_limit)
+        Searcher.__init__(self, population, fraction_evaluated, generation_size, stabilization_limit)
         # Parameters
         self.hmcr = None  # harmony_memory_considering_rate
         self.par = None

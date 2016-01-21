@@ -108,15 +108,17 @@ class Searcher:
                     pcm_log.debug('Creating %d random structures' % n)
                     self.population.random_population(n)
 
-    def get_generation(self, value=None):
+    def get_generation(self, generation_number=None):
         """
         Return all the elements tagged as belonging to a given generation
 
-        :return:
+        :param generation_number: Number of generation to get
+        :return: (list) Identifiers of all candidates for a given generation number
+        :rtype: list
         """
-        if value is None:
-            value = self.current_generation
-        return [x for x in self.generation if value in self.generation[x]]
+        if generation_number is None:
+            generation_number = self.current_generation
+        return [x for x in self.generation if generation_number in self.generation[x]]
 
     def print_status(self, level='DEBUG'):
         if level == 'DEBUG':
@@ -158,12 +160,22 @@ class Searcher:
         self.old_actives = self.population.actives
         self.old_nextgen = self.get_generation(self.current_generation + 1)
 
+    def advance(self, father, son, change):
+        self.write_change(father, change)
+        if str(father) not in self.lineage_inv:
+            print '%s not in current lineage' % father
+            print 'Lineages %s' % self.lineage_inv.keys()
+            raise ValueError('Father not in lineage')
+        slot = self.lineage_inv[str(father)]
+        self.lineage[slot].append(None)
+        self.lineage[slot][self.current_generation + 1] = son
+        self.lineage_inv[str(son)] = slot
+        self.set_generation(son, self.current_generation + 1)
+
     def pass_to_new_generation(self, entry_id, reason=None):
         pcm_log.debug('Moving to new generation : %s' % str(entry_id))
         change = {'change': 'promoted', 'reason': reason}
-        self.set_generation(entry_id, self.current_generation + 1)
-        self.write_change(entry_id, change)
-        self.advance_lineage(entry_id, entry_id)
+        self.advance(entry_id, entry_id, change)
 
     def replace_by_changed(self, entry_id_old, reason=None):
         entry_id_new = self.population.move_random(entry_id_old, factor=self.delta_change, in_place=False,
@@ -171,32 +183,20 @@ class Searcher:
         change = {'change': 'modified', 'to': entry_id_new, 'reason': reason}
         pcm_log.debug('Modified  %s -> %s' % (str(entry_id_old), str(entry_id_new)))
         self.population.disable(entry_id_old)
-        self.set_generation(entry_id_new, self.current_generation + 1)
-        self.write_change(entry_id_old, change)
-        self.advance_lineage(entry_id_old, entry_id_new)
+        self.advance(entry_id_old, entry_id_new, change)
 
     def replace_by_other(self, entry_id_old, entry_id_new, reason=None):
         change = {'change': 'replace_by_other', 'to': entry_id_new, 'reason': reason}
         pcm_log.debug('Changed  %s -> %s' % (str(entry_id_old), str(entry_id_new)))
         self.population.disable(entry_id_old)
-        self.set_generation(entry_id_new, self.current_generation + 1)
-        self.write_change(entry_id_old, change)
-        self.advance_lineage(entry_id_old, entry_id_new)
+        self.advance(entry_id_old, entry_id_new, change)
 
     def replace_by_random(self, entry_id_old, reason=None):
         self.population.disable(entry_id_old)
         entry_id_new, origin = self.population.add_random()
         pcm_log.debug('Replace by random  %s -> %s' % (str(entry_id_old), str(entry_id_new)))
-        self.set_generation(entry_id_new, self.current_generation + 1)
         change = {'change': 'replace_by_random', 'to': entry_id_new, 'reason': reason, 'origin': origin}
-        self.write_change(entry_id_old, change)
-        self.advance_lineage(entry_id_old, entry_id_new)
-
-    def advance_lineage(self, father, son):
-        slot = self.lineage_inv[str(father)]
-        self.lineage[slot].append(None)
-        self.lineage[slot][self.current_generation + 1] = son
-        self.lineage_inv[str(son)] = slot
+        self.advance(entry_id_old, entry_id_new, change)
 
     def save_generations(self):
         if self.pcdb is not None:
@@ -234,6 +234,45 @@ class Searcher:
     def get_params(self):
         pass
 
+    def update_lineages(self):
+
+        assert len(self.population.actives) == self.generation_size
+
+        # Complete lineage dictionary with generation_size entries
+        # Each entry on the dictionary is a list of current_generation+1 values
+        for i in range(self.generation_size):
+            if str(i) not in self.lineage:
+                self.lineage[str(i)] = [None]
+            while len(self.lineage[str(i)]) < self.current_generation + 1:
+                self.lineage[str(i)].append(None)
+
+        # Complete lineage for all actives with known lineage_inv
+        for entry_id in self.population.actives:
+            if entry_id in self.lineage_inv:
+                slot = self.lineage_inv[entry_id]
+                self.lineage[slot][self.current_generation] = entry_id
+
+        # Find empty slots for actives not in lineage_inv
+        for entry_id in self.population.actives:
+            if entry_id not in self.lineage_inv:
+                for i in range(self.generation_size):
+                    # Search for the first empty slot and associate it to the entry_id
+                    if self.lineage[str(i)][self.current_generation] is None:
+                        self.lineage[str(i)][self.current_generation] = entry_id
+                        self.lineage_inv[str(entry_id)] = str(i)
+                        break
+
+        # Check consistency between lineage and lineage_inv
+        for i in range(self.generation_size):
+            assert str(i) in self.lineage
+            assert self.lineage[str(i)][-1] in self.lineage_inv
+            assert self.lineage_inv[self.lineage[str(i)][-1]] == str(i)
+
+        # Setting Generation list
+        pcm_log.debug('Setting generation...')
+        for entry_id in self.population.actives:
+            self.set_generation(entry_id, self.current_generation)
+
     def run(self):
         """
         Execute the total number of cycles
@@ -246,34 +285,12 @@ class Searcher:
         self.population.save_info()
         best_member = ''
 
-        # Fill the lineage for current generation
-        for i in range(self.generation_size):
-            if i not in self.lineage:
-                self.lineage[str(i)] = [None]
-            while len(self.lineage[str(i)]) < self.current_generation + 1:
-                self.lineage[str(i)].append(None)
-
         while True:
             self.print_status(level='DEBUG')
 
             pcm_log.debug('[%s] Enforcing the size of generation: %d' % (self.searcher_name, self.generation_size))
             self.enforce_generation_size()
-
-            for entry_id in self.population.actives:
-                if entry_id in self.lineage_inv:
-                    slot = self.lineage_inv[-1]
-                    self.lineage[slot][self.current_generation] = entry_id
-            for entry_id in self.population.actives:
-                if str(entry_id) not in self.lineage_inv:
-                    for i in range(self.generation_size):
-                        if self.lineage[str(i)][self.current_generation] is None:
-                            self.lineage[str(i)][self.current_generation] = entry_id
-                            self.lineage_inv[str(entry_id)] = str(i)
-                            break
-
-            pcm_log.debug('Setting generation...')
-            for entry_id in self.population.actives:
-                self.set_generation(entry_id, self.current_generation)
+            self.update_lineages()
 
             self.old_actives = self.population.actives
             self.old_nextgen = self.get_generation(self.current_generation + 1)
@@ -327,22 +344,7 @@ class Searcher:
 
             pcm_log.debug('[%s] Running one cycle' % self.searcher_name)
             self.run_one()
-            self.print_status(level='DEBUG')
-
-            # Increase the current generation number
-            self.current_generation += 1
-
-            # Enable all entries in the new generation
-            # Disable all entries not in new generation
-            pcm_log.debug('[%s] Activating new generation, disabling others' % self.searcher_name)
-            for entry_id in self.generation:
-                if self.current_generation in self.generation[entry_id]:
-                    self.population.enable(entry_id)
-                else:
-                    self.population.disable(entry_id)
-            self.print_status(level='DEBUG')
-
-            self.save_generations()
+            self.update_generation()
 
         print 'Searcher ended after %d iterations' % self.current_generation
         print 'Best candidate: [%s] %s' % (best_member, self.population.str_entry(best_member))
@@ -354,6 +356,21 @@ class Searcher:
             change['generation'] = self.current_generation
             change['from'] = entry_id
             self.pcdb.db.generation_changes.insert(change)
+
+    def update_generation(self):
+        # Increase the current generation number
+        assert len(self.get_generation()) == self.generation_size
+        self.current_generation += 1
+
+        # Enable all entries in the new generation
+        # Disable all entries not in new generation
+        pcm_log.debug('[%s] Activating new generation, disabling others' % self.searcher_name)
+        for entry_id in self.generation:
+            if self.current_generation in self.generation[entry_id]:
+                self.population.enable(entry_id)
+            else:
+                self.population.disable(entry_id)
+        self.save_generations()
 
     @property
     def searcher_name(self):

@@ -257,6 +257,25 @@ u'Fm-3m'
         else:
             return self.structure.copy()
 
+    def crystal_system(self, symprec=1e-5, angle_tolerance=-1.0):
+
+        num = self.number(symprec, angle_tolerance)
+
+        if num < 3:
+            return 'Triclinic'
+        elif num < 16:
+            return 'Monoclinic'
+        elif num < 75:
+            return 'Orthorhombic'
+        elif num < 143:
+            return 'Tetragonal'
+        elif num < 168:
+            return 'Trigonal'
+        elif num < 195:
+            return 'Hexagonal'
+        else:
+            return 'Cubic'
+
 
 def symmetrize(structure, initial_symprec=0.01, final_symprec=0.1, delta_symprec=0.01):
     if structure.natom == 1:

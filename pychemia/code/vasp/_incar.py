@@ -303,7 +303,6 @@ class InputVariables:
         else:
             self.variables['ISMEAR'] = 0
 
-
     def set_ion_relax(self, NSW=50, ISIF=2, IBRION=2, EDIFFG=-1E-3):
         self.variables['IBRION'] = IBRION
         self.variables['NSW'] = NSW

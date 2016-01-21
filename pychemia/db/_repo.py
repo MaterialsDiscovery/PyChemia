@@ -222,6 +222,7 @@ class StructureEntry:
     def __ne__(self, other):
         return not self.__eq__(other)
 
+
 class PropertiesEntry:
     """
     Defines one calc in the Execution Repository

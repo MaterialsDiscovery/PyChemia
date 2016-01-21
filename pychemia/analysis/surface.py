@@ -1,9 +1,8 @@
 import numpy as np
 import pychemia
+import itertools
 import scipy.spatial
-
-# Define the tolerance
-tol = 1.e-5
+from scipy.spatial import qhull
 
 
 # return [x, y, d], that ax + by = d, d = gcd(a, b)
@@ -28,7 +27,7 @@ def print_vector(v):
     print "\n"
 
 
-def create_surface(structure, h, k, l, layers):
+def create_surface(structure, h, k, l, layers, tol=1.e-5):
     cell = structure.cell
     a1 = np.array(cell[0])
     a2 = np.array(cell[1])
@@ -79,7 +78,6 @@ def create_surface(structure, h, k, l, layers):
     symbols += structure.symbols
     surf = pychemia.Structure(symbols=symbols, reduced=reduced, cell=newbasis)
 
-    surf.canonical_form()
     if layers > 1:
         new_surf = surf.supercell((1, 1, layers))
         cell = new_surf.cell
@@ -147,13 +145,201 @@ def get_onion_layers(structure):
     assert (not structure.is_periodic)
     layers = []
     cur_st = structure.copy()
-    while True:
+
+    morelayers = True
+    while morelayers:
         pos = cur_st.positions
-        voro = scipy.spatial.Voronoi(pos)
-        surface = [i for i in range(cur_st.natom) if -1 in voro.regions[voro.point_region[i]]]
-        print surface
+        try:
+            voro = scipy.spatial.Voronoi(pos)
+            surface = [i for i in range(cur_st.natom) if -1 in voro.regions[voro.point_region[i]]]
+        except qhull.QhullError:
+            surface = range(cur_st.natom)
+            morelayers = False
+        layers.append(surface)
+        if not morelayers:
+            break
+
         core = [i for i in range(cur_st.natom) if i not in surface]
+        if len(core) == 0:
+            print 'No atoms in core'
+            break
         symbols = list(np.array(cur_st.symbols)[np.array(core)])
         positions = cur_st.positions[np.array(core)]
         cur_st = pychemia.Structure(symbols=symbols, positions=positions, periodicity=False)
-        layers.append(surface)
+
+    new_layers = [layers[0]]
+    included = list(layers[0])
+
+    acumulator = 0
+    for i in range(1, len(layers)):
+        noincluded = [j for j in range(structure.natom) if j not in included]
+        print 'Layer: %3d   Atoms on Surface: %3d     Internal Atoms: %3d' % (i,
+                                                                              len(included) - acumulator,
+                                                                              len(noincluded))
+        acumulator = len(included)
+        relabel = [noincluded[j] for j in layers[i]]
+        included += relabel
+        new_layers.append(relabel)
+
+    return new_layers
+
+
+def get_edges_and_facets(structure, surface, seed, distance_tolerance=2.0):
+    if seed not in surface:
+        print 'Error: seed not in surface'
+        print 'Seed: ', seed
+        print 'Surface: ', surface
+        raise ValueError('Seed not in surface')
+
+    idx_seed = surface.index(seed)
+    pos = structure.positions[surface]
+    dl = scipy.spatial.Delaunay(pos)
+    if seed not in surface:
+        print 'Error: Seed not on the surface'
+
+    # Delaunay tetrahedrals
+    # The indices for each tetragon are relative to the surface
+    # not the structure
+    tetra = [x for x in dl.simplices if idx_seed in x]
+
+    # Determining Facets
+    facets = []
+    for x in tetra:
+        facets += [y for y in list(itertools.combinations(x, 3)) if idx_seed in y]
+
+    # Indices of facets relative to surface not the structure
+    facets = list(tuple([sorted(x) for x in facets]))
+
+    selected_facets = []
+    for x in facets:
+        dm = scipy.spatial.distance_matrix(pos[x], pos[x])
+        maxdist = max(dm.flatten())
+        pair = np.where(dm == maxdist)
+        atom1 = x[pair[0][0]]
+        atom2 = x[pair[1][0]]
+        covrad1 = pychemia.utils.periodic.covalent_radius(structure.symbols[surface[atom1]])
+        covrad2 = pychemia.utils.periodic.covalent_radius(structure.symbols[surface[atom2]])
+        if maxdist < distance_tolerance * (covrad1 + covrad2):
+            # Converting indices from surface to structure
+            st_facet = tuple([surface[x[i]] for i in range(3)])
+            selected_facets.append(st_facet)
+        else:
+            pass
+            # print 'Excluded: ', atom1, atom2, surface[atom1], surface[atom2]
+
+    print 'Original facets', facets
+    facets = selected_facets
+    print 'Selected facets', facets
+
+    # Deternmining Edges
+    edges = []
+    for x in facets:
+        # Make indices are relative to structure
+        edges += [y for y in list(itertools.permutations(x, 2)) if y[0] == seed]
+    edges = list(set(edges))
+    return edges, facets
+
+
+def attach_to_edge(structure, edges, edge_index=None, radius=1.0):
+    if edge_index is None:
+        rnd = np.random.randint(len(edges))
+        chosen = edges[rnd]
+    else:
+        assert edge_index < len(edges)
+        chosen = edges[edge_index]
+
+    print 'Edge chosen: ', chosen
+    v1 = structure.positions[chosen[0]]
+    v2 = structure.positions[chosen[1]]
+    vector = 0.5 * (v2 + v1)
+    dv = 0.5 * pychemia.utils.mathematics.unit_vector(vector)
+    n = 0
+    cur_vector = None
+    increase = True
+    while True:
+        cur_vector = vector + n * dv
+        distances = scipy.spatial.distance_matrix(structure.positions, cur_vector.reshape((1, 3)))
+        for j in range(structure.natom):
+            sum_covalent_radius = pychemia.utils.periodic.covalent_radius(structure.symbols[j]) + radius
+            if distances[j] < sum_covalent_radius:
+                print 'Sum Cov Rad: %7.3f  Distance: %7.3f ' % (sum_covalent_radius, distances[j])
+                n += 1
+                increase = True
+                break
+            increase = False
+        if not increase:
+            break
+    return cur_vector, chosen
+
+
+def attach_to_facet(structure, facets, facet_index=None, radius=1.0):
+    if facet_index is None:
+        rnd = np.random.randint(len(facets))
+        chosen = facets[rnd]
+    else:
+        assert facet_index < len(facets)
+        chosen = facets[facet_index]
+
+    print 'Facet chosen: ', chosen
+    v1 = np.array(structure.positions[chosen[0]])
+    v2 = np.array(structure.positions[chosen[1]])
+    v3 = np.array(structure.positions[chosen[2]])
+    center = 0.5 * (v3 + v2 + v1)
+    dv = 0.5 * pychemia.utils.mathematics.unit_vector(np.cross(v2 - v1, v3 - v1))
+    if np.dot(dv, center) < 0:
+        dv = -dv
+    n = 0
+    increase = True
+    cur_vector = None
+    while True:
+        cur_vector = center + n * dv
+        distances = scipy.spatial.distance_matrix(structure.positions, cur_vector.reshape((1, 3)))
+        for j in range(structure.natom):
+            sum_covalent_radius = pychemia.utils.periodic.covalent_radius(structure.symbols[j]) + radius
+            if distances[j] < sum_covalent_radius:
+                print 'Sum Cov Rad: %7.3f  Distance: %7.3f ' % (sum_covalent_radius, distances[j])
+                n += 1
+                increase = True
+                break
+            increase = False
+        if not increase:
+            break
+    return cur_vector, chosen
+
+
+def random_attaching(structure, seed, target_species, radius=1.0):
+    print 'Seed: ', seed
+
+    lys = pychemia.analysis.surface.get_onion_layers(structure)
+    surface = lys[0]
+
+    tol = 2.0
+    edges = []
+    facets = []
+    while True:
+        edges, facets = get_edges_and_facets(structure, surface, seed, distance_tolerance=tol)
+        if len(edges) > 0 and len(facets) > 0:
+            break
+        else:
+            print 'No facets or edges found, increasing tolerance tol=', tol
+            tol += 0.1
+
+    print 'Number of Edges:', len(edges)
+    print 'Number of Facets: ', len(facets)
+
+    if True or np.random.randint(2) == 0:
+        print 'Attaching to edge'
+        vec, edge_facet = attach_to_edge(structure, edges, radius=radius)
+        attach_to = 'Edge'
+    else:
+        print 'Attaching to facet'
+        vec, edge_facet = attach_to_facet(structure, facets, radius=radius)
+        attach_to = 'Facet'
+
+    new_sts = {}
+    for specie in target_species:
+        new_symbols = list(structure.symbols) + [specie]
+        new_positions = np.concatenate((structure.positions, [vec]))
+
+        new_sts[specie] = pychemia.Structure(symbols=new_symbols, positions=new_positions, periodicity=False)
+    return new_sts, attach_to, edge_facet

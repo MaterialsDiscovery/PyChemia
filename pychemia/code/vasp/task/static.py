@@ -13,7 +13,8 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class StaticCalculation(Task):
-    def __init__(self, structure, workdir='.', binary='vasp', encut=1.3, kpoints=None, kp_density=1E4):
+    def __init__(self, structure, workdir='.', binary='vasp', encut=1.3, kpoints=None, kp_density=1E4,
+                 extra_incar=None):
 
         self.encut = encut
         if kpoints is None:
@@ -22,7 +23,7 @@ class StaticCalculation(Task):
             self.kpoints = kp
         else:
             self.kpoints = kpoints
-        self.task_params = {'encut': self.encut, 'kpoints': self.kpoints.to_dict}
+        self.task_params = {'encut': self.encut, 'kpoints': self.kpoints.to_dict, 'extra_incar': extra_incar}
         Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, binary=binary)
 
     def run(self, nparal=4):
@@ -33,9 +34,13 @@ class StaticCalculation(Task):
         vj.job_static()
         vj.input_variables.set_density_for_restart()
         vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir + os.sep + 'POTCAR')
+        vj.input_variables.variables['NBANDS'] = nparal * ((30 + self.structure.valence_electrons()) / nparal + 1)
         vj.input_variables.set_ismear(self.kpoints)
         vj.input_variables.variables['SIGMA'] = 0.2
         vj.input_variables.variables['ISPIN'] = 2
+        if self.task_params['extra_incar'] is not None:
+            for i in self.task_params['extra_incar']:
+                vj.input_variables.variables[i] = self.task_params['extra_incar'][i]
         vj.set_inputs()
         self.encut = vj.input_variables.variables['ENCUT']
         vj.run(use_mpi=True, mpi_num_procs=nparal)

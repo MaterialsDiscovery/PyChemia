@@ -1062,8 +1062,6 @@ Empty structure
         return ret
 
 
-
-
 def load_structure_json(filename):
     ret = Structure()
     ret.load_json(filename)

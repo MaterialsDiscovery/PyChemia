@@ -67,13 +67,16 @@ class FireBall(Codes):
         self.kpoints = kpoints
         self.binary = binary
 
-    def set_inputs(self):
+    def set_inputs(self, rms=0.1):
         self.write_input(filename=self.workdir + os.sep + 'fireball.in')
         self.write_basis(filename=self.workdir + os.sep + 'input.bas')
         if self.structure.is_periodic:
             self.write_lattice(filename=self.workdir + os.sep + 'input.lvs')
             self.write_kpoints(filename=self.workdir + os.sep + 'input.kpts')
         self.link_fdata()
+        wf = open(self.workdir + os.sep + 'rms.input', 'w')
+        wf.write('%f\n' % rms)
+        wf.close()
 
     def get_outputs(self):
         pass
@@ -111,7 +114,10 @@ class FireBall(Codes):
         if self.option:
             ret += '&OPTION\n'
             for variable in sorted(self.option):
-                ret += '%s = %s\n' % (variable, str(self.option[variable]))
+                if isinstance(self.option[variable], basestring):
+                    ret += "%s = '%s'\n" % (variable, str(self.option[variable]))
+                else:
+                    ret += '%s = %s\n' % (variable, str(self.option[variable]))
             ret += '&END\n'
 
         if self.output:
