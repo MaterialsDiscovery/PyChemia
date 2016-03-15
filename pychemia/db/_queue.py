@@ -36,7 +36,7 @@ class PyChemiaQueue:
         else:
             self._client = pymongo.MongoClient(host=host, port=port, ssl=ssl,
                                                ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE)
-        for i in ['version', 'openssl']:
+        for i in ['version']:
             print '%20s : %s' % (i, self._client.server_info()[i])
         self.db = self._client[name]
         if user is not None and self.db.authenticate(user, passwd):

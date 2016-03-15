@@ -356,3 +356,10 @@ class InputVariables:
             value = [value]
 
         return value
+
+
+def get_potcar_info(filename='POTCAR'):
+    rf = open(filename)
+    data = rf.read()
+    ret = re.findall('([\w\ ]*)=([.\ \d]*)', data)
+    return ret

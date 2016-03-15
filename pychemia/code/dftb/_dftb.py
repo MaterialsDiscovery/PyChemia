@@ -494,14 +494,22 @@ def read_detailed_out(filename='detailed.out'):
     rf = open(filename, 'r')
     data = rf.read()
 
-    # In this case no values of forces, stress and energy are produced
-    if re.findall(r'SCC is NOT converged, maximal SCC iterations exceeded', data):
-        pcm_log.debug('SCC is NOT converged, maximal SCC iterations exceeded')
-
     # Extracting the data from 'detailed.out'
     forces = re.findall(r'Total\s*Forces\s*([\.\-\+E\d\s]+)\n', data)
     stress = re.findall(r'Total\s*stress\s*tensor\s*([\.\-\+E\d\s]+)\n', data)
     total_energy = re.findall(r'Total\s*energy:\s*[\.\-\+E\d\s]*\s*H\s*([\.\-\d\sE]+)\s*eV', data)
+
+    max_force = re.findall(r'Max force for moved atoms::\s*([\.\-\+E\d\s]+)\s*au', data)
+    if len(max_force) > 0:
+        max_force = float(max_force[-1])
+    else:
+        max_force = None
+
+    max_deriv = re.findall(r'Maximal derivative component:\s*([\.\-\+E\d\s]+)\s*au', data)
+    if len(max_deriv) > 0:
+        max_deriv = float(max_deriv[-1])
+    else:
+        max_deriv = None
 
     if forces:
         forces = np.array(forces[0].split(), dtype=float).reshape((-1, 3))
@@ -532,6 +540,10 @@ def read_detailed_out(filename='detailed.out'):
     ret['forces'] = forces
     ret['stress'] = stress
     ret['total_energy'] = total_energy
+    if max_force is not None:
+        ret['max_force'] = max_force
+    if max_deriv is not None:
+        ret['max_deriv'] = max_deriv
     return ret
 
 
@@ -574,7 +586,10 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
     ret['Geometry_Steps'] = []
     for iblock in geom_blocks:
         ib = iblock.split('\n')
-        tmp = {'iter': int(ib[0]), 'scc': {}}
+        if 'Lattice' in ib[0]:
+            tmp = {'iter': int(ib[0].split(',')[0]), 'scc': {}}
+        else:
+            tmp = {'iter': int(ib[0]), 'scc': {}}
         tmp['scc']['tot_electronic'] = []
         tmp['scc']['diff_electronic'] = []
         tmp['scc']['scc_error'] = []
@@ -589,6 +604,10 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
                 tmp[left.strip()] = {'value': float(right.split()[0]), 'units': right.split()[1]}
 
         ret['Geometry_Steps'].append(tmp)
+
+    max_force = re.findall(r'Maximal force component:\s*([\s\dE+-.]+)\s*\n', data)
+    if len(max_force) > 0:
+        ret['max_force'] = float(max_force[-1])
 
     if re.findall('Geometry did NOT converge', data):
         pcm_log.debug('Convergence not achieved!')

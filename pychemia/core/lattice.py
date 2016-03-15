@@ -330,8 +330,9 @@ array([[ True,  True,  True,  True],
         # Exclude distances out of sphere
         if exclude_out_sphere:
             inside_sphere = ret['distance'] <= radius
-            ret['distance'] = ret['distance'][inside_sphere]
-            ret['image'] = ret['image'][inside_sphere]
+            if sum(inside_sphere) > 0:
+                ret['distance'] = ret['distance'][inside_sphere]
+                ret['image'] = ret['image'][inside_sphere]
 
         if sort_by_distance:
             sorted_indices = np.argsort(ret['distance'])

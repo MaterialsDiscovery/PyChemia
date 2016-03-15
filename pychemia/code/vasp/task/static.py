@@ -34,7 +34,8 @@ class StaticCalculation(Task):
         vj.job_static()
         vj.input_variables.set_density_for_restart()
         vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir + os.sep + 'POTCAR')
-        vj.input_variables.variables['NBANDS'] = nparal * ((30 + self.structure.valence_electrons()) / nparal + 1)
+        vj.input_variables.variables['NBANDS'] = nparal * ((int(self.structure.valence_electrons()) +
+                                                            self.structure.natom) / nparal + 1)
         vj.input_variables.set_ismear(self.kpoints)
         vj.input_variables.variables['SIGMA'] = 0.2
         vj.input_variables.variables['ISPIN'] = 2

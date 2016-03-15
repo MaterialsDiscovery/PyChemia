@@ -4,6 +4,7 @@ import numpy as np
 from .._codes import Codes
 from pychemia import pcm_log, Structure
 from pychemia.utils.periodic import atomic_number, atomic_symbol
+from pychemia.serializer import generic_serializer
 import re
 
 
@@ -147,20 +148,8 @@ class FireBall(Codes):
         return ret
 
     def write_basis(self, filename='input.bas'):
+        write_geometry_bas(self.structure, filename)
 
-        wf = open(filename, 'w')
-        wf.write('%d\n' % self.structure.natom)
-        for i in range(self.structure.natom):
-            if self.structure.is_periodic:
-                x = self.structure.reduced[i, 0]
-                y = self.structure.reduced[i, 1]
-                z = self.structure.reduced[i, 2]
-            else:
-                x = self.structure.positions[i, 0]
-                y = self.structure.positions[i, 1]
-                z = self.structure.positions[i, 2]
-            wf.write('%d %13.7f %13.7f %13.7f\n' % (atomic_number(self.structure.symbols[i]), x, y, z))
-        wf.close()
 
     def write_lattice(self, filename='input.lvs'):
         wf = open(filename, 'w')
@@ -219,6 +208,12 @@ def read_fireball_stdout(filename):
                 forces[iteration, int(fields[2]) - 1] = np.array(fields[-3:], dtype=float)
         iteration += 1
 
+    ret = re.findall('Cartesian Forces:\s*Max = ([=\w\s\d.]*)RMS = ([\s\d.]*)\n', data)
+    ret = [[float(x) for x in y] for y in ret]
+    max_force = [x[0] for x in ret]
+    rms = [x[1] for x in ret]
+
+
     energy_data = re.findall(r'---------- T H E  T O T A L  E N E R G Y -----------([\s\w\d\.\-=/]+)--- \n', data)
 
     energy = []
@@ -232,7 +227,12 @@ def read_fireball_stdout(filename):
                 ienergy[tmp[0].strip()] = float(tmp[1])
         energy.append(ienergy)
 
-    ret = {'symbols': symbols, 'initial_positions': initial_positions, 'forces': forces, 'energy': energy}
+    ret = {'symbols': symbols,
+           'initial_positions': initial_positions,
+           'forces': generic_serializer(forces),
+           'energetics': energy,
+           'max_force': max_force,
+           'rms_force': rms}
     return ret
 
 
@@ -249,3 +249,45 @@ def read_geometry_bas(filename):
         positions[i] = np.array(line[1:])
 
     return Structure(symbols=symbols, positions=positions, periodicity=False)
+
+
+def write_geometry_bas(structure, filename):
+    wf = open(filename, 'w')
+    wf.write('%3d\n' % structure.natom)
+    for i in range(structure.natom):
+        if structure.is_periodic:
+            x = structure.reduced[i, 0]
+            y = structure.reduced[i, 1]
+            z = structure.reduced[i, 2]
+        else:
+            x = structure.positions[i, 0]
+            y = structure.positions[i, 1]
+            z = structure.positions[i, 2]
+        wf.write('%3d %13.7f %13.7f %13.7f\n' % (atomic_number(structure.symbols[i]), x, y, z))
+    wf.close()
+
+
+def get_fdata_info(fdata_path='Fdata'):
+    rf = open(fdata_path + os.sep + 'info.dat')
+    data = rf.read()
+    ret = re.findall('([-.\ \d\w]*) \- ([\ \d\w;]*) \n', data)
+    res = {}
+    for i in ret:
+        key = i[1]
+        value = i[0]
+        if key == 'Information for this species':
+            cur_atom = int(value)
+            res[cur_atom] = {}
+        elif key == 'Element':
+            res[cur_atom]['Element'] = value.strip()
+        elif key == 'Nuclear Z':
+            res[cur_atom]['Nuclear Z'] = int(value)
+        elif key == 'Atomic Mass':
+            res[cur_atom]['Atomic Mass'] = float(value)
+        elif key == 'Number of shells; L for each shell':
+            res[cur_atom]['Number of shells; L for each shell'] = int(value)
+        elif key == 'Radial cutoffs PP':
+            res[cur_atom]['Radial cutoffs PP'] = float(value)
+        elif key == 'Atomic energy':
+            res[cur_atom]['Atomic energy'] = float(value)
+    return res

@@ -10,7 +10,8 @@ from pychemia import Structure
 
 
 class PyChemiaDB:
-    def __init__(self, name='pychemiadb', host='localhost', port=27017, user=None, passwd=None, ssl=False):
+    def __init__(self, name='pychemiadb', host='localhost', port=27017, user=None, passwd=None, ssl=False,
+                 replicaset=None):
         """
         Creates a MongoDB client to 'host' with 'port' and connect it to the database 'name'.
         Authentication can be used with 'user' and 'password'
@@ -23,7 +24,13 @@ class PyChemiaDB:
 
         :return:
         """
-        self.db_settings = {'name': name, 'host': host, 'port': port, 'user': user, 'passwd': passwd, 'ssl': ssl}
+        self.db_settings = {'name': name,
+                            'host': host,
+                            'port': port,
+                            'user': user,
+                            'passwd': passwd,
+                            'ssl': ssl,
+                            'replicaset': replicaset}
         self.name = name
         uri = 'mongodb://'
         if user is not None:
@@ -35,9 +42,11 @@ class PyChemiaDB:
         if user is not None:
             uri += '/' + name
         if pymongo.version_tuple[0] == 2:
-            self._client = pymongo.MongoClient(uri, ssl=ssl)
+            self._client = pymongo.MongoClient(uri, ssl=ssl, replicaSet=replicaset)
         elif pymongo.version_tuple[0] == 3:
-            self._client = pymongo.MongoClient(uri, ssl=ssl, ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE)
+            self._client = pymongo.MongoClient(uri, ssl=ssl,
+                                               ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE,
+                                               replicaSet=replicaset)
         else:
             raise ValueError('Wrong version of pymongo')
         self.db = self._client[name]
@@ -89,7 +98,6 @@ class PyChemiaDB:
         :return:
         :rtype : ObjectId
         """
-        entry_id = object_id(entry_id)
 
         assert (self.entries.find_one({'_id': entry_id}) is not None)
         entry = self.entries.find_one({'_id': entry_id})
@@ -186,7 +194,6 @@ class PyChemiaDB:
 
         :rtype : Structure
         """
-        entry_id = object_id(entry_id)
         entry = self.entries.find_one({'_id': entry_id})
         return Structure.from_dict(entry['structure'])
 
@@ -197,7 +204,6 @@ class PyChemiaDB:
 
         :rtype : tuple
         """
-        entry_id = object_id(entry_id)
         entry = self.entries.find_one({'_id': entry_id})
         structure_dict = entry['structure']
         if 'properties' in entry:
@@ -218,7 +224,6 @@ class PyChemiaDB:
 
         :rtype : bool
         """
-        entry_id = object_id(entry_id)
         entry = self.entries.find_one({'_id': entry_id})
 
         if 'status' in entry and entry['status'] is not None and 'lock' in entry['status']:
@@ -290,13 +295,16 @@ def get_database(db_settings):
         db_settings['port'] = 27017
     if 'ssl' not in db_settings:
         db_settings['ssl'] = False
+    if 'replicaset' not in db_settings:
+        db_settings['replicaset'] = None
 
     if 'user' not in db_settings:
         pcdb = PyChemiaDB(name=db_settings['name'], host=db_settings['host'], port=db_settings['port'],
-                          ssl=db_settings['ssl'])
+                          ssl=db_settings['ssl'], replicaset=db_settings['replicaset'])
     else:
         pcdb = PyChemiaDB(name=db_settings['name'], host=db_settings['host'], port=db_settings['port'],
-                          user=db_settings['user'], passwd=db_settings['passwd'], ssl=db_settings['ssl'])
+                          user=db_settings['user'], passwd=db_settings['passwd'], ssl=db_settings['ssl'],
+                          replicaset=db_settings['replicaset'])
     return pcdb
 
 
@@ -307,7 +315,8 @@ def object_id(entry_id):
         return entry_id
 
 
-def create_user(name, admin_name, admin_passwd, user_name, user_passwd, host='localhost', port=27017, ssl=False):
+def create_user(name, admin_name, admin_passwd, user_name, user_passwd, host='localhost', port=27017, ssl=False,
+                replicaset=None):
     """
     Creates a new user for the database "name"
 
@@ -317,13 +326,17 @@ def create_user(name, admin_name, admin_passwd, user_name, user_passwd, host='lo
     :param user_name: (str) Username for the database
     :param user_passwd: (str) Password for the user
     :param ssl
+    :param replicaset: (str, None) Identifier of a Replica Set
     :return:
     """
-    mc = pymongo.MongoClient(host=host, port=port, ssl=ssl, ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE)
+    mc = pymongo.MongoClient(host=host, port=port, ssl=ssl, ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE,
+                             replicaset=replicaset)
     mc.admin.authenticate(admin_name, admin_passwd)
     mc[name].add_user(user_name, user_passwd)
-    return PyChemiaDB(name=name, user=user_name, passwd=user_passwd, host=host, port=port, ssl=ssl)
+    return PyChemiaDB(name=name, user=user_name, passwd=user_passwd, host=host, port=port, ssl=ssl,
+                      replicaset=replicaset)
 
 
-def create_database(name, admin_name, admin_passwd, user_name, user_passwd, host='localhost', port=27017, ssl=False):
-    return create_user(name, admin_name, admin_passwd, user_name, user_passwd, host, port, ssl)
+def create_database(name, admin_name, admin_passwd, user_name, user_passwd, host='localhost', port=27017, ssl=False,
+                    replicaset=None):
+    return create_user(name, admin_name, admin_passwd, user_name, user_passwd, host, port, ssl, replicaset)

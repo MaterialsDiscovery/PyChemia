@@ -1,3 +1,4 @@
+import sys
 import uuid
 import random
 import numpy as np
@@ -5,6 +6,7 @@ from fractions import gcd
 from pychemia import Composition, Structure, pcm_log
 from pychemia.db import USE_MONGO
 from pychemia.analysis import StructureAnalysis, StructureChanger, StructureMatch
+from pychemia.analysis.splitting import SplitMatch
 from pychemia.utils.mathematics import unit_vector
 from pychemia.utils.periodic import atomic_number, covalent_radius
 from _population import Population
@@ -68,22 +70,24 @@ class StructurePopulation(Population):
         return entry_id
 
     def get_max_force_stress(self, entry_id):
-        entry = self.get_entry(entry_id)
+        entry = self.pcdb.entries.find_one({'_id': entry_id}, {'properties': 1})
         if entry is not None and entry['properties'] is not None:
             properties = entry['properties']
             if 'forces' not in properties or 'stress' not in properties:
-                forces = None
-                stress = None
+                max_force = None
+                max_stress = None
             elif properties['forces'] is None or properties['stress'] is None:
-                forces = None
-                stress = None
+                max_force = None
+                max_stress = None
             else:
-                forces = np.max(np.abs(np.array(entry['properties']['forces'], dtype=float).flatten()))
-                stress = np.max(np.abs(np.array(entry['properties']['stress'], dtype=float).flatten()))
+                forces = np.array(entry['properties']['forces'])
+                stress = np.array(entry['properties']['stress'])
+                max_force = np.max(np.apply_along_axis(np.linalg.norm, 1, forces))
+                max_stress = np.max(np.abs(stress.flatten()))
         else:
-            forces = None
-            stress = None
-        return forces, stress
+            max_force = None
+            max_stress = None
+        return max_force, max_stress
 
     def is_evaluated(self, entry_id):
         max_force, max_stress = self.get_max_force_stress(entry_id)
@@ -184,7 +188,7 @@ class StructurePopulation(Population):
         selection = self.ids_sorted(ids)
         print 'Searching duplicates in %d structures' % len(selection)
         for i in range(len(selection) - 1):
-            print i, 'of', len(selection)
+            sys.stdout.write(str(i) + '-')
             entry_id = selection[i]
             value_i = self.value(entry_id)
             for j in range(i + 1, len(selection)):
@@ -401,10 +405,13 @@ class StructurePopulation(Population):
         structure1 = self.get_structure(ids[0])
         structure2 = self.get_structure(ids[1])
 
-        direction1 = np.random.randint(3)
-        direction2 = np.random.randint(3)
+        split_match = SplitMatch(structure1, structure2)
+        st1, st2 = split_match.get_simple_match()
 
-        structure1.gap_detection(direction1)
+        entry_id = self.new_entry(st1, active=True)
+        entry_jd = self.new_entry(st2, active=True)
+
+        return entry_id, entry_jd
 
     def str_entry(self, entry_id):
 

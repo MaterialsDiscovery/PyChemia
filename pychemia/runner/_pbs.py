@@ -73,10 +73,10 @@ class PBSRunner:
             wf.write("%s\n" % self.template)
         wf.close()
 
-    def submit(self):
+    def submit(self, priority=0):
         cwd = os.getcwd()
         os.chdir(self.workdir)
-        returncode = subprocess.call(["qsub", "%s" % self.filename])
+        returncode = subprocess.call(["qsub", "%s" % self.filename, '-p', '%d' % priority])
         if returncode != 0:
             print 'Some error happended:', returncode
         os.chdir(cwd)

@@ -49,6 +49,14 @@ class Composition:
             self._set_composition(value)
         elif isinstance(value, Composition):
             self._set_composition(value.composition)
+        elif hasattr(value, "__len__"):
+            dvalue = {}
+            for i in value:
+                if i in dvalue:
+                    dvalue[i] += 1
+                else:
+                    dvalue[i] = 1
+            self._set_composition(dvalue)
         else:
             self._composition = {}
 

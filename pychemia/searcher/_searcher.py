@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from pychemia import pcm_log
 import time
+import bson
 
 
 class Searcher:
@@ -32,7 +33,7 @@ class Searcher:
         else:
             self.searcher_id = searcher_id
 
-    def recover(self):
+    def recover(self, changedb=False):
         if self.pcdb is not None:
             data = self.pcdb.db.searcher_info.find_one({'_id': self.searcher_id})
             if data is not None:
@@ -48,6 +49,72 @@ class Searcher:
                     self.generation[entry['_id']] = entry[self.searcher_id]
                     if max(self.generation[entry['_id']]) > self.current_generation:
                         self.current_generation = max(self.generation[entry['_id']])
+
+            lineage_data = self.pcdb.db.lineage.find_one({'_id': self.searcher_id})
+            if lineage_data is not None:
+                lineage = lineage_data['lineage']
+                lineage_inv = lineage_data['lineage_inv']
+
+                changed = False
+                for i in lineage.keys():
+                    for j in lineage[i]:
+                        if j == 'None':
+                            lineage[i].remove(j)
+                            changed = True
+                if changed and changedb:
+                    print 'Lineage was changed (Some entry was null)'
+                    self.pcdb.db.lineage.update({'_id': self.searcher_id}, {'$set': {'lineage': lineage}})
+
+                sizes = [len(lineage[x]) for x in lineage]
+                assert min(sizes) == max(sizes)
+
+                for i in lineage.keys():
+                    self.lineage[i] = [bson.ObjectId(x) for x in lineage[i]]
+
+                for i in lineage_inv.keys():
+                    self.lineage_inv[bson.ObjectId(i)] = lineage_inv[i]
+
+                self.correct_extras(changedb)
+
+    def correct_extras(self, changedb=False):
+        for entry_id in self.get_generation():
+            if entry_id not in self.lineage_inv:
+                print 'Disabling one entry not in lineage_inv', entry_id
+                self.population.disable(entry_id)
+                print self.generation.pop(entry_id)
+                if changedb:
+                    self.pcdb.db.generations.remove({'_id': entry_id})
+            else:
+                slot = self.lineage_inv[entry_id]
+                if self.lineage[slot][-1] != entry_id:
+                    print 'Disabling one entry not in lineage[slot][-1]', entry_id
+                    self.population.disable(entry_id)
+                    print self.generation.pop(entry_id)
+                    if changedb:
+                        self.pcdb.db.generations.remove({'_id': entry_id})
+
+        if self.current_generation > 0:
+            for slot in range(self.generation_size):
+                entry_id = self.lineage[str(slot)][-1]
+                if entry_id not in self.population.actives:
+                    print 'Activating from lineage', entry_id
+                    self.population.enable(entry_id)
+                if entry_id not in self.get_generation():
+                    self.set_generation(entry_id, self.current_generation)
+            actives = self.population.actives
+            for entry_id in actives:
+                if entry_id not in self.get_generation():
+                    print 'Disabling ', entry_id
+                    self.population.disable(entry_id)
+            for entry_id in self.get_generation():
+                if entry_id not in self.population.actives:
+                    print 'Enabling', entry_id
+                    self.population.enable(entry_id)
+            candidates_per_generation = [len(self.get_generation(i)) for i in range(self.current_generation + 1)]
+            print 'Candidates per generation: ', candidates_per_generation
+            print 'Current generation: ', self.current_generation, 'Candidates: ', len(self.get_generation())
+            assert len(self.get_generation()) == self.generation_size
+            assert min(candidates_per_generation) == max(candidates_per_generation)
 
     def __str__(self):
         ret = ' Searcher Name:       %s\n' % self.searcher_name
@@ -74,39 +141,43 @@ class Searcher:
                 break
             elif len(actives) == self.generation_size:
                 pcm_log.debug('Equal')
+                self.correct_extras(changedb=True)
                 break
             elif len(actives) > self.generation_size:
                 pcm_log.debug('More %d' % len(actives))
-                # Overpopulated removing some members
-                if len(actives_evaluated) > self.generation_size:
-                    n = len(actives_evaluated) - self.generation_size
-                    pcm_log.debug('Disabling the %d worst entries' % n)
-                    candidates = self.population.ids_sorted(actives_evaluated)
-                    for entry_id in candidates[-n:]:
-                        self.population.disable(entry_id)
-                else:
-                    n = len(actives) - self.generation_size
-                    pcm_log.debug('Disabling %d non evaluated entries' % n)
-                    for i in range(n):
-                        self.population.disable(actives_no_evaluated[i])
+                self.correct_extras(changedb=True)
             else:
                 pcm_log.debug('Less %d' % len(actives))
-                if len(evaluated) >= self.generation_size:
-                    pcm_log.debug('Enabling some entries starting from the best candidates')
-                    candidates = self.population.ids_sorted(evaluated)
-                    index = 0
-                    while len(actives) < self.generation_size and index < len(evaluated):
-                        if candidates[index] not in actives:
-                            pcm_log.debug('Not in actives %s' % str(candidates[index]))
-                            self.population.enable(candidates[index])
-                        else:
-                            pcm_log.debug('In actives %s' % str(candidates[index]))
-                        index += 1
-                        actives = self.population.actives
-                else:
-                    n = self.generation_size - len(actives)
-                    pcm_log.debug('Creating %d random structures' % n)
-                    self.population.random_population(n)
+                sizes = [len(self.lineage[x]) for x in self.lineage]
+                assert min(sizes) == max(sizes)
+                for i in self.lineage:
+                    entry_id = self.lineage[i][-1]
+                    print 'Activating', i, entry_id
+                    self.population.enable(entry_id)
+                assert len(self.population.actives) == self.generation_size
+                assert len(self.get_generation()) == self.generation_size
+                sizes = [len(self.get_generation(i)) for i in range(self.current_generation)]
+                assert min(sizes) == max(sizes)
+
+                # if len(evaluated) >= self.generation_size:
+                #     pcm_log.debug('Enabling some entries starting from the best candidates')
+                #     candidates = self.population.ids_sorted(evaluated)
+                #     index = 0
+                #     while len(actives) < self.generation_size and index < len(evaluated):
+                #         if candidates[index] not in actives:
+                #             pcm_log.debug('Not in actives %s' % str(candidates[index]))
+                #             self.population.enable(candidates[index])
+                #         else:
+                #             pcm_log.debug('In actives %s' % str(candidates[index]))
+                #         index += 1
+                #         actives = self.population.actives
+                # else:
+                #     n = self.generation_size - len(actives)
+                #     pcm_log.debug('Creating %d random structures' % n)
+                #     self.population.random_population(n)
+
+        for i in self.population.actives:
+            self.set_generation(i, self.current_generation)
 
     def get_generation(self, generation_number=None):
         """
@@ -162,14 +233,14 @@ class Searcher:
 
     def advance(self, father, son, change):
         self.write_change(father, change)
-        if str(father) not in self.lineage_inv:
+        if father not in self.lineage_inv:
             print '%s not in current lineage' % father
             print 'Lineages %s' % self.lineage_inv.keys()
             raise ValueError('Father not in lineage')
-        slot = self.lineage_inv[str(father)]
+        slot = self.lineage_inv[father]
         self.lineage[slot].append(None)
         self.lineage[slot][self.current_generation + 1] = son
-        self.lineage_inv[str(son)] = slot
+        self.lineage_inv[son] = slot
         self.set_generation(son, self.current_generation + 1)
 
     def pass_to_new_generation(self, entry_id, reason=None):
@@ -207,13 +278,21 @@ class Searcher:
                 else:
                     self.pcdb.db.generations.update({'_id': entry_id}, {'$set': {self.searcher_id: info}})
 
+            lineage = {}
+            for i in self.lineage.keys():
+                lineage[i] = [str(x) for x in self.lineage[i]]
+
+            lineage_inv = {}
+            for i in self.lineage_inv.keys():
+                lineage_inv[str(i)] = self.lineage_inv[i]
+
             if self.pcdb.db.lineage.find_one({'_id': self.searcher_id}) is None:
                 self.pcdb.db.lineage.insert({'_id': self.searcher_id,
-                                             'lineage_inv': self.lineage_inv,
-                                             'lineage': self.lineage})
+                                             'lineage_inv': lineage_inv,
+                                             'lineage': lineage})
             else:
-                self.pcdb.db.lineage.update({'_id': self.searcher_id}, {'$set': {'lineage': self.lineage}})
-                self.pcdb.db.lineage.update({'_id': self.searcher_id}, {'$set': {'lineage_inv': self.lineage_inv}})
+                self.pcdb.db.lineage.update({'_id': self.searcher_id}, {'$set': {'lineage': lineage,
+                                                                                 'lineage_inv': lineage_inv}})
 
     def set_generation(self, entry_id, value):
         if entry_id not in self.generation:
@@ -259,7 +338,7 @@ class Searcher:
                     # Search for the first empty slot and associate it to the entry_id
                     if self.lineage[str(i)][self.current_generation] is None:
                         self.lineage[str(i)][self.current_generation] = entry_id
-                        self.lineage_inv[str(entry_id)] = str(i)
+                        self.lineage_inv[entry_id] = str(i)
                         break
 
         # Check consistency between lineage and lineage_inv
@@ -313,10 +392,11 @@ class Searcher:
             self.population.refine_progressive(best_member)
 
             pcm_log.info('Best candidate: [%s] %s' % (best_member, self.population.str_entry(best_member)))
-            pcm_log.debug('[%s] Generations %s' % (str(best_member), str(self.generation[best_member])))
-            if len(self.generation[best_member]) > self.stabilization_limit:
-                self.save_generations()
-                break
+            if best_member in self.get_generation():
+                pcm_log.debug('[%s] Generations %s' % (str(best_member), str(self.generation[best_member])))
+                if len(self.generation[best_member]) > self.stabilization_limit:
+                    self.save_generations()
+                    break
 
             if self.target_value is not None:
                 if self.population.value(best_member) <= self.target_value:

@@ -4,6 +4,7 @@ from .._dftb import DFTBplus, read_detailed_out, read_dftb_stdout, read_geometry
 from pychemia import pcm_log
 from pychemia.dft import KPoints
 from pychemia.code import Relaxator
+import numpy as np
 
 try:
     from pychemia.symm import symmetrize
@@ -11,6 +12,7 @@ except ImportError:
     def symmetrize(structure):
         return structure
 
+INITIAL_SCORE = -25
 
 class Relaxation(Relaxator):
     def __init__(self, structure, relaxator_params=None, workdir='.', kpoints=None, target_forces=1E-3, waiting=False,
@@ -57,7 +59,7 @@ class Relaxation(Relaxator):
     def run(self):
 
         irun = 0
-        score = 0
+        score = INITIAL_SCORE
         dftb = DFTBplus()
         dftb.initialize(workdir=self.workdir, structure=self.structure, kpoints=self.kpoints)
         dftb.set_slater_koster(search_paths=self.slater_path)
@@ -65,7 +67,7 @@ class Relaxation(Relaxator):
         dftb.driver['LatticeOpt'] = False
         # Decreasing the target_forces to avoid the final static
         # calculation of raising too much the forces after symmetrization
-        dftb.driver['MaxForceComponent'] = 0.5 * self.target_forces
+        dftb.driver['MaxForceComponent'] = self.target_forces
         dftb.driver['ConvergentForcesOnly'] = True
         dftb.driver['MaxSteps'] = 100
         dftb.hamiltonian['MaxSCCIterations'] = 20
@@ -77,24 +79,28 @@ class Relaxation(Relaxator):
         while True:
             if dftb.runner is not None and dftb.runner.poll() is not None:
                 pcm_log.info('Execution completed. Return code %d' % dftb.runner.returncode)
-                stdo = read_dftb_stdout()
-                print 'Converged: ', stdo['ion_convergence']
+                stdo = read_dftb_stdout(filename=self.workdir + os.sep + 'dftb_stdout.log')
+
+                good_forces, good_stress = self.relaxation_status()
+                if 'max_force' in stdo:
+                    print 'Converged: %s\t Max Force: %9.3e\t MaxForceComponent: %9.3e' % (stdo['ion_convergence'],
+                                                                                           stdo['max_force'],
+                                                                                           self.target_forces)
 
                 filename = dftb.workdir + os.sep + 'detailed.out'
                 if not os.path.exists(filename):
                     pcm_log.error('Could not find ' + filename)
                     break
-                good_forces, good_stress, good_data = self.relaxation_status()
 
-                if not good_data:
+                if not good_forces and not good_stress:
                     # This happens when all the SCC are completed without convergence
                     dftb.driver['ConvergentForcesOnly'] = False
                 else:
                     dftb.driver['ConvergentForcesOnly'] = True
 
                 score = self.quality(score)
-                pcm_log.debug('Present score : ' + str(score))
-                if score < 20:
+                pcm_log.debug('Score :  %d Good Forces: %s   Good Stress: %s' % (score, good_forces, good_stress))
+                if score < 0:
 
                     if good_forces and good_stress:
                         pcm_log.debug('Convergence: Internals + Cell')
@@ -110,6 +116,18 @@ class Relaxation(Relaxator):
                         dftb.driver['MovedAtoms'] = '1:-1'
 
                     dftb.structure = read_geometry_gen(dftb.workdir + os.sep + 'geo_end.gen')
+
+                    # lets change the positions if the score have lowered to -10
+                    if score == -10:
+                        dftb.structure.positions += 0.2 * np.random.rand(dftb.structure.natom, 3) - 0.1
+                        dftb.structure.positions2reduced()
+                        dftb.structure.set_cell(1.1 * dftb.structure.cell)
+                    if score == -1:
+                        dftb.structure = dftb.structure.random_cell(dftb.structure.composition)
+                        print 'RANDOM STRUCTURE'
+                        print dftb.structure
+                        score = INITIAL_SCORE
+
                     dftb.structure.save_json(dftb.workdir + os.sep + 'structure_current.json')
                     if self.symmetrize:
                         dftb.structure = symmetrize(dftb.structure)
@@ -142,16 +160,11 @@ class Relaxation(Relaxator):
                     while dftb.runner.poll() is None:
                         dftb.run_status()
                         time.sleep(10)
-                    pcm_log.debug('I am alive!!!')
-                    filename = dftb.workdir + os.sep + 'detailed.out'
-
-                    ret = read_detailed_out(filename=filename)
-                    forces = ret['forces']
-                    stress = ret['stress']
-                    total_energy = ret['total_energy']
+                    print 'Completed Static run'
+                    forces, stress, total_energy = self.get_forces_stress_energy()
 
                     if stress is None or forces is None or total_energy is None:
-                        pcm_log.debug('Avoiding a static run relaxing and exiting')
+                        pcm_log.debug('Null Forces, Stress or Energy, relaxing and exiting')
                         dftb.basic_input()
                         dftb.driver['LatticeOpt'] = False
                         # Decreasing the target_forces to avoid the final static
@@ -168,7 +181,17 @@ class Relaxation(Relaxator):
                         while dftb.runner.poll() is None:
                             time.sleep(10)
                         print 'FINAL:', read_detailed_out(filename=filename)
-                    break
+                        forces, stress, total_energy = self.get_forces_stress_energy()
+                        if stress is None or forces is None or total_energy is None:
+                            pcm_log.debug('Again Null Forces, Stress or Energy, Randomizing Structure')
+                            dftb.structure = dftb.structure.random_cell(dftb.structure.composition)
+                            print 'RANDOM STRUCTURE'
+                            print dftb.structure
+                            score = INITIAL_SCORE
+                        else:
+                            break
+                    else:
+                        break
             else:
                 pcm_log.debug('ID: %s' % os.path.basename(self.workdir))
                 filename = dftb.workdir + os.sep + 'dftb_stdout.log'
@@ -192,8 +215,22 @@ class Relaxation(Relaxator):
                 time.sleep(10)
 
     def quality(self, score):
-        # Increase the score on each iteration
-        score += 1
+
+        good_forces, good_stress = self.relaxation_status()
+        if good_forces and good_stress:
+            print 'Finished with forces and stress under target_forces'
+            score = 0
+        elif good_forces:
+            print 'Finished with forces under target_forces (not stress)'
+            score = score
+        else:
+            # Increase the score on each iteration
+            score += 1
+
+        if self.structure.density < 0.1:
+            print 'Very small density = Bad Structure'
+            score = -1
+
         return score
 
     def get_forces_stress_energy(self):

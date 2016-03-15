@@ -1,5 +1,4 @@
 import os
-import math
 import socket
 import time
 import numpy as np
@@ -7,10 +6,10 @@ from multiprocessing import Process
 from pychemia import pcm_log
 from pychemia.analysis import StructureAnalysis
 from pychemia.code.dftb.task import Relaxation
+from pychemia.code.dftb import read_detailed_out
 from pychemia.serializer import generic_serializer
 from pychemia.db import get_database
 from pychemia.utils.periodic import atomic_number
-from pychemia.symm import StructureSymmetry
 
 
 class EvaluatorDaemon:
@@ -49,9 +48,24 @@ class EvaluatorDaemon:
 
             filename = workdir + os.sep + 'detailed.out'
             if os.path.isfile(filename):
+                detailed = read_detailed_out(filename)
+                if 'max_force' in detailed:
+                    max_force = detailed['max_force']
+                else:
+                    max_force = target_forces
+
+                if 'max_deriv' in detailed:
+                    max_deriv = detailed['max_deriv']
+                else:
+                    max_deriv = target_forces
+
                 forces, stress, total_energy = relaxer.get_forces_stress_energy()
-                print 'Forces: ', np.apply_along_axis(np.linalg.norm, 1, forces)
-                print 'Stress: ', np.max(np.abs(stress.flatten()))
+
+                if forces is not None:
+                    magnitude_forces = np.apply_along_axis(np.linalg.norm, 1, forces)
+                    print 'Forces: Max: %9.3e Avg: %9.3e' % (np.max(magnitude_forces), np.average(magnitude_forces))
+                    print 'Stress: ', np.max(np.abs(stress.flatten()))
+
                 if forces is None:
                     pcm_log.error('No forces found on %s' % filename)
                 if stress is None:
@@ -63,7 +77,6 @@ class EvaluatorDaemon:
 
                 if forces is not None and stress is not None and total_energy is not None and new_structure is not None:
                     pcm_log.info('[%s]: Updating properties' % str(entry_id))
-                    symmetry = StructureSymmetry(new_structure)
                     pcdb.update(entry_id, structure=new_structure)
                     te = total_energy
                     pcdb.entries.update({'_id': entry_id},
@@ -72,9 +85,10 @@ class EvaluatorDaemon:
                                                   'properties.forces': generic_serializer(forces),
                                                   'properties.stress': generic_serializer(stress),
                                                   'properties.energy': te,
+                                                  'properties.max_force': max_force,
+                                                  'properties.max_deriv': max_deriv,
                                                   'properties.energy_pa': te / new_structure.natom,
-                                                  'properties.energy_pf': te / new_structure.get_composition().gcd,
-                                                  'properties.spacegroup': symmetry.number()}})
+                                                  'properties.energy_pf': te / new_structure.get_composition().gcd}})
 
                     # Fingerprint
                     # Update the fingerprints only if the two structures are really different
@@ -119,6 +133,8 @@ class EvaluatorDaemon:
             ids_running.append(None)
 
         pcdb = get_database(self.database_settings)
+        print 'Database contains: %d entries' % pcdb.entries.count()
+
         for entry in pcdb.entries.find({}):
             pcdb.unlock(entry['_id'], name=socket.gethostname())
         print 'Number of entries: ', pcdb.entries.count()
@@ -167,7 +183,12 @@ class EvaluatorDaemon:
                             # Relax lowering the target forces by one order of magnitude each time
                             current_status = self.get_current_status(entry)
                             pcm_log.debug('Current max forces-stress: %7.3e' % current_status)
-                            step_target = max([10 ** math.floor(math.log10(current_status / 2.0)), self.target_forces])
+                            if 'max_deriv' in entry['properties']:
+                                print 'Maximal derivative found: ', entry['properties']['max_deriv']
+                                step_target = 0.1 * entry['properties']['max_deriv']
+                            else:
+                                print 'Maximal derivative not found'
+                                step_target = 0.1 * current_status
                             pcm_log.debug('New target  forces-stress: %7.3e' % step_target)
 
                             procs[j] = Process(target=worker, args=(db_settings, entry_id, workdir, step_target,
@@ -184,42 +205,35 @@ class EvaluatorDaemon:
     def is_evaluated(self, entry):
         return self.get_current_status(entry) < self.target_forces
 
-    @staticmethod
-    def get_current_status(entry):
+    def get_current_status(self, entry):
         if entry is not None and 'properties' in entry and entry['properties'] is not None:
             if 'forces' in entry['properties'] and entry['properties']['forces'] is not None:
-                forces = np.max(np.abs(np.array(entry['properties']['forces'], dtype=float).flatten()))
+                forces = np.array(entry['properties']['forces']).reshape((-1, 3))
+                max_force = np.max(np.apply_along_axis(np.linalg.norm, 1, forces))
             else:
                 pcm_log.debug('No forces')
-                forces = 10
+                max_force = 1
             if 'stress' in entry['properties'] and entry['properties']['stress'] is not None:
-                stress = np.max(np.abs(np.array(entry['properties']['stress'], dtype=float).flatten()))
+                stress = np.array(entry['properties']['stress']).reshape((-1, 3))
+                max_stress = np.max(np.abs(stress.flatten()))
             else:
                 pcm_log.debug('No stress')
-                stress = 10
+                max_stress = 1
         else:
             pcm_log.debug('Bad entry')
             print entry
-            forces = 10
-            stress = 10
-        return max([forces, stress])
+            max_force = 1
+            max_stress = 1
+        if max(max_force, max_stress) > self.target_forces:
+            print 'Status for %s: forces: %9.2E stress: %9.2E' % (entry['_id'], max_force, max_stress)
+        return max(max_force, max_stress)
 
     def is_evaluable(self, entry):
         if 'lock' in entry['status']:
             return False
         elif self.evaluate_all:
             return True
-        elif self.is_evaluated(entry):
-            return False
-        elif 'relaxation' not in entry['status']:
-            return True
-        if 'relaxation' in entry['status']:
-            if entry['status']['relaxation'] == 'failed':
-                if self.evaluate_failed:
-                    return True
-                else:
-                    return False
-        if self.get_current_status(entry) > self.target_forces:
+        elif self.get_current_status(entry) > self.target_forces:
             return True
         else:
             return False
