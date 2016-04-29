@@ -1,10 +1,11 @@
 import math
-from pychemia import pcm_log
+
 from _searcher import Searcher
+from pychemia import pcm_log
 
 
 class FireFly(Searcher):
-    def __init__(self, population, params=None, fraction_evaluated=1.0, generation_size=32,
+    def __init__(self, population, params=None, generation_size=32,
                  stabilization_limit=10, target_value=None):
         """
         Implementation fo the Firefly algorithm for global minimization
@@ -20,13 +21,12 @@ class FireFly(Searcher):
             'delta': How the random change decreases with time
             'multi_move': Boolean to express if the fireflies moves following all the  other brighter ones or just
             the closest brigter firefly
-        :param fraction_evaluated: (float)
         :param generation_size: (int)
         :param stabilization_limit: (int)
         :return:
         """
         # Initializing objects
-        Searcher.__init__(self, population, fraction_evaluated, generation_size, stabilization_limit, target_value)
+        Searcher.__init__(self, population, generation_size, stabilization_limit, target_value)
         # Parameters
         self.gamma = None
         self.beta0 = None

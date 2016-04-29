@@ -1,6 +1,8 @@
 import json
 from abc import ABCMeta, abstractmethod
+
 import numpy as np
+
 from pychemia.db import USE_MONGO
 
 if USE_MONGO:
@@ -55,6 +57,7 @@ class Population:
         """
         Return an entry identified by 'entry_id'
 
+        :param with_id:
         :param entry_id: A database identifier
         :return:
         """
@@ -164,6 +167,10 @@ class Population:
 
     @property
     def actives_evaluated(self):
+        """
+
+        :rtype: list
+        """
         return [x for x in self.actives if self.is_evaluated(x)]
 
     @property

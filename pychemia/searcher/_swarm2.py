@@ -1,10 +1,11 @@
 import math
-from pychemia import pcm_log
+
 from _searcher import Searcher
+from pychemia import pcm_log
 
 
 class ParticleSwarm(Searcher):
-    def __init__(self, population, params=None, fraction_evaluated=0.95, generation_size=32, stabilization_limit=10):
+    def __init__(self, population, params=None, generation_size=32, stabilization_limit=10):
         """
         Implementation fo the Firefly algorithm for global minimization
         This searcher uses a metric to compute the attractiveness and the vector displacement
@@ -12,7 +13,6 @@ class ParticleSwarm(Searcher):
 
         :param population:
         :param params: (dict) Parameters to setup the Searcher
-        :param fraction_evaluated: (float)
         :param generation_size: (int)
         :param stabilization_limit: (int)
         :return:
@@ -24,11 +24,10 @@ class ParticleSwarm(Searcher):
         self.elites = None
         self.set_params(params)
         # Constrains
-        self.fraction_evaluated = fraction_evaluated
         self.generation_size = generation_size
         self.stabilization_limit = stabilization_limit
         # Initializing objects
-        Searcher.__init__(self, self.population, fraction_evaluated, generation_size, stabilization_limit)
+        Searcher.__init__(self, self.population, generation_size, stabilization_limit)
 
     def set_params(self, params):
         if params is None:

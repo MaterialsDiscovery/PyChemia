@@ -1,9 +1,9 @@
-from pychemia import pcm_log
 from _searcher import Searcher
+from pychemia import pcm_log
 
 
 class ParticleSwarm(Searcher):
-    def __init__(self, population, params=None, fraction_evaluated=0.90, generation_size=32, stabilization_limit=10):
+    def __init__(self, population, params=None, generation_size=32, stabilization_limit=10):
         """
         Implementation fo the Particle Swarm Optimization algorithm for global minimization
 
@@ -13,13 +13,12 @@ class ParticleSwarm(Searcher):
              the target structure
             'alpha0': Factor of scale for the random movement
             'delta': How the random change decreases with time
-        :param fraction_evaluated: (float)
         :param generation_size: (int)
         :param stabilization_limit: (int)
         :return:
         """
         # Initializing objects
-        Searcher.__init__(self, population, fraction_evaluated, generation_size, stabilization_limit)
+        Searcher.__init__(self, population, generation_size, stabilization_limit)
         # Parameters
         self.beta0 = None
         self.alpha0 = None

@@ -1,6 +1,8 @@
-import os
 import math
+import os
+import re
 from numbers import Number
+
 import numpy as np
 
 __author__ = "Guillermo Avendano-Franco"
@@ -317,7 +319,7 @@ class InputVariables:
 
     def set_rough_relaxation(self):
         self.set_minimum(PREC='Normal', ISPIN=1, LREAL=False, ISMEAR=0, LORBIT=11)
-        self.set_electron_scf(NELM=60, NELMIN=5, EDIFF=1E-4, IALGO=48)
+        self.set_electron_scf(NELM=60, NELMIN=2, EDIFF=1E-4, IALGO=48)
         self.set_ion_relax(NSW=50, ISIF=2, IBRION=2, EDIFFG=-1E-2)
         self.variables['NPAR'] = 2
 

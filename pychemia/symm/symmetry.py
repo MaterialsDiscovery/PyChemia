@@ -1,31 +1,21 @@
 import numpy as np
+
 from pychemia import Structure
 
 try:
-    import pyspglib
+    import spglib as spg
 
-    try:
-        import pyspglib.spglib
-
-        if 'primitive' not in pyspglib.spglib.__dict__ and 'primitive' in pyspglib.spglib.spg.__dict__:
-            USE_SPGLIB = True
-        else:
-            print 'SPGLIB is present but outdated, please install spglib > 1.7'
-            USE_SPGLIB = False
-    except ImportError:
-        print 'SPGLIB not found, symmetry module disabled'
-        USE_SPGLIB = False
-
+    USE_SPGLIB = True
 except ImportError:
-    print 'SPGLIB not found, symmetry module disabled'
     USE_SPGLIB = False
+    # from pyspglib import spglib as spg
 
 
 class StructureSymmetry(object):
     """
     Takes a pychemia.Structure object and creates an object with methods
     to identify symmetry groups and other symmetry related operations.
-    Uses pyspglib to perform various symmetry finding operations.
+    Uses spglib to perform various symmetry finding operations.
     """
 
     def __init__(self, structure):
@@ -88,11 +78,11 @@ u'Fm-3m'
                 'brv_types',
                 'brv_positions')
         dataset = {}
-        for key, data in zip(keys, pyspglib.spglib.spg.dataset(self._transposed_cell,
-                                                               self._reduced,
-                                                               self._numbers,
-                                                               symprec,
-                                                               angle_tolerance)):
+        for key, data in zip(keys, spg.spglib.spg.dataset(self._transposed_cell,
+                                                          self._reduced,
+                                                          self._numbers,
+                                                          symprec,
+                                                          angle_tolerance)):
             dataset[key] = data
 
         dataset['international'] = dataset['international'].strip()
@@ -128,7 +118,7 @@ u'Fm-3m'
         """
 
         dataset = self.get_symmetry_dataset(symprec=symprec, angle_tolerance=angle_tolerance)
-        symbols = pyspglib.spglib.spg.spacegroup_type(dataset['hall_number'])
+        symbols = spg.spglib.spg.spacegroup_type(dataset['hall_number'])
 
         if symbol_type == 1:
             return "%s (%d)" % (symbols[0], dataset['number'])
@@ -220,7 +210,7 @@ u'Fm-3m'
         numbers = np.zeros(natom * 4, dtype='intc')
         numbers[:natom] = np.array(self._numbers, dtype='intc')
 
-        natom_bravais = pyspglib.spglib.spg.refine_cell(cell, pos, numbers, natom, symprec, angle_tolerance)
+        natom_bravais = spg.spglib.spg.refine_cell(cell, pos, numbers, natom, symprec, angle_tolerance)
         if natom_bravais == 0:
             return self.structure.copy()
 
@@ -248,7 +238,7 @@ u'Fm-3m'
         reduced = np.array(self._reduced, dtype='double', order='C')
         numbers = np.array(self._numbers, dtype='intc')
 
-        natom_prim = pyspglib.spglib.spg.primitive(cell, reduced, numbers, symprec, angle_tolerance)
+        natom_prim = spg.spglib.spg.primitive(cell, reduced, numbers, symprec, angle_tolerance)
         symbols = [self.structure.species[x] for x in (numbers[:natom_prim] - 1)]
         reduced = reduced[:natom_prim]
 

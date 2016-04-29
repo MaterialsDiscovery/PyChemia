@@ -1,10 +1,12 @@
 import os
 import time
-from .._dftb import DFTBplus, read_detailed_out, read_dftb_stdout, read_geometry_gen
-from pychemia import pcm_log
-from pychemia.dft import KPoints
-from pychemia.code import Relaxator
+
 import numpy as np
+
+from pychemia import pcm_log
+from pychemia.code import Relaxator
+from pychemia.dft import KPoints
+from .._dftb import DFTBplus, read_detailed_out, read_dftb_stdout, read_geometry_gen
 
 try:
     from pychemia.symm import symmetrize
@@ -14,14 +16,16 @@ except ImportError:
 
 INITIAL_SCORE = -25
 
+
 class Relaxation(Relaxator):
     def __init__(self, structure, relaxator_params=None, workdir='.', kpoints=None, target_forces=1E-3, waiting=False,
-                 kp_density=10000):
+                 kp_density=10000, forced=True):
 
         self.workdir = workdir
         self.initial_structure = structure
         self.slater_path = None
         self.symmetrize = False
+        self.forced = forced
         if relaxator_params is None:
             relaxator_params = {'slater_path': '.'}
 
@@ -118,11 +122,11 @@ class Relaxation(Relaxator):
                     dftb.structure = read_geometry_gen(dftb.workdir + os.sep + 'geo_end.gen')
 
                     # lets change the positions if the score have lowered to -10
-                    if score == -10:
+                    if score == -10 and self.forced:
                         dftb.structure.positions += 0.2 * np.random.rand(dftb.structure.natom, 3) - 0.1
                         dftb.structure.positions2reduced()
                         dftb.structure.set_cell(1.1 * dftb.structure.cell)
-                    if score == -1:
+                    if score == -1 and self.forced:
                         dftb.structure = dftb.structure.random_cell(dftb.structure.composition)
                         print 'RANDOM STRUCTURE'
                         print dftb.structure

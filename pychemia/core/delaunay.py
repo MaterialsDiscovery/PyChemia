@@ -45,6 +45,7 @@ def reduce_bases(extended_bases, tolerance):
     """
     Reduces the basis with a given tolerance
 
+    :param extended_bases:
     :param tolerance: (float) Tolerance used by reduction algorithm
     """
     metric = _np.dot(extended_bases, extended_bases.transpose())

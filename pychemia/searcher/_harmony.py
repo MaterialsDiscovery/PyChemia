@@ -1,10 +1,11 @@
 import random
-from pychemia import pcm_log
+
 from _searcher import Searcher
+from pychemia import pcm_log
 
 
 class HarmonySearch(Searcher):
-    def __init__(self, population, params=None, fraction_evaluated=0.95, generation_size=32, stabilization_limit=10):
+    def __init__(self, population, params=None, generation_size=32, stabilization_limit=10):
         """
         Harmony Search Method:
         This searcher is the simplest one, does not require a metric space except for the evaluation
@@ -21,11 +22,9 @@ class HarmonySearch(Searcher):
                     top:  Number of members that are automatically promoted to the next generation (The best)
                     tail: Number of members that are automatically discarded (The worst)
         :param stabilization_limit: Number of generations survived by the best member
-        :param fraction_evaluated: The ratio between the active members evaluated and the total number of members.
-                                   Once this ratio is fulfilled the generation is considered sufficient to start a cycle
         """
         # Mandatory objects
-        Searcher.__init__(self, population, fraction_evaluated, generation_size, stabilization_limit)
+        Searcher.__init__(self, population, generation_size, stabilization_limit)
         # Parameters
         self.hmcr = None  # harmony_memory_considering_rate
         self.par = None

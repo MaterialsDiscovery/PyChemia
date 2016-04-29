@@ -1,8 +1,10 @@
 import uuid
-import scipy.optimize
+
 import numpy as np
-from pychemia.utils.mathematics import unit_vector
+import scipy.optimize
+
 from _population import Population
+from pychemia.utils.mathematics import unit_vector
 
 
 class EuclideanPopulation(Population):
@@ -176,6 +178,7 @@ class EuclideanPopulation(Population):
         If in_place is True the movement occurs on the
         same address as imember
 
+        :param factor:
         :param imember:
         :param jmember:
         :param in_place:

@@ -1,7 +1,9 @@
-from abc import ABCMeta, abstractmethod
-from pychemia import pcm_log
 import time
+from abc import ABCMeta, abstractmethod
+
 import bson
+
+from pychemia import pcm_log
 
 
 class Searcher:
@@ -11,11 +13,10 @@ class Searcher:
     Generations
     """
 
-    def __init__(self, population, fraction_evaluated=1.0, generation_size=32, stabilization_limit=10,
+    def __init__(self, population, generation_size=32, stabilization_limit=10,
                  target_value=None, searcher_id=None):
         self.population = population
         self.generation_size = generation_size
-        self.fraction_evaluated = fraction_evaluated
         self.stabilization_limit = stabilization_limit
         self.target_value = target_value
         self.current_generation = 0
@@ -37,7 +38,6 @@ class Searcher:
         if self.pcdb is not None:
             data = self.pcdb.db.searcher_info.find_one({'_id': self.searcher_id})
             if data is not None:
-                self.fraction_evaluated = data['fraction_evaluated']
                 self.stabilization_limit = data['stabilization_limit']
                 self.generation_size = data['generation_size']
                 self.set_params(data['params'])
@@ -118,7 +118,6 @@ class Searcher:
 
     def __str__(self):
         ret = ' Searcher Name:       %s\n' % self.searcher_name
-        ret += ' Fraction evaluated:  %5.3f\n' % self.fraction_evaluated
         ret += ' Generation size:     %d\n' % self.generation_size
         ret += ' Stabilization limit: %d\n' % self.stabilization_limit
         ret += ' Current Generation:  %d\n' % self.current_generation
@@ -145,6 +144,7 @@ class Searcher:
                 break
             elif len(actives) > self.generation_size:
                 pcm_log.debug('More %d' % len(actives))
+                self.recover(changedb=True)
                 self.correct_extras(changedb=True)
             else:
                 pcm_log.debug('Less %d' % len(actives))
@@ -377,16 +377,16 @@ class Searcher:
             self.print_status()
 
             number_evaluated = len(self.population.actives_evaluated)
-            while len(self.population.actives_evaluated) < self.fraction_evaluated * self.generation_size:
+            while self.population.fraction_evaluated < 1.0:
                 if len(self.population.actives_evaluated) != number_evaluated:
-                    pcm_log.debug("Population '%s' still not evaluated. Ratio %5.3f / %5.3f" %
-                                  (self.population.name, self.population.fraction_evaluated, self.fraction_evaluated))
+                    pcm_log.debug("Population '%s' still not evaluated. %4.0f %%" % (self.population.name,
+                                                                                     100 * self.population.fraction_evaluated))
                     self.print_status(level='DEBUG')
                     number_evaluated = len(self.population.actives_evaluated)
                 self.population.replace_failed()
                 time.sleep(self.sleep_time)
-            pcm_log.debug("Population '%s' evaluated. Ratio %5.3f / %5.3f" %
-                          (self.population.name, self.population.fraction_evaluated, self.fraction_evaluated))
+            pcm_log.debug("Population '%s' evaluated. %4.0f %%" % (self.population.name,
+                                                                   100 * self.population.fraction_evaluated))
 
             best_member = self.population.best_candidate
             self.population.refine_progressive(best_member)
@@ -459,7 +459,6 @@ class Searcher:
     @property
     def to_dict(self):
         return {'name': self.searcher_name,
-                'fraction_evaluated': self.fraction_evaluated,
                 'generation_size': self.generation_size,
                 'stabilization_limit': self.stabilization_limit,
                 'params': self.get_params()}

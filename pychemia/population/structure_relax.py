@@ -1,15 +1,17 @@
-import sys
-import uuid
 import random
-import numpy as np
+import uuid
 from fractions import gcd
+
+import numpy as np
+import pymongo
+
+from _population import Population
 from pychemia import Composition, Structure, pcm_log
-from pychemia.db import USE_MONGO
 from pychemia.analysis import StructureAnalysis, StructureChanger, StructureMatch
 from pychemia.analysis.splitting import SplitMatch
+from pychemia.db import USE_MONGO
 from pychemia.utils.mathematics import unit_vector
 from pychemia.utils.periodic import atomic_number, covalent_radius
-from _population import Population
 
 if USE_MONGO:
     from pychemia.db import get_database
@@ -185,17 +187,19 @@ class StructurePopulation(Population):
     def get_duplicates(self, ids, fast=False):
         dupes_dict = {}
         dupes_list = []
+        values = {}
+        for i in ids:
+            values[i] = self.value(i)
         selection = self.ids_sorted(ids)
         print 'Searching duplicates in %d structures' % len(selection)
         for i in range(len(selection) - 1):
-            sys.stdout.write(str(i) + '-')
             entry_id = selection[i]
-            value_i = self.value(entry_id)
+            value_i = values[entry_id]
             for j in range(i + 1, len(selection)):
                 entry_jd = selection[j]
                 if fast and entry_jd in dupes_list:
                     continue
-                value_j = self.value(entry_jd)
+                value_j = values[entry_jd]
                 if abs(value_i - value_j) < self.value_tol:
                     distance = self.distance(entry_id, entry_jd)
                     if distance < self.distance_tol:
@@ -240,9 +244,11 @@ class StructurePopulation(Population):
 
         ids_pair = [entry_id, entry_jd]
         ids_pair.sort()
-        distance_entry = self.pcdb.db.distances.find_one({'pair': ids_pair})
+        distance_entry = self.pcdb.db.distances.find_one({'pair': ids_pair}, {'distance': 1})
+        self.pcdb.db.distances.create_index([("pair", pymongo.ASCENDING)])
 
         if distance_entry is None:
+            print 'Distance not in DB'
             fingerprints = {}
             for entry_ijd in [entry_id, entry_jd]:
 
@@ -266,7 +272,6 @@ class StructurePopulation(Population):
                 else:
                     fingerprints[entry_ijd] = self.pcdb.db.fingerprints.find_one({'_id': entry_ijd})
 
-        if distance_entry is None:
             dij = []
             for pair in fingerprints[entry_id]:
                 if pair in fingerprints[entry_jd] and pair != '_id':
@@ -312,6 +317,7 @@ class StructurePopulation(Population):
         If in_place is True the movement occurs on the
         same address as entry_id
 
+        :param factor:
         :param entry_id:
         :param entry_jd:
         :param in_place:

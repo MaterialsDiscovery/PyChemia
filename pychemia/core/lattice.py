@@ -1,15 +1,18 @@
-import sys
-import random
 import itertools
-import numpy as np
+import random
+import sys
+from itertools import combinations
 from math import ceil, sqrt, cos, sin, radians, acos
+
+import numpy as np
+from pyhull.voronoi import VoronoiTess
+
+from pychemia import pcm_log
 from pychemia.utils.mathematics import length_vectors, angle_vectors, wrap2_pmhalf, \
     unit_vector, rotation_matrix_around_axis_angle, angle_vector
-from .composition import Composition
-from itertools import combinations
-from pychemia import pcm_log
-from pychemia.utils.periodic import covalent_radius
 from pychemia.utils.mathematics import matrix_from_eig, vector_set_perpendicular
+from pychemia.utils.periodic import covalent_radius
+from .composition import Composition
 
 
 class Lattice:
@@ -184,10 +187,6 @@ array([ 60.,  60.,  60.])
         return frame, line1, line2, line3
 
     def get_wigner_seitz(self):
-
-        from pyhull.voronoi import VoronoiTess
-        import itertools
-
         points = []
         for i, j, k in itertools.product((-1, 0, 1), repeat=3):
             points.append(i * self.cell[0] + j * self.cell[1] + k * self.cell[2])
@@ -279,6 +278,8 @@ array([[ True,  True,  True,  True],
         Returns all the distances between two positions x1 and x2
         taking into account the periodicity of the cell
 
+        :param sort_by_distance:
+        :param exclude_out_sphere:
         :param x1:
         :param x2:
         :param radius:

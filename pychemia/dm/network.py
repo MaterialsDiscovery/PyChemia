@@ -1,6 +1,7 @@
-import os
-import bson
 import json
+import os
+
+import bson
 import networkx as nx
 from networkx.readwrite import json_graph
 
@@ -102,13 +103,13 @@ class NetworkAnalysis:
                   separators=(',', ': '))
 
         best = lista[0]
-        print 'Population: %10s Evaluated: %4d   N:%5d E:%5d    BN:%4d BE:%4d  %7.2f  GG: %8s %8s' % (
-        self.population.name,
-        len(self.population),
-        graph.number_of_nodes(),
-        graph.number_of_nodes(),
-        graph_basins.number_of_nodes(),
-        graph_basins.number_of_edges(),
-        float(graph_basins.number_of_edges()) / (1.0 + graph_basins.number_of_nodes()),
-        str(best) in graph.nodes(),
-        str(best) in graph_basins.nodes())
+        line = 'Population: %10s Evaluated: %4d   N:%5d E:%5d    BN:%4d BE:%4d  %7.2f  GG: %8s %8s'
+        print line % (self.population.name,
+                      len(self.population),
+                      graph.number_of_nodes(),
+                      graph.number_of_nodes(),
+                      graph_basins.number_of_nodes(),
+                      graph_basins.number_of_edges(),
+                      float(graph_basins.number_of_edges()) / (1.0 + graph_basins.number_of_nodes()),
+                      str(best) in graph.nodes(),
+                      str(best) in graph_basins.nodes())

@@ -1,7 +1,9 @@
 import math
 import sys
+
 import numpy as np
 import scipy.spatial
+
 import pychemia
 from pychemia.code.lennardjones import lj_compact_evaluate
 from pychemia.utils.mathematics import unit_vector
@@ -88,6 +90,7 @@ class LJCluster(Population):
         a n-dimensional vector of the distances between each atom to the
         origin and
 
+        :param rcut:
         :param entry_id: The id of one population entry
         :param entry_jd: The id of another population entry
         :return: (int) The distance between two clusters

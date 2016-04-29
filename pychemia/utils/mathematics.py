@@ -1,7 +1,9 @@
-import itertools as it
+import itertools
 import math
+from collections import OrderedDict
 from fractions import gcd
 from math import cos, sin, sqrt
+
 import numpy as np
 from scipy import weave
 
@@ -34,7 +36,8 @@ def length_vectors(m):
 >>> length_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
 array([  3.74165739,   8.77496439,  13.92838828,   1.        ,   2.        ])
     """
-    return np.apply_along_axis(np.linalg.norm, 1, np.array(m))
+    m = np.array(m)
+    return np.linalg.norm(m, axis=1)
 
 
 def unit_vector(v):
@@ -75,7 +78,8 @@ array([[ 0.26726124,  0.53452248,  0.80178373],
 >>> length_vectors(b)
 array([ 1.,  1.,  1.,  1.,  1.])
     """
-    return np.divide(np.array(m, dtype=float).T, length_vectors(np.array(m, dtype=float))).T
+    m = np.array(m)
+    return m / (np.linalg.norm(m, axis=1)[:, np.newaxis])
 
 
 def angle_vector(v1, v2, units='rad'):
@@ -115,6 +119,19 @@ def angle_vector(v1, v2, units='rad'):
         return angle
     elif units == 'deg':
         return 180.0 * angle / np.pi
+
+
+def angle_between_vectors(a, b):
+    assert a.shape == b.shape
+
+    norms = (np.linalg.norm(a, axis=1) * np.linalg.norm(b, axis=1))
+    norms[norms == 0] = 1
+    dots = np.sum(a * b, axis=1) / norms
+    dots = np.round(dots, 15)
+    dots[dots > 1] = 1.0
+    norms = (np.linalg.norm(a, axis=1) * np.linalg.norm(b, axis=1))
+    dots[norms == 0] = 1.0
+    return np.arccos(dots)
 
 
 def angle_vectors(m, units='rad'):
@@ -157,7 +174,7 @@ def angle_vectors(m, units='rad'):
     """
 
     ret = {}
-    for i in it.combinations(range(len(m)), 2):
+    for i in itertools.combinations(range(len(m)), 2):
         ret[i] = angle_vector(m[i[0]], m[i[1]], units=units)
     return ret
 
@@ -204,7 +221,7 @@ def distances(m):
  (3, 4): (array([-1,  0,  2]), 2.2360679774997898)}
     """
     ret = {}
-    for i in it.combinations(range(len(m)), 2):
+    for i in itertools.combinations(range(len(m)), 2):
         ret[i] = distance(m[i[0]], m[i[1]])
     return ret
 
@@ -550,3 +567,90 @@ def gram_smith_qr(ndim):
     while np.linalg.det(matrix_a) < 1E-5:
         matrix_a = np.random.rand(ndim, ndim)
     return np.linalg.qr(matrix_a)[0]
+
+
+def cartesian_to_spherical(xyz):
+    """
+    Convert a numpy array (Nx3) into
+    a numpy array (Nx3) where the first
+    column is the magnitude of the vector
+    and second and third are spherical angles
+
+    We use the mathematical notation
+    (radial, azimuthal, polar)
+
+    :param xyz: numpy.array
+    :return: numpy.array
+    """
+    xyz = np.array(xyz).reshape((-1, 3))
+    spherical = np.zeros(xyz.shape)
+    xy = xyz[:, 0] ** 2 + xyz[:, 1] ** 2
+    spherical[:, 0] = np.sqrt(xy + xyz[:, 2] ** 2)
+    spherical[:, 1] = np.arctan2(xyz[:, 1], xyz[:, 0])
+    spherical[:, 2] = np.arctan2(np.sqrt(xy), xyz[:, 2])  # for elevation angle defined from Z-axis down
+    # spherical[:, 2] = np.arctan2(xyz[:, 2], np.sqrt(xy))   # for elevation angle defined from XY-plane up
+    return spherical
+
+
+def spherical_to_cartesian(spherical):
+    """
+    Convert a numpy array (Nx3) from
+    spherical coordinates to cartesian
+    coordinates
+
+    We use the mathematical notation
+    (radial, azimuthal, polar)
+
+    :param spherical: numpy.array
+    :return: numpy.array
+    """
+    spherical = np.array(spherical).reshape((-1, 3))
+    xyz = np.zeros(spherical.shape)
+
+    xyz[:, 0] = spherical[:, 0] * np.cos(spherical[:, 1]) * np.sin(spherical[:, 2])
+    xyz[:, 1] = spherical[:, 0] * np.sin(spherical[:, 1]) * np.sin(spherical[:, 2])
+    xyz[:, 2] = spherical[:, 0] * np.cos(spherical[:, 2])
+    return xyz
+
+
+def rotation_ndim(n, t, indices):
+    rot = np.eye(n)
+    rot[indices[0], indices[0]] = np.cos(t)
+    rot[indices[1], indices[1]] = np.cos(t)
+    rot[indices[0], indices[1]] = -np.sin(t)
+    rot[indices[1], indices[0]] = np.sin(t)
+    return rot
+
+
+def generalized_euler_angles(m):
+    # Make a copy of the original matrix
+    mp = np.array(m)
+    # The dimension of the matrix
+    n = m.shape[0]
+    # The angles is an ordered list of operations
+    # Rotations form a non-abelian group
+    angles = OrderedDict()
+    for i in itertools.combinations(range(n), 2):
+        # Compute the angle to align the plane i
+        # into the canonical base
+        theta = np.arctan(mp[i[0], i[1]] / mp[i[0], i[0]])
+        angles[i] = theta
+        # Compute a rotation matrix for plane i
+        rot = rotation_ndim(n, theta, i)
+        # Apply the rotation left side
+        mp = np.array(np.dot(rot, mp))
+        retm = rotation_ndim(n, angles)
+
+    # angles is a Ordered dictionary of Generalized Euler Angles
+    # mp is a matrix that should be close to Identity
+    # retm is the return matrix, the matrix that should be
+    # close to the original one
+    return angles, mp, retm
+
+
+def rotation_matrix_ndim(n, angles):
+    ret = np.eye(n)
+    for i in angles.keys()[::-1]:
+        rot = rotation_ndim(n, angles[i], i)
+        ret = np.dot(rot.T, ret)
+    return ret

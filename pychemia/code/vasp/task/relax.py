@@ -1,19 +1,21 @@
-import os
-import time
-import shutil
 import json
 import logging.handlers
+import os
+import shutil
+import time
+
 import numpy as np
+
+from pychemia import pcm_log
+from pychemia.dft import KPoints
+from pychemia.serializer import generic_serializer
+from pychemia.utils.mathematics import round_small
 from .._incar import InputVariables
 from .._outcar import VaspOutput, read_vasp_stdout
-from .._vasp import VaspJob, VaspAnalyser
 from .._poscar import read_poscar
-from pychemia.utils.mathematics import round_small
-from pychemia.dft import KPoints
-from pychemia import pcm_log
-from pychemia.serializer import generic_serializer
-from ..._tasks import Task
+from .._vasp import VaspJob, VaspAnalyser
 from ..._relaxator import Relaxator
+from ..._tasks import Task
 
 __author__ = 'Guillermo Avendano-Franco'
 
@@ -118,9 +120,11 @@ class IonRelaxation(Relaxator, Task):
         # How to change EDIFFG
         if max_force > self.target_forces or max_stress > self.target_forces:
             if self.relax_cell:
-                vj.input_variables.variables['EDIFFG'] = round_small(-0.01 * max(max_force, max_stress))
+                vj.input_variables.variables['EDIFFG'] = np.min(round_small(-0.01 * max(max_force, max_stress)),
+                                                                -self.target_forces)
             else:
-                vj.input_variables.variables['EDIFFG'] = round_small(-0.01 * max_force)
+                vj.input_variables.variables['EDIFFG'] = np.min(round_small(-0.01 * max_force),
+                                                                -self.target_forces)
 
         pcm_log.debug('Current Values: ISIF: %2d   IBRION: %2d   EDIFF: %7.1E \tEDIFFG: %7.1E' %
                       (vj.input_variables.variables['ISIF'],
@@ -235,7 +239,7 @@ class IonRelaxation(Relaxator, Task):
                         #             energy_str += ' <'
                         #     pcm_log.debug(energy_str)
 
-                time.sleep(10)
+                time.sleep(30)
 
         outcars = sorted([x for x in os.listdir(self.workdir) if x.startswith('OUTCAR')])[::-1]
         vo = VaspOutput(self.workdir + os.sep + outcars[0])

@@ -1,11 +1,13 @@
+import itertools
 import math
 import sys
-import itertools
+
 import numpy as np
 import numpy.linalg
+
 from pychemia import Structure, pcm_log
-from pychemia.utils.periodic import atomic_number, covalent_radius, valence
 from pychemia.utils.mathematics import integral_gaussian
+from pychemia.utils.periodic import atomic_number, covalent_radius, valence
 
 
 class StructureAnalysis:
@@ -210,6 +212,11 @@ class StructureAnalysis:
         Computes simultaneously the bonds for all atoms and the coordination
         number using a multiplicative tolerance for the sum of covalent radius
 
+        :param use_jump:
+        :param jump:
+        :param tol:
+        :param verbose:
+        :param use_laplacian:
         :param initial_cutoff_radius: (float) Tolerance factor (default is 1.2)
         :param ensure_conectivity: (bool) If True the tolerance of each bond is
                adjusted to ensure that each atom is connected at least once
@@ -368,6 +375,8 @@ class StructureAnalysis:
         If noupdate=False
         the Laplacian matrix method is not used and rcut is 2*max(cov_radii)
 
+        :param use_jump:
+        :param ensure_conectivity:
         :param verbose: (bool) To print some debug info
         :param initial_cutoff_radius: (float)
         :param use_laplacian: (bool) If True, the Laplacian method is used

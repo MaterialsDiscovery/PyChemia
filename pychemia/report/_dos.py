@@ -1,5 +1,7 @@
-import sys
 import os
+import sys
+
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -41,6 +43,7 @@ class DensityOfStates:
         :return: (DensityOfStates) object
         """
         table = np.loadtxt(filename)
+        table = np.array(table)
         if title is None:
             root, ext = os.path.splitext(os.path.basename(filename))
             name = root
@@ -108,6 +111,8 @@ def plot_one_dos(dosobj, ax=None, horizontal=True, figwidth=16, figheight=12):
     If the axes is no given, a new figure is created and the
     axes is returned
 
+    :param figheight:
+    :param figwidth:
     :param dosobj: (DensityOfStates) object
     :param ax: (matplotlib.axes.Axes) object
     :param horizontal: (bool) if the plot is horizontal or

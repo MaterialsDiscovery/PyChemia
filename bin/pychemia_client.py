@@ -8,6 +8,7 @@ import socket
 import subprocess
 import sys
 import time
+
 from pychemia.utils.computing import get_int
 
 __author__ = 'Guillermo Avendano-Franco'
@@ -72,18 +73,17 @@ def inquirer(ip, port):
         message = 'COUNT'
         # Send data
         print >> sys.stderr, 'sending "%s"' % message
-        sent = sock.sendto(message, server_address)
+        sock.sendto(message, server_address)
 
         # Receive response
         print >> sys.stderr, 'waiting to receive'
         data, server = sock.recvfrom(4096)
         print >> sys.stderr, 'received "%s"' % data
-        nentries = int(data)
 
         message = 'WORKDIR'
         # Send data
         print >> sys.stderr, 'sending "%s"' % message
-        sent = sock.sendto(message, server_address)
+        sock.sendto(message, server_address)
 
         # Receive response
         print >> sys.stderr, 'waiting to receive'
@@ -94,7 +94,7 @@ def inquirer(ip, port):
         message = 'GET'
         # Send data
         print >> sys.stderr, 'sending "%s"' % message
-        sent = sock.sendto(message, server_address)
+        sock.sendto(message, server_address)
 
         # Receive response
         print >> sys.stderr, 'waiting to receive'
@@ -126,7 +126,7 @@ def finisher(entry_id, ip, port):
         message = 'FINISHED:' + str(entry_id)
         # Send data
         print >> sys.stderr, 'sending "%s"' % message
-        sent = sock.sendto(message, server_address)
+        sock.sendto(message, server_address)
 
         # Receive response
         print >> sys.stderr, 'waiting to receive'

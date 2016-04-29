@@ -3,9 +3,9 @@ from pychemia import pcm_log
 
 
 class GreyWolf(Searcher):
-    def __init__(self, population, params=None, fraction_evaluated=0.95, generation_size=32, stabilization_limit=10):
+    def __init__(self, population, params=None, generation_size=32, stabilization_limit=10):
 
-        Searcher.__init__(self, population, fraction_evaluated, generation_size, stabilization_limit)
+        Searcher.__init__(self, population, generation_size, stabilization_limit)
         self.a = None
         self.c = None
         self.set_params(params)

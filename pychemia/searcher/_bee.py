@@ -3,16 +3,15 @@ from pychemia import pcm_log
 
 
 class BeeAlgorithm(Searcher):
-    def __init__(self, population, params=None, fraction_evaluated=0.95, generation_size=32, stabilization_limit=10):
+    def __init__(self, population, params=None, generation_size=32, stabilization_limit=10):
         """
         Implementation fo the Firefly algorithm for global minimization
 
         :param population:
         :param stabilization_limit:
-        :param fraction_evaluated:
         :return:
         """
-        Searcher.__init__(self, population, fraction_evaluated, generation_size, stabilization_limit)
+        Searcher.__init__(self, population, generation_size, stabilization_limit)
         # Parameters
         self.ne = None  # Number of elite scout bees
         self.nre = None  # Number of elite foragers
@@ -39,7 +38,8 @@ class BeeAlgorithm(Searcher):
         self.nre = 3  # Number of elite foragers
         self.nb = 2  # Number of best scout bees (excluding elites)
         self.nrb = 2  # Number of best foragers
-        self.ns = self.n - self.ne * self.nre - self.nb * self.nrb  # Number of scouts (include elites,  best and others)
+        # Number of scouts (include elites,  best and others)
+        self.ns = self.n - self.ne * self.nre - self.nb * self.nrb
         if params is None:
             params = {}
         if 'nb' in params:

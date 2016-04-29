@@ -4,21 +4,23 @@ This class defines methods to create and manipulate
 atomic structures such as molecules, clusters and crystals
 """
 
-import os
-import json
-import sys
-import numpy as np
 import itertools
-from math import sin, cos
-import scipy.spatial
+import json
+import os
 import struct
+import sys
+from math import sin, cos
+from multiprocessing import Pool
+
+import numpy as np
+import scipy.spatial
+
 from pychemia import pcm_log
-from pychemia.core.lattice import Lattice
-from pychemia.core.delaunay import get_reduced_bases
 from pychemia.core.composition import Composition
+from pychemia.core.delaunay import get_reduced_bases
+from pychemia.core.lattice import Lattice
 from pychemia.utils.computing import unicode2string
 from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence, atomic_symbols
-from multiprocessing import Pool
 
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2014"
@@ -571,7 +573,7 @@ Empty structure
         elif npcell.shape == (3,):
             self.cell = np.diag(npcell)
         else:
-            self.cell = np.array(cell).reshape([3, 3])
+            self.cell = np.array(cell).reshape((3, 3))
         self._lattice = None
 
     def set_mag_moments(self, mag_moments):
@@ -591,11 +593,9 @@ Empty structure
         Set periodicity of the structure
 
         Args:
-            periodicity: (Boolean) a single value
-            means that the structure has that
-            periodicity all along the 3 directions.
-            Otherwise a list of 3 booleans is
-            required
+            periodicity: (Boolean) a single value means that the structure has that
+                        periodicity all along the 3 directions. Otherwise a list
+                        of 3 booleans is required
         """
         if isinstance(periodicity, bool):
             self.periodicity = 3 * [periodicity]
@@ -622,7 +622,7 @@ Empty structure
         This contains adimensional values
         relative to cell vectors
 
-        :param positions: A array of 3 vectors with adimensional coordinates
+        :param reduced:
         :return:
         """
         self.reduced = np.array(reduced).reshape([-1, 3])

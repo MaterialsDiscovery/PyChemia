@@ -1,9 +1,11 @@
 import itertools
+
 import numpy as np
+
 from pychemia import Composition, Structure
 
 
-class SplitMatch():
+class SplitMatch:
     def __init__(self, structure1, structure2):
 
         assert structure1.nsites == structure2.nsites

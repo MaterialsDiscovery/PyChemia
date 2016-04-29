@@ -1,5 +1,12 @@
 import pychemia
-from pyspglib import spglib
+
+try:
+    import spglib as spg
+
+    USE_SPGLIB = True
+except ImportError:
+    USE_SPGLIB = False
+    # from pyspglib import spglib as spg
 
 """
 Interface with the Atomic Simulation Environment (ASE)
@@ -34,8 +41,8 @@ def cif2structure(filename, primitive=False, symprec=0.001):
     :return:
     """
     aseatoms = ase.io.read(filename)
-    if primitive:
-        lattice, scaled_positions, numbers = spglib.find_primitive(aseatoms, symprec)
+    if primitive and USE_SPGLIB:
+        lattice, scaled_positions, numbers = spg.find_primitive(aseatoms, symprec)
         if lattice is not None and scaled_positions is not None and numbers is not None:
             fin_atoms = ase.atoms.Atoms(cell=lattice, scaled_positions=scaled_positions, numbers=numbers, pbc=True)
         else:

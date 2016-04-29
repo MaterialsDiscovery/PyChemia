@@ -32,10 +32,11 @@ Implemented Classes:
 
 """
 # basic modules. Should be present
-import numpy as np
-import re
 import logging
+import re
+
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class UtilsProcar:
@@ -1397,7 +1398,7 @@ class FermiSurface:
     def Plot(self, interpolation=200, mask=None):
         """Only 2D layer geometry along z"""
         self.log.debug("Plot: ...")
-        from scipy.interpolate import griddata, interp2d
+        from scipy.interpolate import griddata
 
         if self.useful is None:
             raise RuntimeError("self.FindEnergy() must be called before Plotting")
@@ -1436,7 +1437,7 @@ class FermiSurface:
 
         """
         self.log.debug("st: ...")
-        from scipy.interpolate import griddata, interp2d, BivariateSpline
+        from scipy.interpolate import griddata
 
         if self.useful is None:
             raise RuntimeError("self.FindEnergy() must be called before Plotting")

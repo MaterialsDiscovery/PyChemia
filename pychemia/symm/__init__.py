@@ -8,24 +8,24 @@ The routines and classes heavily rely on spglib
 from pychemia import Structure
 
 try:
-    import pyspglib
 
     try:
-        import pyspglib.spglib
-        from pychemia.symm.symmetry import StructureSymmetry
-
-        # Testing version of spglib
-        st = Structure(symbols=['H'])
-        symm = StructureSymmetry(st)
-        ret = pyspglib.spglib.spg.dataset(symm.transposed, symm.reduced, symm.numbers, 1e-5, -1.0)
-        if type(ret[3]) is list:
-            USE_SPGLIB = False
-            print 'SPGLIB is present but outdated, please install spglib > 1.7'
-        else:
-            USE_SPGLIB = True
+        import spglib as spg
     except ImportError:
-        print 'SPGLIB not found, symmetry module disabled'
+        from pyspglib import spglib as spg
+
+    from pychemia.symm.symmetry import StructureSymmetry
+
+    # Testing version of spglib
+    st = Structure(symbols=['H'])
+    symm = StructureSymmetry(st)
+    ret = spg.spglib.spg.dataset(symm.transposed, symm.reduced, symm.numbers, 1e-5, -1.0)
+    if type(ret[3]) is list:
         USE_SPGLIB = False
+        version = "%d.%d.%d" % spg.get_version()
+        print 'SPGLIB current version is %s, please install spglib > 1.9' % version
+    else:
+        USE_SPGLIB = True
 
 except ImportError:
     print 'SPGLIB not found, symmetry module disabled'

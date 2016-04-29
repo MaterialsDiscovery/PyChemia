@@ -1,12 +1,14 @@
-import socket
 import itertools
 import json
-import pymongo
-import numpy as np
+import socket
 from multiprocessing import Pool
+
+import numpy as np
+import pymongo
 from bson.objectid import ObjectId
-from pychemia.utils.periodic import atomic_symbols
+
 from pychemia import Structure
+from pychemia.utils.periodic import atomic_symbols
 
 
 class PyChemiaDB:
@@ -320,6 +322,8 @@ def create_user(name, admin_name, admin_passwd, user_name, user_passwd, host='lo
     """
     Creates a new user for the database "name"
 
+    :param port:
+    :param host:
     :param name: (str) The name of the database
     :param admin_name: (str) The administrator name
     :param admin_passwd: (str) Administrator password

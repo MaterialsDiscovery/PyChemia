@@ -1,5 +1,9 @@
-import sys
+import bz2
+import gzip
 import hashlib
+import os
+import sys
+import zipfile
 
 
 def unicode2string(value):
@@ -78,3 +82,28 @@ def hashfile(filename):
             hasher.update(buf)
             buf = afile.read(blocksize)
     return hasher.hexdigest()
+
+
+def read_file(filename):
+    if not os.path.exists(filename):
+        raise ValueError('Could not open file: ', filename)
+
+    if filename[-3:] == '.gz':
+        rf = gzip.GzipFile(filename)
+    elif filename[-4:] == '.bz2':
+        rf = bz2.BZ2File(filename)
+    elif filename[-4:] == '.zip':
+        rf = zipfile.ZipFile(filename)
+    else:
+        rf = open(filename)
+    return rf.read()
+
+
+def only_ascii(string):
+    """
+    Remove non-ascii characters, from monty
+
+    :param string:
+    :return:
+    """
+    return "".join(x for x in string if ord(x) < 128)

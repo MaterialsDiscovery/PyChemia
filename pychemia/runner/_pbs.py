@@ -1,7 +1,8 @@
-import os
-import subprocess
-import socket
 import datetime
+import os
+import socket
+import subprocess
+import xml.etree.ElementTree as ElementTree
 
 
 class PBSRunner:
@@ -80,6 +81,13 @@ class PBSRunner:
         if returncode != 0:
             print 'Some error happended:', returncode
         os.chdir(cwd)
+
+
+def get_jobs(user):
+    data = subprocess.check_output(['qstat', '-x', '-f', '-u', user])
+    xmldata = ElementTree.fromstring(data)
+    jobs = [i.find('Job_Name').text for i in xmldata.findall('Job')]
+    return jobs
 
 
 def report_cover():

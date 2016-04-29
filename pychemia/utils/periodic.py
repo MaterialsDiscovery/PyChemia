@@ -143,12 +143,25 @@ groups = [None,
           1, 2, 13, 14, 15, 16, 17, 18,
           1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
           1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
-          1, 2, 3,
-          None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+          1, 2,
+          -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3,
           4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
-          1, 2, 3,
-          None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+          1, 2,
+          -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3,
           4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+
+blocks = [None,
+          's', 'p',
+          's', 's', 'p', 'p', 'p', 'p', 'p', 'p',
+          's', 's', 'p', 'p', 'p', 'p', 'p', 'p',
+          's', 's', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'p', 'p', 'p', 'p', 'p', 'p',
+          's', 's', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'p', 'p', 'p', 'p', 'p', 'p',
+          's', 's',
+          'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f',
+          'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'p', 'p', 'p', 'p', 'p', 'p',
+          's', 's',
+          'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f',
+          'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'p', 'p', 'p', 'p', 'p', 'p']
 
 # covalent_radii=[0.00,
 #                 0.31,0.28,1.28,0.96,0.76,0.73,0.71,0.66,0.57,0.58,
@@ -293,6 +306,17 @@ def period(value=None):
 def group(value=None):
     table = []
     for i in groups:
+        if i is None:
+            table.append(0)
+        else:
+            table.append(i)
+
+    return _get_property(table, value)
+
+
+def block(value=None):
+    table = []
+    for i in blocks:
         if i is None:
             table.append(0)
         else:

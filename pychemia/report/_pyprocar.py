@@ -1,5 +1,6 @@
-import procar
 import numpy as np
+
+import procar
 
 
 class BandStructure:
@@ -12,7 +13,7 @@ class BandStructure:
 
         self.data = procar.ProcarSelect(self.procarFile, deepCopy=True)
 
-    def SimpleBands(self):
+    def simple_bands(self):
         self.data.selectIspin([0])
         self.data.selectAtoms([-1])
         self.data.selectOrbital([-1])

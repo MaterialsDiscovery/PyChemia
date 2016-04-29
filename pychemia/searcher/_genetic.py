@@ -1,6 +1,7 @@
+import numpy as np
+
 from _searcher import Searcher
 from pychemia import pcm_log
-import numpy as np
 
 """
 Implementation of Genetic Algorithms
@@ -13,11 +14,12 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class GeneticAlgorithm(Searcher):
-    def __init__(self, population, params=None, fraction_evaluated=0.95, generation_size=32, stabilization_limit=10):
-        Searcher.__init__(self, population, fraction_evaluated, generation_size, stabilization_limit)
+    def __init__(self, population, params=None, generation_size=32, stabilization_limit=10):
+        Searcher.__init__(self, population, generation_size, stabilization_limit)
         self.nelite = None
         self.mutation_prob = None
         self.cross_prob = None
+        self.crossing_sets = None
         self.set_params(params)
 
     def set_params(self, params):
@@ -68,8 +70,9 @@ class GeneticAlgorithm(Searcher):
                 if self.nelite + j + jump < len(selection):
                     entry_jd = selection[self.nelite + j + jump]
                     new_entry_id, new_entry_jd = self.population.cross([entry_id, entry_jd])
-                    print 'Replace candidates %d and %d by crossing %d with %d' % (
-                    self.nelite + j + jump, discarded_index, self.nelite + j + jump, i)
+                    print 'Replace candidates %d and %d by crossing %d with %d' % (self.nelite + j + jump,
+                                                                                   discarded_index,
+                                                                                   self.nelite + j + jump, i)
 
                     pcm_log.debug('[%s] Moved to: %s' % (entry_id, new_entry_id))
                     self.replace_by_other(entry_jd, new_entry_id,

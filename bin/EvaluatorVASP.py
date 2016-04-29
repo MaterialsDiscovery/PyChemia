@@ -8,8 +8,7 @@ import numpy as np
 
 from pychemia import pcm_log
 from pychemia.analysis import StructureAnalysis
-from pychemia.code.dftb import read_detailed_out
-from pychemia.code.dftb.task import Relaxation
+from pychemia.code.vasp.task import IonRelaxation
 from pychemia.db import get_database
 from pychemia.evaluator import DirectEvaluator
 from pychemia.serializer import generic_serializer
@@ -26,28 +25,16 @@ def worker(db_settings, entry_id, workdir, target_forces, relaxator_params):
         pcdb.lock(entry_id)
     structure = pcdb.get_structure(entry_id)
     structure = structure.scale()
-    if 'forced' in relaxator_params:
-        forced = relaxator_params['forced']
-    else:
-        forced = True
-
-    relaxer = Relaxation(structure, relaxator_params=relaxator_params, workdir=workdir,
-                         target_forces=target_forces, waiting=True, forced=forced)
-    relaxer.run()
+    print 'relaxator_params', relaxator_params
+    relaxer = IonRelaxation(structure, workdir=workdir, target_forces=target_forces, waiting=False,
+                            binary=relaxator_params['binary'], encut=1.3, kp_grid=None, kp_density=1E4,
+                            relax_cell=True, max_calls=10)
+    print 'relaxing on:', relaxer.workdir
+    relaxer.run(relaxator_params['nmpiparal'])
     pcm_log.info('[%s]: Finished relaxation. Target forces: %7.3e' % (str(entry_id), target_forces))
 
-    filename = workdir + os.sep + 'detailed.out'
+    filename = workdir + os.sep + 'OUTCAR'
     if os.path.isfile(filename):
-        detailed = read_detailed_out(filename)
-        if 'max_force' in detailed:
-            max_force = detailed['max_force']
-        else:
-            max_force = target_forces
-
-        if 'max_deriv' in detailed:
-            max_deriv = detailed['max_deriv']
-        else:
-            max_deriv = target_forces
 
         forces, stress, total_energy = relaxer.get_forces_stress_energy()
 
@@ -75,8 +62,6 @@ def worker(db_settings, entry_id, workdir, target_forces, relaxator_params):
                                           'properties.forces': generic_serializer(forces),
                                           'properties.stress': generic_serializer(stress),
                                           'properties.energy': te,
-                                          'properties.max_force': max_force,
-                                          'properties.max_deriv': max_deriv,
                                           'properties.energy_pa': te / new_structure.natom,
                                           'properties.energy_pf': te / new_structure.get_composition().gcd}})
 
@@ -124,7 +109,7 @@ if __name__ == '__main__':
     logger.addHandler(logging.NullHandler())
     logger.setLevel(logging.DEBUG)
 
-    description = """Launch DFTB+ for non-evaluated entries in a PyChemia Database"""
+    description = """Launch VASP for non-evaluated entries in a PyChemia Database"""
 
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('-t', '--host',
@@ -142,15 +127,18 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--dbname',
                         default=None, metavar='dbname', type=str,
                         help='PyChemia Database name (default: None)')
-    parser.add_argument('-l', '--slater_path',
+    parser.add_argument('-b', '--binary',
                         default=None, metavar='path', type=str,
-                        help='Slater Path (default: None)')
+                        help='VASP binary (default: None)')
     parser.add_argument('-f', '--target_forces',
                         default=1E-3, metavar='x', type=float,
                         help='Target Forces (default: 1E-3)')
     parser.add_argument('-n', '--nparal',
                         default=1, metavar='N', type=int,
                         help='Number of parallel processes (default: 1)')
+    parser.add_argument('-m', '--nmpiparal',
+                        default=1, metavar='N', type=int,
+                        help='Number of MPI parallel processes (default: 1)')
     parser.add_argument('-r', '--replicaset',
                         default=None, metavar='name', type=str,
                         help='ReplicaSet  (default: None)')
@@ -177,8 +165,12 @@ if __name__ == '__main__':
             raise ValueError('Password is mandatory if user is entered')
         db_settings['user'] = args.user
         db_settings['passwd'] = args.passwd
-    relaxator_params = {'slater_path': args.slater_path}
-    print 'pyChemia Evaluator using DFTB+'
+    if args.binary is None:
+        args.binary = 'vasp'
+    if args.nmpiparal is None:
+        args.nmpiparal = 1
+    relaxator_params = {'binary': args.binary, 'nmpiparal': args.nmpiparal}
+    print 'pyChemia Evaluator using VASP'
     print 'dbname    : %s' % args.dbname
     print 'host      : %s' % args.host
     print 'port      : %d' % args.port
@@ -186,7 +178,8 @@ if __name__ == '__main__':
     print 'replicaset: %s' % args.replicaset
     print 'workdir   : %s' % args.workdir
     print 'nparal    : %d' % args.nparal
-    print 'slater-path   : %s' % str(args.slater_path)
+    print 'nmpiparal : %d' % args.nmpiparal
+    print 'binary    : %s' % str(args.binary)
     print 'target-forces : %.2E' % args.target_forces
     print 'evaluate_all  : %s' % str(args.evaluate_all)
     print 'waiting       : %s' % str(args.waiting)

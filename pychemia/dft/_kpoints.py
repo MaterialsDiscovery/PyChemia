@@ -1,5 +1,7 @@
-import numpy as np
 from math import sqrt, ceil
+
+import numpy as np
+
 from pychemia.serializer import PyChemiaJsonable, generic_serializer
 
 """
@@ -242,6 +244,8 @@ class KPoints(PyChemiaJsonable):
         """
         Returns a grid optimized for the given structure
 
+        :param force_odd:
+        :param density_of_kpoints:
         :param lattice: A PyChemia Lattice object
         :param number_of_kpoints: Aproximate number of kpoints to use
         """

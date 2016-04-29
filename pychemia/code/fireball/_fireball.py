@@ -1,11 +1,13 @@
 import os
-import subprocess
-import numpy as np
-from .._codes import Codes
-from pychemia import pcm_log, Structure
-from pychemia.utils.periodic import atomic_number, atomic_symbol
-from pychemia.serializer import generic_serializer
 import re
+import subprocess
+
+import numpy as np
+
+from pychemia import pcm_log, Structure
+from pychemia.serializer import generic_serializer
+from pychemia.utils.periodic import atomic_number, atomic_symbol
+from .._codes import Codes
 
 
 class FireBall(Codes):
@@ -150,7 +152,6 @@ class FireBall(Codes):
     def write_basis(self, filename='input.bas'):
         write_geometry_bas(self.structure, filename)
 
-
     def write_lattice(self, filename='input.lvs'):
         wf = open(filename, 'w')
         for i in range(3):
@@ -213,7 +214,6 @@ def read_fireball_stdout(filename):
     max_force = [x[0] for x in ret]
     rms = [x[1] for x in ret]
 
-
     energy_data = re.findall(r'---------- T H E  T O T A L  E N E R G Y -----------([\s\w\d\.\-=/]+)--- \n', data)
 
     energy = []
@@ -270,7 +270,7 @@ def write_geometry_bas(structure, filename):
 def get_fdata_info(fdata_path='Fdata'):
     rf = open(fdata_path + os.sep + 'info.dat')
     data = rf.read()
-    ret = re.findall('([-.\ \d\w]*) \- ([\ \d\w;]*) \n', data)
+    ret = re.findall('([-. \d\w]*) \- ([ \d\w;]*) \n', data)
     res = {}
     for i in ret:
         key = i[1]

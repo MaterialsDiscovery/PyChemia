@@ -3,7 +3,9 @@ Routines to read and write POSCAR file
 """
 
 import os
+
 import numpy as _np
+
 import pychemia
 
 
@@ -60,6 +62,14 @@ def read_poscar(path='POSCAR'):
             You can set a consistent POTCAR along the POSCAR or
             modify your POSCAR by adding the atomic symbol on the sixth line of the file"""
             return None
+
+    if not species:
+        print 'No information about species'
+        raise ValueError()
+
+    print natom
+    print species
+    print natom_per_species
 
     symbols = []
     for i in range(len(natom_per_species)):
@@ -121,6 +131,8 @@ def get_species(path):
     rf = open(path, 'r')
     for line in rf.readlines():
         if 'PAW_PBE' in line and 'PAW_PBE' == line.split()[0].strip():
+            species.append(line.split()[1].split('_')[0])
+        if 'PAW' in line and 'PAW' == line.split()[0].strip() and 'radial' not in line:
             species.append(line.split()[1].split('_')[0])
 
     return species
