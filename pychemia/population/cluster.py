@@ -392,8 +392,6 @@ def direct_move(pos_orig, pos_dest, fraction):
 
 
 def movement_sweep(pos_orig, pos_dest, symbols, figname='figure.pdf'):
-    import matplotlib
-    matplotlib.use('agg')
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots(ncols=1, nrows=3, sharex=True, figsize=(11, 8.5))
     plt.subplots_adjust(left=0.07, bottom=0.07, right=0.98, top=0.98, wspace=0.08, hspace=0.08)

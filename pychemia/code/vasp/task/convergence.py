@@ -43,8 +43,6 @@ class Convergence:
             print 'Convergence not executed'
             return
 
-        import matplotlib
-        matplotlib.use('agg')
         import matplotlib.pyplot as plt
         x = [idata[variable] for idata in self.convergence_info]
         y = [idata['free_energy'] for idata in self.convergence_info]

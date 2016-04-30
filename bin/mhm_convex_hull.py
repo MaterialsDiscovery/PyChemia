@@ -4,9 +4,6 @@ import os
 import sys
 import json
 import numpy as np
-import matplotlib
-
-matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull
 import getopt

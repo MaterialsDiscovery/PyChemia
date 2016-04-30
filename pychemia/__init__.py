@@ -3,6 +3,12 @@ PyChemia is an open-source Python Library for materials structural search. The p
 a method agnostic framework for materials discovery and design using a variety of methods from Metaheuristic to
 Dynamical such as minima hoping method (MHM)
 """
+import sys
+
+if 'matplotlib' not in sys.modules:
+    import matplotlib
+
+    matplotlib.use('agg')
 
 import logging
 
