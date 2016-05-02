@@ -23,11 +23,12 @@ install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose
   # Coverage packages are on my binstar channel
   # conda install --yes -c guilleaf python-coveralls nose-cov
-  - python setup.py install
+  # python setup.py install
 
 # Run test
 script:
-  - nosetests --with-cov --cov pychemia --cov-config .coveragerc --logging-level=INFO
+  - nosetest -v
+  # nosetests --with-cov --cover-package pychemia --cov-config .coveragerc --logging-level=INFO
 
 # Calculate coverage
 after_success:
