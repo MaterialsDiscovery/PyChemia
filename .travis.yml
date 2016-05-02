@@ -19,17 +19,14 @@ before_install:
   - sudo ln -s /run/shm /dev/shm
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coveralls
   # Coverage packages are on my binstar channel
   # conda install --yes -c guilleaf python-coveralls nose-cov
   # python setup.py install
-  - ls -al
-  - pwd
 
 # Run test
 script:
-  - nosetests -v
-  # nosetests --with-cov --cover-package pychemia --cov-config .coveragerc --logging-level=INFO
+  nosetests -v --with-cov --cover-package pychemia --cov-config .coveragerc --logging-level=INFO
 
 # Calculate coverage
 after_success:
