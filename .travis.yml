@@ -26,11 +26,11 @@ install:
 
 # Run test
 script:
-  nosetests -v --with-cov --cover-package pychemia --cov-config .coveragerc --logging-level=INFO
+  nosetests -v --with-cov --cover-package pychemia --logging-level=INFO
 
 # Calculate coverage
 after_success:
-  - coveralls --config_file .coveragerc
+  - coveralls
 
 
 # OLD
