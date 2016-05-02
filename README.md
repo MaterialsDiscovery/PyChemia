@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/MaterialsDiscovery/PyChemia.svg?branch=master)]
+(https://travis-ci.org/MaterialsDiscovery/PyChemia)
+
+
 PyChemia
 ========
 
