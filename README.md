@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/MaterialsDiscovery/PyChemia.svg?branch=master)]
 (https://travis-ci.org/MaterialsDiscovery/PyChemia)
-
+[![GitHub release](https://img.shields.io/github/release/MaterialsDiscovery/PyChemia.svg?maxAge=2592000)]()
+[![PyPI](https://img.shields.io/pypi/pyversions/PyChemia.svg?maxAge=2592000)]()
 
 PyChemia
 ========
