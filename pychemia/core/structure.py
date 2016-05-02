@@ -11,11 +11,19 @@ import struct
 import sys
 from math import sin, cos
 from multiprocessing import Pool
-
 import numpy as np
-import scipy.spatial
-
 from pychemia import pcm_log
+
+try:
+    import scipy
+
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+
+if HAS_SCIPY:
+    import scipy.spatial
+
 from pychemia.core.composition import Composition
 from pychemia.core.delaunay import get_reduced_bases
 from pychemia.core.lattice import Lattice
@@ -857,7 +865,10 @@ Empty structure
         if self.is_periodic:
             return self.lattice.distance2(self.reduced[atom1], self.reduced[atom2])
         else:
-            dm = scipy.spatial.distance_matrix(self.positions, self.positions)
+            if HAS_SCIPY:
+                dm = scipy.spatial.distance_matrix(self.positions, self.positions)
+            else:
+                raise NotImplementedError
             return dm[atom1, atom2]
 
     def distance_matrix(self):
@@ -868,7 +879,10 @@ Empty structure
                     dm[i, j] = self.lattice.distance2(self.reduced[i], self.reduced[j])
                     dm[j, i] = dm[i, j]
         else:
-            return scipy.spatial.distance_matrix(self.positions, self.positions)
+            if HAS_SCIPY:
+                return scipy.spatial.distance_matrix(self.positions, self.positions)
+            else:
+                raise NotImplementedError
 
     def valence_electrons(self):
         ret = 0
@@ -1208,6 +1222,9 @@ def random_structure(method, composition, periodic=True, best_volume=1E10):
 
 def cluster_minimal_distance(pos):
     pos = np.array(pos).reshape((-1, 3))
-    dismat = scipy.spatial.distance_matrix(pos, pos)
-    tmp = np.max(dismat.flatten())
-    return np.min((dismat + tmp * np.eye(len(pos))).flatten())
+    if HAS_SCIPY:
+        dismat = scipy.spatial.distance_matrix(pos, pos)
+        tmp = np.max(dismat.flatten())
+        return np.min((dismat + tmp * np.eye(len(pos))).flatten())
+    else:
+        raise NotImplementedError

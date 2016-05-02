@@ -3,9 +3,13 @@
 import os
 import sys
 import numpy as np
-import pychemia.code.abinit
 from pychemia.utils.constants import bohr_angstrom
+from pychemia import HAS_SCIPY
 
+if HAS_SCIPY:
+    import pychemia.code.abinit
+else:
+    raise ImportError('scipy could not be found')
 
 def input2xyz(abivar, basename, datasets):
     """

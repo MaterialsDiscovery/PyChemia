@@ -1,19 +1,17 @@
 import random
 import uuid
 from fractions import gcd
-
 import numpy as np
-import pymongo
-
 from _population import Population
 from pychemia import Composition, Structure, pcm_log
 from pychemia.analysis import StructureAnalysis, StructureChanger, StructureMatch
 from pychemia.analysis.splitting import SplitMatch
-from pychemia.db import USE_MONGO
+from pychemia import HAS_PYMONGO
 from pychemia.utils.mathematics import unit_vector
 from pychemia.utils.periodic import atomic_number, covalent_radius
 
-if USE_MONGO:
+if HAS_PYMONGO:
+    import pymongo
     from pychemia.db import get_database
 
 

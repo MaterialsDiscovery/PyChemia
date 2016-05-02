@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 import os
 import sys
-import pychemia.code.abinit
+from pychemia import HAS_SCIPY
+
+if HAS_SCIPY:
+    import pychemia.code.abinit
+else:
+    raise ImportError('scipy could not be found')
 
 if __name__ == '__main__':
 

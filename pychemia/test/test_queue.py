@@ -5,12 +5,17 @@ import pychemia
 import tempfile
 import shutil
 from pychemia.utils.computing import hashfile
+from pychemia import HAS_PYMONGO, HAS_GRIDFS
 
 
 def test_queue():
     """
     Testing PyChemiaQueue               :
     """
+    if not HAS_PYMONGO or not HAS_GRIDFS:
+        print 'PyChemiaQueue was disabled'
+        return
+
     print "Testing PyChemiaQueue"
 
     source = 'pychemia/test/data/vasp_01'

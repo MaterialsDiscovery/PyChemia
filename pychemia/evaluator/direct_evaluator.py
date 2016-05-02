@@ -5,8 +5,10 @@ from multiprocessing import Process
 
 import numpy as np
 
-from pychemia import pcm_log
-from pychemia.db import get_database
+from pychemia import pcm_log, HAS_PYMONGO
+
+if HAS_PYMONGO:
+    from pychemia.db import get_database
 
 
 class DirectEvaluator:

@@ -2,12 +2,16 @@
 
 import os
 import pychemia
+from pychemia import HAS_PYMONGO
 
 
 def test_popu_noncoll():
     """
     Testing PopulationNonColl           :
     """
+    if not HAS_PYMONGO:
+        print 'PyChemiaDB was disabled'
+        return
     source = 'pychemia/test/data/vasp_02'
     assert os.path.isfile(source + os.sep + 'INCAR')
     assert os.path.isfile(source + os.sep + 'POSCAR')

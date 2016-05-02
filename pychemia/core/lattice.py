@@ -3,11 +3,9 @@ import random
 import sys
 from itertools import combinations
 from math import ceil, sqrt, cos, sin, radians, acos
-
 import numpy as np
-from pyhull.voronoi import VoronoiTess
 
-from pychemia import pcm_log
+from pychemia import pcm_log, HAS_PYHULL
 from pychemia.utils.mathematics import length_vectors, angle_vectors, wrap2_pmhalf, \
     unit_vector, rotation_matrix_around_axis_angle, angle_vector
 from pychemia.utils.mathematics import matrix_from_eig, vector_set_perpendicular
@@ -187,15 +185,19 @@ array([ 60.,  60.,  60.])
         return frame, line1, line2, line3
 
     def get_wigner_seitz(self):
-        points = []
-        for i, j, k in itertools.product((-1, 0, 1), repeat=3):
-            points.append(i * self.cell[0] + j * self.cell[1] + k * self.cell[2])
-        tess = VoronoiTess(points)
-        ret = []
-        for r in tess.ridges:
-            if r[0] == 13 or r[1] == 13:
-                ret.append([tess.vertices[i] for i in tess.ridges[r]])
-        return ret
+        if HAS_PYHULL:
+            from pyhull.voronoi import VoronoiTess
+            points = []
+            for i, j, k in itertools.product((-1, 0, 1), repeat=3):
+                points.append(i * self.cell[0] + j * self.cell[1] + k * self.cell[2])
+            tess = VoronoiTess(points)
+            ret = []
+            for r in tess.ridges:
+                if r[0] == 13 or r[1] == 13:
+                    ret.append([tess.vertices[i] for i in tess.ridges[r]])
+            return ret
+        else:
+            raise NotImplementedError
 
     def get_wigner_seitz_container(self):
         """

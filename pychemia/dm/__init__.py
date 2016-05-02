@@ -1,9 +1,9 @@
 """
 Routines related to Data mining
 """
-try:
+from pychemia import HAS_NETWORKX
+
+if HAS_NETWORKX:
     from network import NetworkAnalysis
-except ImportError:
-    print 'Networkx not present'
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

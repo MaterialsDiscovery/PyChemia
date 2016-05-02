@@ -1,9 +1,9 @@
 import time
 from abc import ABCMeta, abstractmethod
+from pychemia import pcm_log, HAS_PYMONGO
 
-import bson
-
-from pychemia import pcm_log
+if HAS_PYMONGO:
+    import bson
 
 
 class Searcher:
@@ -69,10 +69,16 @@ class Searcher:
                 assert min(sizes) == max(sizes)
 
                 for i in lineage.keys():
-                    self.lineage[i] = [bson.ObjectId(x) for x in lineage[i]]
+                    if HAS_PYMONGO:
+                        self.lineage[i] = [bson.ObjectId(x) for x in lineage[i]]
+                    else:
+                        self.lineage[i] = [x for x in lineage[i]]
 
                 for i in lineage_inv.keys():
-                    self.lineage_inv[bson.ObjectId(i)] = lineage_inv[i]
+                    if HAS_PYMONGO:
+                        self.lineage_inv[bson.ObjectId(i)] = lineage_inv[i]
+                    else:
+                        self.lineage_inv[i] = lineage_inv[i]
 
                 self.correct_extras(changedb)
 

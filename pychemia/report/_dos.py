@@ -1,8 +1,10 @@
 import os
 import sys
-
-import matplotlib.pyplot as plt
 import numpy as np
+from pychemia import HAS_MATPLOTLIB
+
+if HAS_MATPLOTLIB:
+    import matplotlib.pyplot as plt
 
 
 class DensityOfStates:
@@ -119,7 +121,10 @@ def plot_one_dos(dosobj, ax=None, horizontal=True, figwidth=16, figheight=12):
 
     :return: (matplotlib.figure.Figure, matplotlib.axes.Axes) the (fig, ax) tuple
     """
-    import matplotlib.pyplot as plt
+    if HAS_MATPLOTLIB:
+        import matplotlib.pyplot as plt
+    else:
+        raise NotImplementedError
 
     if ax is None:
         fig = plt.figure()

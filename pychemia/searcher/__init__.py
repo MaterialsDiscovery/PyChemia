@@ -9,7 +9,11 @@ from _genetic import GeneticAlgorithm
 from _grey import GreyWolf
 from _harmony import HarmonySearch
 from _swarm import ParticleSwarm
-from plot import plot_evolution_circular
+
+from pychemia import HAS_MATPLOTLIB
+
+if HAS_MATPLOTLIB:
+    from plot import plot_evolution_circular
 
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

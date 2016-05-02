@@ -6,10 +6,10 @@ ABINIT '.files' files
 ABINIT '_OUT.nc' output files
 
 """
-import pychemia as _pcm
+from pychemia import HAS_SCIPY
 import task
 
-if _pcm.HAS_SCIPY:
+if HAS_SCIPY:
     from ._abifiles import AbiFiles
     from ._input import InputVariables, xyz2input
     from ._abinit import AbinitJob

@@ -28,7 +28,6 @@ try:
         USE_SPGLIB = True
 
 except ImportError:
-    print 'SPGLIB not found, symmetry module disabled'
     USE_SPGLIB = False
 
 if USE_SPGLIB:

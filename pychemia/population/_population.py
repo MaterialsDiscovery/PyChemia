@@ -1,11 +1,9 @@
 import json
-from abc import ABCMeta, abstractmethod
-
 import numpy as np
+from abc import ABCMeta, abstractmethod
+from pychemia import HAS_PYMONGO
 
-from pychemia.db import USE_MONGO
-
-if USE_MONGO:
+if HAS_PYMONGO:
     from pychemia.db import PyChemiaDB
 
 

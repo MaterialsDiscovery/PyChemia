@@ -106,7 +106,7 @@ u'Fm-3m'
 
         return dataset
 
-    def get_spacegroup(self, symprec=1e-5, angle_tolerance=-1.0, symbol_type=0):
+    def get_spacegroup(self, symprec=1e-5, angle_tolerance=-1.0):
         """
         Return space group in international table symbol and number
         as a string.
@@ -118,12 +118,7 @@ u'Fm-3m'
         """
 
         dataset = self.get_symmetry_dataset(symprec=symprec, angle_tolerance=angle_tolerance)
-        symbols = spg.spglib.spg.spacegroup_type(dataset['hall_number'])
-
-        if symbol_type == 1:
-            return "%s (%d)" % (symbols[0], dataset['number'])
-        else:
-            return "%s (%d)" % (symbols[4], dataset['number'])
+        return "%s (%d)" % (dataset['international'], dataset['number'])
 
     def spacegroup(self, symprec=1e-5, angle_tolerance=-1.0):
         """

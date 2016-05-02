@@ -12,7 +12,14 @@ import ftplib
 import urllib2
 import tarfile
 import time
-from pychemia.code.abinit import psp_name
+
+from pychemia import HAS_SCIPY
+
+if HAS_SCIPY:
+    from pychemia.code.abinit import psp_name
+else:
+    raise ImportError('scipy could not be found')
+
 
 
 def get_rpath_psp(kind, exchange, atomicnumber=None):

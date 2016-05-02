@@ -2,32 +2,12 @@
 Routines related to Metadata info and Repositories
 """
 
-try:
-    import pymongo
+from pychemia import HAS_PYMONGO, HAS_GRIDFS
 
-    if pymongo.version_tuple[0] < 3:
-        print 'Pymongo version is too old for PyChemia, install pymongo 3+'
-        USE_MONGO = False
-    else:
-        USE_MONGO = True
-except ImportError:
-    pymongo = None
-    print 'Could no import pymongo, mongo database functionality disabled'
-    USE_MONGO = False
-
-try:
-    import gridfs
-
-    USE_GRIDFS = True
-except ImportError:
-    gridfs = None
-    print 'Could no import pymongo, mongo database functionality disabled'
-    USE_GRIDFS = False
-
-if USE_MONGO:
+if HAS_PYMONGO:
     from _db import PyChemiaDB, get_database, object_id, create_user, create_database
 
-    if USE_GRIDFS:
+    if HAS_GRIDFS:
         from _queue import PyChemiaQueue
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())
