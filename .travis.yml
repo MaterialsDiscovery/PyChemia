@@ -24,10 +24,12 @@ install:
   # Coverage packages are on my binstar channel
   # conda install --yes -c guilleaf python-coveralls nose-cov
   # python setup.py install
+  - ls -al
+  - pwd
 
 # Run test
 script:
-  - nosetest -v
+  - nosetests -v
   # nosetests --with-cov --cover-package pychemia --cov-config .coveragerc --logging-level=INFO
 
 # Calculate coverage
