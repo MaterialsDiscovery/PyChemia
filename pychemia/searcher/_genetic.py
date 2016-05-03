@@ -58,7 +58,7 @@ class GeneticAlgorithm(Searcher):
 
         for i in range(self.nelite):
             entry_id = selection[i]
-            print 'Promoting candidates ', i
+            print('Promoting candidates ', i)
             pcm_log.debug('[%s] Promoted to new generation' % str(entry_id))
             self.pass_to_new_generation(entry_id, reason='Elite')
 
@@ -70,9 +70,9 @@ class GeneticAlgorithm(Searcher):
                 if self.nelite + j + jump < len(selection):
                     entry_jd = selection[self.nelite + j + jump]
                     new_entry_id, new_entry_jd = self.population.cross([entry_id, entry_jd])
-                    print 'Replace candidates %d and %d by crossing %d with %d' % (self.nelite + j + jump,
+                    print('Replace candidates %d and %d by crossing %d with %d' % (self.nelite + j + jump,
                                                                                    discarded_index,
-                                                                                   self.nelite + j + jump, i)
+                                                                                   self.nelite + j + jump, i))
 
                     pcm_log.debug('[%s] Moved to: %s' % (entry_id, new_entry_id))
                     self.replace_by_other(entry_jd, new_entry_id,

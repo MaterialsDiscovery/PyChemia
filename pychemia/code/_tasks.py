@@ -50,11 +50,11 @@ class Task:
 
     def status(self):
         if self.finished:
-            print 'Task finished'
+            print('Task finished')
         if self.started:
-            print 'Task started'
+            print('Task started')
         if self.success:
-            print 'Task completed successfully'
+            print('Task completed successfully')
 
     def report_end(self, html, file_format):
         from lxml import etree

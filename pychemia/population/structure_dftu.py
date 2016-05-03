@@ -1,8 +1,9 @@
+from __future__ import print_function
 import os
 import itertools
 import numpy as np
 from pychemia.code.abinit import InputVariables
-from _population import Population
+from ._population import Population
 from pychemia import pcm_log
 from pychemia.utils.mathematics import gram_smith_qr
 
@@ -12,7 +13,7 @@ class PopulationDFTU(Population):
 
         Population.__init__(self, name, 'global')
         if not os.path.isfile(abinit_input):
-            print "Abinit input not found"
+            print("Abinit input not found")
             raise ValueError
         self.input = InputVariables(abinit_input)
         self.structure = self.input.get_structure()
@@ -21,7 +22,7 @@ class PopulationDFTU(Population):
         if natpawu is None:
             spinat = self.input.get_value('spinat')
             if spinat is None:
-                print 'I could not determine the number of atoms playing a role in the DFT+U calculation'
+                print('I could not determine the number of atoms playing a role in the DFT+U calculation')
                 raise ValueError('Could not determine natpawu')
             else:
                 spinat = np.array(spinat).reshape((-1, 3))
@@ -173,7 +174,7 @@ class PopulationDFTU(Population):
 
     def str_entry(self, entry_id):
         entry = self.get_entry(entry_id)
-        print entry['properties']['P'], entry['properties']['d']
+        print(entry['properties']['P'], entry['properties']['d'])
 
     def get_duplicates(self, ids):
         return None

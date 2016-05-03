@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import pychemia
 import itertools
@@ -21,10 +22,10 @@ def ext_gcd(a, b):
 
 
 def print_vector(v):
-    print 'v = ',
+    print('v = ', end='')
     for i in range(3):
-        print v[i],
-    print "\n"
+        print(v[i], end='')
+    print("\n")
 
 
 def create_surface(structure, h, k, l, layers, tol=1.e-5):
@@ -42,17 +43,17 @@ def create_surface(structure, h, k, l, layers, tol=1.e-5):
     v = ext_gcd(k, l)
     p = v[0]
     q = v[1]
-    print 'p = ', p
-    print 'q = ', q
+    print('p = ', p)
+    print('q = ', q)
 
     k1 = np.dot(p * (k * a1 - h * a2) + q * (l * a1 - h * a3), l * a2 - k * a3)
     k2 = np.dot(l * (k * a1 - h * a2) - k * (l * a1 - h * a3), l * a2 - k * a3)
-    print "\n\nk1 = ", k1
-    print "k2 = ", k2
+    print("\n\nk1 = ", k1)
+    print("k2 = ", k2)
 
     if abs(k2) > tol:
         c = -int(round(k1 / k2))
-        print "c = -int(round(k1/k2)) = ", c
+        print("c = -int(round(k1/k2)) = ", c)
         p, q = p + c * l, q - c * k
 
     # Calculate lattice vectors {v1, v2, v3} defining basis of the new cell
@@ -186,9 +187,9 @@ def get_onion_layers(structure):
 
 def get_facets(structure, surface, seed, distance_tolerance=2.0):
     if seed not in surface:
-        print 'Error: seed not in surface'
-        print 'Seed: ', seed
-        print 'Surface: ', surface
+        print('Error: seed not in surface')
+        print('Seed: ', seed)
+        print('Surface: ', surface)
         raise ValueError('Seed not in surface')
 
     idx_seed = surface.index(seed)
@@ -262,7 +263,7 @@ def random_attaching(structure, seed, target_species, natom_crystal, radius=1.8,
     surface = lys[0]
 
     if seed not in surface:
-        print 'Current Seed not in surface, searching a new seed'
+        print('Current Seed not in surface, searching a new seed')
         seed = find_new_seed(structure, surface, seed, natom_crystal)
 
     tol = basetol
@@ -270,18 +271,18 @@ def random_attaching(structure, seed, target_species, natom_crystal, radius=1.8,
     while True:
         facets, mintol = get_facets(structure, surface, seed, distance_tolerance=tol)
         if len(facets) > 0:
-            print 'Possible Facets', facets
+            print('Possible Facets', facets)
             break
         elif mintol > 2 * basetol:
             return None, None, None, None
         else:
             tol = mintol
-            print 'No facets found, increasing tolerance to ', tol
+            print('No facets found, increasing tolerance to ', tol)
 
     while True:
         rnd = np.random.randint(len(facets))
         facet_chosen = facets[rnd]
-        print 'Seed: %3d     Number of facets: %3d     Facet chosen: %s' % (seed, len(facets), facet_chosen)
+        print('Seed: %3d     Number of facets: %3d     Facet chosen: %s' % (seed, len(facets), facet_chosen))
 
         center, uvector, atoms_facet = attach_to_facet(structure, facet_chosen)
 
@@ -298,14 +299,14 @@ def random_attaching(structure, seed, target_species, natom_crystal, radius=1.8,
             mindist = np.min((dist_matrix + 100 * identity).flatten())
             if mindist > cov_rad:
                 good_pos += 1
-                print 'We have a minimal distance of', mindist
+                print('We have a minimal distance of', mindist)
             new_sts[specie] = pychemia.Structure(symbols=new_symbols, positions=new_positions, periodicity=False)
 
         if good_pos == len(target_species):
-            print 'Good position selected for all species'
+            print('Good position selected for all species')
             break
         else:
-            print 'One bad position, choosing a new facet'
+            print('One bad position, choosing a new facet')
 
     return new_sts, facet_chosen, center, uvector
 
@@ -338,13 +339,13 @@ def find_new_seed(st, surface, seed, natom_crystal):
     if len(candidates) > 0:
         dists = scipy.spatial.distance_matrix(st.center_mass().reshape((1, 3)), st.positions[candidates])
         npcandidates = np.array(candidates)[dists[0].argsort()]
-        print 'Candidates ordered by distance to CM', npcandidates
+        print('Candidates ordered by distance to CM', npcandidates)
         for i in npcandidates:
             facets, mintol = get_facets(st, surface, i, distance_tolerance=1.0)
             if mintol < 5.0:
                 new_seed = i
                 break
 
-    print 'Seed: %3d => %3d' % (seed, new_seed)
+    print('Seed: %3d => %3d' % (seed, new_seed))
     assert (new_seed in surface)
     return int(new_seed)

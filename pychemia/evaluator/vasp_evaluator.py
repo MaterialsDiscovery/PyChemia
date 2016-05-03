@@ -40,7 +40,7 @@ class RelaxPopulation:
             workdir = self.basedir + os.sep + name
             structure = self.population.db.get_structure(entry['_id'])
             kpoints.set_optimized_grid(structure.lattice, density_of_kpoints=density_of_kpoints)
-            print kpoints
+            print(kpoints)
             vj = VaspJob()
             vj.initialize(workdir=workdir, structure=structure, kpoints=kpoints)
             inp = InputVariables()
@@ -99,16 +99,16 @@ class RelaxPopulation:
                 self.add_status(entry_id, 'NOOUTCAR')
             else:
                 self.del_status(entry_id, 'NOOUTCAR')
-                print '-'
+                print('-')
                 vo = VaspOutput(workdir + os.sep + 'OUTCAR')
                 relaxation_info = vo.relaxation_info()
                 if len(relaxation_info) != 3:
-                    print '[' + str(entry_id) + ']' + ' Missing some data in OUTCAR (forces or stress)'
+                    print('[' + str(entry_id) + ']' + ' Missing some data in OUTCAR (forces or stress)')
                     self.add_status(entry_id, 'NOOUTCAR')
 
-                print '[' + str(entry_id) + ']' + 'Results:'
+                print('[' + str(entry_id) + ']' + 'Results:')
                 for i in relaxation_info:
-                    print '[' + str(entry_id) + '] %20s %12.5e' % (i, relaxation_info[i])
+                    print('[' + str(entry_id) + '] %20s %12.5e' % (i, relaxation_info[i]))
 
                 # Conditions to consider the structure relaxed
                 if relaxation_info['avg_force'] < self.target_force:
@@ -159,10 +159,10 @@ class RelaxPopulation:
                 vj.input_variables.variables['EDIFFG'] = - self.target_force
 
             # Print new values
-            print '[' + str(entry_id) + ']' + 'New Values:'
+            print('[' + str(entry_id) + ']' + 'New Values:')
             for i in ['ISIF', 'IBRION', 'EDIFF', 'EDIFFG']:
-                print '[' + str(entry_id) + ']' + i + ' : ', vj.input_variables.variables[i]
-            print '-'
+                print('[' + str(entry_id) + ']' + i + ' : ', vj.input_variables.variables[i])
+            print('-')
 
             for i in ['OUTCAR']:
                 if not os.path.exists(workdir + os.sep + i):
@@ -175,7 +175,7 @@ class RelaxPopulation:
             try:
                 vj.structure = read_poscar(workdir + os.sep + 'CONTCAR')
             except ValueError:
-                print 'Error reading CONTCAR'
+                print('Error reading CONTCAR')
 
             vj.set_inputs()
             properties = vj.outcar

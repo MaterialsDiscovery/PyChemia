@@ -9,6 +9,7 @@ from pychemia import pcm_log
 
 class PopulationNonColl(Population):
     def __init__(self, name, source_dir='.', mag_atoms=None, magmom_magnitude=2.0, distance_tolerance=0.1):
+        self.name = name
         Population.__init__(self, name, 'global')
         if not os.path.isfile(source_dir + os.sep + 'INCAR'):
             raise ValueError("INCAR not found")
@@ -24,6 +25,7 @@ class PopulationNonColl(Population):
             self.mag_atoms = mag_atoms
         self.magmom_magnitude = magmom_magnitude
         self.distance_tolerance = distance_tolerance
+
 
     def __str__(self):
         ret = ' Population NonColl\n\n'
@@ -44,9 +46,9 @@ class PopulationNonColl(Population):
                 'magmom_magnitude': self.magmom_magnitude,
                 'distance_tolerance': self.distance_tolerance}
 
-    def from_dict(self, population_dict):
+    @staticmethod
+    def from_dict(population_dict):
         return PopulationNonColl(name=population_dict['name'],
-                                 tag=population_dict['tag'],
                                  mag_atoms=population_dict['mag_atoms'],
                                  magmom_magnitude=population_dict['magmom_magnitude'],
                                  distance_tolerance=population_dict['distance_tolerance'])
@@ -139,7 +141,7 @@ class PopulationNonColl(Population):
 
     def str_entry(self, entry_id):
         entry = self.pcdb.entries.find_one({'_id': entry_id}, {'properties.magmom': 1})
-        print np.array(entry['properties']['magmom']).reshape((-1, 3))
+        print(np.array(entry['properties']['magmom']).reshape((-1, 3)))
 
     def get_duplicates(self, ids):
         return None

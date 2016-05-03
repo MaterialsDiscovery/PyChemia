@@ -70,13 +70,13 @@ class IonRelaxation(Relaxator, Task):
                                                                     info['avg_stress_diag'],
                                                                     info['avg_stress_non_diag']))
         else:
-            print 'Failure to get forces and stress'
+            print('Failure to get forces and stress')
             return False
 
         vo = VaspOutput(self.workdir + os.sep + 'OUTCAR')
         info = vo.relaxation_info()
         if len(info) != 3:
-            print ' Missing some data in OUTCAR (forces or stress)'
+            print(' Missing some data in OUTCAR (forces or stress)')
 
         # Conditions to consider the structure relaxed
         if info['avg_force'] < self.target_forces:
@@ -171,7 +171,7 @@ class IonRelaxation(Relaxator, Task):
         vj.input_variables.set_density_for_restart()
         vj.set_kpoints(self.kpoints)
         vj.set_inputs()
-        print 'Launching VASP using %d processes' % nparal
+        print('Launching VASP using %d processes' % nparal)
         vj.run(use_mpi=True, mpi_num_procs=nparal)
         if self.waiting:
             vj.runner.wait()
@@ -204,7 +204,8 @@ class IonRelaxation(Relaxator, Task):
                 va.run()
 
                 max_force, max_stress = self.get_max_force_stress()
-                print 'Max Force: %9.3E Stress: %9.3E (target forces= %E)' % (max_force, max_stress, self.target_forces)
+                print('Max Force: %9.3E Stress: %9.3E (target forces= %E)' %
+                      (max_force, max_stress, self.target_forces))
 
                 if max_force is not None and max_force < self.target_forces:
 
@@ -284,7 +285,7 @@ class IonRelaxation(Relaxator, Task):
             try:
                 structure = read_poscar(filename)
             except ValueError:
-                print 'Error reading CONTCAR'
+                print('Error reading CONTCAR')
         return structure
 
     def plot(self, filedir=None, file_format='pdf'):

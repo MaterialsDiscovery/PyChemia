@@ -10,7 +10,7 @@ import getopt
 
 
 def usage(name):
-    print """
+    print("""
 NAME
 
     %s
@@ -32,7 +32,7 @@ OPTIONS
     --output_file, -o <string> (Default: ConvexHull.pdf)
         Name of the figure that will be created
 
-""" % os.path.basename(name)
+""" % os.path.basename(name))
 
 
 def spcgrp_props(space_group):
@@ -113,7 +113,7 @@ def main(argv):
             output_file = arg
 
     if not os.path.isfile('results.json'):
-        print 'File not found %s' % 'results.json'
+        print('File not found %s' % 'results.json')
 
     data = json.load(open('results.json'))
     plt.figure(figsize=(11, 8.5))
@@ -125,15 +125,15 @@ def main(argv):
         if idata['ratio'] == 0:
             if energy_left is None or energy_left > idata['energy_pa']:
                 energy_left = idata['energy_pa']
-                print 'Energy per atom for %2s: %9.3f' % (idata['formula'], energy_left)
+                print('Energy per atom for %2s: %9.3f' % (idata['formula'], energy_left))
 
         elif idata['ratio'] == 1:
             if energy_right is None or energy_right > idata['energy_pa']:
                 energy_right = idata['energy_pa']
-                print 'Energy per atom for %2s: %9.3f' % (idata['formula'], energy_right)
+                print('Energy per atom for %2s: %9.3f' % (idata['formula'], energy_right))
 
     if energy_left is None or energy_right is None:
-        print 'Pure elements not found, formation energy cannot be computed'
+        print('Pure elements not found, formation energy cannot be computed')
         sys.exit(1)
 
     points = []
@@ -162,11 +162,11 @@ def main(argv):
 
     for spcgrp in [15, 74, 142, 167, 194, 230]:
         marker, color, lab, m, z, fs = spcgrp_props(spcgrp)
-        print 'Marker for %12s: %s' % (lab, marker)
+        print('Marker for %12s: %s' % (lab, marker))
         plt.plot(-100, -100, marker, ms=m, fillstyle=fs, color=color, label=lab)
 
     plt.xlim(-0.05, 1.05)
-    print 'Limits', ylim_bottom, ylim_top
+    print('Limits', ylim_bottom, ylim_top)
     plt.ylim(ylim_bottom, ylim_top)
     plt.legend(loc=9, prop={'size': 10}, numpoints=1)
     plt.subplots_adjust(left=0.12, bottom=0.13, right=0.98, top=0.96, wspace=None, hspace=None)

@@ -27,7 +27,7 @@ class KPointConvergence:
         dftb.initialize(workdir=self.workdir, structure=self.structure, kpoints=kpoints)
         ans = dftb.set_slater_koster(search_paths=self.slater_path)
         if not ans:
-            print 'Slater-Koster files not complete'
+            print('Slater-Koster files not complete')
 
     def run(self):
 
@@ -38,7 +38,7 @@ class KPointConvergence:
         dftb.initialize(workdir=self.workdir, structure=self.structure, kpoints=kpoints)
         ans = dftb.set_slater_koster(search_paths=self.slater_path)
         if not ans:
-            print 'Slater-Koster files not complete'
+            print('Slater-Koster files not complete')
             return
 
         grid = None
@@ -69,9 +69,9 @@ class KPointConvergence:
                         if os.path.exists(filename):
                             ret = read_detailed_out(filename)
                             line = 'KPoint_grid= %15s  iSCC= %4d  Total_energy= %10.4f  SCC_error= %9.3E'
-                            print line % (grid, ret['SCC']['iSCC'], ret['total_energy'], ret['SCC']['SCC_error'])
+                            print(line % (grid, ret['SCC']['iSCC'], ret['total_energy'], ret['SCC']['SCC_error']))
                         else:
-                            print 'detailed.out could not be found, exiting...'
+                            print('detailed.out could not be found, exiting...')
                             return
                         n += 2
                         energies.append(ret['total_energy'])

@@ -79,7 +79,7 @@ class PBSRunner:
         os.chdir(self.workdir)
         returncode = subprocess.call(["qsub", "%s" % self.filename, '-p', '%d' % priority])
         if returncode != 0:
-            print 'Some error happended:', returncode
+            print('Some error happended:', returncode)
         os.chdir(cwd)
 
 

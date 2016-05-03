@@ -1,10 +1,9 @@
+from __future__ import print_function
 import os
 import socket
 import time
 from multiprocessing import Process
-
 import numpy as np
-
 from pychemia import pcm_log, HAS_PYMONGO
 
 if HAS_PYMONGO:
@@ -35,11 +34,11 @@ class DirectEvaluator:
             ids_running.append(None)
 
         pcdb = get_database(self.database_settings)
-        print 'Database contains: %d entries' % pcdb.entries.count()
+        print('Database contains: %d entries' % pcdb.entries.count())
 
         for entry in pcdb.entries.find({}):
             pcdb.unlock(entry['_id'], name=socket.gethostname())
-        print 'Number of entries: ', pcdb.entries.count()
+        print('Number of entries: ', pcdb.entries.count())
 
         while True:
 
@@ -60,7 +59,7 @@ class DirectEvaluator:
 
             index = 0
             relaxing = np.array([True for j in range(self.nparal) if procs[j] is not None and procs[j].is_alive()])
-            print '[%s]-> To Relax: %d  Relaxing: %d' % (pcdb.name, len(to_relax), sum(relaxing))
+            print('[%s]-> To Relax: %d  Relaxing: %d' % (pcdb.name, len(to_relax), sum(relaxing)))
             while index < len(to_relax):
 
                 entry_id = to_relax[index]
@@ -118,11 +117,11 @@ class DirectEvaluator:
                 max_stress = 1
         else:
             pcm_log.debug('Bad entry')
-            print entry
+            print(entry)
             max_force = 1
             max_stress = 1
         if max(max_force, max_stress) > self.target_forces:
-            print 'Status for %s: forces: %9.2E stress: %9.2E' % (entry['_id'], max_force, max_stress)
+            print('Status for %s: forces: %9.2E stress: %9.2E' % (entry['_id'], max_force, max_stress))
         return max(max_force, max_stress)
 
     def is_evaluable(self, entry):

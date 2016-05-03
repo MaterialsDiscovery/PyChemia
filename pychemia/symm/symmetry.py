@@ -113,7 +113,6 @@ u'Fm-3m'
 
         :param symprec: (float) Symmetry precision
         :param angle_tolerance: (float) angle tolerance for spglib internal routine
-        :param symbol_type: (int)
         :return:
         """
 

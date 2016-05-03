@@ -53,8 +53,8 @@ def worker(db_settings, entry_id, workdir, target_forces, relaxator_params):
 
         if forces is not None:
             magnitude_forces = np.apply_along_axis(np.linalg.norm, 1, forces)
-            print 'Forces: Max: %9.3e Avg: %9.3e' % (np.max(magnitude_forces), np.average(magnitude_forces))
-            print 'Stress: ', np.max(np.abs(stress.flatten()))
+            print('Forces: Max: %9.3e Avg: %9.3e' % (np.max(magnitude_forces), np.average(magnitude_forces)))
+            print('Stress: ', np.max(np.abs(stress.flatten())))
 
         if forces is None:
             pcm_log.error('No forces found on %s' % filename)
@@ -169,7 +169,7 @@ if __name__ == '__main__':
         parser.print_help()
         exit(1)
 
-    print args
+    print(args)
     db_settings = {'name': args.dbname, 'host': args.host, 'port': args.port, 'ssl': args.ssl,
                    'replicaset': args.replicaset}
     if args.user is not None:
@@ -178,21 +178,21 @@ if __name__ == '__main__':
         db_settings['user'] = args.user
         db_settings['passwd'] = args.passwd
     relaxator_params = {'slater_path': args.slater_path}
-    print 'pyChemia Evaluator using DFTB+'
-    print 'dbname    : %s' % args.dbname
-    print 'host      : %s' % args.host
-    print 'port      : %d' % args.port
-    print 'user      : %s' % args.user
-    print 'replicaset: %s' % args.replicaset
-    print 'workdir   : %s' % args.workdir
-    print 'nparal    : %d' % args.nparal
-    print 'slater-path   : %s' % str(args.slater_path)
-    print 'target-forces : %.2E' % args.target_forces
-    print 'evaluate_all  : %s' % str(args.evaluate_all)
-    print 'waiting       : %s' % str(args.waiting)
-    print 'ssl           : %s' % str(args.ssl)
+    print('pyChemia Evaluator using DFTB+')
+    print('dbname    : %s' % args.dbname)
+    print('host      : %s' % args.host)
+    print('port      : %d' % args.port)
+    print('user      : %s' % args.user)
+    print('replicaset: %s' % args.replicaset)
+    print('workdir   : %s' % args.workdir)
+    print('nparal    : %d' % args.nparal)
+    print('slater-path   : %s' % str(args.slater_path))
+    print('target-forces : %.2E' % args.target_forces)
+    print('evaluate_all  : %s' % str(args.evaluate_all))
+    print('waiting       : %s' % str(args.waiting))
+    print('ssl           : %s' % str(args.ssl))
 
-    print db_settings
+    print(db_settings)
     evaluator = DirectEvaluator(db_settings, args.workdir,
                                 target_forces=args.target_forces,
                                 nparal=args.nparal,

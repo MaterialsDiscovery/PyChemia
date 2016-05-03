@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import time
 from multiprocessing import Pool, Process
@@ -38,7 +39,7 @@ def cluster_fb_worker(db_settings):
 def cluster_fb_evaluator(db_settings, nparal):
     pcdb = pychemia.db.get_database(db_settings)
     population = pychemia.population.LJCluster(pcdb)
-    print 'Staring evaluator for ', population.name
+    print('Staring evaluator for ', population.name)
     while True:
         entry = population.pcdb.db.pychemia_entries.find_one({'status.' + population.tag: True,
                                                               'status.lock': {'$exists': False},

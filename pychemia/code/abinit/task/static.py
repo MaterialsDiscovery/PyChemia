@@ -34,7 +34,7 @@ class StaticCalculation(Task):
 
     def plot(self, figname='static_calculation.pdf'):
         if not self.finished:
-            print 'The task is not finished'
+            print('The task is not finished')
             return
         import matplotlib.pyplot as plt
         plt.switch_backend('agg')

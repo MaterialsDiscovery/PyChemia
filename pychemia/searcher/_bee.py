@@ -1,4 +1,5 @@
-from _searcher import Searcher
+from __future__ import print_function
+from ._searcher import Searcher
 from pychemia import pcm_log
 
 
@@ -61,7 +62,7 @@ class BeeAlgorithm(Searcher):
         pcm_log.info('Size of selection : %d' % len(selection))
 
         if self.scouts_elite is None:
-            print 'First run', len(selection), self.ns
+            print('First run', len(selection), self.ns)
             # During the first iteration all the selection are scouts
             # Lets choose from there the elite, the best and the actual
             # scouts for the next iterations
@@ -91,7 +92,7 @@ class BeeAlgorithm(Searcher):
                     self.population.disable(ident)
                     self.generation[ident] = [self.current_generation + 1]
                     self.scouts_others.append(ident)
-                    print 'Added to other scouts', ident
+                    print('Added to other scouts', ident)
                 self.print_status()
 
             else:
@@ -103,10 +104,10 @@ class BeeAlgorithm(Searcher):
                 #    print 'Population raised:',entry_id
         else:
             # New iterations look into each patch and see witch bees are on each patch
-            print 'Foragers %d' % len(self.foragers), self.foragers
-            print 'Elite    %d' % len(self.scouts_elite), self.scouts_elite
-            print 'Best     %d' % len(self.scouts_best), self.scouts_best
-            print 'Others   %d' % len(self.scouts_others), self.scouts_others
+            print('Foragers %d' % len(self.foragers), self.foragers)
+            print('Elite    %d' % len(self.scouts_elite), self.scouts_elite)
+            print('Best     %d' % len(self.scouts_best), self.scouts_best)
+            print('Others   %d' % len(self.scouts_others), self.scouts_others)
 
             self.process_scouts(self.scouts_elite, selection)
             self.process_scouts(self.scouts_best, selection)
@@ -150,15 +151,15 @@ class BeeAlgorithm(Searcher):
                 self.population.disable(ident)
                 self.generation[ident] = [self.current_generation + 1]
                 self.scouts_others.append(ident)
-                print 'Added to other scouts', ident
+                print('Added to other scouts', ident)
 
-            print 'After run_one:'
+            print('After run_one:')
             self.print_status()
 
     def create_foragers(self, scout, n):
         for i in range(n):
             forager = self.population.move_random(scout, factor=self.delta_change, in_place=False, kind='move')
-            print 'For scout:', scout, ' new forager: ', forager
+            print('For scout:', scout, ' new forager: ', forager)
             self.population.disable(forager)
             self.generation[forager] = [self.current_generation + 1]
             if scout not in self.foragers:
@@ -171,7 +172,7 @@ class BeeAlgorithm(Searcher):
     def process_scouts(self, scouts, selection):
         # Removing dead bees from log
         for ibee in list(scouts):
-            print ibee, len(self.foragers[ibee])
+            print(ibee, len(self.foragers[ibee]))
             dead_bees = 0
             for j in list(self.foragers[ibee]):
                 if j not in selection:
@@ -181,7 +182,7 @@ class BeeAlgorithm(Searcher):
 
         for ibee in list(scouts):
             foragers_alive = self.population.ids_sorted(self.foragers[ibee])
-            print 'Foragers that survived:', foragers_alive
+            print('Foragers that survived:', foragers_alive)
             if len(foragers_alive) > 0:
                 best_forager = foragers_alive[0]
                 if self.population.value(best_forager) < self.population.value(ibee):

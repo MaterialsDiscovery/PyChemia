@@ -9,7 +9,11 @@
 
 import os
 import ftplib
-import urllib2
+
+try:
+    from urllib2 import urlopen
+except ImportError:
+    from urllib.request import urlopen
 import tarfile
 import time
 
@@ -69,11 +73,11 @@ def get_all_psps(basedir, exchange, kind):
         rpath = get_rpath_psp(kind, exchange)
         filename = rpath.split('/')[-1]
         if not os.path.isfile(directory + '/' + filename):
-            u = urllib2.urlopen(rpath)
+            u = urlopen(rpath)
             f = open(directory + os.sep + filename, 'wb')
             meta = u.info()
             file_size = int(meta.getheaders("Content-Length")[0])
-            print "Downloading: %s Bytes: %s" % (filename, file_size)
+            print("Downloading: %s Bytes: %s" % (filename, file_size))
             file_size_dl = 0
             block_sz = 8192
             while True:
@@ -84,9 +88,9 @@ def get_all_psps(basedir, exchange, kind):
                 f.write(readed_buffer)
                 status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / file_size)
                 status += chr(8) * (len(status) + 1)
-                print status,
+                print(status, end='')
             f.close()
-            print '\n'
+            print('\n')
         try:
             tar = tarfile.open(directory + '/' + filename, 'r:gz')
             for item in tar:
@@ -94,7 +98,7 @@ def get_all_psps(basedir, exchange, kind):
                     tar.extract(item, path=directory)
         except tarfile.ReadError:
             name = os.path.basename(filename)
-            print name[:name.rfind('.')], '<filename>'
+            print(name[:name.rfind('.')], '<filename>')
 
     elif kind == 'HGH':
         while True:
@@ -104,11 +108,11 @@ def get_all_psps(basedir, exchange, kind):
             ftp.cwd('pub/abinitio/Psps/LDA_HGH/')
             for filename in ftp.nlst():
                 if not os.path.exists(directory + '/' + filename) or os.path.getsize(directory + '/' + filename) == 0:
-                    print 'Getting %s' % filename
+                    print('Getting %s' % filename)
                     try:
                         ftp.retrbinary('RETR ' + filename, open(directory + '/' + filename, 'wb').write)
                     except ftplib.error_perm:
-                        print 'Failed to get ', filename
+                        print('Failed to get ', filename)
                         succeed = False
             ftp.close()
             if succeed:
@@ -150,7 +154,7 @@ def get_all_psps(basedir, exchange, kind):
                         missing_psps.append(i)
                         ftp.close()
                         time.sleep(5)
-                        print 'Reconnecting...'
+                        print('Reconnecting...')
                         if os.path.isfile(directory + '/' + filename):
                             os.remove(directory + '/' + filename)
                         ftp = ftplib.FTP('ftp.abinit.org')  # connect to host, default port
@@ -158,7 +162,7 @@ def get_all_psps(basedir, exchange, kind):
                         nofile = False
         ftp.close()
         if len(missing_psps) > 0:
-            print "kind == '%s' and exchange == '%s' and i in %s" % (kind, exchange, missing_psps)
+            print("kind == '%s' and exchange == '%s' and i in %s" % (kind, exchange, missing_psps))
 
 
 if __name__ == '__main__':
@@ -170,7 +174,7 @@ if __name__ == '__main__':
         os.mkdir(basedir)
 
     for exchange in ['LDA', 'GGA', 'DEN']:
-        print '=> ' + exchange
+        print('=> ' + exchange)
         lista = []
         if exchange == 'LDA':
             lista = ['FHI', 'TM', 'GTH', 'PAW', 'CORE', 'HGH']
@@ -180,5 +184,5 @@ if __name__ == '__main__':
             lista = ['AE', 'FC']
 
         for kind in lista:
-            print '--> ' + kind
+            print('--> ' + kind)
             get_all_psps(basedir, exchange, kind)

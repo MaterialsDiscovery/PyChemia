@@ -3,13 +3,14 @@ PyChemia is an open-source Python Library for materials structural search. The p
 a method agnostic framework for materials discovery and design using a variety of methods from Metaheuristic to
 Dynamical such as minima hoping method (MHM)
 """
+from __future__ import print_function
 
 try:
     import scipy
 
     HAS_SCIPY = True
 except ImportError:
-    print "Library 'scipy' could not be found, several places of the code will be disabled"
+    # print("Library 'scipy' could not be found, several places of the code will be disabled")
     HAS_SCIPY = False
 
 try:
@@ -17,7 +18,7 @@ try:
 
     HAS_SPGLIB = True
 except ImportError:
-    print "Library 'spglib' could not be found, disabling pychemia.symm.SymmetryAnalysis"
+    #print("Library 'spglib' could not be found, disabling pychemia.symm.SymmetryAnalysis")
     HAS_SPGLIB = False
 
 try:
@@ -25,7 +26,7 @@ try:
 
     HAS_MATPLOTLIB = True
 except ImportError:
-    print "Library 'matplotlib' could not be found, disabling plotting functionality"
+    #print("Library 'matplotlib' could not be found, disabling plotting functionality")
     HAS_MATPLOTLIB = False
 
 try:
@@ -33,7 +34,7 @@ try:
 
     HAS_PYHULL = True
 except ImportError:
-    print "Library 'pyhull' could not be found"
+    #print("Library 'pyhull' could not be found")
     HAS_PYHULL = False
 
 try:
@@ -41,14 +42,14 @@ try:
 
     HAS_NETWORKX = True
 except ImportError:
-    print "Library 'networkx' could not be found, disabling pychemia.dm.NetworkAnalysis"
+    #print("Library 'networkx' could not be found, disabling pychemia.dm.NetworkAnalysis")
     HAS_NETWORKX = False
 
 try:
     import Scientific
     HAS_SCIENTIFIC = True
 except ImportError:
-    print "Library 'Scientific' could not be found"
+    #print("Library 'Scientific' could not be found")
     HAS_SCIENTIFIC = False
 
 import sys
@@ -62,13 +63,13 @@ try:
     import pymongo
 
     if pymongo.version_tuple[0] < 3:
-        print "Library 'pymongo' its too old, disabling pychemia.db.PyChemiaDB"
+        #print("Library 'pymongo' its too old, disabling pychemia.db.PyChemiaDB")
         HAS_PYMONGO = False
     else:
         HAS_PYMONGO = True
 except ImportError:
     pymongo = None
-    print "Library 'pymongo' could not be found, disabling pychemia.db.PyChemiaDB"
+    #print("Library 'pymongo' could not be found, disabling pychemia.db.PyChemiaDB")
     HAS_PYMONGO = False
 
 try:
@@ -77,7 +78,7 @@ try:
     HAS_GRIDFS = True
 except ImportError:
     gridfs = None
-    print "Library 'gridfs' could not be found, disabling pychemia.db.PyChemiaQueue"
+    #print("Library 'gridfs' could not be found, disabling pychemia.db.PyChemiaQueue")
     HAS_GRIDFS = False
 
 
@@ -85,14 +86,14 @@ try:
     import ase
     HAS_ASE = True
 except ImportError:
-    print "Library 'ase' could not be found, disabling pychemia.external.ase"
+    #print("Library 'ase' could not be found, disabling pychemia.external.ase")
     HAS_ASE = False
 
 try:
     import pymatgen
     HAS_PYMATGEN = True
 except ImportError:
-    print "Library 'pymatgen' could not be found, disabling pychemia.external.pymatgen"
+    #print("Library 'pymatgen' could not be found, disabling pychemia.external.pymatgen")
     HAS_PYMATGEN = False
 
 import logging
@@ -100,23 +101,23 @@ import logging
 pcm_log = logging.getLogger(__name__)
 pcm_log.addHandler(logging.NullHandler())
 from .core import Structure, Composition, Lattice
-import analysis
-import db
-import dft
-import dm
-import gui
-import io
-import report
-import runner
-import searcher
-import symm
-import utils
-import web
-import external
-import serializer
+from . import analysis
+from . import db
+from . import dft
+from . import dm
+from . import gui
+from . import io
+from . import report
+from . import runner
+from . import searcher
+from . import symm
+from . import utils
+from . import web
+from . import external
+from . import serializer
 from _info import __author__, __copyright__, __version__, __email__, __status__, __date__, Version
-import code
-import population
+from . import code
+from . import population
 from .core.from_file import structure_from_file
 
 

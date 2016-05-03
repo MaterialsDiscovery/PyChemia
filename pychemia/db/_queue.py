@@ -28,7 +28,7 @@ class PyChemiaQueue:
                 uri += ':' + str(passwd)
             uri += '@'
         uri += host + ':' + str(port)
-        print 'URI:', uri
+        print('URI:', uri)
         if user is not None:
             uri += '/' + name
         if replicaset is not None:
@@ -37,10 +37,10 @@ class PyChemiaQueue:
             self._client = pymongo.MongoClient(host=host, port=port, ssl=ssl,
                                                ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE)
         for i in ['version']:
-            print '%20s : %s' % (i, self._client.server_info()[i])
+            print('%20s : %s' % (i, self._client.server_info()[i]))
         self.db = self._client[name]
         if user is not None and self.db.authenticate(user, passwd):
-            print 'Authentication successful'
+            print('Authentication successful')
 
         self.set_minimal_schema()
         self.fs = gridfs.GridFS(self.db)
@@ -58,13 +58,13 @@ class PyChemiaQueue:
         if existing is None:
 
             file_id = self.fs.put(rf, filename=os.path.basename(filename), hash=hashcode)
-            print 'New file ', file_id
+            print('New file ', file_id)
             self.db.pychemia_entries.update({'_id': entry_id}, {'$addToSet': {location + '.files': {'file_id': file_id,
                                                                                                     'name': filename,
                                                                                                     'hash': hashcode}}})
         else:
             file_id = existing['_id']
-            print 'File already present ', file_id
+            print('File already present ', file_id)
             self.db.pychemia_entries.update({'_id': entry_id}, {'$addToSet': {location + '.files': {'file_id': file_id,
                                                                                                     'name': filename,
                                                                                                     'hash': hashcode}}})
@@ -74,16 +74,16 @@ class PyChemiaQueue:
 
     def set_minimal_schema(self):
         for entry in self.db.pychemia_entries.find({'meta': None}, {'_id': 1}):
-            print 'Missing field "meta" on', entry['_id']
+            print('Missing field "meta" on', entry['_id'])
             self.db.pychemia_entries.update({'_id': entry['_id']}, {'$set': {'meta': {}}})
         for entry in self.db.pychemia_entries.find({'input': None}, {'_id': 1}):
-            print 'Missing field "input" on', entry['_id']
+            print('Missing field "input" on', entry['_id'])
             self.db.pychemia_entries.update({'_id': entry['_id']}, {'$set': {'input': {}}})
         for entry in self.db.pychemia_entries.find({'output': None}, {'_id': 1}):
-            print 'Missing field "output" on', entry['_id']
+            print('Missing field "output" on', entry['_id'])
             self.db.pychemia_entries.update({'_id': entry['_id']}, {'$set': {'output': {}}})
         for entry in self.db.pychemia_entries.find({'job': None}, {'_id': 1}):
-            print 'Missing field "job" on', entry['_id']
+            print('Missing field "job" on', entry['_id'])
             self.db.pychemia_entries.update({'_id': entry['_id']}, {'$set': {'job': {}}})
 
     def set_structure(self, entry_id, location, structure):

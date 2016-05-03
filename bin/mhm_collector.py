@@ -9,7 +9,7 @@ import getopt
 
 
 def usage(name):
-    print """
+    print("""
 NAME
 
     %s
@@ -31,7 +31,7 @@ OPTIONS
 
     --right, -r <string>
         Specie that will appear on the right side of the convex hull, its composition ratio will be 1.0
-""" % os.path.basename(name)
+""" % os.path.basename(name))
 
 
 def main(argv):
@@ -66,7 +66,7 @@ def main(argv):
         sys.exit(1)
 
     if not os.path.isdir(directory):
-        print 'Not such directory ', directory
+        print('Not such directory ', directory)
         sys.exit(1)
 
     basedir = directory
@@ -81,10 +81,10 @@ def main(argv):
             path = basedir + os.sep + idir + os.sep + idir2
 
             if not os.path.exists(path + os.sep + 'CONTCAR') or os.path.getsize(path + os.sep + 'CONTCAR') == 0:
-                print "Missing CONTCAR on %s/%s" % (idir, idir2)
+                print("Missing CONTCAR on %s/%s" % (idir, idir2))
 
                 if not os.path.exists(path + os.sep + 'POSCAR') or os.path.getsize(path + os.sep + 'POSCAR') == 0:
-                    print "Missing POSCAR on %s/%s" % (idir, idir2)
+                    print("Missing POSCAR on %s/%s" % (idir, idir2))
                     continue
                 st = pychemia.code.vasp.read_poscar(path + os.sep + 'POSCAR')
             else:
@@ -115,8 +115,8 @@ def main(argv):
             else:
                 ratio = float(st.composition[specie1]) / (st.composition[specie2] + st.composition[specie1])
 
-            print " %30s SPCGRP: %4d   ENERGY_PA: %9.3f   MAXFORCE: %9.2E" % ((idir + os.sep + idir2).ljust(30),
-                                                                              space_group, energy / st.natom, maxforce)
+            print(" %30s SPCGRP: %4d   ENERGY_PA: %9.3f   MAXFORCE: %9.2E" % ((idir + os.sep + idir2).ljust(30),
+                                                                              space_group, energy / st.natom, maxforce))
 
             ret.append({'formula': formula,
                         'spcgrp': space_group,

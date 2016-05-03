@@ -1,3 +1,4 @@
+from __future__ import print_function
 import time
 from abc import ABCMeta, abstractmethod
 from pychemia import pcm_log, HAS_PYMONGO
@@ -62,7 +63,7 @@ class Searcher:
                             lineage[i].remove(j)
                             changed = True
                 if changed and changedb:
-                    print 'Lineage was changed (Some entry was null)'
+                    print('Lineage was changed (Some entry was null)')
                     self.pcdb.db.lineage.update({'_id': self.searcher_id}, {'$set': {'lineage': lineage}})
 
                 sizes = [len(lineage[x]) for x in lineage]
@@ -85,17 +86,17 @@ class Searcher:
     def correct_extras(self, changedb=False):
         for entry_id in self.get_generation():
             if entry_id not in self.lineage_inv:
-                print 'Disabling one entry not in lineage_inv', entry_id
+                print('Disabling one entry not in lineage_inv', entry_id)
                 self.population.disable(entry_id)
-                print self.generation.pop(entry_id)
+                print(self.generation.pop(entry_id))
                 if changedb:
                     self.pcdb.db.generations.remove({'_id': entry_id})
             else:
                 slot = self.lineage_inv[entry_id]
                 if self.lineage[slot][-1] != entry_id:
-                    print 'Disabling one entry not in lineage[slot][-1]', entry_id
+                    print('Disabling one entry not in lineage[slot][-1]', entry_id)
                     self.population.disable(entry_id)
-                    print self.generation.pop(entry_id)
+                    print(self.generation.pop(entry_id))
                     if changedb:
                         self.pcdb.db.generations.remove({'_id': entry_id})
 
@@ -103,22 +104,22 @@ class Searcher:
             for slot in range(self.generation_size):
                 entry_id = self.lineage[str(slot)][-1]
                 if entry_id not in self.population.actives:
-                    print 'Activating from lineage', entry_id
+                    print('Activating from lineage', entry_id)
                     self.population.enable(entry_id)
                 if entry_id not in self.get_generation():
                     self.set_generation(entry_id, self.current_generation)
             actives = self.population.actives
             for entry_id in actives:
                 if entry_id not in self.get_generation():
-                    print 'Disabling ', entry_id
+                    print('Disabling ', entry_id)
                     self.population.disable(entry_id)
             for entry_id in self.get_generation():
                 if entry_id not in self.population.actives:
-                    print 'Enabling', entry_id
+                    print('Enabling', entry_id)
                     self.population.enable(entry_id)
             candidates_per_generation = [len(self.get_generation(i)) for i in range(self.current_generation + 1)]
-            print 'Candidates per generation: ', candidates_per_generation
-            print 'Current generation: ', self.current_generation, 'Candidates: ', len(self.get_generation())
+            print('Candidates per generation: ', candidates_per_generation)
+            print('Current generation: ', self.current_generation, 'Candidates: ', len(self.get_generation()))
             assert len(self.get_generation()) == self.generation_size
             assert min(candidates_per_generation) == max(candidates_per_generation)
 
@@ -158,7 +159,7 @@ class Searcher:
                 assert min(sizes) == max(sizes)
                 for i in self.lineage:
                     entry_id = self.lineage[i][-1]
-                    print 'Activating', i, entry_id
+                    print('Activating', i, entry_id)
                     self.population.enable(entry_id)
                 assert len(self.population.actives) == self.generation_size
                 assert len(self.get_generation()) == self.generation_size
@@ -209,7 +210,7 @@ class Searcher:
                                                                           len(self.get_generation(
                                                                               self.current_generation + 1))))
         else:
-            print '-'
+            print('-')
             pcm_log.info(' %s (tag: %s)' % (self.population.name, self.population.tag))
             pcm_log.info(' Current Generation             : %4d' % self.current_generation)
             pcm_log.info(' Population (evaluated/total)   : %4d /%4d' % (len(self.population.evaluated),
@@ -240,8 +241,8 @@ class Searcher:
     def advance(self, father, son, change):
         self.write_change(father, change)
         if father not in self.lineage_inv:
-            print '%s not in current lineage' % father
-            print 'Lineages %s' % self.lineage_inv.keys()
+            print('%s not in current lineage' % father)
+            print('Lineages %s' % self.lineage_inv.keys())
             raise ValueError('Father not in lineage')
         slot = self.lineage_inv[father]
         self.lineage[slot].append(None)
@@ -364,8 +365,8 @@ class Searcher:
 
         :return:
         """
-        print str(self)
-        print str(self.population)
+        print(str(self))
+        print(str(self.population))
         self.save_info()
         self.population.save_info()
         best_member = ''
@@ -406,13 +407,13 @@ class Searcher:
 
             if self.target_value is not None:
                 if self.population.value(best_member) <= self.target_value:
-                    print 'Target value achieved: target=%9.3f best=%9.3f' % (self.population.value(best_member),
-                                                                              self.target_value)
+                    print('Target value achieved: target=%9.3f best=%9.3f' % (self.population.value(best_member),
+                                                                              self.target_value))
                     self.save_generations()
                     break
                 else:
-                    print 'Best value = %7.3f     target value = %7.3f' % (self.population.value(best_member),
-                                                                           self.target_value)
+                    print('Best value = %7.3f     target value = %7.3f' % (self.population.value(best_member),
+                                                                           self.target_value))
 
             pcm_log.debug('[%s] Removing not evaluated: %d' %
                           (self.searcher_name, len(self.population.actives_no_evaluated)))
@@ -432,8 +433,8 @@ class Searcher:
             self.run_one()
             self.update_generation()
 
-        print 'Searcher ended after %d iterations' % self.current_generation
-        print 'Best candidate: [%s] %s' % (best_member, self.population.str_entry(best_member))
+        print('Searcher ended after %d iterations' % self.current_generation)
+        print('Best candidate: [%s] %s' % (best_member, self.population.str_entry(best_member)))
 
     def write_change(self, entry_id, change):
         if self.pcdb is not None:

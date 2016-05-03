@@ -11,7 +11,7 @@ try:
     import scipy
     from _analysis import *
 except ImportError:
-    print 'SCIPY Not found'
+    print('SCIPY Not found')
 
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

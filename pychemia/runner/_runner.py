@@ -77,7 +77,7 @@ class Runner:
                     rf = open('vasp.stdout', 'r')
                     for iline in rf.readlines()[-20:]:
                         if iline.strip().startswith("WARNING: Sub-Space-Matrix is not hermitian in DAV"):
-                            print "[WARNING: Sub-Space-Matrix is not hermitian in DAV] Stopping now..."
+                            print("[WARNING: Sub-Space-Matrix is not hermitian in DAV] Stopping now...")
                             self._stop_run(childp)
                     if time.time() - initime > self.runtime:
                         self._stop_run(childp)
@@ -85,10 +85,10 @@ class Runner:
                     else:
                         if analyser is not None:
                             ret = analyser()
-                            print os.path.basename(path), ret
+                            print(os.path.basename(path), ret)
                         time.sleep(60)
 
-                print 'The return code was', childp.returncode
+                print('The return code was', childp.returncode)
                 os.chdir(cwd)
                 errf.close()
                 outf.close()
@@ -101,7 +101,7 @@ class Runner:
 
     @staticmethod
     def _stop_run(childp, softtime=600, extratime=60):
-        print 'Creating Stoping files'
+        print('Creating Stoping files')
         wf = open('CHKPT', 'w')
         wf.close()
         wf = open('STOPCAR', 'w')
@@ -111,13 +111,13 @@ class Runner:
 
         childp.poll()
         if childp.returncode is None:
-            print 'Sending SIGTERM to process'
+            print('Sending SIGTERM to process')
             childp.terminate()
             time.sleep(extratime)
 
         childp.poll()
         if childp.returncode is None:
-            print 'Sending SIGKILL to process'
+            print('Sending SIGKILL to process')
             childp.kill()
         if os.path.isfile('CHKPT'):
             os.remove('CHKPT')
@@ -135,8 +135,8 @@ class Runner:
                 if pt[i] is None or not pt[i].is_alive():
                     ret = checker(workdirs[index])
                     if ret:
-                        print 'Launching for process ' + str(i) + ' on dir ' + os.path.basename(
-                            workdirs[index]) + ' index ' + str(index)
+                        print('Launching for process ' + str(i) + ' on dir ' + os.path.basename(
+                            workdirs[index]) + ' index ' + str(index))
                         pt[i] = Process(target=worker, args=(workdirs[index],))
                         pt[i].start()
                     index = (index + 1) % len(workdirs)
@@ -146,7 +146,7 @@ class Runner:
                 if not os.path.isfile(idir + os.sep + 'COMPLETE'):
                     complete = False
             if complete:
-                print 'Finishing...'
+                print('Finishing...')
                 break
 
     def run_multidirs_nonstop(self, workdirs, worker, checker):

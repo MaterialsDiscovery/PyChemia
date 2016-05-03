@@ -10,7 +10,7 @@ def test_popu_noncoll():
     Testing PopulationNonColl           :
     """
     if not HAS_PYMONGO:
-        print 'PyChemiaDB was disabled'
+        print('PyChemiaDB was disabled')
         return
     source = 'pychemia/test/data/vasp_02'
     assert os.path.isfile(source + os.sep + 'INCAR')

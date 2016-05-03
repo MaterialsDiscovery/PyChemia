@@ -2,13 +2,16 @@ import os
 import json
 import time
 import numpy as np
-from pychemia import pcm_log
+from pychemia import pcm_log, HAS_MATPLOTLIB
 from pychemia.dft import KPoints
 from .._vasp import VaspJob
 from .._outcar import read_vasp_stdout
 from .._kpoints import read_kpoints
 from .._poscar import read_poscar
 from ..._tasks import Task
+
+if HAS_MATPLOTLIB:
+    import matplotlib.pyplot as plt
 
 __author__ = 'Guillermo Avendano-Franco'
 
@@ -21,7 +24,7 @@ class Convergence:
 
     def _best_value(self, variable):
         if not self.is_converge:
-            print 'Convergence not completed'
+            print('Convergence not completed')
             return None
         else:
             return self.convergence_info[-3][variable]
@@ -40,10 +43,9 @@ class Convergence:
     def _convergence_plot(self, variable, xlabel, title, figname, annotate):
 
         if not self.is_converge:
-            print 'Convergence not executed'
+            print('Convergence not executed')
             return
 
-        import matplotlib.pyplot as plt
         x = [idata[variable] for idata in self.convergence_info]
         y = [idata['free_energy'] for idata in self.convergence_info]
         plt.figure(figsize=(10, 8))
@@ -70,7 +72,7 @@ class Convergence:
     def _convergence_save(self, filename):
 
         if not self.is_converge:
-            print 'Convergence not executed'
+            print('Convergence not executed')
             return
 
         wf = open(filename, 'w')
@@ -133,7 +135,7 @@ class ConvergenceCutOffEnergy(Task, Convergence):
             vj.input_variables.variables['ISPIN'] = 2
             vj.set_inputs()
             encut = vj.input_variables.variables['ENCUT']
-            print 'Testing ENCUT = %7.3f' % encut
+            print('Testing ENCUT = %7.3f' % encut)
             vj.run(use_mpi=True, mpi_num_procs=nparal)
             pcm_log.debug('Starting VASP')
             while True:
@@ -164,7 +166,7 @@ class ConvergenceCutOffEnergy(Task, Convergence):
                 time.sleep(5)
             vj.get_outputs()
             free_energy = vj.outcar.final_data['energy']['free_energy']
-            print 'encut= %7.3f  free_energy: %9.6f' % (encut, free_energy)
+            print('encut= %7.3f  free_energy: %9.6f' % (encut, free_energy))
             self.convergence_info.append({'free_energy': free_energy, 'encut': encut, 'factor': x})
             energies.append(free_energy)
             if len(energies) > 2 and abs(max(energies[-3:]) - min(energies[-3:])) < self.energy_tolerance:
@@ -262,8 +264,8 @@ class ConvergenceKPointGrid(Task, Convergence):
                 vj.job_static()
                 vj.input_variables.set_density_for_restart()
                 vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir + os.sep + 'POTCAR')
-                vj.input_variables.variables['NBANDS'] = nparal * (
-                (30 + self.structure.valence_electrons()) / nparal + 1)
+                vj.input_variables.variables['NBANDS'] = nparal * ((30 + self.structure.valence_electrons()) /
+                                                                   nparal + 1)
                 vj.input_variables.set_ismear(kp)
                 vj.input_variables.variables['SIGMA'] = 0.2
                 vj.input_variables.variables['ISPIN'] = 2
@@ -297,7 +299,7 @@ class ConvergenceKPointGrid(Task, Convergence):
                 vj.get_outputs()
                 energy = vj.outcar.final_data['energy']['free_energy']
                 energies.append(energy)
-                print 'kp_density= %10d kp_grid= %15s free_energy= %9.6f' % (density, grid, energy)
+                print('kp_density= %10d kp_grid= %15s free_energy= %9.6f' % (density, grid, energy))
                 self.convergence_info.append({'free_energy': vj.outcar.final_data['energy']['free_energy'],
                                               'kp_grid': list(grid),
                                               'kp_density': density,
@@ -328,7 +330,7 @@ class ConvergenceKPointGrid(Task, Convergence):
     def best_kpoints(self):
 
         if not self.is_converge:
-            print 'Convergence not completed'
+            print('Convergence not completed')
             return None
         else:
             kp = KPoints()

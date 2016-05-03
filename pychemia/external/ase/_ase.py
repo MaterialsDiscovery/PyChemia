@@ -25,7 +25,7 @@ try:
     import ase.atoms
     import ase.io
 except ImportError:
-    print 'The module ase could not be imported'
+    print('The module ase could not be imported')
     raise ImportError
 
 

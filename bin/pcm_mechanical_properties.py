@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def usage(name):
-    print """
+    print("""
 NAME
     %s
 
@@ -26,7 +26,7 @@ OPTIONS
     --outcar, -o <string> (Default: 'OUTCAR')
         OUTCAR file from which the mechanical properties will be computed
 
-""" % os.path.basename(name)
+""" % os.path.basename(name))
 
 
 def main(argv):
@@ -49,8 +49,8 @@ def main(argv):
 
     tem = np.array(elastic_moduli(outcar)['total_elastic_moduli'])
     np.set_printoptions(precision=3)
-    print ' Total Elastic Moduli'
-    print ' --------------------\n'
+    print(' Total Elastic Moduli')
+    print(' --------------------\n')
     for irow in tem:
         for jelem in irow:
             if jelem == 0.0 or jelem == -0.0:
@@ -59,14 +59,14 @@ def main(argv):
                 sys.stdout.write(' %12.3f' % jelem)
         sys.stdout.write('\n')
 
-    print '\n'
+    print('\n')
     mech = mechanical_properties(tem)
-    print " %20s %5s %12s %12s %12s" % ('Property'.ljust(20), 'Units', 'Voigt', 'Reuss', 'Average')
-    print ' ' + 65 * "-"
+    print(" %20s %5s %12s %12s %12s" % ('Property'.ljust(20), 'Units', 'Voigt', 'Reuss', 'Average'))
+    print(' ' + 65 * "-")
     for i in sorted(mech):
-        print " %20s %5s %12.3f %12.3f %12.3f" % (i.ljust(20), mech[i]['units'], mech[i]['Voigt'], mech[i]['Reuss'],
-                                                  0.5 * (mech[i]['Voigt'] + mech[i]['Reuss']))
-    print ' ' + 65 * "-"
+        print(" %20s %5s %12.3f %12.3f %12.3f" % (i.ljust(20), mech[i]['units'], mech[i]['Voigt'], mech[i]['Reuss'],
+                                                  0.5 * (mech[i]['Voigt'] + mech[i]['Reuss'])))
+    print(' ' + 65 * "-")
 
 
 if __name__ == "__main__":

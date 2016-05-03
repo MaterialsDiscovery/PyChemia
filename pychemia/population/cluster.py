@@ -1,9 +1,8 @@
+from __future__ import print_function
 import math
 import sys
-
 import numpy as np
 import scipy.spatial
-
 import pychemia
 from pychemia.code.lennardjones import lj_compact_evaluate
 from pychemia.utils.mathematics import unit_vector
@@ -157,7 +156,7 @@ class LJCluster(Population):
         dupes_dict = {}
         dupes_list = []
         selection = self.ids_sorted(ids)
-        print 'Searching duplicates in %d structures' % len(selection)
+        print('Searching duplicates in %d structures' % len(selection))
         for i in range(len(selection) - 1):
             ncomps = 0
             entry_id = selection[i]
@@ -231,7 +230,7 @@ class LJCluster(Population):
                                                periodicity=False)
             lj = pychemia.code.LennardJones(new_structure)
             if lj.get_energy() < 0.0:
-                print 'Effective factor reduced to %7.3f, original factor %7.3f' % (reduc * factor, factor)
+                print('Effective factor reduced to %7.3f, original factor %7.3f' % (reduc * factor, factor))
                 break
             reduc -= 0.05
             if reduc <= 0.0:
@@ -245,7 +244,7 @@ class LJCluster(Population):
         minimal_distance = np.min((distance_matrix + tmp * np.eye(len(new_positions))).flatten())
 
         if minimal_distance < 1E-8:
-            print "Null distance between different atoms, no moving"
+            print("Null distance between different atoms, no moving")
             new_positions = pos_orig
 
         if tmp > 5:
@@ -268,7 +267,7 @@ class LJCluster(Population):
         if gtol is None:
             gtol = self.target_forces
 
-        print 'Evaluating', entry_id
+        print('Evaluating', entry_id)
         structure = self.get_structure(entry_id)
 
         positions, forces, energy = lj_compact_evaluate(structure, gtol, self.minimal_density)
@@ -296,15 +295,15 @@ class LJCluster(Population):
             inivalue = self.value(entry_id)
             gtol = 10 ** math.ceil(math.log10(self.maxforce(entry_id)))
             while True:
-                print 'Local minimization up to ', gtol
+                print('Local minimization up to ', gtol)
                 gtol /= 10
                 structure, properties, energy = self.evaluate(entry_id, gtol=gtol)
                 if energy / structure.natom < inivalue:
                     self.pcdb.update(entry_id, structure=structure, properties=properties)
                 else:
-                    print 'Relaxation raise value', inivalue, '<', energy / structure.natom
+                    print('Relaxation raise value', inivalue, '<', energy / structure.natom)
                 if self.maxforce(entry_id) > gtol:
-                    print 'The relaxation was not successful'
+                    print('The relaxation was not successful')
                     break
 
     def move_random(self, entry_id, factor=0.2, in_place=False, kind='move'):

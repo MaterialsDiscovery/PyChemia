@@ -194,28 +194,28 @@ class StructureEntry:
     def __eq__(self, other):
         ret = True
         if self.structure != other.structure:
-            print 'Not equal structure'
+            print('Not equal structure')
             ret = False
         elif self.children is None and other.children is not None:
             ret = False
         elif self.children is not None and other.children is None:
             ret = False
         elif self.children is not None and set(self.children) != set(other.children):
-            print 'Not equal children'
+            print('Not equal children')
             ret = False
         elif self.parents is None and other.parents is not None:
             ret = False
         elif self.parents is not None and other.parents is None:
             ret = False
         elif self.parents is not None and set(self.parents) != set(other.parents):
-            print 'Not equal parents'
+            print('Not equal parents')
             ret = False
         elif self.tags is None and other.tags is not None:
             ret = False
         elif self.tags is not None and other.tags is None:
             ret = False
         elif self.tags is not None and set(self.tags) != set(other.tags):
-            print 'Not equal tags'
+            print('Not equal tags')
             ret = False
         return ret
 
@@ -310,7 +310,7 @@ class StructureRepository:
         try:
             jsonload = unicode2string(_json.load(rf))
         except ValueError:
-            print "Error deserializing the object"
+            print("Error deserializing the object")
             jsonload = {'tags': {}}
         self.fromdict(jsonload)
         rf.close()
@@ -359,14 +359,14 @@ class StructureRepository:
         for i in self.tags:
             for j in self.tags[i]:
                 if not os.path.isdir(self.path + '/' + j) or not os.path.isfile(self.path + '/' + j + '/metadata.json'):
-                    print 'Removing', j
+                    print('Removing', j)
                     self.tags[i].remove(j)
         self.save()
 
     def refine(self):
         formulas = self.get_formulas()
         for j in formulas:
-            print j
+            print(j)
             if len(formulas[j]) > 1:
                 for i in range(len(formulas[j]) - 1):
                     stru1 = StructureEntry(repository=self, identifier=formulas[j][i])
@@ -448,7 +448,7 @@ class StructureRepository:
         return th, result_list
 
     def del_entry(self, entry):
-        print 'Deleting ', entry.identifier
+        print('Deleting ', entry.identifier)
         for i in entry.tags:
             self.tags[i].remove(entry.identifier)
         _shutil.rmtree(entry.path)

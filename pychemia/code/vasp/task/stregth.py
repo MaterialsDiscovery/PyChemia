@@ -54,26 +54,26 @@ class IdealStrength(Task):
             tmpkp.set_optimized_grid(newst.lattice, density_of_kpoints=self.kp_density, force_odd=True)
 
             if ifactor < 1.0:
-                print '\nCompresing cell to %7.3f percent' % (ifactor * 100)
-                print '-------------------\n'
+                print('\nCompresing cell to %7.3f percent' % (ifactor * 100))
+                print('-------------------\n')
             elif ifactor > 1.0:
-                print '\nExpanding cell to %7.3f percent' % (ifactor * 100)
-                print '-------------------\n'
+                print('\nExpanding cell to %7.3f percent' % (ifactor * 100))
+                print('-------------------\n')
             else:
-                print '\nOriginal cell'
-                print '-------------\n'
+                print('\nOriginal cell')
+                print('-------------\n')
 
             new_density = tmpkp.get_density_of_kpoints(newst.lattice)
-            print 'KP Density: target: %d  new lattice: %d' % (self.kp_density, new_density)
-            print 'KP Grid:    target: %s  new lattice: %s' % (self.kpoints.grid, tmpkp.grid)
+            print('KP Density: target: %d  new lattice: %d' % (self.kp_density, new_density))
+            print('KP Grid:    target: %s  new lattice: %s' % (self.kpoints.grid, tmpkp.grid))
 
             if np.prod(tmpkp.grid) > np.prod(self.kpoints.grid):
 
-                print 'The new cell ask for a bigger grid, doing a new convergence...\n'
+                print('The new cell ask for a bigger grid, doing a new convergence...\n')
 
                 self.cleaner()
-                print '\nConvergence of K-Point Grid'
-                print '---------------------------\n'
+                print('\nConvergence of K-Point Grid')
+                print('---------------------------\n')
                 ck = ConvergenceKPointGrid(newst, workdir=self.workdir + os.sep + 'KPCONV_' + str(ifactor),
                                            binary=self.binary, encut=self.encut, energy_tolerance=self.energy_tol,
                                            recover=True)
@@ -82,7 +82,7 @@ class IdealStrength(Task):
                 ck.report()
                 self.kpoints = ck.best_kpoints
             else:
-                print 'The current grid is still good'
+                print('The current grid is still good')
 
             self.cleaner()
             relax = IonRelaxation(structure=newst, workdir=self.workdir + os.sep + 'RELAX_' + str(ifactor),

@@ -8,7 +8,7 @@ locations for the pseudopotentials and the results
 are post-process using the output in NetCDF format
 "abinit-o_OUT.nc"
 """
-
+from __future__ import print_function
 import os
 import shutil
 import json
@@ -40,7 +40,7 @@ def test_example2():
     print("Work directory: %s" % workdir)
     assert (os.path.isfile(path + '/abinit_04/t44.in'))
     av = pychemia.code.abinit.InputVariables(path + '/abinit_04/t44.in')
-    print 'Original input:\n%s' % av
+    print('Original input:\n%s' % av)
     abifiles = pychemia.code.abinit.AbiFiles(workdir)
     abifiles.set_input(av)
     abifiles.set_psps('LDA', 'FHI')
@@ -53,7 +53,7 @@ def test_example2():
 
     for i in range(3):
         av.set_value('ecut', av.get_value('ecut') + 3)
-        print 'Computing convergence study with ecut=%f ' % av.get_value('ecut'),
+        print('Computing convergence study with ecut=%f ' % av.get_value('ecut'), end='')
         if i > 0:
             av.set_value('irdwfk', 1)
         av.write(abifiles.get_input_filename())
@@ -65,7 +65,7 @@ def test_example2():
         data = pychemia.code.abinit.netcdf2dict(workdir + '/abinit-o_OUT.nc')
         os.rename(workdir + '/abinit-o_OUT.nc', '%s/abinit-o_OUT.nc_%d' % (workdir, i))
         res.append({'ecut': data['ecut'], 'etotal': data['etotal']})
-        print 'Total energy: %f' % data['etotal']
+        print('Total energy: %f' % data['etotal'])
     os.chdir(cwd)
     json.dump(res, wf)
     wf.close()

@@ -7,7 +7,7 @@ class BandStructure:
     def __init__(self, structure, filename='PROCAR'):
         self.structure = structure
         rcell = self.structure.lattice.reciprocal().cell
-        print rcell
+        print(rcell)
         self.procarFile = procar.ProcarParser()
         self.procarFile.readFile(procar=filename, permissive=False, recLattice=rcell)
 

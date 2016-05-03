@@ -186,7 +186,7 @@ table#t01 th	{
     def get_elastic_moduli(self):
 
         if not os.path.isfile(self.workdir + os.sep + 'OUTCAR'):
-            print 'OUTCAR file not found'
+            print('OUTCAR file not found')
             return
 
         return elastic_moduli()

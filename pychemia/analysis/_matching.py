@@ -84,7 +84,7 @@ class StructureMatch:
                         min_trace = distance_matrix[:, np.array(i)].trace()
                         best[specie] = i
 
-            print 'For specie %s best permutation is %s' % (specie, str(best[specie]))
+            print('For specie %s best permutation is %s' % (specie, str(best[specie])))
 
         best_permutation = np.zeros(self.structure1.natom, dtype=int)
         index = 0

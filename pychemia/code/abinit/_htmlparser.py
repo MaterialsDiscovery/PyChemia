@@ -1,4 +1,4 @@
-from HTMLParser import HTMLParser
+from future.moves.html.parser import HTMLParser
 import sys
 
 

@@ -17,6 +17,7 @@ class AbinitJob(Codes):
         self.stdout_filename = 'abinit.log'
         self.stdin_filename = 'abinit.files'
         self.stderr_filename = 'abinit.err'
+        self.binary = 'abinit'
 
     def finalize(self):
         self.stdout_file.close()

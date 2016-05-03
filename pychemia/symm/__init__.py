@@ -23,7 +23,7 @@ try:
     if type(ret[3]) is list:
         USE_SPGLIB = False
         version = "%d.%d.%d" % spg.get_version()
-        print 'SPGLIB current version is %s, please install spglib > 1.9' % version
+        print('SPGLIB current version is %s, please install spglib > 1.9' % version)
     else:
         USE_SPGLIB = True
 

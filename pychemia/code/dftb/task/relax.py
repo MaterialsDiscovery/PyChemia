@@ -76,7 +76,7 @@ class Relaxation(Relaxator):
         dftb.driver['MaxSteps'] = 100
         dftb.hamiltonian['MaxSCCIterations'] = 20
         dftb.set_inputs()
-        print 'Launching DFTB+ with target force of %9.2E ' % dftb.driver['MaxForceComponent']
+        print('Launching DFTB+ with target force of %9.2E ' % dftb.driver['MaxForceComponent'])
         dftb.run()
         if self.waiting:
             dftb.runner.wait()
@@ -87,9 +87,9 @@ class Relaxation(Relaxator):
 
                 good_forces, good_stress = self.relaxation_status()
                 if 'max_force' in stdo:
-                    print 'Converged: %s\t Max Force: %9.3e\t MaxForceComponent: %9.3e' % (stdo['ion_convergence'],
+                    print('Converged: %s\t Max Force: %9.3e\t MaxForceComponent: %9.3e' % (stdo['ion_convergence'],
                                                                                            stdo['max_force'],
-                                                                                           self.target_forces)
+                                                                                           self.target_forces))
 
                 filename = dftb.workdir + os.sep + 'detailed.out'
                 if not os.path.exists(filename):
@@ -128,8 +128,8 @@ class Relaxation(Relaxator):
                         dftb.structure.set_cell(1.1 * dftb.structure.cell)
                     if score == -1 and self.forced:
                         dftb.structure = dftb.structure.random_cell(dftb.structure.composition)
-                        print 'RANDOM STRUCTURE'
-                        print dftb.structure
+                        print('RANDOM STRUCTURE')
+                        print(dftb.structure)
                         score = INITIAL_SCORE
 
                     dftb.structure.save_json(dftb.workdir + os.sep + 'structure_current.json')
@@ -141,7 +141,7 @@ class Relaxation(Relaxator):
                     dftb.roll_outputs(irun)
                     dftb.set_inputs()
                     irun += 1
-                    print 'Launching DFTB+ with target force of %9.2E ' % dftb.driver['MaxForceComponent']
+                    print('Launching DFTB+ with target force of %9.2E ' % dftb.driver['MaxForceComponent'])
                     dftb.run()
                     if self.waiting:
                         dftb.runner.wait()
@@ -157,14 +157,14 @@ class Relaxation(Relaxator):
                     dftb.options['CalculateForces'] = True
                     dftb.driver = {}
                     dftb.set_inputs()
-                    print 'Launching DFTB+ with static evaluation of forces '
+                    print('Launching DFTB+ with static evaluation of forces ')
                     dftb.run()
                     if self.waiting:
                         dftb.runner.wait()
                     while dftb.runner.poll() is None:
                         dftb.run_status()
                         time.sleep(10)
-                    print 'Completed Static run'
+                    print('Completed Static run')
                     forces, stress, total_energy = self.get_forces_stress_energy()
 
                     if stress is None or forces is None or total_energy is None:
@@ -177,20 +177,20 @@ class Relaxation(Relaxator):
                         dftb.driver['ConvergentForcesOnly'] = False
                         dftb.driver['MaxSteps'] = 10
                         dftb.hamiltonian['MaxSCCIterations'] = 50
-                        print dftb.driver
+                        print(dftb.driver)
                         dftb.set_inputs()
                         dftb.run()
                         if self.waiting:
                             dftb.runner.wait()
                         while dftb.runner.poll() is None:
                             time.sleep(10)
-                        print 'FINAL:', read_detailed_out(filename=filename)
+                        print('FINAL:', read_detailed_out(filename=filename))
                         forces, stress, total_energy = self.get_forces_stress_energy()
                         if stress is None or forces is None or total_energy is None:
                             pcm_log.debug('Again Null Forces, Stress or Energy, Randomizing Structure')
                             dftb.structure = dftb.structure.random_cell(dftb.structure.composition)
-                            print 'RANDOM STRUCTURE'
-                            print dftb.structure
+                            print('RANDOM STRUCTURE')
+                            print(dftb.structure)
                             score = INITIAL_SCORE
                         else:
                             break
@@ -201,7 +201,7 @@ class Relaxation(Relaxator):
                 filename = dftb.workdir + os.sep + 'dftb_stdout.log'
                 if os.path.exists(filename):
                     stdo = read_dftb_stdout(filename=filename)
-                    print 'Number of steps:', len(stdo['Geometry_Steps'])
+                    print('Number of steps:', len(stdo['Geometry_Steps']))
                     if len(stdo['Geometry_Steps']) > 1:
                         line = 'Energy behavior: '
                         prev_energy = stdo['Geometry_Steps'][0]['Total Energy']['value']
@@ -215,24 +215,24 @@ class Relaxation(Relaxator):
                             prev_energy = new_energy
                         finene = stdo['Geometry_Steps'][-1]['Total Energy']['value']
                         line += ' %7.3f' % finene
-                        print line
+                        print(line)
                 time.sleep(10)
 
     def quality(self, score):
 
         good_forces, good_stress = self.relaxation_status()
         if good_forces and good_stress:
-            print 'Finished with forces and stress under target_forces'
+            print('Finished with forces and stress under target_forces')
             score = 0
         elif good_forces:
-            print 'Finished with forces under target_forces (not stress)'
+            print('Finished with forces under target_forces (not stress)')
             score = score
         else:
             # Increase the score on each iteration
             score += 1
 
         if self.structure.density < 0.1:
-            print 'Very small density = Bad Structure'
+            print('Very small density = Bad Structure')
             score = -1
 
         return score

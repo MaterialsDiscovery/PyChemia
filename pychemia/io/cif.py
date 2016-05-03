@@ -132,7 +132,7 @@ class CIFStructure:
                         break
 
         if not ret:
-            print self.data.keys()
+            print(self.data.keys())
             for symmetry_label in ["_space_group_IT_number",
                                    "_space_group_IT_number_",
                                    "_symmetry_Int_Tables_number",
@@ -140,10 +140,10 @@ class CIFStructure:
 
                 if symmetry_label in self.data.keys():
                     spg = self.data[symmetry_label]
-                    print spg
+                    print(spg)
                     break
         if not ret:
-            print self.data.keys()
+            print(self.data.keys())
             for symmetry_label in ["_symmetry_space_group_name_H-M",
                                    "_symmetry_space_group_name_H_M",
                                    "_symmetry_space_group_name_H-M_",
@@ -159,7 +159,7 @@ class CIFStructure:
 
                 if symmetry_label in self.data.keys():
                     spg = self.data[symmetry_label]
-                    print spg
+                    print(spg)
                     break
 
         return ret

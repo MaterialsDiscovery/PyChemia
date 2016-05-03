@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import numpy as np
@@ -57,7 +58,7 @@ class DensityOfStates:
         nsets = 1
         for iline in range(len(table) - 1):
             if table[iline, 0] != table[iline - jump, 0]:
-                print iline, jump, table[iline, 0], table[iline - jump, 0]
+                print(iline, jump, table[iline, 0], table[iline - jump, 0])
                 raise ValueError("No consistency on energy values")
             if table[iline + 1, 0] < table[iline, 0]:
                 jump = iline + 1

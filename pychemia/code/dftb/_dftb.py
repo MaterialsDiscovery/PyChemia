@@ -96,11 +96,11 @@ class DFTBplus(Codes):
         for line in rf.readlines():
             line = line.partition('#')[0]
             line = line.rstrip()
-            print 'line--->', line
-            print 'return->', ret
+            print('line--->', line)
+            print('return->', ret)
             # print 'container',current_container
             # print 'tree_pos',tree_pos
-            print 80 * '-'
+            print(80 * '-')
             if line.strip() == '':
                 continue
             elif '=' in line and line.strip()[-1] == '{':
@@ -112,7 +112,7 @@ class DFTBplus(Codes):
                 if rightside == 'GenFormat':
                     gen_format = True
                 level += 1
-                print 'container', current_container
+                print('container', current_container)
             elif gen_format and line.strip() != '}':
                 if value is None:
                     value = line

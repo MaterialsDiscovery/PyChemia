@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from __future__ import print_function
 import logging
 import os
 import sys
@@ -24,7 +24,7 @@ def cleaner():
 
 
 def usage(name):
-    print """
+    print("""
 NAME
     %s
 
@@ -51,7 +51,7 @@ OPTIONS
     --energy_tol, -e <float> (Default: 1E-3)
         Energy tolerance for three succesive values of the Kpoint grid or CutOff energy
 
-""" % os.path.basename(name)
+""" % os.path.basename(name))
 
 
 def main(argv):
@@ -93,24 +93,24 @@ def main(argv):
 
     structure = pychemia.structure_from_file(structure_file)
     if structure is None:
-        print " ERROR: Invalid structure, no structure could be obtained from '%s'" % structure_file
+        print(" ERROR: Invalid structure, no structure could be obtained from '%s'" % structure_file)
         sys.exit(2)
 
     if structure_file == 'POSCAR':
         os.rename('POSCAR', 'POSCAR_original')
 
-    print "\n PyChemia VASP Static"
-    print " =======================\n"
-    print " Executable          : ", binary
-    print " Energy tolerance    : ", energy_tol
-    print " MPI number of procs : ", nparal
-    print " Structure           :\n"
-    print structure
+    print("\n PyChemia VASP Static")
+    print(" =======================\n")
+    print(" Executable          : ", binary)
+    print(" Energy tolerance    : ", energy_tol)
+    print(" MPI number of procs : ", nparal)
+    print(" Structure           :\n")
+    print(structure)
     data = {}
 
     cleaner()
-    print '\nConvergence of Cut-off Energy'
-    print '-----------------------------\n'
+    print('\nConvergence of Cut-off Energy')
+    print('-----------------------------\n')
     ce = ConvergenceCutOffEnergy(structure, energy_tolerance=energy_tol, binary=binary)
     ce.run(nparal)
     ce.save()
@@ -124,8 +124,8 @@ def main(argv):
     wf.close()
 
     cleaner()
-    print '\nConvergence of K-Point Grid'
-    print '---------------------------\n'
+    print('\nConvergence of K-Point Grid')
+    print('---------------------------\n')
     ck = ConvergenceKPointGrid(structure, encut=encut, energy_tolerance=energy_tol, binary=binary)
     ck.run(nparal)
     ck.save()

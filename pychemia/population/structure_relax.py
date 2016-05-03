@@ -44,6 +44,7 @@ class StructurePopulation(Population):
         self.max_comp_mult = max_comp_mult
         self.pcdb_source = pcdb_source
         self.source_blacklist = []
+        self.name = name
         Population.__init__(self, name, tag)
 
     def recover(self):
@@ -127,7 +128,7 @@ class StructurePopulation(Population):
 
                 entry = None
                 condition['properties.spacegroup'] = random.randint(1, 230)
-                print 'Trying', condition['properties.spacegroup']
+                print('Trying', condition['properties.spacegroup'])
                 for ientry in self.pcdb_source.entries.find(condition):
                     if ientry['_id'] not in self.source_blacklist:
                         entry = ientry
@@ -136,9 +137,9 @@ class StructurePopulation(Population):
                     origin = entry['_id']
                     structure = self.pcdb_source.get_structure(entry['_id'])
                     factor = covalent_radius(self.composition.species[0]) / covalent_radius(structure.species[0])
-                    print 'From source: %s Spacegroup: %d Scaling: %7.3f' % (structure.formula,
+                    print('From source: %s Spacegroup: %d Scaling: %7.3f' % (structure.formula,
                                                                              entry['properties']['spacegroup'],
-                                                                             factor)
+                                                                             factor))
                     structure.set_cell(np.dot(factor * np.eye(3), structure.cell))
                     structure.symbols = structure.natom * self.composition.species
                     self.source_blacklist.append(entry['_id'])
@@ -189,7 +190,7 @@ class StructurePopulation(Population):
         for i in ids:
             values[i] = self.value(i)
         selection = self.ids_sorted(ids)
-        print 'Searching duplicates in %d structures' % len(selection)
+        print('Searching duplicates in %d structures' % len(selection))
         for i in range(len(selection) - 1):
             entry_id = selection[i]
             value_i = values[entry_id]
@@ -246,7 +247,7 @@ class StructurePopulation(Population):
         self.pcdb.db.distances.create_index([("pair", pymongo.ASCENDING)])
 
         if distance_entry is None:
-            print 'Distance not in DB'
+            print('Distance not in DB')
             fingerprints = {}
             for entry_ijd in [entry_id, entry_jd]:
 
@@ -293,7 +294,7 @@ class StructurePopulation(Population):
                                           'structure.natom': {'$lte': self.min_comp_mult * comp.natom,
                                                               '$gte': self.max_comp_mult * comp.natom}}):
             if index < sizemax:
-                print 'Adding entry ' + str(entry['_id']) + ' from ' + readdb.name
+                print('Adding entry ' + str(entry['_id']) + ' from ' + readdb.name)
                 self.new_entry(readdb.get_structure(entry['_id']))
                 index += 1
 
@@ -395,7 +396,8 @@ class StructurePopulation(Population):
                 'value_tol': self.value_tol,
                 'distance_tol': self.distance_tol}
 
-    def from_dict(self, population_dict):
+    @staticmethod
+    def from_dict(population_dict):
         return StructurePopulation(name=population_dict['name'],
                                    tag=population_dict['tag'],
                                    target_forces=population_dict['target_forces'],

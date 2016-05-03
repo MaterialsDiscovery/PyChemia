@@ -12,8 +12,8 @@ def test_composition():
     assert (comp.formula == 'Ba2Cu3O7Y')
     assert (abs(comp.covalent_volume() - 285.185) < 1E-5)
     assert (comp.natom == 13)
-    assert (comp.species_hex() == 942087432L)
-    assert (comp.species_bin() == 72058144330612992L)
+    assert (comp.species_hex() == 942087432)
+    assert (comp.species_bin() == 72058144330612992)
     assert (comp.sorted_formula(sortby='hill') == 'Ba2Cu3O7Y')
 
     comp = pychemia.Composition('Na2Cl2')

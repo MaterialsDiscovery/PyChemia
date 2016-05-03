@@ -223,10 +223,10 @@ class StructureAnalysis:
         :return: tuple
         """
         if verbose:
-            print 'Computing all distances...'
+            print('Computing all distances...')
         bonds_dict, distances_list = self.close_distances()
         if verbose:
-            print 'Number of distances computed: ', len(distances_list)
+            print('Number of distances computed: ', len(distances_list))
 
         cutoff_radius = initial_cutoff_radius
         bonds = None
@@ -235,7 +235,7 @@ class StructureAnalysis:
 
         while True:
             if verbose:
-                print 'Current cutoff radius : ', cutoff_radius
+                print('Current cutoff radius : ', cutoff_radius)
             bonds = []
             tolerances = []
             for i in range(self.structure.natom):
@@ -277,12 +277,12 @@ class StructureAnalysis:
                     laplacian[i, i] = 0
                     laplacian[i, i] = -sum(laplacian[i])
                 if verbose:
-                    print laplacian
+                    print(laplacian)
                 if np.max(np.abs(laplacian)) == 0:
                     cutoff_radius += jump
                     if verbose:
-                        print 'The laplacian is all zero'
-                        print 'Increasing cutoff radius by ', jump, 'A\n'
+                        print('The laplacian is all zero')
+                        print('Increasing cutoff radius by ', jump, 'A\n')
                     continue
 
                 # if verbose:
@@ -290,14 +290,14 @@ class StructureAnalysis:
                 # evals, evecs = scipy.sparse.linalg.eigsh(laplacian)
                 ev = numpy.linalg.eigvalsh(laplacian)
                 if verbose:
-                    print 'Number of Eigenvalues close to zero :', sum(ev < tol)
-                    print 'Lowest Eigenvalues :', ev
+                    print('Number of Eigenvalues close to zero :', sum(ev < tol))
+                    print('Lowest Eigenvalues :', ev)
                     # print 'Lowest Eigenvalues :', evals
 
                 if sum(ev < tol) > 1 and use_jump:
                     cutoff_radius += jump
                     if verbose:
-                        print 'Increasing cutoff radius by ', jump, 'A\n'
+                        print('Increasing cutoff radius by ', jump, 'A\n')
                 else:
                     increase = False
                     for i in bonds:
@@ -306,7 +306,7 @@ class StructureAnalysis:
                     if increase:
                         cutoff_radius += jump
                         if verbose:
-                            print 'Increasing cutoff radius by', jump, 'A\n'
+                            print('Increasing cutoff radius by', jump, 'A\n')
                     else:
                         break
             else:
@@ -384,8 +384,8 @@ class StructureAnalysis:
         :rtype : (float)
         """
         if self._supercell == (1, 1, 1) and verbose:
-            print "Only internal connectivity can be ensure, for complete connectivity in the crystal you must use a " \
-                  "supercell at of (2,2,2)"
+            print('''Only internal connectivity can be ensure, for complete connectivity in the crystal you must use a
+                  supercell at of (2,2,2)''')
 
         bonds, coordination, all_distances, tolerances, cutoff_radius = \
             self.get_bonds_coordination(initial_cutoff_radius=initial_cutoff_radius,
@@ -393,7 +393,7 @@ class StructureAnalysis:
                                         use_laplacian=use_laplacian, verbose=verbose, use_jump=use_jump)
 
         if verbose:
-            print 'Structure coordination : ', coordination
+            print('Structure coordination : ', coordination)
 
         sigma = 3.0
         c_hard = 1300.0
@@ -404,7 +404,7 @@ class StructureAnalysis:
         atomicnumbers = atomic_number(self.structure.species)
 
         if verbose:
-            print 'Atomic numbers in the structure :', atomicnumbers
+            print('Atomic numbers in the structure :', atomicnumbers)
 
         for i in atomicnumbers:
             f_d += valence(i) / covalent_radius(i)
@@ -421,7 +421,7 @@ class StructureAnalysis:
         # Selection of different bonds
         diff_bonds = np.unique(np.array(reduce(lambda xx, y: xx + y, bonds)))
         if verbose:
-            print 'Number of different bonds : ', len(diff_bonds)
+            print('Number of different bonds : ', len(diff_bonds))
 
         for i in diff_bonds:
             i1 = all_distances[i]['pair'][0]
@@ -442,7 +442,7 @@ class StructureAnalysis:
 
         vol = self.structure.volume
         if verbose:
-            print "Structure volume:", vol
+            print("Structure volume:", vol)
             # print("f:", f)
             # print("x:", x)
 
@@ -576,10 +576,10 @@ class StructureAnalysis:
         f = 1.0 - (len(dic_atms) * f_n ** (1.0 / len(dic_atms)) / f_d) ** 2
 
         if verbose:
-            print 'BONDS'
-            print dis_dic
-            print 'COORDINATION'
-            print coord
+            print('BONDS')
+            print(dis_dic)
+            print('COORDINATION')
+            print(coord)
 
         for i in dis_dic.keys():
             i1 = dis_dic[i][2][0]
@@ -601,6 +601,6 @@ class StructureAnalysis:
         hardness_value = c_hard / volume * (len(dis_dic) * x ** (1. / (len(dis_dic)))) * math.exp(-sigma * f)
 
         if verbose:
-            print hardness_value
+            print(hardness_value)
 
         return round(hardness_value, 3)

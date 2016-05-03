@@ -104,7 +104,7 @@ class NetworkAnalysis:
 
         best = lista[0]
         line = 'Population: %10s Evaluated: %4d   N:%5d E:%5d    BN:%4d BE:%4d  %7.2f  GG: %8s %8s'
-        print line % (self.population.name,
+        print(line % (self.population.name,
                       len(self.population),
                       graph.number_of_nodes(),
                       graph.number_of_nodes(),
@@ -112,4 +112,4 @@ class NetworkAnalysis:
                       graph_basins.number_of_edges(),
                       float(graph_basins.number_of_edges()) / (1.0 + graph_basins.number_of_nodes()),
                       str(best) in graph.nodes(),
-                      str(best) in graph_basins.nodes())
+                      str(best) in graph_basins.nodes()))

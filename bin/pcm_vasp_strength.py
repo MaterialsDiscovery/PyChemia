@@ -20,7 +20,7 @@ def cleaner():
 
 
 def usage(name):
-    print """
+    print("""
 NAME
 
     %s
@@ -66,7 +66,7 @@ OPTIONS
         Determines along which directions the lattice is deformed
         111 means along the 3 directions
         101 means along only along the 'a' and 'c' lattice lengths
-""" % os.path.basename(name)
+""" % os.path.basename(name))
 
 
 def main(argv):
@@ -124,49 +124,49 @@ def main(argv):
 
     expansion = [int(expansion / 100), int(expansion / 10) % 10, expansion % 10]
     if len(expansion) == 0:
-        print " ERROR: ini_factor, fin_factor and delta_factor are not creating a finite range of values"
+        print(" ERROR: ini_factor, fin_factor and delta_factor are not creating a finite range of values")
         sys.exit(2)
 
     structure = pychemia.structure_from_file(structure_file)
     if structure is None:
-        print " ERROR: Invalid structure, no structure could be obtained from '%s'" % structure_file
+        print(" ERROR: Invalid structure, no structure could be obtained from '%s'" % structure_file)
         sys.exit(2)
 
     if structure_file == 'POSCAR':
         os.rename('POSCAR', 'POSCAR_original')
 
-    print "\n PyChemia Ideal Strenght"
-    print " =======================\n"
-    print " Scaling factors     : ", str(np.arange(ini_factor, fin_factor + 0.9 * delta_factor, delta_factor))
-    print " Executable          : ", binary
-    print " Energy tolerance    : ", energy_tol
-    print " Target forces       : ", target_forces
-    print " Expansion directions: ", str(expansion)
-    print " MPI number of procs : ", nparal
-    print " Structure           :\n"
-    print structure
+    print("\n PyChemia Ideal Strenght")
+    print(" =======================\n")
+    print(" Scaling factors     : ", str(np.arange(ini_factor, fin_factor + 0.9 * delta_factor, delta_factor)))
+    print(" Executable          : ", binary)
+    print(" Energy tolerance    : ", energy_tol)
+    print(" Target forces       : ", target_forces)
+    print(" Expansion directions: ", str(expansion))
+    print(" MPI number of procs : ", nparal)
+    print(" Structure           :\n")
+    print(structure)
 
     cleaner()
-    print '\nConvergence of Cut-off Energy'
-    print '-----------------------------\n'
+    print('\nConvergence of Cut-off Energy')
+    print('-----------------------------\n')
     ce = ConvergenceCutOffEnergy(structure, energy_tolerance=energy_tol, binary=binary)
     if os.path.isfile('convergence_encut.json'):
-        print 'A previous convergence study was found, loading...'
+        print('A previous convergence study was found, loading...')
         ce.load()
     if not ce.is_converge:
         ce.run(nparal)
         ce.save()
         ce.plot()
     encut = ce.best_encut
-    print 'ENCUT: ', encut
+    print('ENCUT: ', encut)
 
     cleaner()
-    print '\nConvergence of K-Point Grid'
-    print '---------------------------\n'
+    print('\nConvergence of K-Point Grid')
+    print('---------------------------\n')
     ck = ConvergenceKPointGrid(structure, workdir='.', binary=binary, encut=encut,
                                energy_tolerance=energy_tol, recover=True)
     if os.path.isfile('convergence_kpoints.json'):
-        print 'A previous convergence study was found, loading...'
+        print('A previous convergence study was found, loading...')
         ck.load()
     if not ck.is_converge:
         ck.run(nparal)
@@ -174,7 +174,7 @@ def main(argv):
         ck.plot()
     kp = ck.best_kpoints
     kp_density = kp.get_density_of_kpoints(structure.lattice)
-    print 'KPOINT GRID', kp.grid
+    print('KPOINT GRID', kp.grid)
 
     strenght = IdealStrength(structure, ini_factor, fin_factor, delta_factor, kp, kp_density, expansion, encut,
                              nparal, binary, target_forces, output_file)

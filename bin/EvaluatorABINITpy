@@ -80,12 +80,12 @@ if __name__ == '__main__':
             elif option == 'base_input':
                 base_input = sys.argv[i + 1]
                 if not os.path.isfile(base_input):
-                    print 'ERROR: Invalid base input'
+                    print('ERROR: Invalid base input')
                     help_info()
                     exit(1)
             elif option == 'psp':
                 if not os.path.isfile(sys.argv[i + 1]):
-                    print 'ERROR: PSP could not be found'
+                    print('ERROR: PSP could not be found')
                     help_info()
                     exit(1)
                 psps.append(sys.argv[i + 1])
@@ -105,19 +105,19 @@ if __name__ == '__main__':
         db_settings['user'] = user
         db_settings['passwd'] = passwd
 
-    print 'pyChemia Remote Evaluator using ABINIT'
-    print 'dbname         : %s' % dbname
-    print 'host           : %s' % host
-    print 'port           : %d' % port
-    print 'user           : %s' % user
-    print 'input workdir  : %s' % input_workdir
-    print 'output workdir : %s' % output_workdir
-    print 'base input     : %s' % base_input
-    print 'psps           : %s' % str(psps)
-    print 'ssl            : %s' % str(ssl)
+    print('pyChemia Remote Evaluator using ABINIT')
+    print('dbname         : %s' % dbname)
+    print('host           : %s' % host)
+    print('port           : %d' % port)
+    print('user           : %s' % user)
+    print('input workdir  : %s' % input_workdir)
+    print('output workdir : %s' % output_workdir)
+    print('base input     : %s' % base_input)
+    print('psps           : %s' % str(psps))
+    print('ssl            : %s' % str(ssl))
 
     pcdb = get_database(db_settings)
-    print 'Number of entries: ', pcdb.entries.count()
+    print('Number of entries: ', pcdb.entries.count())
 
     while True:
         # Setting New Inputs
@@ -134,5 +134,5 @@ if __name__ == '__main__':
                     shutil.copy(i, path)
                     wf.write(os.path.basename(i) + '\n')
                 wf.close()
-        print 'Sleeping...'
+        print('Sleeping...')
         time.sleep(30)

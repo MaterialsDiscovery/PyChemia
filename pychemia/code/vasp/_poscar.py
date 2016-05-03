@@ -58,18 +58,18 @@ def read_poscar(path='POSCAR'):
         if os.path.isfile(potcarfile):
             species = get_species(potcarfile)
         else:
-            print """ ERROR: The POSCAR does not contain information about the species present on the structure
+            print(""" ERROR: The POSCAR does not contain information about the species present on the structure
             You can set a consistent POTCAR along the POSCAR or
-            modify your POSCAR by adding the atomic symbol on the sixth line of the file"""
+            modify your POSCAR by adding the atomic symbol on the sixth line of the file""")
             return None
 
     if not species:
-        print 'No information about species'
+        print('No information about species')
         raise ValueError()
 
-    print natom
-    print species
-    print natom_per_species
+    print(natom)
+    print(species)
+    print(natom_per_species)
 
     symbols = []
     for i in range(len(natom_per_species)):

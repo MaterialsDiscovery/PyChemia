@@ -9,7 +9,7 @@ from pychemia.code.abinit import InputVariables
 def structure_from_file(structure_file):
     st = None
     if not os.path.isfile(structure_file):
-        print "ERROR: Could not open file '%s'" % structure_file
+        print("ERROR: Could not open file '%s'" % structure_file)
         sys.exit(1)
     if structure_file[-4:].lower() == 'json':
         st = Structure.load_json(structure_file)
@@ -27,6 +27,6 @@ def structure_from_file(structure_file):
         try:
             st = read_poscar(structure_file)
         except ValueError:
-            print "ERROR: Could not extract structure from file '%s'" % structure_file
+            print("ERROR: Could not extract structure from file '%s'" % structure_file)
             exit(1)
     return st

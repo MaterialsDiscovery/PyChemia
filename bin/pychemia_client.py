@@ -21,8 +21,8 @@ class TimedOutExc(Exception):
 def deadline(timeout, *args):
     def decorate(f):
         def handler(signum, frame):
-            print 'signum:', signum
-            print 'frame:', frame
+            print('signum:', signum)
+            print('frame:', frame)
             raise TimedOutExc()
 
         def new_f(*args):
@@ -37,7 +37,7 @@ def deadline(timeout, *args):
 
 
 def usage(name):
-    print """
+    print("""
 NAME
     %s
 
@@ -59,7 +59,7 @@ OPTIONS
     --ip, -i <string>
         IP address to bind the server
 
-""" % os.path.basename(name)
+""" % os.path.basename(name))
 
 
 @deadline(60)
@@ -110,7 +110,7 @@ def inquirer(ip, port):
 
 
 def executor(workdir):
-    print 'Work directory', workdir
+    print('Work directory', workdir)
     os.chdir(workdir)
     subprocess.call(['python', 'executor.py'])
 
@@ -142,7 +142,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], "hi:p:", ["help", "ip=", "port="])
     except getopt.GetoptError:
-        print 'Wrong parsing of options'
+        print('Wrong parsing of options')
         usage(argv[0])
         sys.exit(2)
 
@@ -163,7 +163,7 @@ def main(argv):
     if ip is None:
         ip = socket.gethostbyname(socket.gethostname())
 
-    print 'PyChemia Client connecting to server on : ', ip
+    print('PyChemia Client connecting to server on : ', ip)
 
     workdir = None
     entry_id = None
@@ -172,23 +172,23 @@ def main(argv):
             try:
                 workdir, entry_id = inquirer(ip, port)
             except TimedOutExc as e:
-                print "INQUIRER took too long: %s", e.message
+                print("INQUIRER took too long: %s", e.message)
         else:
             lt = time.localtime()
             random.seed(lt.tm_yday * 24 + lt.tm_hour)
             rndport = random.randint(10000, 20000)
-            print 'PyChemia Client using port : ', rndport
+            print('PyChemia Client using port : ', rndport)
             try:
                 workdir, entry_id = inquirer(ip, rndport)
             except TimedOutExc as e:
-                print "Error({0}): {1}".format(e, e.message)
+                print("Error({0}): {1}".format(e, e.message))
 
-        print 'We got the workdir: ', workdir
-        print 'The entry_id is : ', entry_id
+        print('We got the workdir: ', workdir)
+        print('The entry_id is : ', entry_id)
 
         if workdir is not None and entry_id is not None:
             if entry_id == '':
-                print 'No entries to execute, taking a nap'
+                print('No entries to execute, taking a nap')
                 time.sleep(15)
             else:
                 break
@@ -203,12 +203,12 @@ def main(argv):
         lt = time.localtime()
         random.seed(lt.tm_yday * 24 + lt.tm_hour)
         rndport = random.randint(10000, 20000)
-        print 'PyChemia Client using port : ', rndport
+        print('PyChemia Client using port : ', rndport)
 
         try:
             finisher(entry_id, ip, rndport)
         except TimedOutExc as e:
-            print "Error({0}): {1}".format(e, e.message)
+            print("Error({0}): {1}".format(e, e.message))
 
 
 if __name__ == "__main__":

@@ -25,11 +25,11 @@ def worker(db_settings, entry_id, workdir, target_forces, relaxator_params):
         pcdb.lock(entry_id)
     structure = pcdb.get_structure(entry_id)
     structure = structure.scale()
-    print 'relaxator_params', relaxator_params
+    print('relaxator_params', relaxator_params)
     relaxer = IonRelaxation(structure, workdir=workdir, target_forces=target_forces, waiting=False,
                             binary=relaxator_params['binary'], encut=1.3, kp_grid=None, kp_density=1E4,
                             relax_cell=True, max_calls=10)
-    print 'relaxing on:', relaxer.workdir
+    print('relaxing on:', relaxer.workdir)
     relaxer.run(relaxator_params['nmpiparal'])
     pcm_log.info('[%s]: Finished relaxation. Target forces: %7.3e' % (str(entry_id), target_forces))
 
@@ -40,8 +40,8 @@ def worker(db_settings, entry_id, workdir, target_forces, relaxator_params):
 
         if forces is not None:
             magnitude_forces = np.apply_along_axis(np.linalg.norm, 1, forces)
-            print 'Forces: Max: %9.3e Avg: %9.3e' % (np.max(magnitude_forces), np.average(magnitude_forces))
-            print 'Stress: ', np.max(np.abs(stress.flatten()))
+            print('Forces: Max: %9.3e Avg: %9.3e' % (np.max(magnitude_forces), np.average(magnitude_forces)))
+            print('Stress: ', np.max(np.abs(stress.flatten())))
 
         if forces is None:
             pcm_log.error('No forces found on %s' % filename)
@@ -157,7 +157,7 @@ if __name__ == '__main__':
         parser.print_help()
         exit(1)
 
-    print args
+    print(args)
     db_settings = {'name': args.dbname, 'host': args.host, 'port': args.port, 'ssl': args.ssl,
                    'replicaset': args.replicaset}
     if args.user is not None:
@@ -170,22 +170,22 @@ if __name__ == '__main__':
     if args.nmpiparal is None:
         args.nmpiparal = 1
     relaxator_params = {'binary': args.binary, 'nmpiparal': args.nmpiparal}
-    print 'pyChemia Evaluator using VASP'
-    print 'dbname    : %s' % args.dbname
-    print 'host      : %s' % args.host
-    print 'port      : %d' % args.port
-    print 'user      : %s' % args.user
-    print 'replicaset: %s' % args.replicaset
-    print 'workdir   : %s' % args.workdir
-    print 'nparal    : %d' % args.nparal
-    print 'nmpiparal : %d' % args.nmpiparal
-    print 'binary    : %s' % str(args.binary)
-    print 'target-forces : %.2E' % args.target_forces
-    print 'evaluate_all  : %s' % str(args.evaluate_all)
-    print 'waiting       : %s' % str(args.waiting)
-    print 'ssl           : %s' % str(args.ssl)
+    print('pyChemia Evaluator using VASP')
+    print('dbname    : %s' % args.dbname)
+    print('host      : %s' % args.host)
+    print('port      : %d' % args.port)
+    print('user      : %s' % args.user)
+    print('replicaset: %s' % args.replicaset)
+    print('workdir   : %s' % args.workdir)
+    print('nparal    : %d' % args.nparal)
+    print('nmpiparal : %d' % args.nmpiparal)
+    print('binary    : %s' % str(args.binary))
+    print('target-forces : %.2E' % args.target_forces)
+    print('evaluate_all  : %s' % str(args.evaluate_all))
+    print('waiting       : %s' % str(args.waiting))
+    print('ssl           : %s' % str(args.ssl))
 
-    print db_settings
+    print(db_settings)
     evaluator = DirectEvaluator(db_settings, args.workdir,
                                 target_forces=args.target_forces,
                                 nparal=args.nparal,

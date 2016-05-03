@@ -11,7 +11,7 @@ def test_abinit2xyz():
     """
     if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
         pychemia.info()
-        print 'Running abinit2xyz', pychemia.HAS_SCIPY, pychemia.HAS_SCIENTIFIC
+        print('Running abinit2xyz', pychemia.HAS_SCIPY, pychemia.HAS_SCIENTIFIC)
         script = 'bin/abi_abinit2xyz.py'
         args = path + '/abinit_03/abinit.in'
         subprocess.call(['python', script, args])

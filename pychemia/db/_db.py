@@ -109,8 +109,8 @@ class PyChemiaDB:
             elif isinstance(structure, dict):
                 entry['structure'] = structure
             else:
-                print 'ERROR: Could not process the structure'
-                print type(structure)
+                print('ERROR: Could not process the structure')
+                print(type(structure))
         if properties is not None:
             entry['properties'] = properties
         if status is not None:
@@ -186,7 +186,7 @@ class PyChemiaDB:
                     valid = False
 
             if valid:
-                print comp.composition
+                print(comp.composition)
                 ret.append(entry['_id'])
         return ret
 
@@ -246,10 +246,10 @@ class PyChemiaDB:
 
     def set_minimal_schema(self):
         for entry_id in self.entries.find({'status': None}, {'status': 1}):
-            print entry_id
+            print(entry_id)
             self.entries.update({'_id': entry_id['_id']}, {'$set': {'status': {}}})
         for entry_id in self.entries.find({'properties': None}):
-            print entry_id
+            print(entry_id)
             self.entries.update({'_id': entry_id['_id']}, {'$set': {'properties': {}}})
 
     def create_static(self, field):
@@ -262,7 +262,7 @@ class PyChemiaDB:
 
         pool = Pool(processes=nparal)
         cursor = self.entries.find({}, no_cursor_timeout=True)
-        print cursor.count()
+        print(cursor.count())
         entries = [entry['_id'] for entry in cursor]
         ret = pool.map(function, itertools.izip(itertools.repeat(self.db_settings), entries))
         cursor.close()

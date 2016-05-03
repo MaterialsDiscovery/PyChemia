@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from __future__ import print_function
 import os
 import sys
 import pychemia
@@ -32,13 +32,13 @@ if __name__ == "__main__":
     layers = args.layers
 
     if not os.path.isfile(inputfile):
-        print 'File not found: ', input
+        print('File not found: ', input)
         sys.exit(1)
 
-    print 'INPUT:  ', inputfile
-    print 'OUTPUT: ', outputfile
-    print 'MILLER: ', miller
-    print 'LAYERS: ', layers
+    print('INPUT:  ', inputfile)
+    print('OUTPUT: ', outputfile)
+    print('MILLER: ', miller)
+    print('LAYERS: ', layers)
 
     h = int(miller[0])
     k = int(miller[1])
@@ -47,12 +47,12 @@ if __name__ == "__main__":
     structure = pychemia.code.vasp.read_poscar(inputfile)
     surf = pychemia.analysis.create_surface(structure, h, k, l, layers)
 
-    print surf
+    print(surf)
 
     pychemia.code.vasp.write_poscar(surf, outputfile)
 
     symmetry = pychemia.symm.StructureSymmetry(structure)
-    print 'SpaceGroup (Original): ', symmetry.number()
+    print('SpaceGroup (Original): ', symmetry.number())
 
     symmetry = pychemia.symm.StructureSymmetry(surf)
-    print 'SpaceGroup (Final)   : ', symmetry.number()
+    print('SpaceGroup (Final)   : ', symmetry.number())

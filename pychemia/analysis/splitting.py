@@ -26,7 +26,7 @@ class SplitMatch:
                 self.split_sites[i] = get_simple_split_sites(self.structures[i], self.cut_planes[i])
                 if len(self.split_sites[i]) == 0:
                     delta_distance *= 0.9
-                    print 'delta distance reduced to', delta_distance
+                    print('delta distance reduced to', delta_distance)
             if len(self.split_sites[0]) > 0 and len(self.split_sites[1]) > 0:
                 # Select two compatible splits (that preserve the number of atoms)
                 has_groups = False
@@ -40,12 +40,12 @@ class SplitMatch:
                     grp0 = self.split_sites[0].keys()[rnd]
                     for grp1 in self.split_sites[1]:
                         trial += 1
-                        print 'Selected Groups:', grp0, grp1
+                        print('Selected Groups:', grp0, grp1)
                         if len(self.split_sites[0][grp0]) == len(self.split_sites[1][grp1]):
                             has_groups = True
                             break
                     if trial > 10:
-                        print 'Bad splitting of sites, decreasing distance'
+                        print('Bad splitting of sites, decreasing distance')
                         grp0 = None
                         grp1 = None
                         break
@@ -74,8 +74,8 @@ class SplitMatch:
         cut_value1 = self.cut_planes[0][idim1][cp1]
         cut_value2 = self.cut_planes[1][idim2][cp2]
 
-        print 'idim1:', idim1, 'cut_value1:', cut_value1
-        print 'idim2:', idim2, 'cut_value2:', cut_value2
+        print('idim1:', idim1, 'cut_value1:', cut_value1)
+        print('idim2:', idim2, 'cut_value2:', cut_value2)
 
         # Select one possible permutation that will make the second
         # structure being cutted along the same dimension as the first one
@@ -89,8 +89,8 @@ class SplitMatch:
             if permsel1 is not None and permsel2 is not None:
                 break
 
-        print 'Permutation Selected 1:', permsel1
-        print 'Permutation Selected 2:', permsel2
+        print('Permutation Selected 1:', permsel1)
+        print('Permutation Selected 2:', permsel2)
 
         newreduced1 = np.zeros((self.structures[0].natom, 3))
         newreduced2 = np.zeros((self.structures[1].natom, 3))

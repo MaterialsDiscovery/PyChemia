@@ -323,13 +323,13 @@ True
         return ret
 
     def species_bin(self):
-        spec_bin = 0L
+        spec_bin = 0
         for i in atomic_number(self.species):
             spec_bin += 2 ** i
         return spec_bin
 
     def species_hex(self):
-        spec_hex = 0L
+        spec_hex = 0
         i = 0
         for atom_number in sorted(atomic_number(self.species)):
             spec_hex += atom_number * (256 ** i)

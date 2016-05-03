@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from __future__ import print_function
 import os
 import getopt
 import json
@@ -16,7 +16,7 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 def usage(name):
-    print """
+    print("""
 NAME
     %s
 
@@ -41,7 +41,7 @@ OPTIONS
     --ip, -i <string>
         IP address to bind the server
 
-""" % os.path.basename(name)
+""" % os.path.basename(name))
 
 
 def get_database(dbsettings):
@@ -113,7 +113,7 @@ def deploy(entry_id, pychemia_queue, basedir):
 
     entry = pychemia_queue.db.pychemia_entries.find_one({'_id': entry_id}, {'job': 1})
     job_settings = entry['job']
-    print job_settings
+    print(job_settings)
 
     if len(job_settings) > 0:
         wf = open(workdir + os.sep + 'job.json', 'w')
@@ -141,7 +141,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], "hd:p:i:w:", ["help", "dbsettings_file=", "port=", "ip=", 'workdir='])
     except getopt.GetoptError:
-        print 'Error with options'
+        print('Error with options')
         usage(argv[0])
         sys.exit(2)
 
@@ -170,15 +170,15 @@ def main(argv):
             ip = arg
 
     if workdir is None:
-        print 'Missing workdir'
+        print('Missing workdir')
         usage(argv[0])
         sys.exit()
     if not os.path.isdir(workdir):
         os.mkdir(workdir)
 
-    print 'dbsettings_file:', dbsettings_file
+    print('dbsettings_file:', dbsettings_file)
     if dbsettings_file is None or not os.path.exists(dbsettings_file):
-        print 'Missing dbsettings'
+        print('Missing dbsettings')
         usage(argv[0])
         sys.exit()
     else:
@@ -187,13 +187,13 @@ def main(argv):
     if ip is None:
         ip = socket.gethostbyname(socket.gethostname())
 
-    print 'PyChemia Server binded to IP: ', ip
+    print('PyChemia Server binded to IP: ', ip)
 
     pcq = get_database(dbsettings)
-    print 'Connected with database, number of entries: ', pcq.db.pychemia_entries.count()
+    print('Connected with database, number of entries: ', pcq.db.pychemia_entries.count())
 
     if port is not None:
-        print 'Using port : %s' % port
+        print('Using port : %s' % port)
         p = multiprocessing.Process(target=listener, args=(dbsettings, ip, port, workdir))
         p.start()
     else:
@@ -205,9 +205,9 @@ def main(argv):
             port = random.randint(10000, 20000)
             if port != old_port:
                 if p is not None and p.is_alive():
-                    print 'Terminating listener on port : %s' % old_port
+                    print('Terminating listener on port : %s' % old_port)
                     p.terminate()
-                print 'Using port : %s' % port
+                print('Using port : %s' % port)
                 p = multiprocessing.Process(target=listener, args=(dbsettings, ip, port, workdir))
                 p.start()
                 old_port = port

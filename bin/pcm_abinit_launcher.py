@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import logging
 import os
 import sys
@@ -29,7 +30,7 @@ def cleaner():
 
 
 def usage(name):
-    print """
+    print("""
 NAME
     %s
 
@@ -56,7 +57,7 @@ OPTIONS
     --pseudo, -p <string> (Default: 'FHI_LDA')
         Kind and Exchange for Pseudopotentials
 
-""" % os.path.basename(name)
+""" % os.path.basename(name))
 
 
 def main(argv):
@@ -97,17 +98,17 @@ def main(argv):
 
     structure = pychemia.code.abinit.InputVariables(inpu_file).get_structure()
     if structure is None:
-        print " ERROR: Invalid structure, no structure could be obtained"
+        print(" ERROR: Invalid structure, no structure could be obtained")
         sys.exit(2)
 
-    print "\n PyChemia ABINIT Job"
-    print " =======================\n"
-    print " MPI number of procs : ", nparal
-    print " ABINIT binary       : ", binary
-    print " ABINIT input_file   : ", inpu_file
-    print " ABINIT pseudo       : ", pseudo
-    print " Structure           :\n"
-    print structure
+    print("\n PyChemia ABINIT Job")
+    print(" =======================\n")
+    print(" MPI number of procs : ", nparal)
+    print(" ABINIT binary       : ", binary)
+    print(" ABINIT input_file   : ", inpu_file)
+    print(" ABINIT pseudo       : ", pseudo)
+    print(" Structure           :\n")
+    print(structure)
 
     wf = open(output_file, 'w')
     data = {'input': {'binary': binary, 'nparal': nparal, 'structure': structure.to_dict}, 'complete': False, }
@@ -135,11 +136,11 @@ def main(argv):
         energetics = ao.get_energetics()
         if energetics is not None:
             if len(energetics['iter']) > old_niter:
-                print "ITER %4d  ETOT= %15.8f deltaE(h)= %9.2E residm= %9.2E nres2= %9.2E" % (energetics['iter'][-1],
+                print("ITER %4d  ETOT= %15.8f deltaE(h)= %9.2E residm= %9.2E nres2= %9.2E" % (energetics['iter'][-1],
                                                                                               energetics['etot'][-1],
                                                                                               energetics['deltaEh'][-1],
                                                                                               energetics['residm'][-1],
-                                                                                              energetics['nres2'][-1])
+                                                                                              energetics['nres2'][-1]))
                 old_niter = len(energetics['iter'])
         time.sleep(60)
 

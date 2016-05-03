@@ -10,7 +10,7 @@ try:
     from qmpy import Entry
 except ImportError:
     Entry = None
-    print "Could not import 'qmpy' as needed to interface with the OQMD database"
+    print("Could not import 'qmpy' as needed to interface with the OQMD database")
     exit(1)
 
 version = 0.1
@@ -37,8 +37,8 @@ def run_one(a):
     :param a: OQMD Entry object
     :return:
     """
-    print 'Entry: %6d  Number of Calculations: %3d  Energies: %s' % (a.id, a.calculation_set.count(),
-                                                                     str([c.energy for c in a.calculation_set.all()]))
+    print('Entry: %6d  Number of Calculations: %3d  Energies: %s' % (a.id, a.calculation_set.count(),
+                                                                     str([c.energy for c in a.calculation_set.all()])))
     energy = 1E10
     best_calculation = None
     for c in a.calculation_set.all():
@@ -92,7 +92,7 @@ def getter(entry_ids, db_settings, current, start=0):
 
     initial = start * jump
     final = min(start * jump + jump, len(entry_ids))
-    print 'Process: %2d Processing from %6d to %6d' % (start, initial, final)
+    print('Process: %2d Processing from %6d to %6d' % (start, initial, final))
 
     for a_id in entry_ids[initial:final]:
 
@@ -103,15 +103,15 @@ def getter(entry_ids, db_settings, current, start=0):
             index = current.index(a_id)
             # Removing duplicated entries
             if index < len(current) and current[index + 1] == a_id:
-                print 'We found at least one duplicate!'
+                print('We found at least one duplicate!')
                 duplicate = False
                 for entry in pcdb.db.pychemia_entries.find({'properties.oqmd.entry_id': a_id}):
                     if duplicate:
-                        print 'Removing PyChemiaDB entry: %s' % str(entry['_id'])
+                        print('Removing PyChemiaDB entry: %s' % str(entry['_id']))
                         pcdb.db.pychemia_entries.remove({'_id': entry['_id']})
                     duplicate = True
 
-    print 'Process: %2d Entries missing: %3d' % (start, len(ret))
+    print('Process: %2d Entries missing: %3d' % (start, len(ret)))
 
     return ret
 
@@ -187,17 +187,17 @@ if __name__ == '__main__':
     pcdb = pychemia.db.get_database(db_settings)
 
     nitems = pcdb.entries.count()
-    print 'Number of entries in the current PyChemia Database: %d' % nitems
+    print('Number of entries in the current PyChemia Database: %d' % nitems)
 
     current = []
     for entry in pcdb.db.pychemia_entries.find({'properties.oqmd.entry_id': {'$exists': True}}):
         current.append(entry['properties']['oqmd']['entry_id'])
     current.sort()
-    print 'Number of entries coming from OQMD: %d' % len(current)
+    print('Number of entries coming from OQMD: %d' % len(current))
 
     queryset = Entry.objects.all()
     entry_ids = [entry.id for entry in queryset]
-    print 'Number of entries in OQMD: %d' % len(entry_ids)
+    print('Number of entries in OQMD: %d' % len(entry_ids))
 
     pool = Pool(processes=6)
 

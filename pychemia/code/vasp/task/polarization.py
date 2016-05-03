@@ -93,7 +93,7 @@ class Polarization(Task):
                         runner.run(dirpath=pathname + os.sep + step)
                         rf = open(pathname + os.sep + step + os.sep + 'vasp.stdout')
                         if rf.readlines()[-2].strip() != 'writing wavefunctions':
-                            print 'Finished writing the Wavefunctions'
+                            print('Finished writing the Wavefunctions')
                             success = True
                         else:
                             success = False
@@ -109,7 +109,7 @@ class Polarization(Task):
                         runner.run(dirpath=pathname + os.sep + step)
                         rf = open(pathname + os.sep + step + os.sep + 'vasp.stdout')
                         if rf.readlines()[-2].strip() != 'writing wavefunctions':
-                            print 'Finished writing the Wavefunctions'
+                            print('Finished writing the Wavefunctions')
                             success = True
                         else:
                             success = False
@@ -133,7 +133,7 @@ class Polarization(Task):
                         runner.run(dirpath=pathname + os.sep + step)
                         rf = open(pathname + os.sep + step + os.sep + 'vasp.stdout')
                         if rf.readlines()[-2].strip() == 'writing wavefunctions':
-                            print 'Finished writing the Wavefunctions'
+                            print('Finished writing the Wavefunctions')
                             success = True
                         else:
                             success = False

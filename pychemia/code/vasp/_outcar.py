@@ -63,7 +63,7 @@ class VaspOutput:
             self.array_sizes['NIONSTEPS'] = len(self.forces)
             # pcm_log.info('Number of Ionic steps: ' + str(self.array_sizes['NIONSTEPS']))
         else:
-            print 'Forces and Positions could not be parsed : ', pos_forces.shape
+            print('Forces and Positions could not be parsed : ', pos_forces.shape)
 
         fermi = re.findall(r'E-fermi\s+:\s+([-.\d]+)', self.data)
         fermi = np.array(fermi, dtype=float)
@@ -104,7 +104,7 @@ class VaspOutput:
                 kpt_eigenvals.reshape((-1, 3))
                 bands_dict[ikpt] = {'position': kpt_pos, 'eigenvalues': kpt_eigenvals}
             except ValueError:
-                print 'Error parsing bands'
+                print('Error parsing bands')
         self.bands = bands_dict
 
         if 'NIONSTEPS' in self.array_sizes:
@@ -275,7 +275,7 @@ class VaspOutput:
             return None
         else:
             datablock = datablock[0]
-        print datablock
+        print(datablock)
 
         for iline in datablock.split('\n'):
             if ':' in iline:
@@ -283,7 +283,7 @@ class VaspOutput:
                 try:
                     ret[key_value[0].strip()] = (float(key_value[1].split()[0]), key_value[1].split()[1])
                 except ValueError:
-                    print 'Failed to parse: ', key_value
+                    print('Failed to parse: ', key_value)
         return ret
 
     def get_general_timing(self):
@@ -296,7 +296,7 @@ class VaspOutput:
                     try:
                         ret[key_value[0].strip()] = float(key_value[1].strip())
                     except ValueError:
-                        print 'Failed to parse: ', key_value
+                        print('Failed to parse: ', key_value)
         return ret
 
     @property

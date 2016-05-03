@@ -52,7 +52,7 @@ if __name__ == '__main__':
         elif os.path.isfile(sys.argv[i]) and sys.argv[i][-4:] == '.dat':
             filelist.append(sys.argv[i])
 
-    print figname
+    print(figname)
     for i in filelist:
         a = pychemia.report.DensityOfStates().read(i)
         doslist.append(a)

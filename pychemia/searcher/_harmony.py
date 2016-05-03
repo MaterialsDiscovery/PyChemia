@@ -26,10 +26,10 @@ class HarmonySearch(Searcher):
         # Mandatory objects
         Searcher.__init__(self, population, generation_size, stabilization_limit)
         # Parameters
-        self.hmcr = None  # harmony_memory_considering_rate
-        self.par = None
-        self.top = None
-        self.tail = None
+        self.hmcr = 0.9  # harmony_memory_considering_rate
+        self.par = 0.9
+        self.top = 2
+        self.tail = 2
         self.set_params(params)
         self.delta_change = 1
 
@@ -40,10 +40,6 @@ class HarmonySearch(Searcher):
 
         :param params:
         """
-        self.hmcr = 0.9
-        self.par = 0.9
-        self.top = 2
-        self.tail = 2
         if params is None:
             params = {}
         if 'hmcr' in params:

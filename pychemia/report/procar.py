@@ -401,7 +401,7 @@ class ProcarParser:
             self.kpoints = np.array(self.kpoints, dtype=float)
         except ValueError:
             self.log.error("Ill-formatted data:")
-            print '\n'.join([str(x) for x in self.kpoints])
+            print('\n'.join([str(x) for x in self.kpoints]))
             if permissive is True:
                 # Discarding the kpoints list, however I need to set
                 # self.ispin beforehand.
@@ -603,7 +603,7 @@ class ProcarParser:
                                str(self.orbitalCount + 1) + " = " +
                                str(self.ionsCount * (self.orbitalCount + 1)) +
                                " Fields. Present block: " + str(len(line.split())))
-                print line
+                print(line)
                 raise RuntimeError("Flats happens")
 
         # replacing the "tot" string by a number, to allows a conversion
@@ -1203,9 +1203,9 @@ class ProcarPlot:
             xaxis = np.array(xaxis)
         else:
             xaxis = np.arange(len(self.bands))
-        print "self.kpoints: ", self.kpoints.shape
-        print "xaxis.shape : ", xaxis.shape
-        print "bands.shape : ", self.bands.shape
+        print("self.kpoints: ", self.kpoints.shape)
+        print("xaxis.shape : ", xaxis.shape)
+        print("bands.shape : ", self.bands.shape)
         plot = plt.plot(xaxis, self.bands.transpose(), 'r-', marker=marker,
                         markersize=size)
         plt.xlim(xaxis.min(), xaxis.max())
@@ -1221,7 +1221,7 @@ class ProcarPlot:
     def scatterPlot(self, size=50, mask=None, cmap='hot_r', vmax=None, vmin=None,
                     marker='o', ticks=None):
         bsize, ksize = self.bands.shape
-        print bsize, ksize
+        print(bsize, ksize)
 
         if self.kpoints is not None:
             xaxis = [0]
@@ -1275,7 +1275,7 @@ class ProcarPlot:
             vmin = self.spd.min()
         if vmax is None:
             vmax = self.spd.max()
-        print "normalizing to: ", (vmin, vmax)
+        print("normalizing to: ", (vmin, vmax))
         norm = matplotlib.colors.Normalize(vmin, vmax)
 
         if self.kpoints is not None:
@@ -1317,19 +1317,19 @@ class ProcarPlot:
         k-point
         """
 
-        print "Atomic plot: bands.shape  :", self.bands.shape
-        print "Atomic plot: spd.shape    :", self.spd.shape
-        print "Atomic plot: kpoints.shape:", self.kpoints.shape
+        print("Atomic plot: bands.shape  :", self.bands.shape)
+        print("Atomic plot: spd.shape    :", self.spd.shape)
+        print("Atomic plot: kpoints.shape:", self.kpoints.shape)
 
         self.bands = np.hstack((self.bands, self.bands))
         self.spd = np.hstack((self.spd, self.spd))
         self.kpoints = np.vstack((self.kpoints, self.kpoints))
         self.kpoints[0][-1] += 1
-        print "Atomic plot: bands.shape  :", self.bands.shape
-        print "Atomic plot: spd.shape    :", self.spd.shape
-        print "Atomic plot: kpoints.shape:", self.kpoints.shape
+        print("Atomic plot: bands.shape  :", self.bands.shape)
+        print("Atomic plot: spd.shape    :", self.spd.shape)
+        print("Atomic plot: kpoints.shape:", self.kpoints.shape)
 
-        print self.kpoints
+        print(self.kpoints)
 
         fig = self.parametricPlot(cmap, vmin, vmax)
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
@@ -1679,20 +1679,20 @@ class ProcarSymmetry:
 
 def scriptCat(args):
     if args.quiet is False:
-        print "Concatenating:"
-        print "Input         : ", ', '.join(args.inFiles)
-        print "Output        : ", args.outFile
+        print("Concatenating:")
+        print("Input         : ", ', '.join(args.inFiles))
+        print("Output        : ", args.outFile)
         if args.gz:
-            print "out compressed: True"
+            print("out compressed: True")
         if args.verbose > 2:
             args.verbose = 2
         if args.verbose:
-            print "verbosity     : ", args.verbose
+            print("verbosity     : ", args.verbose)
 
     if args.gz and args.outFile[-3:] is not '.gz':
         args.outFile += '.gz'
         if args.quiet is False:
-            print ".gz extension appended to the outFile"
+            print(".gz extension appended to the outFile")
 
     loglevel = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}[args.verbose]
     handler = UtilsProcar(loglevel)
@@ -1702,43 +1702,43 @@ def scriptCat(args):
 
 def scriptFilter(args):
     if args.quiet is False:
-        print "Input file  :", args.inFile
-        print "Output file :", args.outFile
+        print("Input file  :", args.inFile)
+        print("Output file :", args.outFile)
     if args.verbose:
         if args.verbose > 2:
             args.verbose = 2
-        print "atoms       :", args.atoms
+        print("atoms       :", args.atoms)
         if args.atoms:
-            print "human     :", args.human
-        print "orbitals  :", args.orbitals
+            print("human     :", args.human)
+        print("orbitals  :", args.orbitals)
         if args.orbitals:
-            print "orb. names  :", args.orbital_names
-        print "bands       :", args.bands
-        print "spins       :", args.spin
+            print("orb. names  :", args.orbital_names)
+        print("bands       :", args.bands)
+        print("spins       :", args.spin)
 
     loglevel = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}[args.verbose]
     FileFilter = ProcarFileFilter(args.inFile, args.outFile, loglevel=loglevel)
 
     if args.atoms:
         if args.quiet is False:
-            print "Manipulating the atoms"
+            print("Manipulating the atoms")
 
         if args.human:
             args.atoms = [[y - 1 for y in x] for x in args.atoms]
             if args.verbose:
-                print "new atoms list :", args.atoms
+                print("new atoms list :", args.atoms)
 
         # Now just left to call the driver member
         FileFilter.FilterAtoms(args.atoms)
 
     elif args.orbitals:
         if args.quiet is False:
-            print "Manipulating the orbitals"
+            print("Manipulating the orbitals")
         # If orbitals orbital_names is None, it needs to be filled
         if args.orbital_names is None:
             args.orbital_names = ["o" + str(x) for x in range(len(args.orbitals))]
             if args.quiet is False:
-                print "New orbitals names (default): ", args.orbital_names
+                print("New orbitals names (default): ", args.orbital_names)
         # testing if makes sense
         if len(args.orbitals) != len(args.orbital_names):
             raise RuntimeError("length of orbitals and orbitals names do not match")
@@ -1747,20 +1747,20 @@ def scriptFilter(args):
 
     elif args.bands:
         if args.quiet is False:
-            print "Manipulating the bands"
+            print("Manipulating the bands")
 
         bmin = args.bands[0]
         bmax = args.bands[1]
         if bmax < bmin:
             bmax, bmin = bmin, bmax
             if args.quiet is False:
-                print "New bands limits: ", bmin, " to ", bmax
+                print("New bands limits: ", bmin, " to ", bmax)
 
         FileFilter.FilterBands(bmin, bmax)
 
     elif args.spin:
         if args.quiet is False:
-            print "Manipulating the spin"
+            print("Manipulating the spin")
 
         FileFilter.FilterSpin(args.spin)
 
@@ -1774,51 +1774,51 @@ def scriptBandsplot(args):
     if args.atoms is None:
         args.atoms = [-1]
         if args.human is True:
-            print "WARNING: `--human` option given without atoms list!"
-            print "--human will be set to False (ignored)\n "
+            print("WARNING: `--human` option given without atoms list!")
+            print("--human will be set to False (ignored)\n ")
             args.human = False
     if args.orbitals is None:
         args.orbitals = [-1]
 
     if args.verbose:
-        print "Script initiated"
-        print "input file    : ", args.file
-        print "Mode          : ", args.mode
+        print("Script initiated")
+        print("input file    : ", args.file)
+        print("Mode          : ", args.mode)
 
-        print "spin comp.    : ", args.spin
-        print "atoms list.   : ", args.atoms
-        print "orbs. list.   : ", args.orbitals
+        print("spin comp.    : ", args.spin)
+        print("atoms list.   : ", args.atoms)
+        print("orbs. list.   : ", args.orbitals)
 
     if args.fermi is None and args.outcar is None:
-        print "WARNING: Fermi Energy not set! "
-        print "You should use '-f' or '--outcar'"
-        print "The zero of energy is arbitrary\n"
+        print("WARNING: Fermi Energy not set! ")
+        print("You should use '-f' or '--outcar'")
+        print("The zero of energy is arbitrary\n")
         args.fermi = 0
 
     if args.verbose:
-        print "Fermi Ener.   : ", args.fermi
-        print "Energy range  : ", args.elimit
+        print("Fermi Ener.   : ", args.fermi)
+        print("Energy range  : ", args.elimit)
 
         if args.mask is not None:
-            print "masking thres.: ", args.mask
+            print("masking thres.: ", args.mask)
 
-        print "Colormap      : ", args.cmap
-        print "MarkerSize    : ", args.markersize
+        print("Colormap      : ", args.cmap)
+        print("MarkerSize    : ", args.markersize)
 
-        print "Permissive    : ", args.permissive
+        print("Permissive    : ", args.permissive)
         if args.permissive and args.quiet is False:
-            print "INFO: Permissive flag is on! Be careful"
-        print "vmax          : ", args.vmax
-        print "vmin          : ", args.vmin
-        print "grid enabled  : ", args.grid
+            print("INFO: Permissive flag is on! Be careful")
+        print("vmax          : ", args.vmax)
+        print("vmin          : ", args.vmin)
+        print("grid enabled  : ", args.grid)
         if args.human is not None:
-            print "human         : ", args.human
-        print "Savefig       : ", args.savefig
-        print "kticks        : ", args.kticks
-        print "knames        : ", args.knames
-        print "title         : ", args.title
+            print("human         : ", args.human)
+        print("Savefig       : ", args.savefig)
+        print("kticks        : ", args.kticks)
+        print("knames        : ", args.knames)
+        print("title         : ", args.title)
 
-        print "outcar        : ", args.outcar
+        print("outcar        : ", args.outcar)
 
     # If ticks and names are given we should use them#
     if args.kticks is not None and args.knames is not None:
@@ -1846,7 +1846,7 @@ def scriptBandsplot(args):
         if args.fermi is None:
             args.fermi = outcarparser.FermiOutcar(args.outcar)
             if args.quiet is False:
-                print "INFO: Fermi energy found in outcar file = " + str(args.fermi)
+                print("INFO: Fermi energy found in outcar file = " + str(args.fermi))
         recLat = outcarparser.RecLatOutcar(args.outcar)
 
     # parsing the PROCAR file
@@ -1936,7 +1936,7 @@ def scriptFermi2D(args):
     if args.atoms is None:
         args.atoms = [-1]
         if args.human is True:
-            print "WARNING: `--human` option given without atoms list!!!!!"
+            print("WARNING: `--human` option given without atoms list!!!!!")
 
     if args.orbitals is None:
         args.orbitals = [-1]
@@ -1946,25 +1946,25 @@ def scriptFermi2D(args):
         args.rec_basis.shape = (3, 3)
 
     if len(args.translate) != 3 and len(args.translate) != 1:
-        print "Error: --translate option is invalid! (", args.translate, ")"
+        print("Error: --translate option is invalid! (", args.translate, ")")
         raise RuntimeError("invalid option --translate")
 
     if args.quiet is False:
-        print "file            : ", args.file
-        print "atoms           : ", args.atoms
-        print "orbitals        : ", args.orbitals
-        print "spin comp.      : ", args.spin
-        print "energy          : ", args.energy
-        print "fermi energy    : ", args.fermi
-        print "Rec. basis      : ", args.rec_basis
-        print "rot. symmetry   : ", args.rot_symm
-        print "origin (trasl.) : ", args.translate
-        print "rotation        : ", args.rotation
-        print "masking thres.  : ", args.mask
-        print "save figure     : ", args.savefig
-        print "outcar          : ", args.outcar
-        print "st              : ", args.st
-        print "no_arrows       : ", args.noarrow
+        print("file            : ", args.file)
+        print("atoms           : ", args.atoms)
+        print("orbitals        : ", args.orbitals)
+        print("spin comp.      : ", args.spin)
+        print("energy          : ", args.energy)
+        print("fermi energy    : ", args.fermi)
+        print("Rec. basis      : ", args.rec_basis)
+        print("rot. symmetry   : ", args.rot_symm)
+        print("origin (trasl.) : ", args.translate)
+        print("rotation        : ", args.rotation)
+        print("masking thres.  : ", args.mask)
+        print("save figure     : ", args.savefig)
+        print("outcar          : ", args.outcar)
+        print("st              : ", args.st)
+        print("no_arrows       : ", args.noarrow)
     if args.verbose > 2:
         args.verbose = 2
     loglevel = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}[args.verbose]
@@ -1975,11 +1975,11 @@ def scriptFermi2D(args):
         if args.fermi is None:
             args.fermi = outcarparser.FermiOutcar(args.outcar)
             if args.quiet is False:
-                print "Fermi energy found in outcar file = " + str(args.fermi)
+                print("Fermi energy found in outcar file = " + str(args.fermi))
         args.rec_basis = outcarparser.RecLatOutcar(args.outcar)
     # Reciprocal lattices are needed!
     elif args.rec_basis is None and args.outcar is None:
-        print "ERORR: Reciprocal Lattice is needed, use --rec_basis or --outcar"
+        print("ERORR: Reciprocal Lattice is needed, use --rec_basis or --outcar")
         raise RuntimeError("Reciprocal Lattice not found")
 
     # parsing the file
@@ -2023,7 +2023,7 @@ def scriptFermi2D(args):
     symm.RotSymmetryZ(args.rot_symm)
 
     # plotting the data
-    print "Bands will be shifted by the Fermi energy = ", args.fermi
+    print("Bands will be shifted by the Fermi energy = ", args.fermi)
     fs = FermiSurface(symm.kpoints, symm.bands - args.fermi, character,
                       loglevel=loglevel)
     fs.FindEnergy(args.energy)
@@ -2043,19 +2043,19 @@ def scriptFermi2D(args):
 
 def scriptVector(args):
     if args.quiet is False:
-        print "Input File    : ", args.infile
-        print "Bands         : ", args.bands
-        print "Energy        : ", args.energy
-        print "Fermi         : ", args.fermi
-        print "outcar        : ", args.outcar
-        print "atoms         : ", args.atoms
-        print "orbitals      : ", args.orbitals
-        print "scale factor  : ", args.scale
+        print("Input File    : ", args.infile)
+        print("Bands         : ", args.bands)
+        print("Energy        : ", args.energy)
+        print("Fermi         : ", args.fermi)
+        print("outcar        : ", args.outcar)
+        print("atoms         : ", args.atoms)
+        print("orbitals      : ", args.orbitals)
+        print("scale factor  : ", args.scale)
 
     if args.bands is [] and args.energy is None:
         raise RuntimeError("You must provide the bands or energy.")
     if args.fermi is None and args.outcar is None:
-        print "WARNING: Fermi's Energy not set"
+        print("WARNING: Fermi's Energy not set")
     if args.verbose > 2:
         args.verbose = 2
     loglevel = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}[args.verbose]
@@ -2067,7 +2067,7 @@ def scriptVector(args):
         if args.fermi is None:
             args.fermi = outcarparser.FermiOutcar(args.outcar)
             if args.quiet is False:
-                print "Fermi energy found in outcar file = " + str(args.fermi)
+                print("Fermi energy found in outcar file = " + str(args.fermi))
         recLat = outcarparser.RecLatOutcar(args.outcar)
 
     if args.atoms is None:
@@ -2104,7 +2104,7 @@ def scriptVector(args):
         FerSurf = FermiSurface(sx.kpoints, sx.bands - args.fermi, sx.spd, loglevel)
         FerSurf.FindEnergy(args.energy)
         args.bands = list(FerSurf.useful[0])
-        print "Bands indexes crossing Energy  ", args.energy, ", are: ", args.bands
+        print("Bands indexes crossing Energy  ", args.energy, ", are: ", args.bands)
 
     from mayavi import mlab
 
@@ -2130,8 +2130,8 @@ def scriptVector(args):
 
 def script_repair(args):
     if args.quiet is False:
-        print "Input File    : ", args.infile
-        print "Output File   : ", args.outfile
+        print("Input File    : ", args.infile)
+        print("Output File   : ", args.outfile)
 
     if args.verbose > 2:
         args.verbose = 2

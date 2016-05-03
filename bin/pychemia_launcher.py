@@ -100,16 +100,16 @@ if __name__ == '__main__':
 
     for i in ret:
         if os.path.isfile(i + os.sep + 'lock'):
-            print "Locked:    %s" % i
+            print("Locked:    %s" % i)
         elif os.path.basename(i) in jobs:
-            print 'Submitted: %s' % i
+            print('Submitted: %s' % i)
         else:
-            print 'To submit: %s' % i
+            print('To submit: %s' % i)
             rr = pychemia.runner.PBSRunner(i)
             rr.initialize(nodes=1, ppn=nparal, mail=mail, queue=queue, walltime=[0, nhours, 0, 0])
             structure_file = get_structure_file(i)
             if structure_file is None:
-                print 'No suitable structure was found on: ', i
+                print('No suitable structure was found on: ', i)
             rr.set_template('pcm_vasp_relaxator.py --binary %s --nparal %d --structure_file %s'
                             % (binary, nparal, structure_file))
             rr.write_pbs()

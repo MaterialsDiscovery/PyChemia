@@ -1,4 +1,4 @@
-import bz2
+from __future__ import print_function
 import gzip
 import hashlib
 import os
@@ -60,7 +60,7 @@ def get_int(value):
     if value.isdigit():
         return int(value)
     else:
-        print "ERROR: The value '%s' should be an integer" % value
+        print("ERROR: The value '%s' should be an integer" % value)
         sys.exit(2)
 
 
@@ -68,7 +68,7 @@ def get_float(value):
     try:
         ret = float(value)
     except ValueError:
-        print "ERROR: The value '%s' should be an float number" % value
+        print("ERROR: The value '%s' should be an float number" % value)
         sys.exit(2)
     return ret
 
@@ -90,8 +90,6 @@ def read_file(filename):
 
     if filename[-3:] == '.gz':
         rf = gzip.GzipFile(filename)
-    elif filename[-4:] == '.bz2':
-        rf = bz2.BZ2File(filename)
     elif filename[-4:] == '.zip':
         rf = zipfile.ZipFile(filename)
     else:

@@ -24,7 +24,7 @@ def cleaner():
 
 
 def usage(name):
-    print """
+    print("""
 NAME
     %s
 
@@ -53,7 +53,7 @@ OPTIONS
 
     --target_forces, -t <float> (Default: 1E-3)
         Target forces for internal relaxation
-""" % os.path.basename(name)
+""" % os.path.basename(name))
 
 
 def main(argv):
@@ -99,20 +99,20 @@ def main(argv):
 
     structure = pychemia.structure_from_file(structure_file)
     if structure is None:
-        print " ERROR: Invalid structure, no structure could be obtained from '%s'" % structure_file
+        print(" ERROR: Invalid structure, no structure could be obtained from '%s'" % structure_file)
         sys.exit(2)
 
     if structure_file == 'POSCAR':
         os.rename('POSCAR', 'POSCAR_original')
 
-    print "\n PyChemia VASP Relaxator"
-    print " =======================\n"
-    print " VASP binary         : ", binary
-    print " Energy tolerance    : ", energy_tol
-    print " Target forces       : ", target_forces
-    print " MPI number of procs : ", nparal
-    print " Structure           :\n"
-    print structure
+    print("\n PyChemia VASP Relaxator")
+    print(" =======================\n")
+    print(" VASP binary         : ", binary)
+    print(" Energy tolerance    : ", energy_tol)
+    print(" Target forces       : ", target_forces)
+    print(" MPI number of procs : ", nparal)
+    print(" Structure           :\n")
+    print(structure)
 
     wf = open(output_file, 'w')
     data = {'input': {'binary': binary,
@@ -124,15 +124,15 @@ def main(argv):
     wf.close()
 
     # First Round (Relaxing the original structure)
-    print '\nFirst Round'
-    print '==========='
+    print('\nFirst Round')
+    print('===========')
 
     cleaner()
-    print '\nConvergence of Cut-off Energy'
-    print '-----------------------------\n'
+    print('\nConvergence of Cut-off Energy')
+    print('-----------------------------\n')
     ce = ConvergenceCutOffEnergy(structure, energy_tolerance=energy_tol)
     if os.path.isfile('convergence_encut.json'):
-        print 'A previous convergence study was found, loading...'
+        print('A previous convergence study was found, loading...')
         ce.load()
     if not ce.is_converge:
         ce.run(nparal)
@@ -146,11 +146,11 @@ def main(argv):
     wf.close()
 
     cleaner()
-    print '\nConvergence of K-Point Grid'
-    print '---------------------------\n'
+    print('\nConvergence of K-Point Grid')
+    print('---------------------------\n')
     ck = ConvergenceKPointGrid(structure, encut=encut, energy_tolerance=energy_tol)
     if os.path.isfile('convergence_kpoints.json'):
-        print 'A previous convergence study was found, loading...'
+        print('A previous convergence study was found, loading...')
         ce.load()
     if not ce.is_converge:
         ce.run(nparal)
@@ -159,7 +159,7 @@ def main(argv):
     kp = ck.best_kpoints
 
     data['output'] = {'1R_KPOINTS': list(kp.grid)}
-    print data
+    print(data)
     wf = open(output_file, 'w')
     json.dump(data, wf)
     wf.close()
@@ -170,8 +170,8 @@ def main(argv):
     os.rename('convergence_kpoints.pdf', 'convergence_kpoints_phase1.pdf')
 
     cleaner()
-    print '\nIonic Relaxation'
-    print '----------------\n'
+    print('\nIonic Relaxation')
+    print('----------------\n')
     vr = IonRelaxation(structure=structure, encut=encut, kp_grid=kp.grid, workdir=workdir,
                        target_forces=10 * target_forces)
     vr.run(nparal)
@@ -187,12 +187,12 @@ def main(argv):
     # Second Round (Symetrize structure and redo convergences)
     st = symmetrize(structure)
 
-    print '\nSecond Round'
-    print '============'
+    print('\nSecond Round')
+    print('============')
 
     cleaner()
-    print '\nConvergence of K-Point Grid'
-    print '---------------------------\n'
+    print('\nConvergence of K-Point Grid')
+    print('---------------------------\n')
     ck = ConvergenceKPointGrid(st, encut=encut, energy_tolerance=energy_tol, recover=True)
     ck.run(nparal)
     ck.save()
@@ -205,8 +205,8 @@ def main(argv):
     wf.close()
 
     cleaner()
-    print '\nConvergence of Cut-off Energy'
-    print '-----------------------------\n'
+    print('\nConvergence of Cut-off Energy')
+    print('-----------------------------\n')
     ce = ConvergenceCutOffEnergy(st, energy_tolerance=energy_tol, kpoints=kp)
     ce.run(nparal)
     ce.save()
@@ -224,8 +224,8 @@ def main(argv):
     os.rename('convergence_kpoints.pdf', 'convergence_kpoints_phase2.pdf')
 
     cleaner()
-    print '\nIonic Relaxation'
-    print '----------------\n'
+    print('\nIonic Relaxation')
+    print('----------------\n')
     vr = IonRelaxation(structure=st, workdir='.', encut=encut, kp_grid=kp.grid, target_forces=target_forces)
     vr.run(nparal)
 

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import itertools
 import math
 from collections import OrderedDict
@@ -550,13 +551,13 @@ def gram_smith(v):
     ret = np.zeros((len(v[0]), len(v[0])))
 
     ret[0] = v[0] / np.linalg.norm(v[0])
-    print ret[0]
+    print(ret[0])
 
     for k in range(1, len(v[0])):
         ret[k] = v[k]
-        print k, ret[k]
+        print(k, ret[k])
         for j in range(0, k):
-            print j
+            print(j)
             ret[k] -= projector(ret[j], v[k])
         ret[k] /= np.linalg.norm(ret[k])
     return ret

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from __future__ import print_function
 import os
 import sys
 import json
@@ -9,7 +9,7 @@ filename = None
 if len(sys.argv) == 2:
     filename = sys.argv[1]
 else:
-    print 'Enter the JSON filename to store the data'
+    print('Enter the JSON filename to store the data')
     exit(1)
 
 dirs = [x for x in os.listdir('.') if os.path.isdir(x)]
@@ -20,27 +20,27 @@ for idir in dirs:
         try:
             st = pychemia.code.vasp.read_poscar(idir + '/POSCAR')
         except ValueError:
-            print 'Bad POSCAR\n\n' + open(idir + '/POSCAR').read()
+            print('Bad POSCAR\n\n' + open(idir + '/POSCAR').read())
             continue
         # shutil.copy2(idir+'/POSCAR',idir+'_POSCAR')
-        print idir, st.natom
+        print(idir, st.natom)
     else:
         st = pychemia.Structure.load_json(idir + '/structure.json')
         # shutil.copy2(idir+'/structure.json',idir+'_structure.json')
-        print 'ERROR:', idir, st.natom
+        print('ERROR:', idir, st.natom)
         continue
 
     if os.path.isfile(idir + '/OUTCAR'):
         try:
             vo = pychemia.code.vasp.VaspOutput(idir + '/OUTCAR')
         except ValueError:
-            print 'Error reading Vasp Output @ ' + idir + '/OUTCAR'
+            print('Error reading Vasp Output @ ' + idir + '/OUTCAR')
             continue
         if not vo.has_forces_stress_energy():
-            print 'Error extracting forces @ ' + idir + '/OUTCAR'
+            print('Error extracting forces @ ' + idir + '/OUTCAR')
             continue
     else:
-        print 'No OUTCAR found @ ' + idir
+        print('No OUTCAR found @ ' + idir)
         continue
 
     spacegroup = pychemia.symm.StructureSymmetry(st).number()

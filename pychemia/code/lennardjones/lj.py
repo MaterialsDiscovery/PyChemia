@@ -38,7 +38,7 @@ class LennardJones:
             forces = self.get_forces()
             maxforce = np.max(self.get_magnitude_forces())
             dt = max(100.0 / maxforce, 1.0)
-            print 'Steepest Descent maxforce= %9.3E   density=%7.4f dt=%7.3f' % (maxforce, self.structure.density, dt)
+            print('Steepest Descent maxforce= %9.3E   density=%7.4f dt=%7.3f' % (maxforce, self.structure.density, dt))
 
     def get_sigma_epsilon(self, i, j):
         specie1 = self.structure.symbols[i]
@@ -76,24 +76,24 @@ class LennardJones:
 
             if method in ['BFGS', 'CG']:
                 maxforce = np.max(np.apply_along_axis(np.linalg.norm, 1, np.array(res.jac).reshape((-1, 3))))
-                print '[%2d/%2d] MaxForce= %9.3E  Value= %12.5f' % (soft_call, soft_max_ncalls, maxforce, res.fun)
+                print('[%2d/%2d] MaxForce= %9.3E  Value= %12.5f' % (soft_call, soft_max_ncalls, maxforce, res.fun))
 
                 x0 = res.x
                 soft_call += 1
                 hard_call += 1
                 if maxforce < gtol:
-                    print 'The tolerance was reached: maxforce= %9.3E gtol= %9.3E' % (maxforce, gtol)
+                    print('The tolerance was reached: maxforce= %9.3E gtol= %9.3E' % (maxforce, gtol))
                     break
                 if soft_call > soft_max_ncalls:
-                    print 'Anomalous condition, maxforce= %9.3E gtol= %9.3E' % (maxforce, gtol)
+                    print('Anomalous condition, maxforce= %9.3E gtol= %9.3E' % (maxforce, gtol))
                     pos = np.array(x0).reshape((-1, 3))
                     mindis = np.min(np.array(np.array(scipy.spatial.distance_matrix(pos, pos)) +
                                              100 * np.eye(len(pos))).flatten())
                     x0 = np.array(1.0 / mindis * pos).flatten()
                     soft_call = 1
                 if hard_call > hard_max_ncalls:
-                    print 'Could not reach target forces, maxforce= %9.3E gtol= %9.3E' % (maxforce, gtol)
-                    print 'Hard limit reached, aborting local minimization'
+                    print('Could not reach target forces, maxforce= %9.3E gtol= %9.3E' % (maxforce, gtol))
+                    print('Hard limit reached, aborting local minimization')
                     break
             else:
                 break
@@ -154,10 +154,10 @@ def lj_compact_evaluate(structure, gtol, minimal_density):
         relax = lj.local_minimization()
         structure.set_positions(relax.x.reshape((-1, 3)))
         finden = structure.density
-        print 'Compacting Cluster with harmonic potential: Density I= %7.3f   F= %7.3f' % (iniden, finden)
+        print('Compacting Cluster with harmonic potential: Density I= %7.3f   F= %7.3f' % (iniden, finden))
         k += 1
         if k > 10:
-            print 'I tried too much...'
+            print('I tried too much...')
             break
 
     lj = pychemia.code.LennardJones(structure)

@@ -45,7 +45,7 @@ class FindSym:
         findre = re.findall('# CIF file[\s\w.#,-]*', self.data)
 
         if len(findre) != 1:
-            print 'ERROR: Not CIF data was found on FindSym output'
+            print('ERROR: Not CIF data was found on FindSym output')
             return
         else:
             cifdata = findre[0]

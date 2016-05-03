@@ -14,6 +14,6 @@ try:
 except ImportError:
     abinit = None
     scipy = None
-    print "scipy is not present in the system, the module 'pychemia.code.abinit' is disable"
+    print("scipy is not present in the system, the module 'pychemia.code.abinit' is disable")
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())
