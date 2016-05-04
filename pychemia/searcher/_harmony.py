@@ -1,6 +1,6 @@
 import random
 
-from _searcher import Searcher
+from ._searcher import Searcher
 from pychemia import pcm_log
 
 

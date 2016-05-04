@@ -67,43 +67,43 @@ def inquirer(ip, port):
     # Create a UDP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_address = (ip, port)
-    print >> sys.stderr, 'Connecting to %s:%d' % (ip, port)
+    print('Connecting to %s:%d' % (ip, port), file=sys.stderr)
 
     try:
         message = 'COUNT'
         # Send data
-        print >> sys.stderr, 'sending "%s"' % message
+        print('sending "%s"' % message, file=sys.stderr)
         sock.sendto(message, server_address)
 
         # Receive response
-        print >> sys.stderr, 'waiting to receive'
+        print('waiting to receive', file=sys.stderr)
         data, server = sock.recvfrom(4096)
-        print >> sys.stderr, 'received "%s"' % data
+        print('received "%s"' % data, file=sys.stderr)
 
         message = 'WORKDIR'
         # Send data
-        print >> sys.stderr, 'sending "%s"' % message
+        print('sending "%s"' % message, file=sys.stderr)
         sock.sendto(message, server_address)
 
         # Receive response
-        print >> sys.stderr, 'waiting to receive'
+        print('waiting to receive', file=sys.stderr)
         data, server = sock.recvfrom(4096)
-        print >> sys.stderr, 'received "%s"' % data
+        print('received "%s"' % data, file=sys.stderr)
         workdir = data
 
         message = 'GET'
         # Send data
-        print >> sys.stderr, 'sending "%s"' % message
+        print('sending "%s"' % message, file=sys.stderr)
         sock.sendto(message, server_address)
 
         # Receive response
-        print >> sys.stderr, 'waiting to receive'
+        print('waiting to receive', file=sys.stderr)
         data, server = sock.recvfrom(4096)
-        print >> sys.stderr, 'received "%s"' % data
+        print('received "%s"' % data, file=sys.stderr)
         entry_id = data
 
     finally:
-        print >> sys.stderr, 'closing socket'
+        print('closing socket', file=sys.stderr)
         sock.close()
 
     return workdir + os.sep + entry_id, entry_id
@@ -125,16 +125,16 @@ def finisher(entry_id, ip, port):
     try:
         message = 'FINISHED:' + str(entry_id)
         # Send data
-        print >> sys.stderr, 'sending "%s"' % message
+        print('sending "%s"' % message, file=sys.stderr)
         sock.sendto(message, server_address)
 
         # Receive response
-        print >> sys.stderr, 'waiting to receive'
+        print('waiting to receive', file=sys.stderr)
         data, server = sock.recvfrom(4096)
-        print >> sys.stderr, 'received "%s"' % data
+        print('received "%s"' % data, file=sys.stderr)
 
     finally:
-        print >> sys.stderr, 'closing socket'
+        print('closing socket', file=sys.stderr)
         sock.close()
 
 

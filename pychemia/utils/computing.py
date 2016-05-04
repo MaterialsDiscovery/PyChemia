@@ -19,11 +19,13 @@ def unicode2string(value):
 
     Example:
 >>> unicode2string(u'abc')
-'abc'
+u'abc'
 >>> unicode2string([u'abc'])
-['abc']
+[u'abc']
 >>> unicode2string({u'abc': u'def'})
-{'abc': 'def'}
+{u'abc': u'def'}
+>>> unicode2string('abc')
+'abc'
     """
     if isinstance(value, dict):
         ret = {}
@@ -49,14 +51,24 @@ def convert_color(s):
     :return: (tuple) With 3 floats representing the color in RGB
     :rtype : tuple
 
->>> import pychemia
->>> pychemia.utils.computing.convert_color('FF5500')
+    Example:
+>>> convert_color('FF5500')
 (1.0, 0.3333333333333333, 0.0)
     """
     return float(int(s[:2], 16)) / 255, float(int(s[2:4], 16)) / 255, float(int(s[4:6], 16)) / 255
 
 
 def get_int(value):
+    """
+    Convert a string to an integer
+
+    :param value: (str)
+    :return: (int)
+
+    Example:
+>>> get_int('3')
+3
+    """
     if value.isdigit():
         return int(value)
     else:
@@ -65,15 +77,40 @@ def get_int(value):
 
 
 def get_float(value):
+    """
+    Convert a string to a float number
+
+    :param value: (str)
+    :return: (float)
+
+    Example:
+>>> get_float('3.0')
+3.0
+    """
     try:
         ret = float(value)
     except ValueError:
-        print("ERROR: The value '%s' should be an float number" % value)
-        sys.exit(2)
+        raise ValueError("Could not convert '%s' into a float number" % value)
     return ret
 
 
 def hashfile(filename):
+    """
+    Get the MD5 hash sum of a given file
+
+    :param filename: (str)
+    :return: (str)
+
+>>> import tempfile
+>>> a = tempfile.NamedTemporaryFile()
+>>> hashfile(a.name)
+'d41d8cd98f00b204e9800998ecf8427e'
+>>> a = tempfile.NamedTemporaryFile('w')
+>>> a.file.write(128000*'GAF')
+>>> a.file.flush()
+>>> hashfile(a.name)
+'7b8a4f8a3ce222580765d577df78b782'
+    """
     blocksize = 65536
     hasher = hashlib.md5()
     with open(filename, 'rb') as afile:
@@ -85,8 +122,21 @@ def hashfile(filename):
 
 
 def read_file(filename):
+    """
+    General function to open files even if they are
+    compressed
+
+    :param filename:
+    :return:
+
+    Example:
+>>> import tempfile
+>>> a = tempfile.NamedTemporaryFile()
+>>> read_file(a.name)
+''
+    """
     if not os.path.exists(filename):
-        raise ValueError('Could not open file: ', filename)
+        raise ValueError('Could not open file: %s' % filename)
 
     if filename[-3:] == '.gz':
         rf = gzip.GzipFile(filename)
@@ -103,5 +153,9 @@ def only_ascii(string):
 
     :param string:
     :return:
+
+    Example:
+>>> only_ascii(u'lmnopq')
+u'lmnopq'
     """
     return "".join(x for x in string if ord(x) < 128)

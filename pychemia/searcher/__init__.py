@@ -2,13 +2,13 @@
 Routines related to stochastic optimization techniques
 """
 
-from _annealing import SimulatedAnnealing
-from _bee import BeeAlgorithm
-from _firefly import FireFly
-from _genetic import GeneticAlgorithm
-from _grey import GreyWolf
-from _harmony import HarmonySearch
-from _swarm import ParticleSwarm
+from ._annealing import SimulatedAnnealing
+from ._bee import BeeAlgorithm
+from ._firefly import FireFly
+from ._genetic import GeneticAlgorithm
+from ._grey import GreyWolf
+from ._harmony import HarmonySearch
+from ._swarm import ParticleSwarm
 
 from pychemia import HAS_MATPLOTLIB
 

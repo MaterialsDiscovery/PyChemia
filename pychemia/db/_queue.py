@@ -104,7 +104,7 @@ class PyChemiaQueue:
         if variables is not None and code is None:
             raise ValueError("Input variables requiere code name")
         if variables is None and code is not None:
-            raise ValueError("Input variables requiere code name")
+            raise ValueError("Input variables require code name")
 
         entry = {'input': {}, 'output': {}, 'job': {}, 'meta': {'submitted': False,
                                                                 'priority': priority,
@@ -114,7 +114,7 @@ class PyChemiaQueue:
                                                                 'db_id': db_id}}
         entry_id = self.db.pychemia_entries.insert(entry)
 
-        self.db.pychemia_entries.update({'_id': entry_id}, {'$currentDate': {'meta.CreationDate': True}})
+        self.db.pychemia_entries.update_one({'_id': entry_id}, {'$currentDate': {'meta.CreationDate': True}})
 
         if structure is not None:
             self.set_input_structure(entry_id, structure)

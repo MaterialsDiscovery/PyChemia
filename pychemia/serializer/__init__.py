@@ -1,1 +1,1 @@
-from serializer import PyChemiaJsonable, generic_serializer
+from .serializer import PyChemiaJsonable, generic_serializer

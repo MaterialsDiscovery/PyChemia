@@ -24,6 +24,7 @@ class LJCluster(Population):
         self.minimal_density = minimal_density
         self.refine = refine
         Population.__init__(self, name, tag)
+        print(self.minimal_density)
 
     def add_random(self):
         """
@@ -150,7 +151,8 @@ class LJCluster(Population):
                 'tag': self.tag,
                 'target_forces': self.target_forces,
                 'value_tol': self.value_tol,
-                'distance_tol': self.distance_tol}
+                'distance_tol': self.distance_tol,
+                'minimal_density': self.minimal_density}
 
     def get_duplicates(self, ids, fast=False):
         dupes_dict = {}
@@ -205,7 +207,8 @@ class LJCluster(Population):
                          tag=population_dict['tag'],
                          target_forces=population_dict['target_forces'],
                          value_tol=population_dict['value_tol'],
-                         distance_tol=population_dict['distance_tol'])
+                         distance_tol=population_dict['distance_tol'],
+                         minimal_density=population_dict['minimal_density'])
 
     def move(self, entry_id, entry_jd, factor=0.2, in_place=False):
 
@@ -267,7 +270,7 @@ class LJCluster(Population):
         if gtol is None:
             gtol = self.target_forces
 
-        print('Evaluating', entry_id)
+        print('Evaluating %s target density= %7.3F' % (entry_id, self.minimal_density))
         structure = self.get_structure(entry_id)
 
         positions, forces, energy = lj_compact_evaluate(structure, gtol, self.minimal_density)
@@ -360,6 +363,7 @@ class LJCluster(Population):
             self.value_tol = data['value_tol']
             self.name = data['name']
             self.target_forces = data['target_forces']
+            self.minimal_density = data['minimal_density']
 
     def value(self, entry_id):
         entry = self.get_entry(entry_id)

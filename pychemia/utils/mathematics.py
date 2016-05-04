@@ -4,9 +4,7 @@ import math
 from collections import OrderedDict
 from fractions import gcd
 from math import cos, sin, sqrt
-
 import numpy as np
-from scipy import weave
 
 
 def length_vector(v):
@@ -481,28 +479,86 @@ def rotate_towards_axis(vector, axis, theta=None, fraction=None):
 
 
 def rotation_x(theta):
+    """
+    Create a rotation matrix around the 'x' axis
+
+    :param theta: (float) Angle in radians
+    :return: (numpy.ndarray)
+
+    Example:
+>>> import numpy as np
+>>> m = rotation_x(np.pi/3)
+>>> np.all(np.round(np.dot(m.T,m),15)==np.eye(3))
+True
+    """
     return np.array([[1, 0, 0],
                      [0, np.cos(theta), -np.sin(theta)],
                      [0, np.sin(theta), np.cos(theta)]])
 
 
 def rotation_y(theta):
+    """
+    Create a rotation matrix around the 'y' axis
+
+    :param theta: (float) Angle in radians
+    :return: (numpy.ndarray)
+
+    Example:
+>>> import numpy as np
+>>> m = rotation_y(np.pi/3)
+>>> np.all(np.round(np.dot(m.T,m),15)==np.eye(3))
+True
+    """
     return np.array([[np.cos(theta), 0, np.sin(theta)],
                      [0, 1, 0],
                      [-np.sin(theta), 0, np.cos(theta)]])
 
 
 def rotation_z(theta):
+    """
+    Create a rotation matrix around the 'z' axis
+
+    :param theta: (float) Angle in radians
+    :return: (numpy.ndarray)
+
+    Example:
+>>> import numpy as np
+>>> m = rotation_z(np.pi/3)
+>>> np.all(np.round(np.dot(m.T,m),15)==np.eye(3))
+True
+    """
     return np.array([[np.cos(theta), -np.sin(theta), 0],
                      [np.sin(theta), np.cos(theta), 0],
                      [0, 0, 1]])
 
 
 def apply_rotation(vector, theta_x, theta_y, theta_z):
+    """
+    Apply a rotation matrix to a vector by succesive rotations around
+    the three axis 'x', 'y' and 'z'
+
+    :param vector:
+    :param theta_x: (float) Angle in radians
+    :param theta_y: (float) Angle in radians
+    :param theta_z: (float) Angle in radians
+    :return: (numpy.ndarray)
+
+  Example:
+>>> a=apply_rotation([0.1, 0.2, 0.3], 3.1415/3, 3.1415/4, 3.1415/5)
+>>> b=apply_rotation(a, -3.1415/3, 0, 0)
+>>> c=apply_rotation(b, 0, -3.1415/4, 0)
+>>> d=apply_rotation(c, 0, 0, -3.1415/5)
+>>> d
+array([ 0.1,  0.2,  0.3])
+    """
     return np.round(np.dot(rotation_x(theta_x), np.dot(rotation_y(theta_y), np.dot(rotation_z(theta_z), vector))), 14)
 
 
 def rotation_matrix_weave(axis, theta, mat=None):
+    try:
+        from scipy import weave
+    except ImportError:
+        raise NotImplementedError
     if mat is None:
         mat = np.eye(3, 3)
 
@@ -544,26 +600,67 @@ def rotation_matrix_numpy(axis, theta):
 
 
 def projector(u, v):
-    return np.dot(v, u) / np.dot(u, u) * u
+    """
+    Computes the projector of 'v' over 'u'
+    A vector in the direction of 'u' with a
+    magnitude of the projection of 'v' over 'u'
+
+    :param u:
+    :param v:
+    :return:
+
+    Example:
+>>> projector([0.1, 0.2, 0.3], [0.3, 0.2, 0.1])
+array([ 0.07142857,  0.14285714,  0.21428571])
+>>> projector([1, 0, 0], [0, 2, 0])
+array([0, 0, 0])
+    """
+    return np.dot(v, u) / np.dot(u, u) * np.array(u)
 
 
-def gram_smith(v):
-    ret = np.zeros((len(v[0]), len(v[0])))
+def gram_smith(m):
+    """
+    Create a Gram-Smith ortoganalized
+    matrix, using the first vector of
+    matrix 'm' to build the ortogonal
+    set of vectors
 
-    ret[0] = v[0] / np.linalg.norm(v[0])
-    print(ret[0])
+    :param m:
+    :return:
 
-    for k in range(1, len(v[0])):
-        ret[k] = v[k]
-        print(k, ret[k])
+    Example:
+>>> import numpy as np
+>>> o = gram_smith(np.random.rand(3,3))
+>>> np.round(np.abs(np.linalg.det(o)),10)==1.0
+True
+    """
+    m = np.array(m)
+    ret = np.zeros((len(m[0]), len(m[0])))
+    ret[0] = m[0] / np.linalg.norm(m[0])
+    for k in range(1, len(m[0])):
+        ret[k] = m[k]
         for j in range(0, k):
-            print(j)
-            ret[k] -= projector(ret[j], v[k])
+            ret[k] -= projector(ret[j], m[k])
         ret[k] /= np.linalg.norm(ret[k])
     return ret
 
 
 def gram_smith_qr(ndim):
+    """
+    Create a Gram-Smith orthoganalized matrix.
+    The argument is the dimension of the matrix
+    and uses a random matrix and QR decomposition
+    to build the orthogonal matrix
+
+    :param m:
+    :return:
+
+    Example:
+>>> import numpy as np
+>>> o = gram_smith_qr(3)
+>>> np.round(np.abs(np.linalg.det(o)),10)==1.0
+True
+    """
     matrix_a = np.random.rand(ndim, ndim)
     while np.linalg.det(matrix_a) < 1E-5:
         matrix_a = np.random.rand(ndim, ndim)

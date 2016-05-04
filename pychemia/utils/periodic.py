@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import str
 import numpy as _np
 
 # 118 Elements to date
@@ -249,6 +251,9 @@ def _get_property(table, value=None, scale_factor=1):
            number of the element
         scaling factor: (float) Scaling factor for the
     """
+    if hasattr(value, 'decode'):
+        value = value.decode()
+
     ret = None
     if value is None:
         ret = {}
@@ -258,9 +263,9 @@ def _get_property(table, value=None, scale_factor=1):
         ret = (scale_factor * table[value]) if value is not None else None
     elif isinstance(value, float):
         ret = (scale_factor * table[int(value)]) if value is not None else None
-    elif isinstance(value, basestring) and value in atomic_symbols:
+    elif isinstance(value, str) and value in atomic_symbols:
         ret = scale_factor * table[atomic_number(value)]
-    elif _np.iterable(value):
+    else:
         try:
             ret = [scale_factor * table[int(x)] for x in value]
         except ValueError:
@@ -269,7 +274,6 @@ def _get_property(table, value=None, scale_factor=1):
             else:
                 ret = [scale_factor * table[int(x)] for x in
                        atomic_number(value)]
-
     return ret
 
 
@@ -287,8 +291,6 @@ def valence(value=None):
         The valence of the element/s
 
     Examples:
-
-    >>> from pychemia.utils.periodic import valence
     >>> valence(1)
     1
     >>> valence([1, 2])
@@ -300,10 +302,34 @@ def valence(value=None):
 
 
 def period(value=None):
+    """
+    Return the period of the element(s)
+
+    :param value:
+    :return:
+
+    Examples:
+>>> period('C')
+2
+>>> period(['Au', 'Sb'])
+[6, 5]
+    """
     return _get_property(periods, value)
 
 
 def group(value=None):
+    """
+    Return the group of the element(s)
+
+    :param value:
+    :return:
+
+    Examples:
+>>> group('C')
+14
+>>> group(['Au', 'Sb'])
+[11, 15]
+    """
     table = []
     for i in groups:
         if i is None:
@@ -315,6 +341,18 @@ def group(value=None):
 
 
 def block(value=None):
+    """
+    Return the orbital block of the element(s)
+
+    :param value:
+    :return:
+
+    Examples:
+>>> block('C')
+'p'
+>>> block(['Au', 'Sb'])
+['d', 'p']
+    """
     table = []
     for i in blocks:
         if i is None:
@@ -350,8 +388,9 @@ def covalent_radius(value=None):
         By default the return value is in angstroms
 
     Examples:
-    >>> from pychemia.utils.periodic import covalent_radius
     >>> covalent_radius('H')
+    0.31
+    >>> covalent_radius(1.0)
     0.31
     >>> covalent_radius(1)
     0.31
@@ -379,7 +418,6 @@ def atomic_symbol(value=None):
 
     Examples:
 
-    >>> from pychemia.utils.periodic import atomic_symbol
     >>> atomic_symbol(1)
     'H'
     >>> atomic_symbol([1, 2])
@@ -417,7 +455,6 @@ def mass(value=None):
 
     Examples:
 
-    >>> from pychemia.utils.periodic import mass
     >>> mass(1)
     1.00794
     >>> mass([1, 2])
@@ -428,13 +465,13 @@ def mass(value=None):
     return _get_property(masses, value)
 
 
-def atomic_number(value):
+def atomic_number(arg):
     """
-    Return the atomic number(s) of a symbol of list of integers
+    Return the atomic number(s) of a symbol or list of atomic symbols
     The argument could be an string or list of strings
 
     Args:
-        value: (str,list) atomic symbol or list
+        arg: (str,list) atomic symbol or list
                of atomic symbols
 
     Return:
@@ -442,20 +479,19 @@ def atomic_number(value):
 
     Examples:
 
-    >>> from pychemia.utils.periodic import atomic_number
     >>> atomic_number('H')
     1
     >>> atomic_number(['H', u'He'])
     [1, 2]
     """
     symbol_dict = dict(atomic_symbol())
-
-    if isinstance(value, basestring) and value in atomic_symbols:
-        ret = symbol_dict[str(value)]
-    elif isinstance(value, list):
-        assert (all([x in atomic_symbols for x in value]))
-        ret = [symbol_dict[x] for x in value]
-    else:
-        assert (all([x in atomic_symbols for x in value]))
-        ret = [symbol_dict[x] for x in value]
-    return ret
+    if hasattr(arg, 'decode'):
+        arg = arg.decode()
+    if isinstance(arg, str):
+        if arg not in atomic_symbols:
+            raise ValueError('Atomic symbol not found')
+        return symbol_dict[str(arg)]
+    try:
+        return [atomic_number(x) for x in arg]
+    except TypeError:  # catch when for loop fails
+        raise ValueError('Argument not recognized as atomic symbol or list of atomic symbols')

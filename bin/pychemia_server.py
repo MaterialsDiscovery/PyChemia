@@ -67,25 +67,25 @@ def listener(dbsettings, ip, port, workdir):
 
     # Bind the socket to the port
     server_address = (ip, port)
-    print >> sys.stderr, 'starting up on %s port %s' % server_address
+    print('starting up on %s port %s' % server_address, file=sys.stderr)
     sock.bind(server_address)
 
     pcq = get_database(dbsettings)
 
     while True:
-        print >> sys.stderr, '\nwaiting to receive message'
+        print('\nwaiting to receive message', file=sys.stderr)
         data, address = sock.recvfrom(4096)
 
-        print >> sys.stderr, 'received %s bytes from %s' % (len(data), address)
-        print >> sys.stderr, data
+        print('received %s bytes from %s' % (len(data), address), file=sys.stderr)
+        print(data, file=sys.stderr)
 
         if data == 'COUNT':
             ans = str(pcq.db.pychemia_entries.count())
             sent = sock.sendto(ans, address)
-            print >> sys.stderr, 'sent %s bytes back to %s' % (sent, address)
+            print('sent %s bytes back to %s' % (sent, address), file=sys.stderr)
         if data == 'WORKDIR':
             sent = sock.sendto(workdir, address)
-            print >> sys.stderr, 'sent %s bytes back to %s' % (sent, address)
+            print('sent %s bytes back to %s' % (sent, address), file=sys.stderr)
         if data == 'GET':
             # Selectiong an entry not submitted for execution
             entry = pcq.db.pychemia_entries.find_one({'meta.submitted': False}, {'_id': 1})
@@ -96,13 +96,13 @@ def listener(dbsettings, ip, port, workdir):
             else:
                 entry_id = ''
             sent = sock.sendto(str(entry_id), address)
-            print >> sys.stderr, 'sent %s bytes back to %s' % (sent, address)
+            print('sent %s bytes back to %s' % (sent, address), file=sys.stderr)
         if data.startswith('FINISHED:'):
             entry_id = ObjectId(data.split(':')[1])
             collect(entry_id, pcq, workdir)
             pcq.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'meta.finished': True}})
             sent = sock.sendto('OK', address)
-            print >> sys.stderr, 'sent %s bytes back to %s' % (sent, address)
+            print('sent %s bytes back to %s' % (sent, address), file=sys.stderr)
 
 
 def deploy(entry_id, pychemia_queue, basedir):

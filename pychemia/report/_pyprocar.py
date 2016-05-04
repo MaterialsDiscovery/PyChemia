@@ -1,6 +1,5 @@
 import numpy as np
-
-import procar
+from . import procar
 
 
 class BandStructure:

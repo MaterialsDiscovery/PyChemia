@@ -2,7 +2,6 @@ import pychemia
 
 try:
     import spglib as spg
-
     USE_SPGLIB = True
 except ImportError:
     USE_SPGLIB = False

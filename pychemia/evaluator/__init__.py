@@ -2,11 +2,10 @@ import os as _os
 import shutil as _shutil
 import subprocess as _subprocess
 from abc import ABCMeta, abstractmethod, abstractproperty
-
-from _function import FunctionEvaluator, FunctionObjectiveFunction
-from cluster import cluster_worker, cluster_evaluator, cluster_launcher
-from cluster_fireball import cluster_fb_evaluator, cluster_fb_launcher, cluster_fb_worker
-from direct_evaluator import DirectEvaluator
+from ._function import FunctionEvaluator, FunctionObjectiveFunction
+from .cluster import cluster_worker, cluster_evaluator, cluster_launcher
+from .cluster_fireball import cluster_fb_evaluator, cluster_fb_launcher, cluster_fb_worker
+from .direct_evaluator import DirectEvaluator
 
 
 def execute(basedir, command, script):

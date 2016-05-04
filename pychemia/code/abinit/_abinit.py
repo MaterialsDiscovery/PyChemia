@@ -1,6 +1,6 @@
 import os
-from _abifiles import AbiFiles
-from _input import InputVariables
+from ._abifiles import AbiFiles
+from ._input import InputVariables
 from pychemia.code import Codes
 
 

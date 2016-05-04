@@ -1,4 +1,4 @@
-from _searcher import Searcher
+from ._searcher import Searcher
 
 
 class AntColony(Searcher):

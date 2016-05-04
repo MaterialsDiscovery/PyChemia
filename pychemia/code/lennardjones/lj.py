@@ -76,13 +76,15 @@ class LennardJones:
 
             if method in ['BFGS', 'CG']:
                 maxforce = np.max(np.apply_along_axis(np.linalg.norm, 1, np.array(res.jac).reshape((-1, 3))))
-                print('[%2d/%2d] MaxForce= %9.3E  Value= %12.5f' % (soft_call, soft_max_ncalls, maxforce, res.fun))
+                print('[%2d/%2d] MaxForce/gtol= %9.3E/%9.3E  Value= %12.5f' % (soft_call,
+                                                                               soft_max_ncalls,
+                                                                               maxforce, gtol,
+                                                                               res.fun))
 
                 x0 = res.x
                 soft_call += 1
                 hard_call += 1
                 if maxforce < gtol:
-                    print('The tolerance was reached: maxforce= %9.3E gtol= %9.3E' % (maxforce, gtol))
                     break
                 if soft_call > soft_max_ncalls:
                     print('Anomalous condition, maxforce= %9.3E gtol= %9.3E' % (maxforce, gtol))
@@ -151,10 +153,11 @@ def lj_compact_evaluate(structure, gtol, minimal_density):
     while structure.density < minimal_density:
         iniden = structure.density
         lj = pychemia.code.LennardJones(structure, cp=k)
-        relax = lj.local_minimization()
+        relax = lj.local_minimization(gtol=gtol)
         structure.set_positions(relax.x.reshape((-1, 3)))
         finden = structure.density
-        print('Compacting Cluster with harmonic potential: Density I= %7.3f   F= %7.3f' % (iniden, finden))
+        print('Compacting Cluster (target_density=%7.3f): Density I= %7.3f   F= %7.3f' % (minimal_density,
+                                                                                          iniden, finden))
         k += 1
         if k > 10:
             print('I tried too much...')
