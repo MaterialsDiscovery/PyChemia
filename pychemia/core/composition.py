@@ -2,6 +2,8 @@ from numpy import array, argsort
 from fractions import gcd as _gcd
 from math import pi
 from pychemia.utils.periodic import atomic_symbols, electronegativity, atomic_number, covalent_radius
+from builtins import str
+from functools import reduce
 
 
 class Composition:
@@ -42,8 +44,9 @@ class Composition:
 >>> len(comp)
 0
         """
-
-        if isinstance(value, basestring):
+        if hasattr(value, 'decode'):
+            value = value.decode()
+        if isinstance(value, str):
             self._set_composition(self.formula_parser(value))
         elif isinstance(value, dict):
             self._set_composition(value)
@@ -274,7 +277,7 @@ True
 'CH2'
 >>> comp = pychemia.Composition('IBr')
 >>> comp.sorted_formula(sortby='hill', reduced=False)
-'BrI'
+u'BrI'
 >>> comp = pychemia.Composition('Cl4C')
 >>> comp.sorted_formula(sortby='hill', reduced=False)
 'CCl4'

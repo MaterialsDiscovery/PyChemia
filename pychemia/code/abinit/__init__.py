@@ -7,7 +7,7 @@ ABINIT '_OUT.nc' output files
 
 """
 from pychemia import HAS_SCIPY
-import task
+from . import task
 
 if HAS_SCIPY:
     from ._abifiles import AbiFiles
