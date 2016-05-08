@@ -5,7 +5,7 @@ import subprocess
 import numpy as np
 
 from pychemia import pcm_log, Structure
-from pychemia.serializer import generic_serializer
+from pychemia.utils.serializer import generic_serializer
 from pychemia.utils.periodic import atomic_number, atomic_symbol
 from .._codes import Codes
 

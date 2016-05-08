@@ -7,13 +7,9 @@ from . import vasp
 from . import dftb
 from .lennardjones import LennardJones
 from . import fireball
+from pychemia import HAS_SCIPY
 
-try:
-    import scipy
-    import abinit
-except ImportError:
-    abinit = None
-    scipy = None
-    print("scipy is not present in the system, the module 'pychemia.code.abinit' is disable")
+if HAS_SCIPY:
+    from . import abinit
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

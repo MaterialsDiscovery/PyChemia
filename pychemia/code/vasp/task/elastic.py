@@ -5,7 +5,7 @@ import json
 import numpy as np
 from pychemia.dft import KPoints
 from pychemia import pcm_log
-from pychemia.serializer import generic_serializer
+from pychemia.utils.serializer import generic_serializer
 from .._vasp import VaspJob
 from .._outcar import read_vasp_stdout
 from ..._tasks import Task

@@ -114,7 +114,6 @@ from . import symm
 from . import utils
 from . import web
 from . import external
-from . import serializer
 from ._info import __author__, __copyright__, __version__, __email__, __status__, __date__, Version
 from . import code
 from . import population

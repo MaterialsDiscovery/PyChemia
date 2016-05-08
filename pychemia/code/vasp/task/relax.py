@@ -8,7 +8,7 @@ import numpy as np
 
 from pychemia import pcm_log
 from pychemia.dft import KPoints
-from pychemia.serializer import generic_serializer
+from pychemia.utils.serializer import generic_serializer
 from pychemia.utils.mathematics import round_small
 from .._incar import InputVariables
 from .._outcar import VaspOutput, read_vasp_stdout

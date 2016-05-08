@@ -1,13 +1,15 @@
+from __future__ import unicode_literals
 from numpy import array, argsort
 from fractions import gcd as _gcd
 from math import pi
 from pychemia.utils.periodic import atomic_symbols, electronegativity, atomic_number, covalent_radius
+from pychemia.utils.computing import deep_unicode
 from builtins import str
 from functools import reduce
 
 
 class Composition:
-    """
+    u"""
     The class Composition is basically a dictionary with species as keys and
     number of atoms of that specie as values. The methods provided for Composition objects should
     not contain geometrical information or graph connectivity.
@@ -31,7 +33,7 @@ class Composition:
 >>> import pychemia
 >>> comp = pychemia.Composition({'Ba': 2, 'Cu': 3, 'O': 7, 'Y': 1})
 >>> comp.formula
-'Ba2Cu3O7Y'
+u'Ba2Cu3O7Y'
 >>> comp = pychemia.Composition('Ba2Cu3O7Y')
 >>> comp2 = pychemia.Composition(comp)
 >>> len(comp2)
@@ -44,8 +46,8 @@ class Composition:
 >>> len(comp)
 0
         """
-        if hasattr(value, 'decode'):
-            value = value.decode()
+        if value is not None:
+            value = deep_unicode(value)
         if isinstance(value, str):
             self._set_composition(self.formula_parser(value))
         elif isinstance(value, dict):
@@ -110,10 +112,10 @@ class Composition:
 >>> import pychemia
 >>> import pprint
 >>> pychemia.Composition.formula_parser('Au20')
-{'Au': 20}
+{u'Au': 20}
 >>> ret = pychemia.Composition.formula_parser('UutUupUusUuo')
 >>> pprint.pprint(ret)
-{'Uuo': 1, 'Uup': 1, 'Uus': 1, 'Uut': 1}
+{u'Uuo': 1, u'Uup': 1, u'Uus': 1, u'Uut': 1}
         """
         ret = {}
         jump = False
@@ -161,7 +163,7 @@ class Composition:
         Examples:
 >>> import pychemia
 >>> pychemia.Composition.formula_to_list('NaCl')
-['Na', 'Cl']
+[u'Na', u'Cl']
 >>> flist = pychemia.Composition.formula_to_list(u'Uut2Uup3Uus4Uuo5')
 >>> len(flist)
 14
@@ -218,7 +220,7 @@ True
             number_atoms_specie = self.composition[specie]
             for i in range(number_atoms_specie):
                 ret.append(specie)
-        return ret
+        return deep_unicode(ret)
 
     @property
     def species(self):
@@ -227,7 +229,7 @@ True
 
         :rtype: list
         """
-        return self._composition.keys()
+        return deep_unicode(sorted(list(self._composition.keys())))
 
     @property
     def nspecies(self):
@@ -264,43 +266,41 @@ True
 
         :rtype: str
 
->>> import pychemia
->>> comp=pychemia.Composition('YBa2Cu3O7')
+>>> comp=Composition('YBa2Cu3O7')
 >>> comp.sorted_formula()
-'Ba2Cu3O7Y'
+u'Ba2Cu3O7Y'
 >>> comp.sorted_formula(sortby='hill')
-'Ba2Cu3O7Y'
+u'Ba2Cu3O7Y'
 >>> comp.sorted_formula(sortby='electroneg')
-'Ba2YCu3O7'
->>> comp = pychemia.Composition('H10C5')
+u'Ba2YCu3O7'
+>>> comp = Composition('H10C5')
 >>> comp.sorted_formula(sortby='hill', reduced=True)
-'CH2'
->>> comp = pychemia.Composition('IBr')
+u'CH2'
+>>> comp = Composition('IBr')
 >>> comp.sorted_formula(sortby='hill', reduced=False)
 u'BrI'
->>> comp = pychemia.Composition('Cl4C')
+>>> comp = Composition('Cl4C')
 >>> comp.sorted_formula(sortby='hill', reduced=False)
-'CCl4'
->>> comp = pychemia.Composition('IH3C')
+u'CCl4'
+>>> comp = Composition('IH3C')
 >>> comp.sorted_formula(sortby='hill', reduced=False)
-'CH3I'
->>> comp = pychemia.Composition('BrH5C2')
+u'CH3I'
+>>> comp = Composition('BrH5C2')
 >>> comp.sorted_formula(sortby='hill', reduced=False)
-'C2H5Br'
->>> comp = pychemia.Composition('S04H2')
+u'C2H5Br'
+>>> comp = Composition('S04H2')
 >>> comp.sorted_formula(sortby='hill', reduced=False)
-'H2S4'
->>> comp = pychemia.Composition('SO4H2')
+u'H2S4'
+>>> comp = Composition('SO4H2')
 >>> comp.sorted_formula(sortby='hill', reduced=False)
-'H2O4S'
+u'H2O4S'
         """
         if reduced and self.gcd > 1:
             comp = Composition(self.composition)
             for i in comp.composition:
-                comp._composition[i] /= self.gcd
+                comp._composition[i] //= self.gcd
         else:
             comp = self
-        ret = ''
         if sortby == 'electroneg':
             electroneg = electronegativity(comp.species)
             for i in range(len(electroneg)):
@@ -319,11 +319,12 @@ u'BrI'
             sortedspecies += presortedspecies
         else:
             sortedspecies = sorted(comp.species)
+        ret = u''
         for specie in sortedspecies:
-            ret += specie
+            ret += '%s' % specie
             if comp.composition[specie] > 1:
-                ret += str(comp.composition[specie])
-        return ret
+                ret += "%d" % comp.composition[specie]
+        return deep_unicode(ret)
 
     def species_bin(self):
         spec_bin = 0

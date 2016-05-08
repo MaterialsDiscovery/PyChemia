@@ -6,7 +6,7 @@ import numbers
 from pychemia.code import Codes
 from pychemia.dft import KPoints
 from pychemia import Structure, pcm_log
-from pychemia.serializer import generic_serializer
+from pychemia.utils.serializer import generic_serializer
 
 
 class DFTBplus(Codes):

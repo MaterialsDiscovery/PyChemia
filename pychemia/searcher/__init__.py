@@ -13,7 +13,7 @@ from ._swarm import ParticleSwarm
 from pychemia import HAS_MATPLOTLIB
 
 if HAS_MATPLOTLIB:
-    from plot import plot_evolution_circular
+    from .plot import plot_evolution_circular
 
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

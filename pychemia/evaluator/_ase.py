@@ -7,7 +7,7 @@ from ase.optimize import QuasiNewton
 from ase.constraints import FixAtoms, UnitCellFilter
 import pychemia
 import pychemia.external.ase
-from pychemia.serializer import generic_serializer
+from pychemia.utils.serializer import generic_serializer
 
 
 class AseObjectiveFunction:

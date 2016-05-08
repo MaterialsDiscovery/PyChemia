@@ -1,7 +1,10 @@
+from __future__ import unicode_literals
+from builtins import str
 import math
 import os
 import re
 from numbers import Number
+from pychemia.utils.computing import deep_unicode
 
 import numpy as np
 
@@ -183,6 +186,7 @@ class InputVariables:
             return
 
         value = self.variables[varname]
+        value = deep_unicode(value)
         if isinstance(value, bool):
             if value:
                 ret += '.TRUE.'
@@ -190,7 +194,7 @@ class InputVariables:
                 ret += '.FALSE.'
         elif isinstance(value, Number):
             ret += str(value)
-        elif isinstance(value, basestring):
+        elif isinstance(value, str):
             ret += value
         else:
             # Assume that the variables are integer and test if such assumption
@@ -324,7 +328,7 @@ class InputVariables:
         self.variables['NPAR'] = 2
 
     def set_mit_settings(self):
-        self.set_minimum(PREC='Accurate', ISPIN=2, LREAL=None, ISMEAR=-5, LORBIT=11)
+        self.set_minimum(PREC='Accurate', ISPIN=2, LREAL=False, ISMEAR=-5, LORBIT=11)
         self.set_electron_scf(NELM=100, NELMIN=6, EDIFF=5E-5, IALGO=48)
         self.set_ion_relax(NSW=99, ISIF=3, IBRION=2, EDIFFG=-1E-3)
         self.variables['LWAVE'] = False
@@ -354,7 +358,8 @@ class InputVariables:
             raise ValueError('Input variables does not contain value for "%s"' % varname)
 
         value = self.variables[varname]
-        if return_iterable and isinstance(value, (int, float, basestring)):
+        value = deep_unicode(value)
+        if return_iterable and isinstance(value, (int, float, str)):
             value = [value]
 
         return value

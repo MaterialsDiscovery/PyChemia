@@ -1,4 +1,6 @@
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
+from builtins import str
+from numbers import Number
 import gzip
 import hashlib
 import os
@@ -6,9 +8,9 @@ import sys
 import zipfile
 
 
-def unicode2string(value):
+def deep_unicode(value):
     """
-    Recursively convert the unicode elements of a python object into python strings.
+    Recursively convert to unicode all string-like elements of a complex object.
     Use with care for objects that could not be converted properly to string
     This is safe for things like Atom names and symbols
 
@@ -18,28 +20,33 @@ def unicode2string(value):
     :rtype : (str, list, dict)
 
     Example:
->>> unicode2string(u'abc')
+>>> deep_unicode(u'abc')
 u'abc'
->>> unicode2string([u'abc'])
+>>> deep_unicode([u'abc'])
 [u'abc']
->>> unicode2string({u'abc': u'def'})
+>>> deep_unicode({u'abc': u'def'})
 {u'abc': u'def'}
->>> unicode2string('abc')
-'abc'
+>>> deep_unicode('abc')
+u'abc'
     """
+    if hasattr(value, 'decode'):
+        value = value.decode()
     if isinstance(value, dict):
         ret = {}
         for key in value:
-            ret[unicode2string(key)] = unicode2string(value[key])
+            ret[deep_unicode(key)] = deep_unicode(value[key])
         return ret
         # This line is Python 2.7+
         # return {unicode2string(key): unicode2string(value) for key, value in value.items()}
-    elif isinstance(value, list):
-        return [unicode2string(element) for element in value]
     elif isinstance(value, str):
-        return value.encode('utf-8')
-    else:
         return value
+    elif isinstance(value, Number):
+        return value
+    else:
+        try:
+            return [deep_unicode(element) for element in value]
+        except ValueError:
+            return value
 
 
 def convert_color(s):
@@ -106,7 +113,7 @@ def hashfile(filename):
 >>> hashfile(a.name)
 'd41d8cd98f00b204e9800998ecf8427e'
 >>> a = tempfile.NamedTemporaryFile('w')
->>> a.file.write(128000*'GAF')
+>>> tmp= a.file.write(128000*'GAF')
 >>> a.file.flush()
 >>> hashfile(a.name)
 '7b8a4f8a3ce222580765d577df78b782'

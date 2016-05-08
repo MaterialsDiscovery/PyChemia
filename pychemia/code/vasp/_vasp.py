@@ -7,7 +7,7 @@ from ._outcar import VaspOutput
 from pychemia import Structure, pcm_log
 from pychemia.dft import KPoints
 from pychemia.code import Codes
-from pychemia.utils.computing import unicode2string
+from pychemia.utils.computing import deep_unicode
 
 
 class VaspJob(Codes):
@@ -119,7 +119,7 @@ class VaspJob(Codes):
 
     def load_json(self, filename):
         filep = open(filename, 'r')
-        vj_dict = unicode2string(json.load(filep))
+        vj_dict = deep_unicode(json.load(filep))
         self.fromdict(vj_dict)
 
     def save_json(self, filename):

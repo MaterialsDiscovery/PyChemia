@@ -3,6 +3,7 @@ import os
 import time
 from multiprocessing import Pool, Process
 import pychemia
+from pychemia.utils.serializer import generic_serializer
 
 __author__ = 'Guillermo Avendano-Franco'
 
@@ -26,7 +27,7 @@ def cluster_fb_worker(db_settings):
             sp = fb.run()
             sp.wait()
             so = pychemia.code.fireball.read_fireball_stdout(fb.workdir + os.sep + 'fireball.log')
-            forces = pychemia.serializer.generic_serializer(so['forces'][-1])
+            forces = generic_serializer(so['forces'][-1])
             energy = so['energy'][-1]['ETOT']
             properties = {'forces': forces, 'energy': energy}
             structure = pychemia.code.fireball.read_geometry_bas(fb.workdir + os.sep + 'answer.bas')

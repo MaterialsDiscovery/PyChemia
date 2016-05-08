@@ -3,8 +3,12 @@ Definition of the class Structure
 This class defines methods to create and manipulate
 atomic structures such as molecules, clusters and crystals
 """
+try:
+    import itertools.izip as zip
+except ImportError:
+    pass
 
-import itertools
+from itertools import combinations, repeat
 import json
 import os
 import struct
@@ -27,7 +31,7 @@ if HAS_SCIPY:
 from pychemia.core.composition import Composition
 from pychemia.core.delaunay import get_reduced_bases
 from pychemia.core.lattice import Lattice
-from pychemia.utils.computing import unicode2string
+from pychemia.utils.computing import deep_unicode
 from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence, atomic_symbols
 
 __author__ = "Guillermo Avendano-Franco"
@@ -91,19 +95,19 @@ class Structure:
         Examples:
 >>> import pychemia
 >>> a = pychemia.Structure()
->>> print a
+>>> print(a)
 Empty structure
 >>> a = pychemia.Structure(symbols=['Xe'])
->>> print a.natom
+>>> print(a.natom)
 1
 >>> d = 1.104
 >>> a = pychemia.Structure(symbols=['N', 'N'], positions=[[0, 0, 0], [0, 0, d]], periodicity=False)
->>> print a.natom
+>>> print(a.natom)
 2
 >>> a = 4.05
 >>> b = a/2
 >>> fcc = pychemia.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
->>> print fcc.natom
+>>> print(fcc.natom)
 1
         """
         self.vector_info = {}
@@ -512,9 +516,7 @@ Empty structure
         while stabilization_history < stabilization_number:
             args = list(best_volume * np.ones(10))
 
-            ret = pool.map(worker_star, itertools.izip(itertools.repeat(method),
-                                                       itertools.repeat(composition),
-                                                       itertools.repeat(periodic), args))
+            ret = pool.map(worker_star, zip(repeat(method), repeat(composition), repeat(periodic), args))
 
             ngood = 0
             for structure in ret:
@@ -542,7 +544,7 @@ Empty structure
         if best_structure is not None and periodic:
             # Analysis of the quality for the best structure
             rpos = best_structure.reduced
-            for i, j in itertools.combinations(range(natom), 2):
+            for i, j in combinations(range(natom), 2):
                 distance = best_structure.lattice.minimal_distance(rpos[i], rpos[j])
                 covalent_distance = sum(covalent_radius([symbols[i], symbols[j]]))
                 if distance < covalent_distance:
@@ -806,7 +808,7 @@ Empty structure
     def from_dict(structdict):
 
         natom = structdict['natom']
-        symbols = unicode2string(structdict['symbols'])
+        symbols = deep_unicode(structdict['symbols'])
         periodicity = structdict['periodicity']
         positions = np.array(structdict['positions'])
 
@@ -852,7 +854,7 @@ Empty structure
     def load_json(filename):
 
         filep = open(filename, 'r')
-        structdict = unicode2string(json.load(filep))
+        structdict = deep_unicode(json.load(filep))
         filep.close()
         return Structure.from_dict(structdict)
 

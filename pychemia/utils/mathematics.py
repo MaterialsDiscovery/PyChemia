@@ -613,8 +613,10 @@ def projector(u, v):
 >>> projector([0.1, 0.2, 0.3], [0.3, 0.2, 0.1])
 array([ 0.07142857,  0.14285714,  0.21428571])
 >>> projector([1, 0, 0], [0, 2, 0])
-array([0, 0, 0])
+array([ 0.,  0.,  0.])
     """
+    u = np.array(u, dtype=float)
+    v = np.array(v, dtype=float)
     return np.dot(v, u) / np.dot(u, u) * np.array(u)
 
 

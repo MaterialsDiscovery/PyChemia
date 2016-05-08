@@ -17,7 +17,7 @@ import uuid as _uuid
 import shutil as _shutil
 import math
 from pychemia.core.structure import load_structure_json
-from pychemia.utils.computing import unicode2string
+from pychemia.utils.computing import deep_unicode
 
 
 class StructureEntry:
@@ -91,7 +91,7 @@ class StructureEntry:
     def load(self):
         assert isinstance(self.identifier, str)
         rf = open(self.path + '/metadata.json', 'r')
-        self.metadatafromdict(unicode2string(_json.load(rf)))
+        self.metadatafromdict(deep_unicode(_json.load(rf)))
         rf.close()
         if self.tags is None:
             self.tags = []
@@ -103,7 +103,7 @@ class StructureEntry:
         if os.path.isfile(self.path + '/properties.json'):
             rf = open(self.path + '/properties.json', 'r')
             try:
-                self.properties = unicode2string(_json.load(rf))
+                self.properties = deep_unicode(_json.load(rf))
             except ValueError:
                 os.rename(self.path + '/properties.json', self.path + '/properties.json.FAILED')
                 self.properties = None
@@ -251,7 +251,7 @@ class PropertiesEntry:
         Loads an existing db from its configuration file
         """
         rf = open(self.path + '/properties.json', 'r')
-        self.properties = unicode2string(_json.load(rf))
+        self.properties = deep_unicode(_json.load(rf))
         rf.close()
 
 
@@ -308,7 +308,7 @@ class StructureRepository:
         """
         rf = open(self.path + '/db.json', 'r')
         try:
-            jsonload = unicode2string(_json.load(rf))
+            jsonload = deep_unicode(_json.load(rf))
         except ValueError:
             print("Error deserializing the object")
             jsonload = {'tags': {}}

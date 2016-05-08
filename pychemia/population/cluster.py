@@ -7,6 +7,7 @@ import pychemia
 from pychemia.code.lennardjones import lj_compact_evaluate
 from pychemia.utils.mathematics import unit_vector
 from pychemia.utils.periodic import covalent_radius, atomic_number
+from pychemia.utils.serializer import generic_serializer
 from ._population import Population
 
 
@@ -281,7 +282,7 @@ class LJCluster(Population):
             structure.align_inertia_momenta()
         sorted_indices = structure.sort_sites()
         forces = forces[sorted_indices]
-        properties = {'forces': pychemia.serializer.generic_serializer(forces), 'energy': energy}
+        properties = {'forces': generic_serializer(forces), 'energy': energy}
         return structure, properties, energy
 
     def refine(self, entry_id, gtol=None):
@@ -315,7 +316,7 @@ class LJCluster(Population):
         pos = np.array(entry['structure']['positions']).reshape((-1, 3))
         # Unit Vectors
         uv = pychemia.utils.mathematics.unit_vectors(2 * np.random.rand(*pos.shape) - 1)
-        new_pos = pychemia.serializer.generic_serializer(pos + factor * uv)
+        new_pos = generic_serializer(pos + factor * uv)
 
         structure = pychemia.Structure(positions=new_pos,
                                        symbols=entry['structure']['symbols'],

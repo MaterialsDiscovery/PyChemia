@@ -1,7 +1,7 @@
 import re
 import os
 import numpy as np
-from pychemia.serializer import generic_serializer
+from pychemia.utils.serializer import generic_serializer
 from pychemia import pcm_log
 
 
@@ -45,7 +45,7 @@ class VaspOutput:
         # pcm_log.info('Array sizes : ' + str(self.array_sizes))
 
         self.species = re.findall(r'POTCAR\s*:\s*[\w_]+\s*(\w+)', self.data)
-        self.species = self.species[:len(self.species) / 2]
+        self.species = self.species[:int(len(self.species) / 2)]
         # pcm_log.info('Number of species (= number of POTCARs):' + str(self.species))
 
         pos_forces = re.findall(r'TOTAL-FORCE \(eV/Angst\)\s*-*\s*([-.\d\s]+)\s+-{2}', self.data)

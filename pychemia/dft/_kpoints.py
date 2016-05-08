@@ -2,7 +2,7 @@ from math import sqrt, ceil
 
 import numpy as np
 
-from pychemia.serializer import PyChemiaJsonable, generic_serializer
+from pychemia.utils.serializer import PyChemiaJsonable, generic_serializer
 
 """
 Definition of the set of k-points in reciprocal space
