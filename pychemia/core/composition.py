@@ -220,7 +220,7 @@ True
             number_atoms_specie = self.composition[specie]
             for i in range(number_atoms_specie):
                 ret.append(specie)
-        return deep_unicode(ret)
+        return sorted(deep_unicode(ret))
 
     @property
     def species(self):

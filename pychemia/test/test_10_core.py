@@ -18,8 +18,8 @@ def test_composition():
     assert (comp.sorted_formula(sortby='hill') == 'Ba2Cu3O7Y')
 
     comp = pychemia.Composition('Na2Cl2')
-    assert (sorted(comp.symbols) == sorted([u'Na', u'Na', u'Cl', u'Cl']))
-    assert (pychemia.utils.periodic.valence(comp.symbols) == [1, 1, 7, 7])
+    assert (comp.symbols == [u'Cl', u'Cl', u'Na', u'Na'])
+    assert (pychemia.utils.periodic.valence(comp.symbols) == [7, 7, 1, 1])
 
 
 def test_structure():
