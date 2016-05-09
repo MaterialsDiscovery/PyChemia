@@ -10,6 +10,9 @@ python:
 notifications:
   email: false
 
+services:
+  - mongodb
+
 # Setup anaconda
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
@@ -27,7 +30,8 @@ before_install:
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coverage future networkx
   - conda install --yes -c dan_blanchard python-coveralls nose-cov
-  - conda install --yes -c jochym spglib=1.9.0
+  - git clone https://github.com/atztogo/spglib.git
+  - cd spglib && touch README NEWS AUTHORS && autoreconf -i && ./configure --prefix=/usr && make && sudo make install
 
 # Run test
 script:
