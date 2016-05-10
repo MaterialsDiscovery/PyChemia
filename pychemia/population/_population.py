@@ -1,7 +1,7 @@
+from __future__ import unicode_literals
 import json
 import numpy as np
 from builtins import str
-from __future__ import unicode_literals
 from abc import ABCMeta, abstractmethod
 from pychemia import HAS_PYMONGO
 
