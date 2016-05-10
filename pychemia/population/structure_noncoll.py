@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 import pychemia
-from _population import Population
+from ._population import Population
 from pychemia import pcm_log
 
 

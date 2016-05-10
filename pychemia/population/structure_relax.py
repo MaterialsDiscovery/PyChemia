@@ -2,7 +2,7 @@ import random
 import uuid
 from fractions import gcd
 import numpy as np
-from _population import Population
+from ._population import Population
 from pychemia import Composition, Structure, pcm_log
 from pychemia.analysis import StructureAnalysis, StructureChanger, StructureMatch
 from pychemia.analysis.splitting import SplitMatch

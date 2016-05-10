@@ -13,9 +13,9 @@ class EuclideanPopulation(Population):
         N=ndim the dimensionality of space and
         using an univaluated function 'function'
 
-        :param function:
-        :param ndim:
-        :param limits:
+        :param function: Routine to evaluate a function
+        :param ndim: (int) Dimensions of function space
+        :param limits: (numpy.ndarray)
         :return:
         """
         Population.__init__(self, 'Euclidean', 'global', use_mongo=False)
