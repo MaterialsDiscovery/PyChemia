@@ -13,7 +13,6 @@ notifications:
 services:
   - mongodb
 
-# Setup anaconda
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
@@ -26,7 +25,9 @@ before_install:
   # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
-# Install packages
+  - sudo apt-get -qq update
+  - sudo apt-get install -y gcc gfortran m4 autoconf automake libtool
+
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coverage future networkx
   - conda install --yes -c dan_blanchard python-coveralls nose-cov
