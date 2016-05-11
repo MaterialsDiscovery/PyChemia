@@ -1,7 +1,9 @@
+from __future__ import unicode_literals
+from builtins import str
 import json
 from abc import ABCMeta, abstractproperty
 import numpy as np
-
+from pychemia.utils.computing import deep_unicode
 
 class PyChemiaJsonable(object):
     """
@@ -58,6 +60,7 @@ def generic_serializer(value):
     :param value:
     :return:
     """
+    value = deep_unicode(value)
 
     if value is None:
         return None
@@ -71,7 +74,7 @@ def generic_serializer(value):
             for ivalue in value:
                 new_value.append([list(i) for i in ivalue])
             return new_value
-    elif isinstance(value, basestring):
+    elif isinstance(value, str):
         return value
     elif isinstance(value, float):
         return value

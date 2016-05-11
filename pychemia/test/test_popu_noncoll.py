@@ -15,8 +15,7 @@ def test_popu_noncoll():
     try:
         import pymongo
         maxSevSelDelay = 1
-        client = pymongo.MongoClient("someInvalidURIOrNonExistantHost",
-                                     serverSelectionTimeoutMS=maxSevSelDelay)
+        client = pymongo.MongoClient("localhost", serverSelectionTimeoutMS=maxSevSelDelay)
         client.server_info()  # force connection on a request as the
         # connect=True parameter of MongoClient seems
         # to be useless here

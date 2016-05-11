@@ -4,6 +4,7 @@ import numpy as np
 from builtins import str
 from abc import ABCMeta, abstractmethod
 from pychemia import HAS_PYMONGO
+from pychemia.utils.computing import deep_unicode
 
 if HAS_PYMONGO:
     from pychemia.db import PyChemiaDB
@@ -18,6 +19,7 @@ class Population:
 
     def __init__(self, name, tag, use_mongo=True):
 
+        name = deep_unicode(name)
         self.tag = tag
         self.pcdb = None
         if isinstance(name, str):

@@ -121,7 +121,8 @@ class StructurePopulation(Population):
             factor = np.random.randint(self.min_comp_mult, self.max_comp_mult + 1)
             for i in comp:
                 comp[i] *= factor
-            structure = Structure.random_cell(comp)
+            structure = Structure.random_cell(comp, method='stretching', stabilization_number=5, nparal=5,
+                                              periodic=True)
         else:
             pcm_log.debug('From source')
             while True:
