@@ -42,6 +42,8 @@ u'abc'
         return value
     elif isinstance(value, Number):
         return value
+    elif value is None:
+        return None
     else:
         try:
             return [deep_unicode(element) for element in value]
