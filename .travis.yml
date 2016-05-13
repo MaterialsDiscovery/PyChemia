@@ -1,9 +1,6 @@
 language: python
 python:
-  - 2.6
   - 2.7
-  - 3.1
-  - 3.2
   - 3.3
   - 3.4
   - 3.5
@@ -32,6 +29,9 @@ install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coverage future networkx
   - conda install --yes -c dan_blanchard python-coveralls nose-cov
   - pip install -e "git+https://github.com/atztogo/spglib.git@deb80ab901b1ad1f2df65c2eec39ca7ec4283291#egg=spglib&subdirectory=python"
+  - rm -rf spglib
+  - pwd
+  - ls -al
   # git clone https://github.com/atztogo/spglib.git
   # cd spglib && touch README NEWS AUTHORS && autoreconf -i && ./configure --prefix=/usr && make && sudo make install
 
