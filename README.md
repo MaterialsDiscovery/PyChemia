@@ -33,22 +33,64 @@ Before installing PyChemia, you may need to first install a few critical depende
 
 ### Mandatory
 
-1. Python >= 2.7.x or Python >= 3.1.x
-   The library is tested for the current version of Python
+1. Python >= 2.7 or Python >= 3.3
+   The library is tested on Travis-ci.org for versions of Python
+   2.7, 3.3, 3.4 and 3.5
 
-2. [Numpy](http://www.numpy.org/ "Numpy") >= 1.5
+2. [Numpy](http://www.numpy.org/ "Numpy") >= 1.11
    NumPy is a fundamental package for any Python scientific library.
    Numpy arrays are essential for efficient array manipulation.
+   Many distributions come with relatively old version of numpy,
+   so you should install a more recent version.
 
-3. [SciPy](http://scipy.org/ "SciPy") >= 0.9
+3. [SciPy](http://scipy.org/ "SciPy") >= 0.17
    SciPy is used for many linear algebra and FFT calls
+   Most distros comes with scipy 0.13 or below.
+   PyChemia uses scipy.spatial that have been actively developed
+   since version 0.15, we have tested PyChemia on 0.17.
 
-4. [spglib](http://spglib.sourceforge.net/)
+4. [spglib](http://spglib.sourceforge.net/) > 1.9.4
    Spglib is used to determine symmetry groups for structures
+    Many changes have been introduced recently, you should install it
+    from the github repository as spglib-1.9.4 is not available
+    on pip for that version. You can install using pip by refering to the
+    git repository
 
-5. [pymongo](http://api.mongodb.org/python/current/)
+    pip install -e "git+https://github.com/atztogo/spglib.git#egg=spglib&subdirectory=python"
+
+    or
+
+    pip install -e "git+https://github.com/atztogo/spglib.git#egg=spglib&subdirectory=python" --user
+
+5. [future](http://python-future.org)
+    This is a library that offers some easy hacks to support python 2.7
+    and python 3 on the same code source. The library is easy to install
+    with pip
+
+    pip install future
+
+    or
+
+    pip install future --user
+
+### Optional Highly Recomended
+
+
+1. [pymongo](http://api.mongodb.org/python/current/) > 3.2
    At least for structural search PyChemia relies strongly in MongoDB and its
-   python driver
+   python driver. Any version beyond 3.0 should be fine. We have tested
+   pychemia on pymongo-3.2.2
+
+   pip install pymongo
+
+   or
+
+   pip install pymongo --user
+
+2. [nose] (https://nose.readthedocs.io/en/latest/) >= 1.3.7
+    A python library for testing, simply go to the source directory and execute
+
+    nosetests -v
 
 ### Optional
 
@@ -91,8 +133,16 @@ The best way to install PyChemia is from its GitHub repository
 Once the repository is downloaded, you can install it using
 
     cd PyChemia
-    python setup.py built
+    python setup.py build
+
+    and:
+
     sudo python setup.py install
+    
+    or
+
+    python setup.py install --user
+
 
 Structure of the Library
 ------------------------

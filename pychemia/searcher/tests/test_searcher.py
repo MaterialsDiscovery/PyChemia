@@ -41,7 +41,7 @@ def notest_searcher():
 
 
 class SearcherTest(unittest.TestCase):
-    def test_harmony(self):
+    def notest_harmony(self):
         """
         Tests (pychemia.searcher.harmony)                            :
         """
