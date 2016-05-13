@@ -92,6 +92,7 @@ Before installing PyChemia, you may need to first install a few critical depende
 
     nosetests -v
 
+
 ### Optional
 
 1. [Pandas](http://pandas.pydata.org/ "Pandas")
@@ -123,6 +124,10 @@ Before installing PyChemia, you may need to first install a few critical depende
    For the time being the database contains more than 300000 structures, with more than
    90% of them with the electronic ground-state computed.
 
+1. [coverage] (https://bitbucket.org/ned/coveragepy) >= 4.0.1
+    Provides code coverage analysis
+
+
 How to install PyChemia
 -----------------------
 
@@ -138,7 +143,7 @@ Once the repository is downloaded, you can install it using
     and:
 
     sudo python setup.py install
-    
+
     or
 
     python setup.py install --user
