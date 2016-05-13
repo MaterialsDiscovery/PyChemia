@@ -4,7 +4,7 @@ import numpy as np
 from .._abinit import AbinitJob
 from ..._tasks import Task
 from ..._relaxator import Relaxator
-from pychemia.dft import KPoints
+from pychemia.crystal import KPoints
 
 __author__ = 'Guillermo Avendano-Franco'
 

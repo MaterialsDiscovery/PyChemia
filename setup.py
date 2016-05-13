@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pychemia',
-    version='0.1.1',
+    version='0.1.2',
     author='Guillermo Avendano Franco',
     author_email='gufranco@mail.wvu.edu',
     packages=find_packages(),

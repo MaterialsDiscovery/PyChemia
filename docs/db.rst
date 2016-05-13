@@ -1,5 +1,5 @@
-Database (pychemia.db)
-======================
+pychemia.db
+===========
 
 One core capability of PyChemia is global optimization of atomic
 structures such as clusters and crystals.

@@ -10,12 +10,12 @@ but not requiring the abipython classes
 """
 
 __author__ = "Guillermo Avendano-Franco"
-__copyright__ = "Copyright 2012"
+__copyright__ = "Copyright 2016"
 __version__ = "1.1"
 __maintainer__ = "Guillermo Avendano-Franco"
 __email__ = "guillermo.avendano@uclouvain.be"
 __status__ = "Development"
-__date__ = "Aug 27, 2012"
+__date__ = "May 13, 2016"
 
 
 def netcdf2dict(filename):

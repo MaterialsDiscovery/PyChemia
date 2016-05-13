@@ -211,7 +211,7 @@ class EuclideanPopulation(Population):
         for i in range(self.ndim):
             if self.limits[i, 0] > x[i] or x[i] > self.limits[i, 1]:
                 outside = True
-                print('New position out of limits', x, self.limits)
+                # print('New position out of limits', x, self.limits)
         return not outside
 
     def move_random(self, imember, factor=0.2, in_place=False, kind='move'):

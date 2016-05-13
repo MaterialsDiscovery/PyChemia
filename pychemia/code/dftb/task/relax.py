@@ -5,7 +5,7 @@ import numpy as np
 
 from pychemia import pcm_log
 from pychemia.code import Relaxator
-from pychemia.dft import KPoints
+from pychemia.crystal import KPoints
 from .._dftb import DFTBplus, read_detailed_out, read_dftb_stdout, read_geometry_gen
 
 try:

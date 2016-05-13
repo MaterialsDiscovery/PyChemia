@@ -77,7 +77,7 @@ class Task:
             os.chdir(self.report_dir)
             stderr = open('pandoc_out.log', 'w')
             stdout = open('pandoc_err.log', 'w')
-            sp = subprocess.Popen(['pandoc', 'index.html', '-o', 'report.' + file_format], stderr=stderr, stdout=stdout)
+            sp = subprocess.Popen(['pandoc', 'index.html', '-o', 'visual.' + file_format], stderr=stderr, stdout=stdout)
             os.chdir(cwd)
             stderr.close()
             stdout.close()

@@ -3,7 +3,7 @@ import json
 import time
 import numpy as np
 from pychemia import pcm_log, HAS_MATPLOTLIB
-from pychemia.dft import KPoints
+from pychemia.crystal import KPoints
 from .._vasp import VaspJob
 from .._outcar import read_vasp_stdout
 from .._kpoints import read_kpoints

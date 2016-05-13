@@ -14,19 +14,22 @@ except ImportError:
     HAS_SCIPY = False
 
 try:
-    import spglib
-
+    try:
+        import spglib as spg
+    except ImportError:
+        from pyspglib import spglib as spg
     HAS_SPGLIB = True
 except ImportError:
-    #print("Library 'spglib' could not be found, disabling pychemia.symm.SymmetryAnalysis")
     HAS_SPGLIB = False
+
 
 try:
     import matplotlib
 
+
     HAS_MATPLOTLIB = True
 except ImportError:
-    #print("Library 'matplotlib' could not be found, disabling plotting functionality")
+    # print("Library 'matplotlib' could not be found, disabling visual functionality")
     HAS_MATPLOTLIB = False
 
 try:
@@ -56,7 +59,6 @@ import sys
 
 if HAS_MATPLOTLIB and 'matplotlib' not in sys.modules:
     import matplotlib
-
     matplotlib.use('agg')
 
 try:
@@ -100,20 +102,15 @@ import logging
 
 pcm_log = logging.getLogger(__name__)
 pcm_log.addHandler(logging.NullHandler())
-from .core import Structure, Composition, Lattice
+from .core import Structure, Composition
 from . import analysis
 from . import db
-from . import dft
-from . import dm
-from . import gui
+from . import crystal
 from . import io
-from . import report
 from . import runner
 from . import searcher
-from . import symm
 from . import utils
 from . import web
-from . import external
 from ._info import __author__, __copyright__, __version__, __email__, __status__, __date__, Version
 from . import code
 from . import population

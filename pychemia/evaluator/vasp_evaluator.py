@@ -3,7 +3,7 @@ import shutil
 import json
 import logging
 from pychemia.code.vasp import VaspJob, VaspOutput, InputVariables
-from pychemia.dft import KPoints
+from pychemia.crystal import KPoints
 from pychemia.code.vasp import read_poscar
 from pychemia.utils.mathematics import round_small
 

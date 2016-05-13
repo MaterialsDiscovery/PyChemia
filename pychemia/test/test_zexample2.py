@@ -22,7 +22,7 @@ if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
 
 def test_example2():
     """
-    Example of a multiple calc          :
+    Example of a multiple calc                                   :
     """
     if not (pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC):
         return

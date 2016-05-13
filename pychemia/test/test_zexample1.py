@@ -24,7 +24,7 @@ path = 'pychemia/test/data'
 
 def test_example1():
     """
-    Example of a simple calc            :
+    Example of a simple calc                                     :
     """
     if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
         workdir = tempfile.mkdtemp()

@@ -3,9 +3,7 @@ Routines to read and write POSCAR file
 """
 
 import os
-
 import numpy as _np
-
 import pychemia
 
 
@@ -66,10 +64,6 @@ def read_poscar(path='POSCAR'):
     if not species:
         print('No information about species')
         raise ValueError()
-
-    print(natom)
-    print(species)
-    print(natom_per_species)
 
     symbols = []
     for i in range(len(natom_per_species)):

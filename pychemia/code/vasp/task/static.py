@@ -2,7 +2,7 @@ import os
 import time
 import json
 import numpy as np
-from pychemia.dft import KPoints
+from pychemia.crystal import KPoints
 from pychemia import pcm_log
 from pychemia.utils.serializer import generic_serializer
 from .._vasp import VaspJob

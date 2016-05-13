@@ -5,7 +5,7 @@ from ._kpoints import write_kpoints, read_kpoints
 from ._incar import write_incar, InputVariables, read_incar
 from ._outcar import VaspOutput
 from pychemia import Structure, pcm_log
-from pychemia.dft import KPoints
+from pychemia.crystal import KPoints
 from pychemia.code import Codes
 from pychemia.utils.computing import deep_unicode
 

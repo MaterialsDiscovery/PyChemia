@@ -2,7 +2,7 @@ import json
 import os
 import time
 from pychemia import pcm_log
-from pychemia.dft import KPoints
+from pychemia.crystal import KPoints
 from .._dftb import DFTBplus, read_detailed_out
 
 

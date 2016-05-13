@@ -9,12 +9,12 @@ from pychemia.utils.computing import deep_unicode
 import numpy as np
 
 __author__ = "Guillermo Avendano-Franco"
-__copyright__ = "Copyright 2014"
+__copyright__ = "Copyright 2016"
 __version__ = "0.1"
 __maintainer__ = "Guillermo Avendano-Franco"
 __email__ = "gtux.gaf@gmail.com"
 __status__ = "Development"
-__date__ = "March 16, 2014"
+__date__ = "May 13, 2016"
 
 
 def read_incar(filename='INCAR'):

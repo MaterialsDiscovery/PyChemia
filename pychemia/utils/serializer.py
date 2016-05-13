@@ -4,6 +4,7 @@ import json
 from abc import ABCMeta, abstractproperty
 import numpy as np
 from pychemia.utils.computing import deep_unicode
+from numbers import Integral, Real
 
 class PyChemiaJsonable(object):
     """
@@ -64,31 +65,22 @@ def generic_serializer(value):
 
     if value is None:
         return None
-    elif isinstance(value, np.ndarray):
-        if value.ndim == 1:
-            return list(value)
-        elif value.ndim == 2:
-            return [list(i) for i in value]
-        elif value.ndim == 3:
-            new_value = []
-            for ivalue in value:
-                new_value.append([list(i) for i in ivalue])
-            return new_value
-    elif isinstance(value, str):
-        return value
-    elif isinstance(value, float):
-        return value
-    elif isinstance(value, int):
-        return value
     elif isinstance(value, dict):
         new_value = {}
         for i in value:
             new_value[i] = generic_serializer(value[i])
         return new_value
-    elif isinstance(value, list):
-        new_value = []
-        for i in range(len(value)):
-            new_value.append(generic_serializer(value[i]))
-        return new_value
+    elif hasattr(value, '__iter__'):
+        return [generic_serializer(element) for element in value]
+    elif isinstance(value, str):
+        return value
+    elif isinstance(value, Integral):
+        return int(value)
+    elif isinstance(value, Real):
+        return float(value)
+    elif isinstance(value, np.integer):
+        return int(value)
+    elif isinstance(value, np.float):
+        return float(value)
     else:
-        raise ValueError("I do not know how to covert this: ", type(value))
+        raise ValueError("Could not serialize this: %s of type: " % (value, type(value)))

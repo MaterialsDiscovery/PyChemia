@@ -45,11 +45,7 @@ u'abc'
     elif value is None:
         return None
     else:
-        try:
-            return [deep_unicode(element) for element in value]
-        except ValueError:
-            return value
-
+        return value
 
 def convert_color(s):
     """

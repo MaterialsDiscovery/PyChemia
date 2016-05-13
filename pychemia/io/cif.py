@@ -6,7 +6,7 @@ import os as _os
 import re
 from collections import OrderedDict
 
-from pychemia import Lattice
+from pychemia.crystal import Lattice
 from pychemia.utils.computing import read_file, only_ascii
 
 

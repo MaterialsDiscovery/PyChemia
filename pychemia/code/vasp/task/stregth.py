@@ -25,7 +25,7 @@ class IdealStrength(Task):
         self.energy_tol = energy_tol
 
         if kp is None:
-            kp = pychemia.dft.KPoints()
+            kp = pychemia.crystal.KPoints()
             kp.set_optimized_grid(structure.lattice, density_of_kpoints=kp_density, force_odd=True)
             self.kpoints = kp
         else:
@@ -50,7 +50,7 @@ class IdealStrength(Task):
             newst = pychemia.Structure(cell=newlattice.cell, symbols=self.structure.symbols,
                                        reduced=self.structure.reduced)
 
-            tmpkp = pychemia.dft.KPoints()
+            tmpkp = pychemia.crystal.KPoints()
             tmpkp.set_optimized_grid(newst.lattice, density_of_kpoints=self.kp_density, force_odd=True)
 
             if ifactor < 1.0:
@@ -129,7 +129,7 @@ class IdealStrength(Task):
         self.expansion = self.task_params['expansion']
         self.encut = self.task_params['encut']
         self.target_forces = self.task_params['target_forces']
-        self.kpoints = pychemia.dft.KPoints.from_dict(self.task_params['kp'])
+        self.kpoints = pychemia.crystal.KPoints.from_dict(self.task_params['kp'])
 
     def report(self, file_format='html'):
         from lxml.builder import ElementMaker, E

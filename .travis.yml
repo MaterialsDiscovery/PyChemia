@@ -31,7 +31,8 @@ before_install:
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coverage future networkx
   - conda install --yes -c dan_blanchard python-coveralls nose-cov
-  - git clone https://github.com/atztogo/spglib.git
+  - pip install -e "git+https://github.com/atztogo/spglib.git@deb80ab901b1ad1f2df65c2eec39ca7ec4283291#egg=spglib&subdirectory=python"
+  # git clone https://github.com/atztogo/spglib.git
   # cd spglib && touch README NEWS AUTHORS && autoreconf -i && ./configure --prefix=/usr && make && sudo make install
 
 # Run test

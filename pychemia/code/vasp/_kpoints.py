@@ -3,12 +3,12 @@ import numpy as _np
 import pychemia
 
 __author__ = "Guillermo Avendano-Franco"
-__copyright__ = "Copyright 2014"
+__copyright__ = "Copyright 2016"
 __version__ = "0.1"
 __maintainer__ = "Guillermo Avendano-Franco"
 __email__ = "gtux.gaf@gmail.com"
 __status__ = "Development"
-__date__ = "March 16, 2014"
+__date__ = "May 16, 2016"
 
 
 def read_kpoints(path='KPOINTS'):
@@ -39,7 +39,7 @@ def read_kpoints(path='KPOINTS'):
             kmode = 'Cartesian'
         else:
             kmode = 'Reciprocal'
-        kp = pychemia.dft.KPoints(kmode=kmode)
+        kp = pychemia.crystal.KPoints(kmode=kmode)
         for i in range(nkpt):
             line = _np.array([float(x) for x in rf.readline().split()])
             pos = line[:3]
@@ -53,7 +53,7 @@ def read_kpoints(path='KPOINTS'):
             kmode = 'Monkhorst-pack'
         else:
             raise ValueError("Kpoints mode must be 'Gamma' or 'Monkhorst-pack'")
-        kp = pychemia.dft.KPoints(kmode=kmode)
+        kp = pychemia.crystal.KPoints(kmode=kmode)
         line = _np.array([int(x) for x in rf.readline().split()])
         grid = line[:3]
         try:

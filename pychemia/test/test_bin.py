@@ -7,7 +7,7 @@ path = 'pychemia/test/data'
 
 def test_abinit2xyz():
     """
-    Test command abinit2xyz             :
+    Test command abinit2xyz                                      :
     """
     if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
         pychemia.info()
@@ -26,7 +26,7 @@ def test_abinit2xyz():
 
 def test_xyz2abinit():
     """
-    Test command xyz2abinit             :
+    Test command xyz2abinit                                      :
     """
     if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
         script = 'bin/abi_xyz2abinit.py'
@@ -40,7 +40,7 @@ def test_xyz2abinit():
 
 def test_plot_bonds():
     """
-    Test command plot_bonds             :
+    Test command plot_bonds                                      :
     """
     if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
         script = 'bin/abi_plot_bonds.py'
@@ -53,7 +53,7 @@ def test_plot_bonds():
 
 def test_plot_hist():
     """
-    Test command plot_hist              :
+    Test command plot_hist                                       :
     """
     if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
         script = 'bin/abi_plot_hist.py'

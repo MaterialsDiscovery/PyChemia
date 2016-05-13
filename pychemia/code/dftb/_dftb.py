@@ -4,7 +4,7 @@ import subprocess
 import numpy as np
 import numbers
 from pychemia.code import Codes
-from pychemia.dft import KPoints
+from pychemia.crystal import KPoints
 from pychemia import Structure, pcm_log
 from pychemia.utils.serializer import generic_serializer
 

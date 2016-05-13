@@ -1,7 +1,7 @@
 import os
 import json
 import numpy as np
-from pychemia.dft import KPoints
+from pychemia.crystal import KPoints
 from ..._tasks import Task
 from .._abinit import AbinitJob
 
