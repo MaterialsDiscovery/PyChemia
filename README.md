@@ -34,8 +34,9 @@ Before installing PyChemia, you may need to first install a few critical depende
 ### Mandatory
 
 1. Python >= 2.7 or Python >= 3.3
-   The library is tested on Travis-ci.org for versions of Python
-   2.7, 3.3, 3.4 and 3.5
+   The library is tested for versions of Python 2.7, 3.3, 3.4 and 3.5
+
+   https://travis-ci.org/MaterialsDiscovery/PyChemia
 
 2. [Numpy](http://www.numpy.org/ "Numpy") >= 1.11
    NumPy is a fundamental package for any Python scientific library.
@@ -127,6 +128,10 @@ Before installing PyChemia, you may need to first install a few critical depende
 1. [coverage] (https://bitbucket.org/ned/coveragepy) >= 4.0.1
     Provides code coverage analysis
 
+1. [python-coveralls](https://github.com/z4r/python-coveralls)
+    To submit coverage information to coveralls.io
+
+    https://coveralls.io/github/MaterialsDiscovery/PyChemia
 
 How to install PyChemia
 -----------------------
