@@ -27,7 +27,7 @@ before_install:
 
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coverage future networkx
-  # conda install --yes -c dan_blanchard python-coveralls nose-cov
+  - pip install pymongo
   - pip install -e "git+https://github.com/atztogo/spglib.git#egg=spglib&subdirectory=python"
   - pip install -e "git+https://github.com/z4r/python-coveralls.git#egg=coveralls"
 

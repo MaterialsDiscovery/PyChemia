@@ -84,7 +84,7 @@ def write_kpoints(kp, filepath='KPOINTS'):
 
     wf = open(filename, 'w')
 
-    wf.write('\n')
+    wf.write('Automatic mesh\n')
     if kp.kmode == 'cartesian' or kp.kmode == 'reciprocal':
         wf.write(str(kp.nkpt) + '\n')
         wf.write(kp.kmode.title() + '\n')
