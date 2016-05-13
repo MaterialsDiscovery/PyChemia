@@ -22,8 +22,7 @@ class IonRelaxation(Relaxator, Task):
         if kp_grid is not None:
             self.kpoints = KPoints(kmode='gamma', grid=kp_grid)
         else:
-            self.kpoints = KPoints()
-            self.kpoints.set_optimized_grid(structure.lattice, density_of_kpoints=kp_density)
+            self.kpoints = KPoints.optimized_grid(structure.lattice, kp_density=kp_density)
         self.abinitjob.initialize(workdir=workdir, structure=structure, binary=binary)
         self.relax_cell = relax_cell
         self.max_calls = max_calls

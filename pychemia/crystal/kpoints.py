@@ -162,7 +162,7 @@ class KPoints(PyChemiaJsonable):
         if grid is None:
             self.grid = [1, 1, 1]
         elif len(grid) == 3:
-            self.grid = list(grid)
+            self.grid = [int(x) for x in grid]
         else:
             raise ValueError("Wrong value for grid, should be an array with shape (-1,3)")
         if shifts is None:
