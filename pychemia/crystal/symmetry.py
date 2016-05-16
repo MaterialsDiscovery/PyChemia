@@ -38,15 +38,16 @@ class CrystalSymmetry(object):
         :param structure:
 
         Example:
->>> import pychemia
->>> a = 4.05
->>> b = a/2
->>> fcc = pychemia.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
->>> symm = pychemia.crystal.CrystalSymmetry(fcc)
->>> symm.number()
-225
->>> symm.symbol() == u'Fm-3m'
-True
+        >>> import pychemia
+        >>> a = 4.05
+        >>> b = a/2
+        >>> fcc = pychemia.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
+        >>> symm = pychemia.crystal.CrystalSymmetry(fcc)
+        >>> symm.number()
+        225
+        >>> symm.symbol() == u'Fm-3m'
+        True
+
         """
         assert structure.is_crystal
         assert structure.is_perfect
@@ -111,26 +112,27 @@ True
         :param symprec: (float) Tolerance of distance between atomic positions and between lengths of lattice vectors
                         to be tolerated in the symmetry finding.
         :return: A new pychemia Structure in a Bravais lattice
+
         :rtype : (pychemia.Structure)
 
         Example:
+        >>> import pychemia
+        >>> a = 4.05
+        >>> b = a/2
+        >>> fcc = pychemia.Structure(symbols=['Au'],
+        ...       cell=[[0, b+1E-5, b-1E-5], [b+1E-5, 0, b-1E-5], [b+1E-5, b-1E-5, 0]], periodicity=True)
+        >>> symm = pychemia.crystal.CrystalSymmetry(fcc)
+        >>> symm.number()
+        2
+        >>> symm.symbol() == u'P-1'
+        True
+        >>> fcc2 = symm.refine_cell(symprec=1E-3)
+        >>> symm2 = pychemia.crystal.CrystalSymmetry(fcc2)
+        >>> symm2.number()
+        225
+        >>> symm2.symbol() == u'Fm-3m'
+        True
 
->>> import pychemia
->>> a = 4.05
->>> b = a/2
->>> fcc = pychemia.Structure(symbols=['Au'],
-...       cell=[[0, b+1E-5, b-1E-5], [b+1E-5, 0, b-1E-5], [b+1E-5, b-1E-5, 0]], periodicity=True)
->>> symm = pychemia.crystal.CrystalSymmetry(fcc)
->>> symm.number()
-2
->>> symm.symbol() == u'P-1'
-True
->>> fcc2 = symm.refine_cell(symprec=1E-3)
->>> symm2 = pychemia.crystal.CrystalSymmetry(fcc2)
->>> symm2.number()
-225
->>> symm2.symbol() == u'Fm-3m'
-True
         """
         new_spglib_cell = spg.refine_cell(self.spglib_cell, symprec=symprec)
         return self.get_new_structure(new_spglib_cell)

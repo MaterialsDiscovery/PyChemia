@@ -15,7 +15,7 @@ class ClusterAnalysis:
         for finite systems such as molecules and clusters.
 
         :param structure: (pychemia.Structure) A PyChemia Structure object
-        :return:
+
         """
 
         self.structure = structure.copy()
@@ -81,6 +81,14 @@ class ClusterAnalysis:
 
 class ClusterMatch:
     def __init__(self, structure1, structure2):
+        """
+        Given two structures, ClusterMatch can compute a one-to-one
+        association between atoms of both structures, trying to minimize
+        the displacements needed to move one structure into another.
+
+        :param structure1:
+        :param structure2:
+        """
 
         assert not structure1.is_periodic
         assert not structure2.is_periodic

@@ -6,10 +6,10 @@ OCTOPUS 'inp' input files
 """
 from pychemia import HAS_SCIPY
 import numpy as np
-from ._input import *
+from .input import *
 
 if HAS_SCIPY:
-    from ._analysis import *
+    from .analysis import *
 
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

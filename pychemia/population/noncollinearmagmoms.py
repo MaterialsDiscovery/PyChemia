@@ -7,7 +7,8 @@ from ._population import Population
 from pychemia import pcm_log
 from pychemia.utils.computing import deep_unicode
 
-class PopulationNonColl(Population):
+
+class NonCollinearMagMoms(Population):
     def __init__(self, name, source_dir='.', mag_atoms=None, magmom_magnitude=2.0, distance_tolerance=0.1):
         Population.__init__(self, name, 'global')
         if not os.path.isfile(source_dir + os.sep + 'INCAR'):

@@ -2,7 +2,7 @@ import os
 import numpy as np
 from scipy.io import netcdf_file
 from pychemia.utils.periodic import atomic_symbol
-from ._htmlparser import MyHTMLParser
+from .htmlparser import MyHTMLParser
 
 """
 This module provides general routines used by abipython

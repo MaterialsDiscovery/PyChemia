@@ -1,10 +1,10 @@
-from ..._tasks import Task
+from ...tasks import Task
 import os
 import shutil
 import numpy as np
-from .._kpoints import write_kpoints
-from .._poscar import write_poscar
-from .._incar import write_incar, InputVariables
+from ..kpoints import write_kpoints
+from ..poscar import write_poscar
+from ..incar import write_incar, InputVariables
 
 __author__ = 'Guillermo Avendano-Franco'
 

@@ -16,7 +16,6 @@ def test_structure():
 def test_composition():
     """
     DocTests (pychemia.core.composition)                         :
-.
     """
     import pychemia.core.composition
     suite = unittest.TestSuite()

@@ -42,16 +42,3 @@ classes for the release 1.
 This code is open-source. We also welcome extra hands to improve this library
 with your own contributions. At present only one developer has being in charge
 of the project. More hands and eyes are very welcomed.
-
-Contributors
-------------
-
-1. Prof. Aldo H. Romero [West Virginia University] (Project Director)
-
-1. Guillermo Avendaño-Franco [West Virginia University] (Basic Infraestructure)
-
-1. Irais Valencia Jaime [West Virginia University] (Simulation and testing)
-
-1. Sobhit Singh [West Virginia University] (Data-mining)
-
-1. Francisco Muñoz (Universidad de Chile)

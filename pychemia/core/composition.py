@@ -30,21 +30,22 @@ class Composition:
         :rtype: Composition
 
         Example:
->>> import pychemia
->>> comp = pychemia.Composition({'Ba': 2, 'Cu': 3, 'O': 7, 'Y': 1})
->>> comp.formula
-u'Ba2Cu3O7Y'
->>> comp = pychemia.Composition('Ba2Cu3O7Y')
->>> comp2 = pychemia.Composition(comp)
->>> len(comp2)
-4
->>> comp.nspecies
-4
->>> comp = pychemia.Composition()
->>> comp.composition
-{}
->>> len(comp)
-0
+    >>> import pychemia
+    >>> comp = pychemia.Composition({'Ba': 2, 'Cu': 3, 'O': 7, 'Y': 1})
+    >>> comp.formula
+    u'Ba2Cu3O7Y'
+    >>> comp = pychemia.Composition('Ba2Cu3O7Y')
+    >>> comp2 = pychemia.Composition(comp)
+    >>> len(comp2)
+    4
+    >>> comp.nspecies
+    4
+    >>> comp = pychemia.Composition()
+    >>> comp.composition
+    {}
+    >>> len(comp)
+    0
+
         """
         if value is not None:
             value = deep_unicode(value)
@@ -109,13 +110,14 @@ u'Ba2Cu3O7Y'
         :rtype: dict
 
         Examples:
->>> import pychemia
->>> import pprint
->>> pychemia.Composition.formula_parser('Au20')
-{u'Au': 20}
->>> ret = pychemia.Composition.formula_parser('UutUupUusUuo')
->>> pprint.pprint(ret)
-{u'Uuo': 1, u'Uup': 1, u'Uus': 1, u'Uut': 1}
+        >>> import pychemia
+        >>> import pprint
+        >>> pychemia.Composition.formula_parser('Au20')
+        {u'Au': 20}
+        >>> ret = pychemia.Composition.formula_parser('UutUupUusUuo')
+        >>> pprint.pprint(ret)
+        {u'Uuo': 1, u'Uup': 1, u'Uus': 1, u'Uut': 1}
+
         """
         ret = {}
         jump = False
@@ -161,15 +163,16 @@ u'Ba2Cu3O7Y'
         :rtype : (list)
 
         Examples:
->>> import pychemia
->>> pychemia.Composition.formula_to_list('NaCl')
-[u'Na', u'Cl']
->>> flist = pychemia.Composition.formula_to_list(u'Uut2Uup3Uus4Uuo5')
->>> len(flist)
-14
->>> flist = pychemia.Composition.formula_to_list('Uut2Uup3Uus4Uuo5', nunits=2)
->>> len(flist)
-28
+        >>> import pychemia
+        >>> pychemia.Composition.formula_to_list('NaCl')
+        [u'Na', u'Cl']
+        >>> flist = pychemia.Composition.formula_to_list(u'Uut2Uup3Uus4Uuo5')
+        >>> len(flist)
+        14
+        >>> flist = pychemia.Composition.formula_to_list('Uut2Uup3Uus4Uuo5', nunits=2)
+        >>> len(flist)
+        28
+
         """
         import re
 
@@ -197,16 +200,17 @@ u'Ba2Cu3O7Y'
         :rtype: (int)
 
         Example:
->>> import pychemia
->>> comp = pychemia.Composition('NaCl')
->>> comp.gcd
-1
->>> comp = pychemia.Composition('Na2Cl2')
->>> comp.gcd
-2
->>> comp = pychemia.Composition()
->>> comp.gcd is None
-True
+        >>> import pychemia
+        >>> comp = pychemia.Composition('NaCl')
+        >>> comp.gcd
+        1
+        >>> comp = pychemia.Composition('Na2Cl2')
+        >>> comp.gcd
+        2
+        >>> comp = pychemia.Composition()
+        >>> comp.gcd is None
+        True
+
         """
         if self.natom > 0:
             return reduce(_gcd, self.values)
@@ -266,34 +270,35 @@ True
 
         :rtype: str
 
->>> comp=Composition('YBa2Cu3O7')
->>> comp.sorted_formula()
-u'Ba2Cu3O7Y'
->>> comp.sorted_formula(sortby='hill')
-u'Ba2Cu3O7Y'
->>> comp.sorted_formula(sortby='electroneg')
-u'Ba2YCu3O7'
->>> comp = Composition('H10C5')
->>> comp.sorted_formula(sortby='hill', reduced=True)
-u'CH2'
->>> comp = Composition('IBr')
->>> comp.sorted_formula(sortby='hill', reduced=False)
-u'BrI'
->>> comp = Composition('Cl4C')
->>> comp.sorted_formula(sortby='hill', reduced=False)
-u'CCl4'
->>> comp = Composition('IH3C')
->>> comp.sorted_formula(sortby='hill', reduced=False)
-u'CH3I'
->>> comp = Composition('BrH5C2')
->>> comp.sorted_formula(sortby='hill', reduced=False)
-u'C2H5Br'
->>> comp = Composition('S04H2')
->>> comp.sorted_formula(sortby='hill', reduced=False)
-u'H2S4'
->>> comp = Composition('SO4H2')
->>> comp.sorted_formula(sortby='hill', reduced=False)
-u'H2O4S'
+        >>> comp=Composition('YBa2Cu3O7')
+        >>> comp.sorted_formula()
+        u'Ba2Cu3O7Y'
+        >>> comp.sorted_formula(sortby='hill')
+        u'Ba2Cu3O7Y'
+        >>> comp.sorted_formula(sortby='electroneg')
+        u'Ba2YCu3O7'
+        >>> comp = Composition('H10C5')
+        >>> comp.sorted_formula(sortby='hill', reduced=True)
+        u'CH2'
+        >>> comp = Composition('IBr')
+        >>> comp.sorted_formula(sortby='hill', reduced=False)
+        u'BrI'
+        >>> comp = Composition('Cl4C')
+        >>> comp.sorted_formula(sortby='hill', reduced=False)
+        u'CCl4'
+        >>> comp = Composition('IH3C')
+        >>> comp.sorted_formula(sortby='hill', reduced=False)
+        u'CH3I'
+        >>> comp = Composition('BrH5C2')
+        >>> comp.sorted_formula(sortby='hill', reduced=False)
+        u'C2H5Br'
+        >>> comp = Composition('S04H2')
+        >>> comp.sorted_formula(sortby='hill', reduced=False)
+        u'H2S4'
+        >>> comp = Composition('SO4H2')
+        >>> comp.sorted_formula(sortby='hill', reduced=False)
+        u'H2O4S'
+
         """
         if reduced and self.gcd > 1:
             comp = Composition(self.composition)
@@ -367,6 +372,7 @@ u'H2O4S'
         19.942320000000002
         >>> comp.covalent_volume(packing='spheres')
         10.441774334589468
+
         """
         if packing == 'cubes':
             factor = 8

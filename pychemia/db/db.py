@@ -16,15 +16,14 @@ class PyChemiaDB:
                  replicaset=None):
         """
         Creates a MongoDB client to 'host' with 'port' and connect it to the database 'name'.
-        Authentication can be used with 'user' and 'password'
+            Authentication can be used with 'user' and 'password'
 
         :param name: (str) The name of the database
         :param host: (str) The host as name or IP
         :param port: (int) The number of port to connect with the server (Default is 27017)
         :param user: (str) The user with read or write permissions to the database
-        :param passwd: (str/int) Password to authenticate the user into the server
+        :param passwd: (str,int) Password to authenticate the user into the server
 
-        :return:
         """
         self.db_settings = {'name': name,
                             'host': host,
@@ -91,14 +90,17 @@ class PyChemiaDB:
 
     def update(self, entry_id, structure=None, properties=None, status=None):
         """
-        Update
+        Update the fields 'structure', 'properties' or 'status' for a given identifier 'entry_id'
 
         :param entry_id: (ObjectID, str)
         :param structure: (pychemia.Structure) Structure to update
         :param properties: (dict) Dictionary of properties to update
         :param status: (dict) Status dictionary
-        :return:
+
+        :return: The identifier for the entry that was updated
+
         :rtype : ObjectId
+
         """
 
         assert (self.entries.find_one({'_id': entry_id}) is not None)
@@ -320,18 +322,18 @@ def object_id(entry_id):
 def create_user(name, admin_name, admin_passwd, user_name, user_passwd, host='localhost', port=27017, ssl=False,
                 replicaset=None):
     """
-    Creates a new user for the database "name"
+    Creates a new user for the database 'name'
 
-    :param port:
-    :param host:
     :param name: (str) The name of the database
     :param admin_name: (str) The administrator name
     :param admin_passwd: (str) Administrator password
     :param user_name: (str) Username for the database
     :param user_passwd: (str) Password for the user
-    :param ssl
+    :param host: (str) Name of the host for the MongoDB server (default: 'localhost')
+    :param port: (int) Port to connect to the MongoDB server (default: 27017)
+    :param ssl: (bool) If True enable ssl encryption for communications to host (default: False)
     :param replicaset: (str, None) Identifier of a Replica Set
-    :return:
+
     """
     mc = pymongo.MongoClient(host=host, port=port, ssl=ssl, ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE,
                              replicaset=replicaset)

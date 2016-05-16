@@ -1,5 +1,5 @@
 pychemia.md
 ===========
 
-.. automodule:: pychemia.md
+.. autoclass:: pychemia.md.Verlet
 

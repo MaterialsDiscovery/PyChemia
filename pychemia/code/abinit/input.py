@@ -4,9 +4,9 @@ import collections
 from pychemia.utils.periodic import atomic_symbol, covalent_radius, atomic_number
 from pychemia.utils.constants import bohr_angstrom, angstrom_bohr
 from pychemia.utils.mathematics import unit_vectors
-from ._abifiles import AbiFiles
-from ._parser import parser
-from ._output import netcdf2dict
+from .abifiles import AbiFiles
+from .parser import parser
+from .output import netcdf2dict
 from pychemia.core import Structure
 
 """

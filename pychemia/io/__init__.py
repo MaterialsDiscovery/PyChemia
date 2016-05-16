@@ -1,5 +1,6 @@
 """
-Routines to import and export atomic structures
+Routines to import and export atomic structures.
+Currently supported are *ASCII*, *CIF* and *XYZ*
 """
 
 from . import cif

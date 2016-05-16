@@ -6,14 +6,14 @@ from pychemia import HAS_PYMONGO
 
 def test_popu_noncoll():
     """
-    Tests (pychemia.population.PopulationNonColl)                :
+    Tests (pychemia.population.NonCollinearMagMoms)              :
     """
     if not HAS_PYMONGO:
         print('PyChemiaDB was disabled')
         return
 
+    import pymongo
     try:
-        import pymongo
         maxSevSelDelay = 1
         client = pymongo.MongoClient("localhost", serverSelectionTimeoutMS=maxSevSelDelay)
         client.server_info()  # force connection on a request as the
@@ -27,7 +27,7 @@ def test_popu_noncoll():
     source = 'pychemia/test/data/vasp_02'
     assert os.path.isfile(source + os.sep + 'INCAR')
     assert os.path.isfile(source + os.sep + 'POSCAR')
-    popu = pychemia.population.PopulationNonColl('test_PopulationNonColl', source)
+    popu = pychemia.population.NonCollinearMagMoms('test_PopulationNonColl', source)
     popu.random_population(32)
 
     assert len(popu) == 32

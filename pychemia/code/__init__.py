@@ -1,8 +1,11 @@
 """
-Routines related to Density Functional Theory
+Modules to manipulate input and output for several atomistic simulation codes.
+Currently there are implementations for *ABINIT*, *DFTB+*, *Fireball*, an internal
+LennardJones 'calculator', *Octopus* and *VASP*.
+
 """
-from ._codes import Codes
-from ._relaxator import Relaxator
+from .codes import Codes
+from .relaxator import Relaxator
 from . import vasp
 from . import dftb
 from .lennardjones import LennardJones

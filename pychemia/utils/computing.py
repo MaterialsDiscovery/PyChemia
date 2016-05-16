@@ -15,19 +15,20 @@ def deep_unicode(value):
     This is safe for things like Atom names and symbols
 
     :param value: (unicode, list, dict)
-    :return: (str, list, dict) The string, list or dictionary where all string-like elements
-             are converted into strings
+    :return: (str, list, dict) The string, list or dictionary where all string-like elements are converted into strings
+
     :rtype : (str, list, dict)
 
-    Example:
->>> deep_unicode(u'abc')
-u'abc'
->>> deep_unicode([u'abc'])
-[u'abc']
->>> deep_unicode({u'abc': u'def'})
-{u'abc': u'def'}
->>> deep_unicode('abc')
-u'abc'
+    Examples:
+    >>> deep_unicode(u'abc')
+    u'abc'
+    >>> deep_unicode([u'abc'])
+    [u'abc']
+    >>> deep_unicode({u'abc': u'def'})
+    {u'abc': u'def'}
+    >>> deep_unicode('abc')
+    u'abc'
+
     """
     if hasattr(value, 'decode'):
         value = value.decode()
@@ -54,11 +55,13 @@ def convert_color(s):
 
     :param s: (str)
     :return: (tuple) With 3 floats representing the color in RGB
+
     :rtype : tuple
 
-    Example:
->>> convert_color('FF5500')
-(1.0, 0.3333333333333333, 0.0)
+    Examples:
+    >>> convert_color('FF5500')
+    (1.0, 0.3333333333333333, 0.0)
+
     """
     return float(int(s[:2], 16)) / 255, float(int(s[2:4], 16)) / 255, float(int(s[4:6], 16)) / 255
 
@@ -71,8 +74,9 @@ def get_int(value):
     :return: (int)
 
     Example:
->>> get_int('3')
-3
+    >>> get_int('3')
+    3
+
     """
     if value.isdigit():
         return int(value)
@@ -89,8 +93,9 @@ def get_float(value):
     :return: (float)
 
     Example:
->>> get_float('3.0')
-3.0
+    >>> get_float('3.0')
+    3.0
+
     """
     try:
         ret = float(value)
@@ -106,15 +111,16 @@ def hashfile(filename):
     :param filename: (str)
     :return: (str)
 
->>> import tempfile
->>> a = tempfile.NamedTemporaryFile()
->>> hashfile(a.name)
-'d41d8cd98f00b204e9800998ecf8427e'
->>> a = tempfile.NamedTemporaryFile('w')
->>> tmp= a.file.write(128000*'GAF')
->>> a.file.flush()
->>> hashfile(a.name)
-'7b8a4f8a3ce222580765d577df78b782'
+    >>> import tempfile
+    >>> a = tempfile.NamedTemporaryFile()
+    >>> hashfile(a.name)
+    'd41d8cd98f00b204e9800998ecf8427e'
+    >>> a = tempfile.NamedTemporaryFile('w')
+    >>> tmp= a.file.write(128000*'GAF')
+    >>> a.file.flush()
+    >>> hashfile(a.name)
+    '7b8a4f8a3ce222580765d577df78b782'
+
     """
     blocksize = 65536
     hasher = hashlib.md5()
@@ -135,10 +141,11 @@ def read_file(filename):
     :return:
 
     Example:
->>> import tempfile
->>> a = tempfile.NamedTemporaryFile()
->>> read_file(a.name)
-''
+    >>> import tempfile
+    >>> a = tempfile.NamedTemporaryFile()
+    >>> read_file(a.name)
+    ''
+
     """
     if not os.path.exists(filename):
         raise ValueError('Could not open file: %s' % filename)
@@ -160,7 +167,8 @@ def only_ascii(string):
     :return:
 
     Example:
->>> only_ascii(u'lmnopq')
-u'lmnopq'
+    >>> only_ascii(u'lmnopq')
+    u'lmnopq'
+
     """
     return "".join(x for x in string if ord(x) < 128)

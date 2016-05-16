@@ -3,7 +3,7 @@ import os
 import time
 from pychemia import pcm_log
 from pychemia.crystal import KPoints
-from .._dftb import DFTBplus, read_detailed_out
+from ..dftb import DFTBplus, read_detailed_out
 
 
 class StaticCalculation:

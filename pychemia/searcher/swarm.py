@@ -1,4 +1,4 @@
-from ._searcher import Searcher
+from .searcher import Searcher
 from pychemia import pcm_log
 
 

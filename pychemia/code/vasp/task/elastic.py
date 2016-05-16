@@ -6,9 +6,9 @@ import numpy as np
 from pychemia.crystal import KPoints
 from pychemia import pcm_log
 from pychemia.utils.serializer import generic_serializer
-from .._vasp import VaspJob
-from .._outcar import read_vasp_stdout
-from ..._tasks import Task
+from ..vasp import VaspJob
+from ..outcar import read_vasp_stdout
+from ...tasks import Task
 
 __author__ = 'Guillermo Avendano-Franco'
 

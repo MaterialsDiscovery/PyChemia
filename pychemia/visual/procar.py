@@ -288,32 +288,19 @@ Tries to open a gzipped file "PROCAR-spd.gz"
 
 
 class ProcarParser:
-    """Parses a PROCAR file and store it in memory. It only deals with
+    """
+    Parses a PROCAR file and store it in memory. It only deals with
     PROCAR files, that means no Fermi energy (UtilsProcar.FermiOutcar
     can help), and the reciprocal vectors should be supplied (if used,
     see UtilsProcar class).
 
     Members:
 
-      __init__(self, loglevel): The setup the variables internally, `loglevel`
+        __init__(self, loglevel): The setup the variables internally, `loglevel`
         sets the verbosity level ie: `loglevel=logging.DEBUG` for debugging. Its
         default is `logging.WARNING`
 
-      readFile(self, procar=None, permissive=False, recLattice=None):
-        The only method of the API it load the file completely.
-
-        Arguments:
-        `procar=None`: name of the PROCAR file, can be a gzipped file (the
-                      extension is no required). The default covers a wide range
-                      of obvious alternatives.
-        `permissive=False`: Set to `True` if the PROCAR file has problems reading
-                            the Kpoints (stupid Fortran), but in that case the
-                            Kpoints mesh will be discarded. Future updates could
-                            allow it to handle other formating/corruption issues.
-        `recLattice`=None: Reciprical Vectors, you want to provide them since not
-                           all the paths on the BZ are the same.
-
-      Don't use the other methods beggining with underscores "_"
+    Don't use the other methods beggining with underscores "_"
 
     Example:
     To read a PROCAR or PROCAR.gz file
@@ -321,7 +308,7 @@ class ProcarParser:
     >>> foo = ProcarParser()
     >>> foo.readFile()
 
-    To include the reciprocal vectors, and file name MyFirstPROCAR
+    #To include the reciprocal vectors, and file name MyFirstPROCAR'
 
     >>> outcarparser = UtilsProcar()
     >>> recLat = outcarparser.RecLatOutcar(args.outcar)
@@ -644,27 +631,34 @@ class ProcarParser:
         return
 
     def readFile(self, procar=None, permissive=False, recLattice=None):
-        """Reads and parses the whole PROCAR file. This method is a sort
+        """
+        Reads and parses the whole PROCAR file. This method is a sort
         of metamethod: it opens the file, reads the meta data and call the
         respective functions for parsing kpoints, bands, and projected
         data.
 
-        Args:
+        The only method of the API it load the file completely.
 
-        -procar: The file name, if `None` or a directory, a suitable set
-         of defaults will be used. Default=None
+        :param procar: name of the PROCAR file, can be a gzipped file (the extension is no required).
+                        The default covers a wide range of obvious alternatives. The file name, if `None`
+                        or a directory, a suitable set of defaults will be used. Default=None
 
-        -permissive: turn on (or off) some features to deal with badly
-         written PROCAR files (stupid fortran), up to now just ignores the
-         kpoints coordinates, which -as side effect- prevent he rigth
-         space between kpoints. Default=False (off)
+        :param permissive: Set to `True` if the PROCAR file has problems reading
+                            the Kpoints (stupid Fortran), but in that case the
+                            Kpoints mesh will be discarded. Future updates could
+                            allow it to handle other formating/corruption issues.
+                            turn on (or off) some features to deal with badly
+                            written PROCAR files (stupid fortran), up to now just ignores the
+                            kpoints coordinates, which -as side effect- prevent he rigth
+                            space between kpoints. Default=False (off)
 
-
-        -recLattice: a 3x3 array containing the reciprocal vectors, to
-         change the Kpoints from rec. coordinates to cartesians. Rarely
-         given by hand, see `UtilsProcar.RecLatProcar`. If given, the
-         kpoints will be converted from direct coordinates to cartesian
-         ones. Default=None
+        :param recLattice: Reciprical Vectors, you want to provide them since not
+                            all the paths on the BZ are the same.  a 3x3 array containing the reciprocal vectors, to
+                            change the Kpoints from rec. coordinates to cartesians. Rarely
+                            given by hand, see `UtilsProcar.RecLatProcar`. If given, the
+                            kpoints will be converted from direct coordinates to cartesian
+                            ones. Default=None
+        :return:
 
         """
         self.log.debug("readFile...")
@@ -780,22 +774,22 @@ class ProcarFileFilter:
         file already set by SetOutFile(). The new file only has the
         selected/grouped orbitals.
 
-        Args:
+        :param orbitals: nested iterable with the orbitals indexes to be
+            considered. For example: [[0],[2]] means select the first
+            orbital ("s") and the second one ("pz").
+            [[0],[1,2,3],[4,5,6,7,8]] is ["s", "p", "d"].
+        :param orbitalsNames: The name to be put in each new orbital field (of a
+            orbital line). For example ["s","p","d"] is a good
+            orbitalsName for the orbitals=[[0],[1,2,3],[4,5,6,7,8]].
+            However, ["foo", "bar", "baz"] is equally valid.
 
-        -orbitals: nested iterable with the orbitals indexes to be
-          considered. For example: [[0],[2]] means select the first
-          orbital ("s") and the second one ("pz").
-          [[0],[1,2,3],[4,5,6,7,8]] is ["s", "p", "d"].
-
-        -orbitalsNames: The name to be put in each new orbital field (of a
-          orbital line). For example ["s","p","d"] is a good
-          `orbitalsName` for the `orbitals`=[[0],[1,2,3],[4,5,6,7,8]].
-          However, ["foo", "bar", "baz"] is equally valid.
+        :return:
 
         Note:
-          -The atom index is not counted as the first field.
-          -The last column ('tot') is so important that it is always
-           included. Do not needs to be called
+            - The atom index is not counted as the first field.
+            - The last column ('tot') is so important that it is always
+                included. Do not needs to be called
+
         """
         # setting iostuff, this method -and class- should not made any
         # checking about IO, that is the job of the caller
@@ -1559,7 +1553,8 @@ class ProcarSymmetry:
         return
 
     def GeneralRotation(self, angle, rotAxis=None, store=True):
-        """Apply a rotation defined by an angle and an axis.
+        """
+        Apply a rotation defined by an angle and an axis.
 
         Returning value: (Kpoints, sx,sy,sz), the rotated Kpoints and spin
                          vectors (if not the case, they will be empty
@@ -1571,10 +1566,10 @@ class ProcarSymmetry:
         rotAxis : a fixed Axis when applying the symmetry, usually it is
         from Gamma to another point). It doesn't need to be normalized.
         The RotAxis can be:
-           [x,y,z] : a cartesian vector in k-space.
-           'x': [1,0,0], a rotation in the yz plane.
-           'y': [0,1,0], a rotation in the zx plane.
-           'z': [0,0,1], a rotation in the xy plane
+        [x,y,z] : a cartesian vector in k-space.
+        'x': [1,0,0], a rotation in the yz plane.
+        'y': [0,1,0], a rotation in the zx plane.
+        'z': [0,0,1], a rotation in the xy plane
 
         """
         if rotAxis is None:

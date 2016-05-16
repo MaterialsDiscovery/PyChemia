@@ -12,11 +12,13 @@ def length_vector(v):
     Returns the length of a vector 'v' in arbitrary number of dimensions
 
     :param v: (list, numpy.ndarray) Vector to compute length
+
     :rtype : (float) The lenght of the vector
 
-    Example:
->>> length_vector([1, 2, 3])
-3.7416573867739413
+    Examples:
+    >>> length_vector([1, 2, 3])
+    3.7416573867739413
+
     """
     return np.linalg.norm(v)
 
@@ -30,10 +32,10 @@ def length_vectors(m):
 
     :rtype : numpy.ndarray
 
-    Examples
+    Examples:
+    >>> length_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
+    array([  3.74165739,   8.77496439,  13.92838828,   1.        ,   2.        ])
 
->>> length_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
-array([  3.74165739,   8.77496439,  13.92838828,   1.        ,   2.        ])
     """
     m = np.array(m)
     return np.linalg.norm(m, axis=1)
@@ -45,13 +47,17 @@ def unit_vector(v):
     Arbitrary number of dimensions
 
     :param v: list, numpy.array
+
     :rtype : numpy.ndarray
 
->>> a = unit_vector([1, 2, 3])
->>> a
-array([ 0.26726124,  0.53452248,  0.80178373])
->>> length_vector(a)
-1.0
+    Examples:
+    >>> a = unit_vector([1, 2, 3])
+    >>> a
+    array([ 0.26726124,  0.53452248,  0.80178373])
+
+    >>> length_vector(a)
+    1.0
+
     """
     if length_vector(np.array(v, dtype=float)) < 1E-10:
         raise ValueError('Vector is null')
@@ -64,18 +70,21 @@ def unit_vectors(m):
     of vectors arranged as rows in MxN matrix
 
     :param m: numpy.ndarray
+
     :rtype : numpy.ndarray
 
     Example:
->>> b = unit_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
->>> b
-array([[ 0.26726124,  0.53452248,  0.80178373],
-       [ 0.45584231,  0.56980288,  0.68376346],
-       [ 0.50257071,  0.57436653,  0.64616234],
-       [ 1.        ,  0.        ,  0.        ],
-       [ 0.        ,  0.        ,  1.        ]])
->>> length_vectors(b)
-array([ 1.,  1.,  1.,  1.,  1.])
+    >>> b = unit_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
+    >>> b
+    array([[ 0.26726124,  0.53452248,  0.80178373],
+           [ 0.45584231,  0.56980288,  0.68376346],
+           [ 0.50257071,  0.57436653,  0.64616234],
+           [ 1.        ,  0.        ,  0.        ],
+           [ 0.        ,  0.        ,  1.        ]])
+
+    >>> length_vectors(b)
+    array([ 1.,  1.,  1.,  1.,  1.])
+
     """
     m = np.array(m)
     return m / (np.linalg.norm(m, axis=1)[:, np.newaxis])
@@ -88,21 +97,22 @@ def angle_vector(v1, v2, units='rad'):
 
     :param v1: (list, numpy.ndarray)
     :param v2: (list, numpy.ndarray)
-    :param units: (str) : 'rad' (default) Radians
-                          'deg' Degrees
+    :param units: (str) : 'rad' (default) Radians, 'deg' Degrees
+
     :rtype : float
 
     Examples:
->>> angle_vector([1, 0, 0], [0, 1, 0])
-1.5707963267948966
->>> angle_vector([1, 0, 0], [1, 0, 0])
-0.0
->>> angle_vector([1, 0, 0], [-1, 0, 0])
-3.1415926535897931
->>> angle_vector([1, 0, 0], [0, 1, 0], units='deg')
-90.0
->>> angle_vector([1, 0, 0], [-1, 0, 0], units='deg')
-180.0
+    >>> angle_vector([1, 0, 0], [0, 1, 0])
+    1.5707963267948966
+    >>> angle_vector([1, 0, 0], [1, 0, 0])
+    0.0
+    >>> angle_vector([1, 0, 0], [-1, 0, 0])
+    3.1415926535897931
+    >>> angle_vector([1, 0, 0], [0, 1, 0], units='deg')
+    90.0
+    >>> angle_vector([1, 0, 0], [-1, 0, 0], units='deg')
+    180.0
+
     """
     assert (units in ['rad', 'deg'])
 
@@ -139,37 +149,38 @@ def angle_vectors(m, units='rad'):
     vectors arranged as rows in matrix 'm'
 
     :param m: (numpy.ndarray)
-    :param units: (str) : 'rad' Radians
-                          'deg' Degrees
+    :param units: (str) : 'rad' Radians, 'deg' Degrees
 
     :rtype : numpy.ndarray
-    Example:
 
->>> a = angle_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
->>> import pprint
->>> pprint.pprint(a)
-{(0, 1): 0.22572612855273419,
- (0, 2): 0.2858867976945072,
- (0, 3): 1.3002465638163236,
- (0, 4): 0.6405223126794245,
- (1, 2): 0.060160669141772885,
- (1, 3): 1.0974779950809703,
- (1, 4): 0.8178885561654512,
- (2, 3): 1.0442265974045177,
- (2, 4): 0.86825103780276369,
- (3, 4): 1.5707963267948966}
->>> a = angle_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]], units='deg')
->>> pprint.pprint(a)
-{(0, 1): 12.933154491899135,
- (0, 2): 16.380106926405656,
- (0, 3): 74.498640433063002,
- (0, 4): 36.699225200489877,
- (1, 2): 3.4469524345065143,
- (1, 3): 62.880857226618922,
- (1, 4): 46.861562380328941,
- (2, 3): 59.829776886585428,
- (2, 4): 49.747120023952057,
- (3, 4): 90.0}
+    Examples:
+    >>> import pprint
+    >>> a = angle_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
+    >>> pprint.pprint(a)
+    {(0, 1): 0.22572612855273419,
+     (0, 2): 0.2858867976945072,
+     (0, 3): 1.3002465638163236,
+     (0, 4): 0.6405223126794245,
+     (1, 2): 0.060160669141772885,
+     (1, 3): 1.0974779950809703,
+     (1, 4): 0.8178885561654512,
+     (2, 3): 1.0442265974045177,
+     (2, 4): 0.86825103780276369,
+     (3, 4): 1.5707963267948966}
+
+    >>> a = angle_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]], units='deg')
+    >>> pprint.pprint(a)
+    {(0, 1): 12.933154491899135,
+     (0, 2): 16.380106926405656,
+     (0, 3): 74.498640433063002,
+     (0, 4): 36.699225200489877,
+     (1, 2): 3.4469524345065143,
+     (1, 3): 62.880857226618922,
+     (1, 4): 46.861562380328941,
+     (2, 3): 59.829776886585428,
+     (2, 4): 49.747120023952057,
+     (3, 4): 90.0}
+
     """
 
     ret = {}
@@ -185,13 +196,15 @@ def distance(v1, v2):
 
     :param v1: (list, numpy.ndarray)
     :param v2: (list, numpy.ndarray)
+
     :rtype : tuple
 
-    Example:
->>> distance([0, 0, 0, 1], [1, 0, 0, 0])
-(array([ 1,  0,  0, -1]), 1.4142135623730951)
->>> distance([-1, 0, 0], [1, 0, 0])
-(array([2, 0, 0]), 2.0)
+    Examples:
+    >>> distance([0, 0, 0, 1], [1, 0, 0, 0])
+    (array([ 1,  0,  0, -1]), 1.4142135623730951)
+    >>> distance([-1, 0, 0], [1, 0, 0])
+    (array([2, 0, 0]), 2.0)
+
     """
     ret = np.array(v2) - np.array(v1)
     return ret, length_vector(ret)
@@ -199,25 +212,26 @@ def distance(v1, v2):
 
 def distances(m):
     """
-    Return all the distances for all possible combinations
-    of the row vectors in matrix m
+    Return all the distances for all possible combinations of the row vectors in matrix m
 
     :param m: (list, numpy.ndarray)
+
     :rtype : dict
 
     Example:
->>> import pprint
->>> pprint.pprint(distances([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]]))
-{(0, 1): (array([3, 3, 3]), 5.196152422706632),
- (0, 2): (array([6, 6, 6]), 10.392304845413264),
- (0, 3): (array([ 0, -2, -3]), 3.6055512754639891),
- (0, 4): (array([-1, -2, -1]), 2.4494897427831779),
- (1, 2): (array([3, 3, 3]), 5.196152422706632),
- (1, 3): (array([-3, -5, -6]), 8.3666002653407556),
- (1, 4): (array([-4, -5, -4]), 7.5498344352707498),
- (2, 3): (array([-6, -8, -9]), 13.45362404707371),
- (2, 4): (array([-7, -8, -7]), 12.727922061357855),
- (3, 4): (array([-1,  0,  2]), 2.2360679774997898)}
+    >>> import pprint
+    >>> pprint.pprint(distances([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]]))
+    {(0, 1): (array([3, 3, 3]), 5.196152422706632),
+     (0, 2): (array([6, 6, 6]), 10.392304845413264),
+     (0, 3): (array([ 0, -2, -3]), 3.6055512754639891),
+     (0, 4): (array([-1, -2, -1]), 2.4494897427831779),
+     (1, 2): (array([3, 3, 3]), 5.196152422706632),
+     (1, 3): (array([-3, -5, -6]), 8.3666002653407556),
+     (1, 4): (array([-4, -5, -4]), 7.5498344352707498),
+     (2, 3): (array([-6, -8, -9]), 13.45362404707371),
+     (2, 4): (array([-7, -8, -7]), 12.727922061357855),
+     (3, 4): (array([-1,  0,  2]), 2.2360679774997898)}
+
     """
     ret = {}
     for i in itertools.combinations(range(len(m)), 2):
@@ -227,21 +241,21 @@ def distances(m):
 
 def wrap2_pmhalf(x):
     """
-    Wraps a number or array in the interval ]-1/2, 1/2]
-    values = -1/2 will be wrapped  to 1/2
+    Wraps a number or array in the interval ]-1/2, 1/2] values = -1/2 will be wrapped  to 1/2
 
-    :param x:
+    :param x: (float) The number to be wrapped in the interval (-1/2, 1/2]
 
-    Example:
->>> wrap2_pmhalf(-0.5)
-0.5
->>> wrap2_pmhalf(0.0)
-0.0
->>> wrap2_pmhalf([-0.75, -0.5, -0.25, 0.0, 0.25, 0.5, 0.75])
-array([ 0.25,  0.5 , -0.25,  0.  ,  0.25,  0.5 , -0.25])
->>> wrap2_pmhalf([[-0.75, -0.5, -0.25], [0.25, 0.5, 0.75]])
-array([[ 0.25,  0.5 , -0.25],
-       [ 0.25,  0.5 , -0.25]])
+    Examples:
+    >>> wrap2_pmhalf(-0.5)
+    0.5
+    >>> wrap2_pmhalf(0.0)
+    0.0
+    >>> wrap2_pmhalf([-0.75, -0.5, -0.25, 0.0, 0.25, 0.5, 0.75])
+    array([ 0.25,  0.5 , -0.25,  0.  ,  0.25,  0.5 , -0.25])
+    >>> wrap2_pmhalf([[-0.75, -0.5, -0.25], [0.25, 0.5, 0.75]])
+    array([[ 0.25,  0.5 , -0.25],
+           [ 0.25,  0.5 , -0.25]])
+
     """
 
     def wrap(num):
@@ -485,11 +499,12 @@ def rotation_x(theta):
     :param theta: (float) Angle in radians
     :return: (numpy.ndarray)
 
-    Example:
->>> import numpy as np
->>> m = rotation_x(np.pi/3)
->>> np.all(np.round(np.dot(m.T,m),15)==np.eye(3))
-True
+    Examples:
+    >>> import numpy as np
+    >>> m = rotation_x(np.pi/3)
+    >>> np.all(np.round(np.dot(m.T,m),15)==np.eye(3))
+    True
+
     """
     return np.array([[1, 0, 0],
                      [0, np.cos(theta), -np.sin(theta)],
@@ -504,10 +519,11 @@ def rotation_y(theta):
     :return: (numpy.ndarray)
 
     Example:
->>> import numpy as np
->>> m = rotation_y(np.pi/3)
->>> np.all(np.round(np.dot(m.T,m),15)==np.eye(3))
-True
+    >>> import numpy as np
+    >>> m = rotation_y(np.pi/3)
+    >>> np.all(np.round(np.dot(m.T,m),15)==np.eye(3))
+    True
+
     """
     return np.array([[np.cos(theta), 0, np.sin(theta)],
                      [0, 1, 0],
@@ -521,11 +537,12 @@ def rotation_z(theta):
     :param theta: (float) Angle in radians
     :return: (numpy.ndarray)
 
-    Example:
->>> import numpy as np
->>> m = rotation_z(np.pi/3)
->>> np.all(np.round(np.dot(m.T,m),15)==np.eye(3))
-True
+    Examples:
+    >>> import numpy as np
+    >>> m = rotation_z(np.pi/3)
+    >>> np.all(np.round(np.dot(m.T,m),15)==np.eye(3))
+    True
+
     """
     return np.array([[np.cos(theta), -np.sin(theta), 0],
                      [np.sin(theta), np.cos(theta), 0],
@@ -544,12 +561,13 @@ def apply_rotation(vector, theta_x, theta_y, theta_z):
     :return: (numpy.ndarray)
 
   Example:
->>> a=apply_rotation([0.1, 0.2, 0.3], 3.1415/3, 3.1415/4, 3.1415/5)
->>> b=apply_rotation(a, -3.1415/3, 0, 0)
->>> c=apply_rotation(b, 0, -3.1415/4, 0)
->>> d=apply_rotation(c, 0, 0, -3.1415/5)
->>> d
-array([ 0.1,  0.2,  0.3])
+    >>> a=apply_rotation([0.1, 0.2, 0.3], 3.1415/3, 3.1415/4, 3.1415/5)
+    >>> b=apply_rotation(a, -3.1415/3, 0, 0)
+    >>> c=apply_rotation(b, 0, -3.1415/4, 0)
+    >>> d=apply_rotation(c, 0, 0, -3.1415/5)
+    >>> d
+    array([ 0.1,  0.2,  0.3])
+
     """
     return np.round(np.dot(rotation_x(theta_x), np.dot(rotation_y(theta_y), np.dot(rotation_z(theta_z), vector))), 14)
 
@@ -610,10 +628,11 @@ def projector(u, v):
     :return:
 
     Example:
->>> projector([0.1, 0.2, 0.3], [0.3, 0.2, 0.1])
-array([ 0.07142857,  0.14285714,  0.21428571])
->>> projector([1, 0, 0], [0, 2, 0])
-array([ 0.,  0.,  0.])
+    >>> projector([0.1, 0.2, 0.3], [0.3, 0.2, 0.1])
+    array([ 0.07142857,  0.14285714,  0.21428571])
+    >>> projector([1, 0, 0], [0, 2, 0])
+    array([ 0.,  0.,  0.])
+
     """
     u = np.array(u, dtype=float)
     v = np.array(v, dtype=float)
@@ -631,10 +650,11 @@ def gram_smith(m):
     :return:
 
     Example:
->>> import numpy as np
->>> o = gram_smith(np.random.rand(3,3))
->>> np.round(np.abs(np.linalg.det(o)),10)==1.0
-True
+    >>> import numpy as np
+    >>> o = gram_smith(np.random.rand(3,3))
+    >>> np.round(np.abs(np.linalg.det(o)),10)==1.0
+    True
+
     """
     m = np.array(m)
     ret = np.zeros((len(m[0]), len(m[0])))
@@ -658,10 +678,11 @@ def gram_smith_qr(ndim):
     :return:
 
     Example:
->>> import numpy as np
->>> o = gram_smith_qr(3)
->>> np.round(np.abs(np.linalg.det(o)),10)==1.0
-True
+    >>> import numpy as np
+    >>> o = gram_smith_qr(3)
+    >>> np.round(np.abs(np.linalg.det(o)),10)==1.0
+    True
+
     """
     matrix_a = np.random.rand(ndim, ndim)
     while np.linalg.det(matrix_a) < 1E-5:

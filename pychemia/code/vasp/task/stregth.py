@@ -4,7 +4,7 @@ import pychemia
 import numpy as np
 from .convergence import ConvergenceKPointGrid
 from .relax import IonRelaxation
-from ..._tasks import Task
+from ...tasks import Task
 
 __author__ = 'Guillermo Avendano-Franco'
 

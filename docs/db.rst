@@ -35,5 +35,12 @@ that can be used to feed clusters with execution jobs.
 The PyChemiaQueue is used to fill the role of a meta-queue for structures and 
 jobs that need to be computed. 
 
-.. automodule:: pychemia.db
-:members:
+PyChemiaDB
+----------
+
+.. autoclass:: pychemia.db.PyChemiaDB
+
+PyChemiaQueue
+-------------
+
+.. autoclass:: pychemia.db.PyChemiaDB

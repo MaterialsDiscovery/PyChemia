@@ -48,8 +48,8 @@ class SearcherTest(unittest.TestCase):
         import pychemia
 
         pychemia.pcm_log.debug('HarmonySearch')
-        popu = pychemia.population.EuclideanPopulation(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1],
-                                                       local_minimization=True)
+        popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1],
+                                                local_minimization=True)
         mini = pychemia.utils.metaheuristics.Sphere().minimum(3)
         hs = pychemia.searcher.HarmonySearch(popu)
         hs.run()
@@ -62,7 +62,7 @@ class SearcherTest(unittest.TestCase):
         import pychemia
 
         pychemia.pcm_log.debug('ParticleSwarm')
-        popu = pychemia.population.EuclideanPopulation(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1])
+        popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1])
         mini = pychemia.utils.metaheuristics.Sphere().minimum(3)
         hs = pychemia.searcher.ParticleSwarm(popu)
         hs.run()
@@ -75,7 +75,7 @@ class SearcherTest(unittest.TestCase):
         import pychemia
 
         pychemia.pcm_log.debug('FireFly')
-        popu = pychemia.population.EuclideanPopulation(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1])
+        popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1])
         mini = pychemia.utils.metaheuristics.Sphere().minimum(3)
         hs = pychemia.searcher.FireFly(popu)
         hs.run()
@@ -88,7 +88,7 @@ class SearcherTest(unittest.TestCase):
         import pychemia
 
         pychemia.pcm_log.debug('GeneticAlgorithm')
-        popu = pychemia.population.EuclideanPopulation(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1])
+        popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1])
         mini = pychemia.utils.metaheuristics.Sphere().minimum(3)
         hs = pychemia.searcher.GeneticAlgorithm(popu)
         hs.run()

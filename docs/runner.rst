@@ -1,5 +1,8 @@
 pychemia.runner
 ===============
 
-.. automodule:: pychemia.runner
 
+PBSRunner
+---------
+
+.. autoclass:: pychemia.runner.PBSRunner

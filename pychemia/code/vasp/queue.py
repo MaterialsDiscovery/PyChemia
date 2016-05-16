@@ -1,6 +1,6 @@
 import os
-from ._incar import InputVariables
-from ._poscar import write_poscar
+from .incar import InputVariables
+from .poscar import write_poscar
 
 
 def write_from_queue(queue, entry_id, destination=None):

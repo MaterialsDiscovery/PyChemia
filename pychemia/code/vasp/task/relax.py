@@ -10,12 +10,12 @@ from pychemia import pcm_log
 from pychemia.crystal import KPoints
 from pychemia.utils.serializer import generic_serializer
 from pychemia.utils.mathematics import round_small
-from .._incar import InputVariables
-from .._outcar import VaspOutput, read_vasp_stdout
-from .._poscar import read_poscar
-from .._vasp import VaspJob, VaspAnalyser
-from ..._relaxator import Relaxator
-from ..._tasks import Task
+from ..incar import InputVariables
+from ..outcar import VaspOutput, read_vasp_stdout
+from ..poscar import read_poscar
+from ..vasp import VaspJob, VaspAnalyser
+from ...relaxator import Relaxator
+from ...tasks import Task
 
 __author__ = 'Guillermo Avendano-Franco'
 

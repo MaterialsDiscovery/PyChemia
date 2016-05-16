@@ -1,6 +1,6 @@
 import os as _os
 import subprocess as _subprocess
-from ._utils import netcdf2dict, psp_name
+from .utils import netcdf2dict, psp_name
 
 
 class AbiFiles:

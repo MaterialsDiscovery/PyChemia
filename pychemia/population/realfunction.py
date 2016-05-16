@@ -6,7 +6,7 @@ from ._population import Population
 from pychemia.utils.mathematics import unit_vector
 
 
-class EuclideanPopulation(Population):
+class RealFunction(Population):
     def __init__(self, function, ndim, limits, local_minimization=False):
         """
         Creates a simple population of points in R^N with

@@ -1,8 +1,9 @@
 """
-PyChemia is an open-source Python Library for materials structural search. The purpose of the code is to create
-a method agnostic framework for materials discovery and design using a variety of methods from Metaheuristic to
-Dynamical such as minima hoping method (MHM)
+PyChemia is a python library for automatize atomistic-level calculations. The library provide an API
+ to manipulate structures.
+Integrated to a Mongo database, PyChemia is able to perform global search using several algorithms.
 """
+
 from __future__ import print_function
 
 try:
@@ -111,13 +112,19 @@ from . import runner
 from . import searcher
 from . import utils
 from . import web
-from ._info import __author__, __copyright__, __version__, __email__, __status__, __date__, Version
+from .info import __author__, __copyright__, __version__, __email__, __status__, __date__, Version
 from . import code
 from . import population
 from .core.from_file import structure_from_file
 
 
 def info():
+    """
+    Show basic information about PyChemia, its location and version.
+        Also information about other libraries used by PyChemia
+        both mandatory and optional
+
+    """
     print('PyChemia\n--------\n')
     print('Version: ' + __version__)
     print('Path:    ' + __path__[0])
@@ -133,16 +140,17 @@ def info():
     except ImportError:
         print('pymongo Not Found')
 
-    for modui in ['numpy', 'scipy', 'mayavi', 'Scientific', 'matplotlib', 'pyhull', 'pymatgen', 'qmpy']:
+    for modui in ['numpy', 'scipy', 'mayavi', 'Scientific', 'matplotlib',
+                  'future', 'nose', 'coverage', 'spglib', 'pyhull', 'pymatgen', 'qmpy', ]:
         try:
             mm = __import__(modui)
             print('%10s %10s   %s' % (modui, mm.__version__, mm.__path__[0]))
         except ImportError:
-            print('%10s Not Found' % modui)
+            print('%10s %10s Not Found' % (modui, ''))
 
     try:
         import ase
         from ase import version as ase_version
         print('%10s %10s   %s' % ('ase', ase_version.version_base, ase.__path__[0]))
     except ImportError:
-        print('ase Not Found')
+        print('%10s %10s Not Found' % ('ase', ''))

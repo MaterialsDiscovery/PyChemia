@@ -15,7 +15,7 @@ if HAS_PYMONGO:
     from pychemia.db import get_database
 
 
-class StructurePopulation(Population):
+class RelaxStructures(Population):
     def __init__(self, name, composition=None, tag='global', target_forces=1E-3, value_tol=1E-2,
                  distance_tol=0.3, min_comp_mult=2, max_comp_mult=8, pcdb_source=None):
         """
@@ -150,16 +150,14 @@ class StructurePopulation(Population):
 
     def check_duplicates(self, ids):
         """
-        Computes duplicate structures measuring its distance when
-        their value is larger than value_tol.
-        If the distance is lower than 'distance_tol' the structures
-        will be cosidered as duplicates
+        Computes duplicate structures measuring its distance when their value is larger than value_tol.
+        If the distance is lower than 'distance_tol' the structures will be cosidered as duplicates.
 
         :param ids:
-        :return: (dict) Dictionary of duplicates, the keys are the ids
-        of the duplicates and the value is the structure from which the
-        structure is duplicated. In general the energy of the 'value'
-        is lower than the 'key'
+        :return: (dict) Dictionary of duplicates, the keys are the ids of the duplicates and the value is the structure
+                        from which the structure is duplicated. In general the energy of the 'value' is lower than the
+                        'key'
+
         """
 
         ret = {}
@@ -399,11 +397,11 @@ class StructurePopulation(Population):
 
     @staticmethod
     def from_dict(population_dict):
-        return StructurePopulation(name=population_dict['name'],
-                                   tag=population_dict['tag'],
-                                   target_forces=population_dict['target_forces'],
-                                   value_tol=population_dict['value_tol'],
-                                   distance_tol=population_dict['distance_tol'])
+        return RelaxStructures(name=population_dict['name'],
+                               tag=population_dict['tag'],
+                               target_forces=population_dict['target_forces'],
+                               value_tol=population_dict['value_tol'],
+                               distance_tol=population_dict['distance_tol'])
 
     def cross(self, ids):
 

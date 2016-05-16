@@ -8,7 +8,7 @@ from pychemia import pcm_log
 from pychemia.utils.mathematics import gram_smith_qr
 
 
-class PopulationDFTU(Population):
+class OrbitalDFTU(Population):
     def __init__(self, name, abinit_input='abinit.in', natpawu=None, oxidations=None):
 
         Population.__init__(self, name, 'global')

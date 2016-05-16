@@ -1,7 +1,7 @@
-from ._searcher import Searcher
+from .searcher import Searcher
 
 
-class SimulatedAnnealing(Searcher):
+class AntColony(Searcher):
     def __init__(self, population, params, generation_size=32, stabilization_limit=10):
         self.population = population
         Searcher.__init__(self, self.population, generation_size, stabilization_limit)

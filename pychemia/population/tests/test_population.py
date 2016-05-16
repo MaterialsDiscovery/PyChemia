@@ -5,8 +5,8 @@ import os
 from pychemia import HAS_PYMONGO
 
 if HAS_PYMONGO:
-    from pychemia.population import LJCluster, StructurePopulation, PopulationDFTU, PopulationNonColl, \
-        EuclideanPopulation
+    from pychemia.population import LJCluster, RelaxStructures, OrbitalDFTU, NonCollinearMagMoms, \
+        RealFunction
 
 
 def has_connection():
@@ -44,45 +44,45 @@ class PopulationTest(unittest.TestCase):
 
     def test_structure(self):
         """
-        Tests (pychemia.population.StructurePopulation)              :
+        Tests (pychemia.population.RelaxStructures)                  :
         """
         if not has_connection():
             return
-        popu = StructurePopulation('test', 'NaCl')
+        popu = RelaxStructures('test', 'NaCl')
         popu.add_random()
         popu.add_random()
         popu.pcdb.clean()
 
     def test_noncoll(self):
         """
-        Tests (pychemia.population.PopulationNonColl)                :
+        Tests (pychemia.population.NonCollinearMagMoms)              :
         """
         if not has_connection():
             return
-        popu = PopulationNonColl('test', source_dir='pychemia/test/data/vasp_02')
+        popu = NonCollinearMagMoms('test', source_dir='pychemia/test/data/vasp_02')
         popu.add_random()
         popu.add_random()
         popu.pcdb.clean()
 
     def notest_dftu(self):
         """
-        Tests (pychemia.population.PopulationDFTU)                   :
+        Tests (pychemia.population.OrbitalDFTU)                      :
         """
         if not has_connection():
             return
         print(os.getcwd())
-        popu = PopulationDFTU('test', './data/abinit_01/abinit.in', oxidations=[-1, 1])
+        popu = OrbitalDFTU('test', './data/abinit_01/abinit.in', oxidations=[-1, 1])
         popu.add_random()
         popu.add_random()
         popu.pcdb.clean()
 
     def test_euclidean(self):
         """
-        Tests (pychemia.population.EuclideanPopulation)              :
+        Tests (pychemia.population.RealFunction)                     :
         """
         if not has_connection():
             return
-        popu = EuclideanPopulation(funx2, 2, [-1, 1])
+        popu = RealFunction(funx2, 2, [-1, 1])
         popu.add_random()
         popu.add_random()
 

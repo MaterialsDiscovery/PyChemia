@@ -1,7 +1,7 @@
-from ._searcher import Searcher
+from .searcher import Searcher
 
 
-class MinimaHopping(Searcher):
+class MinimaHoppingMethod(Searcher):
     """
         class MinimaHopping
     """

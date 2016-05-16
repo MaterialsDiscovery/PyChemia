@@ -1,8 +1,8 @@
 """
-Routines related to Metadata info and Repositories
+Classes to manipulate execution on Queue systems, 'Torque'
 """
 
-from ._runner import Runner
-from ._pbs import PBSRunner, report_cover
+from .runner import Runner
+from .pbs import PBSRunner, report_cover
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

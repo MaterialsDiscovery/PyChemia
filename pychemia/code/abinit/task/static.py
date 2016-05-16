@@ -2,8 +2,8 @@ import os
 import json
 import numpy as np
 from pychemia.crystal import KPoints
-from ..._tasks import Task
-from .._abinit import AbinitJob
+from ...tasks import Task
+from ..abinit import AbinitJob
 
 __author__ = 'Guillermo Avendano-Franco'
 

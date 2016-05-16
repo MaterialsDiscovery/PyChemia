@@ -302,33 +302,52 @@ def valence(value=None):
 
 
 def period(value=None):
+    # type: (str, int, list) -> (int, list)
     """
     Return the period of the element(s)
 
-    :param value:
-    :return:
+    :param value: atom symbol, atom number or list of atoms
+    :return: The period of the atom or atoms
+    :rtype: (int, list)
 
     Examples:
->>> period('C')
-2
->>> period(['Au', 'Sb'])
-[6, 5]
+    >>> period('C')
+    2
+    >>> period(6)
+    2
+    >>> period(['Au', 'Sb'])
+    [6, 5]
+    >>> period(['Na', 'O', 'Ag', 'La'])
+    [3, 2, 5, 6]
+    >>> period(range(1,12))
+    [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3]
+
     """
     return _get_property(periods, value)
 
 
 def group(value=None):
+    # type: (str, int, list) -> (int, list)
     """
     Return the group of the element(s)
+    The group for lanctanides and actinides is identified with -3
 
-    :param value:
-    :return:
+    :param value: Atom symbol, atom number or list of atoms
+    :return: The group of the atom or atoms
+    :rtype: (int, list)
 
     Examples:
->>> group('C')
-14
->>> group(['Au', 'Sb'])
-[11, 15]
+    >>> group('C')
+    14
+    >>> group(6)
+    14
+    >>> group(['Au', 'Sb'])
+    [11, 15]
+    >>> group(['Na', 'O', 'Ag', 'La'])
+    [1, 16, 11, -3]
+    >>> group(range(1,12))
+    [1, 18, 1, 2, 13, 14, 15, 16, 17, 18, 1]
+
     """
     table = []
     for i in groups:
@@ -341,17 +360,27 @@ def group(value=None):
 
 
 def block(value=None):
+    # type: (str, int, list) -> (str, list)
     """
     Return the orbital block of the element(s)
+    For example, elements on group 1 and 2 are
+    s-block. Transition metals are on the d-block,
 
-    :param value:
-    :return:
+    :param value: Atom symbol, atom number or list of atoms
+    :return: The block of the atom or atoms
+    :rtype: (str, list)
 
     Examples:
->>> block('C')
-'p'
->>> block(['Au', 'Sb'])
-['d', 'p']
+    >>> block('C')
+    'p'
+    >>> block(6)
+    'p'
+    >>> block(['Au', 'Sb'])
+    ['d', 'p']
+    >>> block(['Na', 'O', 'Ag', 'La'])
+    ['s', 'p', 'd', 'f']
+    >>> block(range(1,12))
+    ['s', 'p', 's', 's', 'p', 'p', 'p', 'p', 'p', 'p', 's']
     """
     table = []
     for i in blocks:
@@ -364,6 +393,27 @@ def block(value=None):
 
 
 def electronegativity(value=None):
+    # type: (str, int, list) -> (float, list)
+    """
+    Electronegativity of the atom or atoms
+
+    :param value: Atom symbol, atom number or list of atoms
+    :return: The value of electronegativity for the atom or atoms
+    :rtype: (float, list)
+
+    Examples:
+    >>> electronegativity('C')
+    2.55
+    >>> electronegativity(6)
+    2.55
+    >>> electronegativity(['Au', 'Sb'])
+    [2.54, 2.05]
+    >>> electronegativity(['Na', 'O', 'Ag', 'La'])
+    [0.93, 3.44, 1.93, 1.1]
+    >>> electronegativity(range(1,12))
+    [2.2, 0, 0.98, 1.57, 2.04, 2.55, 3.04, 3.44, 3.98, 0, 0.93]
+
+    """
     table = []
     for i in electronegativities:
         if i is None:
@@ -375,53 +425,54 @@ def electronegativity(value=None):
 
 
 def covalent_radius(value=None):
+    # type: (str, int, list) -> (float, list)
     """
-    Covalent radius in Bohr of an atom with a given Z atomic_number
+    Covalent radius in Angstrom of an atom or list of atoms.
+    The atoms could be given as symbols or by atomic number
 
-    Args:
-        value: (int,float,str,list) The value/s
-               for which the covalent radius will be evaluated
-               Float values will be cast into integer
-
-    Return:
-        The covalent radius of the element/s
-        By default the return value is in angstroms
+    :param value: Atom symbol, atom number or list of atoms
+    :return: Covalent radius in angstrom for the atom or atoms
+    :rtype: (float, list)
 
     Examples:
-    >>> covalent_radius('H')
-    0.31
-    >>> covalent_radius(1.0)
-    0.31
-    >>> covalent_radius(1)
-    0.31
-    >>> covalent_radius([1, 2])
-    [0.31, 0.28]
-    >>> covalent_radius(['H', 'He'])
-    [0.31, 0.28]
+    >>> covalent_radius('C')
+    0.76
+    >>> covalent_radius(6)
+    0.76
+    >>> covalent_radius(['Au', 'Sb'])
+    [1.36, 1.39]
+    >>> covalent_radius(['Na', 'O', 'Ag', 'La'])
+    [1.66, 0.66, 1.45, 2.07]
+    >>> covalent_radius(range(1,12))
+    [0.31, 0.28, 1.28, 0.96, 0.84, 0.76, 0.71, 0.66, 0.57, 0.58, 1.66]
+
     """
 
     return _get_property(covalent_radii, value)
 
 
 def atomic_symbol(value=None):
+    # type: (int, float, list) -> (str, list)
     """
-    Atom Symbol for a given atomic number
-    Float values will be make integer
+    Atomic symbol for a atom or atoms given by atomic number
+    Float values will be rounded to the lowest integer
 
-    Args:
-        value: (int,float,str,list) The value/s
-               for which the atomic number will be evaluated
-               Float values will be cast into integer
-
-    Return:
-        The atomic number/s of the element/s
+    :param value: Atomic number or list of atomic number
+    :return: Atomic symbol(s) for the atom(s)
+    :rtype: (str, list)
 
     Examples:
+    >>> atomic_symbol(6)
+    'C'
+    >>> atomic_symbol(6.9)
+    'C'
+    >>> atomic_symbol([79, 51])
+    ['Au', 'Sb']
+    >>> atomic_symbol([11, 8, 47, 57])
+    ['Na', 'O', 'Ag', 'La']
+    >>> atomic_symbol(range(1,12))
+    ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na']
 
-    >>> atomic_symbol(1)
-    'H'
-    >>> atomic_symbol([1, 2])
-    ['H', 'He']
     """
     ret = None
     if value is None:
@@ -441,48 +492,49 @@ def atomic_symbol(value=None):
 
 
 def mass(value=None):
+    # type: (int, str, list) -> (float, list)
     """
-    Atom Mass for a given atomic number
+    Atomic mass for a atom or atoms given by atomic number
+    Float values will be rounded to the lowest integer
+    Atomic masses are returned in Standard Atomic weight
 
-    Args:
-        value: (int,float,str,list) The value/s
-               for which the atomic mass will be evaluated
-               Float values will be cast into integer
-
-    Return:
-        The atomic mass of the element/s
-        By default it returns the Standard Atomic weight
+    :param value: Atomic mass or list of atomic masses
+    :return: Atomic mass(es) for the atom(s)
+    :rtype: (float, list)
 
     Examples:
+    >>> mass(6)
+    12.011
+    >>> mass(6.9)
+    12.011
+    >>> mass(['Au', 'Sb'])
+    [196.96654, 121.753]
+    >>> mass(['Na', 'O', 'Ag', 'La'])
+    [22.989768, 15.9994, 107.8682, 138.9055]
+    >>> mass(range(1,12))
+    [1.00794, 4.002602, 6.941, 9.012182, 10.811, 12.011, 14.00674, 15.9994, 18.9984032, 20.1797, 22.989768]
 
-    >>> mass(1)
-    1.00794
-    >>> mass([1, 2])
-    [1.00794, 4.002602]
-    >>> mass(['H', 'He'])
-    [1.00794, 4.002602]
     """
     return _get_property(masses, value)
 
 
 def atomic_number(arg):
+    # type: (str, list) -> (int, list)
     """
-    Return the atomic number(s) of a symbol or list of atomic symbols
-    The argument could be an string or list of strings
+    Atomic number(s) of a symbol or list of atomic symbols
 
-    Args:
-        arg: (str,list) atomic symbol or list
-               of atomic symbols
-
-    Return:
-        The atomic number or list of atomic numbers
+    :param value: Atomic number or list of atomic numbers
+    :return: Atomic number(s) for the atom(s)
+    :rtype: (int, list)
 
     Examples:
+    >>> atomic_number('C')
+    6
+    >>> atomic_number(['Au', 'Sb'])
+    [79, 51]
+    >>> atomic_number(['Na', 'O', 'Ag', 'La'])
+    [11, 8, 47, 57]
 
-    >>> atomic_number('H')
-    1
-    >>> atomic_number(['H', u'He'])
-    [1, 2]
     """
     symbol_dict = dict(atomic_symbol())
     if hasattr(arg, 'decode'):
