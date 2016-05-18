@@ -1,0 +1,142 @@
+First Steps
+===========
+
+This is short and direct introduction to some of the basic functionalities from pychemia.
+To keep things simple, we will be using only the mandatory libraries, and we will not call any external simulation
+packages.
+
+You can use the official python terminal for executing this examples, however, you can gain some extra advantage by
+using the far more powerfull IPython terminal. On Linux machines with Debian, Ubuntu or Linux Mint, you can use the
+following command to install the IPython terminal::
+
+    sudo apt-get install python-ipython
+
+or for python 3.x::
+
+    sudo apt-get install python3-python
+
+On MacOS using macports,
+
+    sudo port install py27-ipython
+
+or for python 3.x
+
+    sudo port install py35-ipython
+
+FCC crystal of gold
+-------------------
+
+Most of the case of use for pychemia start with a Structure. A PyChemia Structure stores atomic positions and cell
+parameters for periodic structures. Lets start with a very simple structure, the FCC structure of gold. One way of
+creating and structure is by directly specifying atomic positions and cell parameters, for example::
+
+    $ ipython3-3.5
+    Python 3.5.1 (default, Mar  2 2016, 03:38:02)
+    Type "copyright", "credits" or "license" for more information.
+
+    IPython 4.2.0 -- An enhanced Interactive Python.
+    ?         -> Introduction and overview of IPython's features.
+    %quickref -> Quick reference.
+    help      -> Python's own help system.
+    object?   -> Details about 'object', use 'object??' for extra details.
+
+    In [1]: import pychemia
+
+    In [2]: a=4.05
+
+    In [3]: b=a/2
+
+    In [4]: fcc = pychemia.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
+
+    In [5]: fcc
+    Out[5]: Structure(symbols=['Au'], cell=[[0.0, 2.025, 2.025], [2.025, 0.0, 2.025], [2.025, 2.025, 0.0]],
+    reduced=[[0.0, 0.0, 0.0]], periodicity=True)
+
+You have created your first structure on PyChemia. The structure contains one atom of Gold and the cell is the
+primitive cell of a FCC structure with one atom. You can 'see' the structure using the 'print' function::
+
+    In [6]: print(fcc)
+    1
+
+     Symb  (             Positions            ) [     Cell-reduced coordinates     ]
+       Au  (     0.0000     0.0000     0.0000 ) [     0.0000     0.0000     0.0000 ]
+
+    Periodicity:  X Y Z
+
+    Lattice vectors:
+         0.0000     2.0250     2.0250
+         2.0250     0.0000     2.0250
+         2.0250     2.0250     0.0000
+
+We can now be interested in see the spacegroup of the structure just created. A pychemia.crystal.CrystalSymmetry
+object allow us to get access to symmetry calculations provided by the ``spglib`` library::
+
+    In [7]: cs=pychemia.crystal.CrystalSymmetry(fcc)
+
+    In [8]: cs.number()
+    Out[8]: 225
+
+    In [9]: cs.symbol()
+    Out[9]: 'Fm-3m'
+
+Both the space group number and the International symbol are accessible from the CrystalSymmetry object. Now we can
+use the CrystalSymmetry object to recreate the convenctional FCC cell::
+
+    In [10]: fcc_conv=cs.refine_cell()
+
+    In [11]: fcc
+    fcc       fcc_conv
+
+    In [12]: fcc_conv
+    Out[12]: Structure(symbols=['Au', 'Au', 'Au', 'Au'], cell=4.05, reduced=[[0.0, 0.0, 0.0], [0.0, 0.5, 0.5],
+    [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]], periodicity=True)
+
+    In [11]: print(fcc_conv)
+    4
+
+     Symb  (             Positions            ) [     Cell-reduced coordinates     ]
+       Au  (     0.0000     0.0000     0.0000 ) [     0.0000     0.0000     0.0000 ]
+       Au  (     0.0000     2.0250     2.0250 ) [     0.0000     0.5000     0.5000 ]
+       Au  (     2.0250     0.0000     2.0250 ) [     0.5000     0.0000     0.5000 ]
+       Au  (     2.0250     2.0250     0.0000 ) [     0.5000     0.5000     0.0000 ]
+
+    Periodicity:  X Y Z
+
+    Lattice vectors:
+         4.0500     0.0000     0.0000
+         0.0000     4.0500     0.0000
+         0.0000     0.0000     4.0500
+
+The lattice vectors are now making a cube, and the structure is made of 4 gold atoms. Now we can want to create a
+supercell, 2x2x1 using the supercell method::
+
+    In [13]: fcc221=fcc_conv.supercell(size=(2,2,1))
+
+    In [14]: print(fcc221)
+    16
+
+     Symb  (             Positions            ) [     Cell-reduced coordinates     ]
+       Au  (     0.0000     0.0000     0.0000 ) [     0.0000     0.0000     0.0000 ]
+       Au  (     0.0000     2.0250     2.0250 ) [     0.0000     0.2500     0.5000 ]
+       Au  (     2.0250     0.0000     2.0250 ) [     0.2500     0.0000     0.5000 ]
+       Au  (     2.0250     2.0250     0.0000 ) [     0.2500     0.2500     0.0000 ]
+       Au  (     0.0000     4.0500     0.0000 ) [     0.0000     0.5000     0.0000 ]
+       Au  (     0.0000     6.0750     2.0250 ) [     0.0000     0.7500     0.5000 ]
+       Au  (     2.0250     4.0500     2.0250 ) [     0.2500     0.5000     0.5000 ]
+       Au  (     2.0250     6.0750     0.0000 ) [     0.2500     0.7500     0.0000 ]
+       Au  (     4.0500     0.0000     0.0000 ) [     0.5000     0.0000     0.0000 ]
+       Au  (     4.0500     2.0250     2.0250 ) [     0.5000     0.2500     0.5000 ]
+       Au  (     6.0750     0.0000     2.0250 ) [     0.7500     0.0000     0.5000 ]
+       Au  (     6.0750     2.0250     0.0000 ) [     0.7500     0.2500     0.0000 ]
+       Au  (     4.0500     4.0500     0.0000 ) [     0.5000     0.5000     0.0000 ]
+       Au  (     4.0500     6.0750     2.0250 ) [     0.5000     0.7500     0.5000 ]
+       Au  (     6.0750     4.0500     2.0250 ) [     0.7500     0.5000     0.5000 ]
+       Au  (     6.0750     6.0750     0.0000 ) [     0.7500     0.7500     0.0000 ]
+
+    Periodicity:  X Y Z
+
+    Lattice vectors:
+         8.1000     0.0000     0.0000
+         0.0000     8.1000     0.0000
+         0.0000     0.0000     4.0500
+

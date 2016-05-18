@@ -1,0 +1,9 @@
+Tutorials
+=========
+
+This is a set of tutorials intended to follow complete tasks that interconnect several modules and classes to achieve
+a given objective.
+
+.. toctree::
+
+    tutorial.structural_search

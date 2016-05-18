@@ -1,10 +1,18 @@
 """
-PyChemia is a python library for automatize atomistic-level calculations. The library provide an API
- to manipulate structures.
-Integrated to a Mongo database, PyChemia is able to perform global search using several algorithms.
+PyChemia is a python library for automatize atomistic-level calculations. The library provide an API to manipulate
+structures, store structures and properties in a Mongo database, search for new structures of a given composition,
+interact with several atomistic simulation codes and visualize atomistic-related data
+
 """
 
 from __future__ import print_function
+
+__author__ = "Guillermo Avendano-Franco"
+__copyright__ = "Copyright 2016"
+__version__ = "0.1.2"
+__email__ = "gtux.gaf@gmail.com"
+__status__ = "Development"
+__date__ = "May 13, 2016"
 
 try:
     import scipy
@@ -23,12 +31,15 @@ try:
 except ImportError:
     HAS_SPGLIB = False
 
+import sys
+
 
 try:
     import matplotlib
-
-
     HAS_MATPLOTLIB = True
+    if 'matplotlib' not in sys.modules:
+        matplotlib.use('agg')
+
 except ImportError:
     # print("Library 'matplotlib' could not be found, disabling visual functionality")
     HAS_MATPLOTLIB = False
@@ -55,12 +66,6 @@ try:
 except ImportError:
     #print("Library 'Scientific' could not be found")
     HAS_SCIENTIFIC = False
-
-import sys
-
-if HAS_MATPLOTLIB and 'matplotlib' not in sys.modules:
-    import matplotlib
-    matplotlib.use('agg')
 
 try:
     import pymongo
@@ -112,11 +117,10 @@ from . import runner
 from . import searcher
 from . import utils
 from . import web
-from .info import __author__, __copyright__, __version__, __email__, __status__, __date__, Version
 from . import code
 from . import population
 from .core.from_file import structure_from_file
-
+from .test import samples
 
 def info():
     """
@@ -154,3 +158,12 @@ def info():
         print('%10s %10s   %s' % ('ase', ase_version.version_base, ase.__path__[0]))
     except ImportError:
         print('%10s %10s Not Found' % ('ase', ''))
+
+
+class Version:
+    @staticmethod
+    def full_version():
+        return 'PyChemia Version=' + __version__ + ' from=' + __date__
+
+    def __init__(self):
+        pass

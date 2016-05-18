@@ -93,6 +93,9 @@ Before installing PyChemia, you may need to first install a few critical depende
 
     nosetests -v
 
+3. [Matplotlib](http://matplotlib.org/  "Matplotlib") >= 1.2
+   Used to plot band structures, densities of states and other 2D plots
+
 
 ### Optional
 
@@ -102,9 +105,6 @@ Before installing PyChemia, you may need to first install a few critical depende
 1. [PyMC](http://pymc-devs.github.io/pymc/index.html)
    PyMC is a python module that implements Bayesian statistical models and fitting algorithms
    Important for the datamining capabilities of PyChemia
-
-1. [Matplotlib](http://matplotlib.org/  "Matplotlib") >= 1.2
-   Used to plot band structures, densities of states and other 2D plots
 
 1. [Mayavi](http://docs.enthought.com/mayavi/mayavi/ "Mayavi") >= 4.1
    Some basic visualization tools are incorporated using this library

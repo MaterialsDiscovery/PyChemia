@@ -10,9 +10,6 @@ from ..kpoints import read_kpoints
 from ..poscar import read_poscar
 from ...tasks import Task
 
-if HAS_MATPLOTLIB:
-    import matplotlib.pyplot as plt
-
 __author__ = 'Guillermo Avendano-Franco'
 
 
@@ -42,6 +39,7 @@ class Convergence:
 
     def _convergence_plot(self, variable, xlabel, title, figname, annotate):
 
+        import matplotlib.pyplot as plt
         if not self.is_converge:
             print('Convergence not executed')
             return

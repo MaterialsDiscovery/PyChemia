@@ -1,0 +1,165 @@
+Installation
+============
+
+There are basically two ways of installing Pychemia, using pip or by cloning the Github repository.
+
+Installing PyChemia with pip
+----------------------------
+
+This is probably the easiest way, pip will download the code, check and eventually install dependencies and installing
+the package on a system-wide place or the home directory.
+All you have to do is execute this command::
+
+    sudo pip install pychemia
+
+or for python 3.x::
+
+    sudo pip3 install pychemia
+
+If you are on a machine where you do not have superuser privileges you can install pychemia on your home directory
+by adding the command '--user'::
+
+    pip install pychemia --user
+
+or for python 3.x::
+
+    pip3 install pychemia --user
+
+This is a simple and usually will work for you. The only situation where it could give you problems is when pip tries
+to compile and install dependencies. In particular, pychemia requires the following packages and versions::
+
+    numpy  >= 1.11.0
+    scipy  >= 0.17.0
+    future >= 0.15.2
+    spglib >= 1.9.4
+
+Now, most Linux distributions will probably come with older versions of numpy and scipy. Even more, Linux clusters
+usually have a very conservative approach related to packages and old versions of ``numpy`` and ``scipy`` are probably
+installed. ``numpy`` and ``scipy`` are python libraries that use the old and known BLAS and LAPACK libraries for all
+the usual linear algebra operations. If you encounter problems related with numpy and scipy, check if you have
+installed blas and lapack on your system.
+
+The python library ``future`` is a small package that helps keeping compatibility with python 2 and python 3 on the same
+source code. Finally ``spglib`` is a C-library with python wrappers for computing space groups and related functionality.
+
+We try to keep the dependencies of PyChemia to a very minimum. Some other libraries provides extra functionality that
+could be necessary for some tasks. Consider install pymongo, nose and matplotlib. You can do that using pip with the
+command::
+
+    sudo pip install pymongo nose matplotlib
+
+Remember that you can use ``--user`` if you want to install on your home directory without special privileges.
+The package 'pymongo' offers connectivity with a Mongo database, a must if you plan to use 'pychemia.population'
+subpackage or doing global searches with the 'pychemia.searcher' subpackage. Matplotlib is the 'standard de-facto'
+for 2D plots on python. Many of the functionalities on 'pychemia.visual' subpackage depends on it. Nose is a python
+package for executing automatize tests for PyChemia. If you want to use it more information is below.
+
+Installing PyChemia from github
+-------------------------------
+
+The current stable repository for PyChemia is on Github, you can download the master branch with the command::
+
+    git clone https://github.com/MaterialsDiscovery/PyChemia.git
+
+If you get a message such as::
+
+    $ git clone https://github.com/MaterialsDiscovery/PyChemia.git
+    -bash: git: command not found
+
+You need to install ``git`` first. On machines from the Debian 'lineage' (Ubuntu, Mint, and many others) you can use
+the command::
+
+    sudo apt-get install git
+
+On systems with ``yum`` you can use::
+
+    sudo yum install git
+
+Now that you have 'cloned' the PyChemia repository you have two options. Install the package by using the set of
+commands::
+
+    cd PyChemia
+    python setup build
+    python setup install --user
+
+Use ``python3`` for the commands above, if you want to use python 3.x instead.
+
+Another alternative is add path where you downloaded the repository to the variable $PYTHONPATH. You can do that
+by editing your ``.bashrc`` file. Supposing that you execute the ``git clone`` command directly on your home directory
+you can add the path for PyChemia adding this line to your .bashrc::
+
+    export PYTHONPATH=$HOME/PyChemia:$PYTHONPATH
+
+If you want the changes on .bashrc take inmediate effect execute::
+
+    source $HOME/.bashrc
+
+Importing the library
+---------------------
+
+No matter how you installed PyChemia, you should be able to load the library. You can use the traditional python
+terminal, for example::
+
+    $ python3.5
+    Python 3.5.1 (default, Mar  2 2016, 03:38:02)
+    [GCC 4.2.1 Compatible Apple LLVM 7.0.2 (clang-700.1.81)] on darwin
+    Type "help", "copyright", "credits" or "license" for more information.
+    >>> import pychemia
+    >>> pychemia.info()
+    PyChemia
+    --------
+
+    Version: 0.1.2
+    Path:    /Users/guilleaf/PyChemia/pychemia
+    Date:    May 13, 2016
+
+    Python version=3.5.1 (default, Mar  2 2016, 03:38:02)
+    [GCC 4.2.1 Compatible Apple LLVM 7.0.2 (clang-700.1.81)]
+
+    pymongo Not Found
+         numpy     1.11.0   /opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/numpy
+         scipy     0.17.1   /opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/scipy
+        mayavi            Not Found
+    Scientific            Not Found
+    matplotlib      1.5.1   /opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/matplotlib
+        future     0.15.2   /opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/future
+          nose      1.3.7   /opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/nose
+      coverage      4.0.3   /opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/coverage
+        spglib      1.9.4   /Users/guilleaf/Library/Python/3.5/lib/python/site-packages/spglib
+        pyhull            Not Found
+      pymatgen            Not Found
+          qmpy            Not Found
+           ase            Not Found
+
+The method ``pcyhemia.info()`` will inform about the several libraries that PyChemia uses, both mandatory and optional,
+their versions and path. That could be informative in case of something not working as expected.
+
+Testing with nose
+-----------------
+
+It is always important to test a library, not only from the developer point of view, but also for an user.
+Nose is a python package that offers a simple command to execute predefined test for a python package and report any
+errors or inconsistencies from the expected resuts.
+
+Direct the terminal to the place where PyChemia is located. Lets suppose that you have pychemia on
+``/Users/guilleaf/PyChemia ``, test PyChemia using the command::
+
+    cd /Users/guilleaf/PyChemia
+    nosetests -v
+
+The name of the command could have small variations according to your distribution. On a MacOS using macports
+the name could be for example ``nosetests-2.7`` or ``nosetests-3.5`` for python 2 and 3 respectively.
+
+``nosetests`` will search for tests on the entire package and subpackages. If everything is fine (and you use ``-v``
+for verbose output) you will get something like::
+
+    ...
+    Example of a simple calc                                     : ... ok
+    Example of a multiple calc                                   : ... ok
+
+    ----------------------------------------------------------------------
+    Ran 38 tests in 5.469s
+
+    OK
+
+That is an indication that all tests were successful and eventually you are ready to use the library.

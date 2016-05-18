@@ -13,7 +13,6 @@ setup(
     install_requires=['numpy >= 1.11.0',
                       'scipy >= 0.17.0',
                       'future>=0.15.2',
-                      'nose>=1.3.7',
                       'spglib>=1.9.4'],
     keywords=["electronic", "structure", "analysis", "materials", "discovery", "metaheuristics"],
 )

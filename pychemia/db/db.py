@@ -16,7 +16,7 @@ class PyChemiaDB:
                  replicaset=None):
         """
         Creates a MongoDB client to 'host' with 'port' and connect it to the database 'name'.
-            Authentication can be used with 'user' and 'password'
+        Authentication can be used with 'user' and 'password'
 
         :param name: (str) The name of the database
         :param host: (str) The host as name or IP

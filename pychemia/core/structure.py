@@ -217,7 +217,9 @@ Empty structure
                     ret += ', cell=' + str(self.cell.diagonal().tolist())
             else:
                 ret += ', cell=' + str(self.cell.tolist())
-        ret += ', positions=' + str(self.positions.tolist())
+            ret += ', reduced=' + str(self.reduced.tolist())
+        else:
+            ret += ', positions=' + str(self.positions.tolist())
         if all([self.periodicity[0] == item for item in self.periodicity]):
             ret += ', periodicity=' + str(self.periodicity[0])
         else:
@@ -410,6 +412,8 @@ Empty structure
         for i in range(3):
             if self.periodicity[i]:
                 self.reduced[:, i] %= 1.0
+                if 1.0 - self.reduced[:, i] < 1E-10:
+                    self.reduced[:, i] = 0
 
     def reduced2positions(self):
         """
@@ -762,6 +766,15 @@ Empty structure
         #    ret['vector_info'] = self.vector_info
         return ret
 
+    def round(self, decimals=6, pos='reduced'):
+        self.set_cell(np.around(self.cell, decimals))
+        if pos == 'reduced':
+            self.set_reduced(np.around(self.reduced, decimals))
+            self.reduced2positions()
+        else:
+            self.set_positions(np.around(self.positions, decimals))
+            self.positions2reduced()
+
     @staticmethod
     def from_dict(structdict):
 
@@ -1045,6 +1058,20 @@ Empty structure
         ret += formula
 
         return ret
+
+    def add_vacuum(self, length, direction=2):
+
+        vacuum = np.zeros(3)
+        vacuum[direction] = length
+        alpha = self.lattice.alpha
+        beta = self.lattice.beta
+        gamma = self.lattice.gamma
+        newlenghts = self.lattice.lengths + vacuum
+        a = newlenghts[0]
+        b = newlenghts[1]
+        c = newlenghts[2]
+        newlattice = self.lattice.from_parameters_to_cell(a, b, c, alpha, beta, gamma)
+        return Structure(symbols=self.symbols, cell=newlattice.cell, positions=self.positions)
 
 
 def load_structure_json(filename):

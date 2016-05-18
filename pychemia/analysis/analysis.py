@@ -158,10 +158,11 @@ class StructureAnalysis:
         struc_dist_x, struc_dist = self.structure_distances(delta=delta, sigma=sigma)
         fp_oganov = struc_dist.copy()
         vol = self.structure.volume
-        ns = self.structure.composition.values()
         for spec_pair in struc_dist:
             for i in range(len(struc_dist[spec_pair])):
-                fp_oganov[spec_pair][i] *= vol / (delta * ns[spec_pair[0]] * ns[spec_pair[1]])
+                number_atoms0 = self.structure.composition[spec_pair[0]]
+                number_atoms1 = self.structure.composition[spec_pair[1]]
+                fp_oganov[spec_pair][i] *= vol / (delta * number_atoms0 * number_atoms1)
                 fp_oganov[spec_pair][i] -= 1
         return struc_dist_x, fp_oganov
 

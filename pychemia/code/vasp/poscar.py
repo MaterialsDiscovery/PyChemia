@@ -55,6 +55,8 @@ def read_poscar(path='POSCAR'):
     if species is None:
         if os.path.isfile(potcarfile):
             species = get_species(potcarfile)
+        elif len(comment.split()) == len(natom_per_species):
+            species = comment.split()
         else:
             print(""" ERROR: The POSCAR does not contain information about the species present on the structure
             You can set a consistent POTCAR along the POSCAR or

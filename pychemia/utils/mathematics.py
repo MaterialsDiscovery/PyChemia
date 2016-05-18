@@ -74,6 +74,7 @@ def unit_vectors(m):
     :rtype : numpy.ndarray
 
     Example:
+    >>> from pychemia.utils.mathematics import *
     >>> b = unit_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
     >>> b
     array([[ 0.26726124,  0.53452248,  0.80178373],

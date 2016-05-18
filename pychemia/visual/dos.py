@@ -4,10 +4,6 @@ import sys
 import numpy as np
 from pychemia import HAS_MATPLOTLIB
 
-if HAS_MATPLOTLIB:
-    import matplotlib.pyplot as plt
-
-
 class DensityOfStates:
     """
     Stores the density of states
@@ -171,6 +167,7 @@ def plot_many_dos(doslist, minenergy=None, maxenergy=None, figwidth=16, figheigh
     :param figheight: (float) Height of figure
     :param figwidth: (float) Width of figure
     """
+    import matplotlib.pyplot as plt
     ndos = len(doslist)
     if minenergy is None:
         minenergy = min([min(x.energies) for x in doslist])
