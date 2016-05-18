@@ -4,7 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/MaterialsDiscovery/PyChemia/badge.svg?branch=master)]
 (https://coveralls.io/github/MaterialsDiscovery/PyChemia?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/pychemia/badge/?version=latest)](http://pychemia.readthedocs.io/en/latest/?badge=latest)
-  
+
 
 PyChemia
 ========
