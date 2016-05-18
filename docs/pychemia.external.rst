@@ -2,9 +2,9 @@ pychemia.external package
 =========================
 
 .. automodule:: pychemia.external
-:members:
-        :undoc-members:
-        :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Subpackages
 -----------

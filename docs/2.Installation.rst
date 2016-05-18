@@ -142,7 +142,7 @@ Nose is a python package that offers a simple command to execute predefined test
 errors or inconsistencies from the expected resuts.
 
 Direct the terminal to the place where PyChemia is located. Lets suppose that you have pychemia on
-``/Users/guilleaf/PyChemia ``, test PyChemia using the command::
+``/Users/guilleaf/PyChemia``, test PyChemia using the command::
 
     cd /Users/guilleaf/PyChemia
     nosetests -v

@@ -2,7 +2,7 @@ pychemia.web package
 ====================
 
 .. automodule:: pychemia.web
-:members:
-        :undoc-members:
-        :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 

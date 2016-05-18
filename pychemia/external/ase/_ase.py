@@ -21,8 +21,8 @@ __status__ = "Development"
 __date__ = "March 31, 2014"
 
 try:
-    import _ase.atoms
-    import _ase.io
+    import ase.atoms
+    import ase.io
 except ImportError:
     print('The module ase could not be imported')
     raise ImportError

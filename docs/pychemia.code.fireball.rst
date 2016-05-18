@@ -2,9 +2,9 @@ pychemia.code.fireball package
 ==============================
 
 .. automodule:: pychemia.code.fireball
-:members:
-        :undoc-members:
-        :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Subpackages
 -----------
@@ -20,8 +20,8 @@ pychemia.code.fireball.fireball module
 --------------------------------------
 
 .. automodule:: pychemia.code.fireball.fireball
-:members:
-        :undoc-members:
-        :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 

@@ -2,9 +2,9 @@ pychemia package
 ================
 
 .. automodule:: pychemia
-:members:
-        :undoc-members:
-        :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Subpackages
 -----------
@@ -28,3 +28,4 @@ Subpackages
     pychemia.utils
     pychemia.visual
     pychemia.web
+

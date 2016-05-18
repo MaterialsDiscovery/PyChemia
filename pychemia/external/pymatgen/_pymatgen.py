@@ -5,11 +5,12 @@ pymatdis objects
 import numpy as np
 
 try:
-    import _pymatgen.io.cif
+    import pymatgen.io.cif
 except ImportError:
     raise ImportError
+
 from pychemia import Structure
-from _pymatgen import Structure as PMG_Structure
+from pymatgen import Structure as PMG_Structure
 
 
 def cif2structure(filename, primitive=False):
