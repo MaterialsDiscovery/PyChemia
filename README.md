@@ -135,25 +135,11 @@ Before installing PyChemia, you may need to first install a few critical depende
 
     https://coveralls.io/github/MaterialsDiscovery/PyChemia
 
-How to install PyChemia
------------------------
+Documentation
+-------------
 
-The best way to install PyChemia is from its GitHub repository
-
-    git clone https://github.com/MaterialsDiscovery/PyChemia.git
-
-Once the repository is downloaded, you can install it using
-
-    cd PyChemia
-    python setup.py build
-
-    and:
-
-    sudo python setup.py install
-
-    or
-
-    python setup.py install --user
+Instructions for installation, using and programming scripts with PyChemia
+can be found on [Read The Docs](http://pychemia.readthedocs.io/en/latest/):
 
 
 Structure of the Library
