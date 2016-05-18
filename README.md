@@ -139,8 +139,10 @@ Documentation
 -------------
 
 Instructions for installation, using and programming scripts with PyChemia
-can be found on [Read The Docs](http://pychemia.readthedocs.io/en/latest/):
+can be found on two repositories for documentation:
 
+    * [Read The Docs](http://pychemia.readthedocs.io/en/latest/)
+    * [Python Hosted](http://pythonhosted.org/pychemia/)
 
 Structure of the Library
 ------------------------

@@ -160,8 +160,10 @@ class StructureAnalysis:
         vol = self.structure.volume
         for spec_pair in struc_dist:
             for i in range(len(struc_dist[spec_pair])):
-                number_atoms0 = self.structure.composition[spec_pair[0]]
-                number_atoms1 = self.structure.composition[spec_pair[1]]
+                specie0=self.structure.species[spec_pair[0]]
+                specie1=self.structure.species[spec_pair[1]]
+                number_atoms0 = self.structure.composition[specie0]
+                number_atoms1 = self.structure.composition[specie1]
                 fp_oganov[spec_pair][i] *= vol / (delta * number_atoms0 * number_atoms1)
                 fp_oganov[spec_pair][i] -= 1
         return struc_dist_x, fp_oganov
