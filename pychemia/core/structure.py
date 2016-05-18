@@ -412,8 +412,6 @@ Empty structure
         for i in range(3):
             if self.periodicity[i]:
                 self.reduced[:, i] %= 1.0
-                if 1.0 - self.reduced[:, i] < 1E-10:
-                    self.reduced[:, i] = 0
 
     def reduced2positions(self):
         """
