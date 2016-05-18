@@ -6,12 +6,12 @@ contain the root `toctree` directive.
 .. toctree::
 :maxdepth: 4
 
-       1.Introduction
-       2.Installation
-       3.FirstSteps
-       4.Tutorials
-       5.PyChemiaAPI
-       6.Contributors
+        1.Introduction
+        2.Installation
+        3.FirstSteps
+        4.Tutorials
+        5.PyChemiaAPI
+        6.Contributors
 
 Indices and tables
 ==================
