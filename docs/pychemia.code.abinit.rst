@@ -2,9 +2,9 @@ pychemia.code.abinit package
 ============================
 
 .. automodule:: pychemia.code.abinit
-:members:
-        :undoc-members:
-        :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Subpackages
 -----------
@@ -21,17 +21,17 @@ pychemia.code.abinit.abifiles module
 ------------------------------------
 
 .. automodule:: pychemia.code.abinit.abifiles
-:members:
-        :undoc-members:
-        :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 pychemia.code.abinit.abinit module
 ----------------------------------
 
 .. automodule:: pychemia.code.abinit.abinit
-:members:
-        :undoc-members:
-        :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 pychemia.code.abinit.htmlparser module
 --------------------------------------
