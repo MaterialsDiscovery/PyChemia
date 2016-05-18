@@ -32,7 +32,7 @@ class StructureMatch:
         gcd1 = self.structure1.get_composition().gcd
         gcd2 = self.structure2.get_composition().gcd
 
-        sts = np.array(shortest_triple_set(lcm(gcd1, gcd2) / gcd1))
+        sts = np.array(shortest_triple_set(lcm(gcd1, gcd2) / gcd1)).astype(int)
         supercell_multiples = sts[self.structure1.lattice.lengths.argsort()[::-1]]
         self.structure1 = self.structure1.supercell(supercell_multiples)
 
@@ -68,14 +68,14 @@ class StructureMatch:
             else:
                 # Only consider permutations of 2 positions
                 for ipar in itertools.permutations(range(len(distance_matrix)), 2):
-                    i = range(len(distance_matrix))
+                    i = list(range(len(distance_matrix)))
                     i[ipar[0]] = ipar[1]
                     i[ipar[1]] = ipar[0]
                     if distance_matrix[:, np.array(i)].trace() < min_trace:
                         min_trace = distance_matrix[:, np.array(i)].trace()
                         best[specie] = i
                 for ipar in itertools.permutations(range(len(distance_matrix)), 4):
-                    i = range(len(distance_matrix))
+                    i = list(range(len(distance_matrix)))
                     i[ipar[0]] = ipar[1]
                     i[ipar[1]] = ipar[0]
                     i[ipar[2]] = ipar[3]

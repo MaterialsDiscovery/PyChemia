@@ -18,5 +18,7 @@ def test_match():
     st2 = st.supercell((2, 3, 4))
     sm = pychemia.analysis.StructureMatch(st, st2)
     sm.match_size()
+    sm.match_atoms()
+    sm.amtch_shape()
     assert sm.structure1.natom == sm.structure2.natom
 
