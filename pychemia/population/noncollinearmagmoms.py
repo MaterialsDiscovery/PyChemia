@@ -155,7 +155,10 @@ class NonCollinearMagMoms(Population):
         n = self.structure.natom
         a = self.magmom_magnitude * np.ones(n)
         b = 2 * np.pi * np.random.rand(n)
-        c = np.pi * np.random.rand(20)
+        c = np.pi * np.random.rand(n)
+        print(a.shape)
+        print(b.shape)
+        print(c.shape)
         magmom = np.vstack((a, b, c)).T
         for i in range(self.structure.natom):
             if i not in self.mag_atoms:
