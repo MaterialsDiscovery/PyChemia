@@ -713,6 +713,7 @@ Empty structure
         new_natom = np.prod(size) * self.natom
         new_symbols = []
         new_positions = np.zeros((new_natom, 3))
+        size=np.array(size).astype(int)
 
         index = 0
         for i in range(size[0]):

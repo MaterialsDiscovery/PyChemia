@@ -11,7 +11,7 @@ from pychemia.analysis import StructureAnalysis
 from pychemia.code.vasp.task import IonRelaxation
 from pychemia.db import get_database
 from pychemia.evaluator import DirectEvaluator
-from pychemia.serializer import generic_serializer
+from pychemia.utils.serializer import generic_serializer
 from pychemia.utils.periodic import atomic_number
 
 

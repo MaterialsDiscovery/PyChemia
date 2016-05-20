@@ -21,6 +21,7 @@ class NonCollinearMagMoms(Population):
         self.structure = pychemia.code.vasp.read_poscar(source_dir + os.sep + 'POSCAR')
         if mag_atoms is None:
             self.mag_atoms = list(np.where(np.apply_along_axis(np.linalg.norm, 1, magmom) > 0.0)[0])
+            self.mag_atoms = [ int(x) for x in self.mag_atoms]
         else:
             self.mag_atoms = mag_atoms
         self.magmom_magnitude = magmom_magnitude
