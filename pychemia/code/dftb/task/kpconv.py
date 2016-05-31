@@ -16,14 +16,13 @@ class KPointConvergence:
         self.slater_path = slater_path
         self.waiting = waiting
         self.energy_tolerance = energy_tolerance
-        if isinstance(slater_path, basestring):
+        if isinstance(slater_path, str):
             self.slater_path = [slater_path]
         self.results = []
         self.output_file = output_file
 
         dftb = DFTBplus()
-        kpoints = KPoints()
-        kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=10000, force_odd=True)
+        kpoints = KPoints.optimized_grid(self.structure.lattice, kp_density=10000, force_odd=True)
         dftb.initialize(workdir=self.workdir, structure=self.structure, kpoints=kpoints)
         ans = dftb.set_slater_koster(search_paths=self.slater_path)
         if not ans:
@@ -33,8 +32,7 @@ class KPointConvergence:
 
         n = 10
         dftb = DFTBplus()
-        kpoints = KPoints()
-        kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=10000, force_odd=True)
+        kpoints = KPoints.optimized_grid(self.structure.lattice, kp_density=10000, force_odd=True)
         dftb.initialize(workdir=self.workdir, structure=self.structure, kpoints=kpoints)
         ans = dftb.set_slater_koster(search_paths=self.slater_path)
         if not ans:
@@ -46,7 +44,7 @@ class KPointConvergence:
 
         while True:
             density = n ** 3
-            kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=density, force_odd=True)
+            kpoints=KPoints.optimized_grid(self.structure.lattice, kp_density=density, force_odd=True)
             if np.sum(grid) != np.sum(kpoints.grid):
                 pcm_log.debug('Trial density: %d  Grid: %s' % (density, kpoints.grid))
                 grid = list(kpoints.grid)

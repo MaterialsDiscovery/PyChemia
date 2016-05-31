@@ -36,8 +36,7 @@ class Relaxation(Relaxator):
         self.structure = self.initial_structure.copy()
         self.waiting = waiting
         if kpoints is None:
-            self.kpoints = KPoints()
-            self.kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=kp_density)
+            self.kpoints = KPoints.optimized_grid(self.structure.lattice, kp_density=kp_density)
         else:
             self.kpoints = kpoints
 
@@ -47,7 +46,7 @@ class Relaxation(Relaxator):
         assert (isinstance(params, dict))
         if 'slater_path' not in params:
             params['slater_path'] = '.'
-        if isinstance(params['slater_path'], basestring):
+        if isinstance(params['slater_path'], str):
             assert os.path.exists(params['slater_path'])
             self.slater_path = [params['slater_path']]
         else:

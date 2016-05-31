@@ -1,12 +1,11 @@
 import os
-
 import numpy as np
-
-import pychemia
 from ._population import Population
 from pychemia import pcm_log
-from pychemia.utils.computing import deep_unicode
-
+from pychemia.utils.mathematics import spherical_to_cartesian, cartesian_to_spherical, rotate_towards_axis, \
+    angle_between_vectors
+from pychemia.code.vasp import read_incar, read_poscar, VaspJob, VaspOutput
+from pychemia.crystal import KPoints
 
 class NonCollinearMagMoms(Population):
     def __init__(self, name, source_dir='.', mag_atoms=None, magmom_magnitude=2.0, distance_tolerance=0.1):
@@ -15,10 +14,10 @@ class NonCollinearMagMoms(Population):
             raise ValueError("INCAR not found")
         if not os.path.isfile(source_dir + os.sep + 'POSCAR'):
             raise ValueError("POSCAR not found")
-        self.input = pychemia.code.vasp.read_incar(source_dir + os.sep + 'INCAR')
+        self.input = read_incar(source_dir + os.sep + 'INCAR')
         magmom = np.array(self.input.get_value('MAGMOM')).reshape((-1, 3))
 
-        self.structure = pychemia.code.vasp.read_poscar(source_dir + os.sep + 'POSCAR')
+        self.structure = read_poscar(source_dir + os.sep + 'POSCAR')
         if mag_atoms is None:
             self.mag_atoms = list(np.where(np.apply_along_axis(np.linalg.norm, 1, magmom) > 0.0)[0])
             self.mag_atoms = [ int(x) for x in self.mag_atoms]
@@ -48,8 +47,8 @@ class NonCollinearMagMoms(Population):
                 'distance_tolerance': self.distance_tolerance}
 
     @staticmethod
-    def from_dict(population_dict):
-        return PopulationNonColl(name=population_dict['name'],
+    def from_dict(self, population_dict):
+        return NonCollinearMagMoms(name=population_dict['name'],
                                  mag_atoms=population_dict['mag_atoms'],
                                  magmom_magnitude=population_dict['magmom_magnitude'],
                                  distance_tolerance=population_dict['distance_tolerance'])
@@ -81,12 +80,12 @@ class NonCollinearMagMoms(Population):
 
     def distance(self, entry_id, entry_jd):
         entry = self.pcdb.entries.find_one({'_id': entry_id}, {'properties.magmom': 1})
-        magmom_i = pychemia.utils.mathematics.spherical_to_cartesian(entry['properties']['magmom'])
+        magmom_i = spherical_to_cartesian(entry['properties']['magmom'])
         entry = self.pcdb.entries.find_one({'_id': entry_jd}, {'properties.magmom': 1})
-        magmom_j = pychemia.utils.mathematics.spherical_to_cartesian(entry['properties']['magmom'])
-        magmom_ixyz = pychemia.utils.mathematics.spherical_to_cartesian(magmom_i)
-        magmom_jxyz = pychemia.utils.mathematics.spherical_to_cartesian(magmom_j)
-        distance = np.sum(pychemia.utils.mathematics.angle_between_vectors(magmom_ixyz, magmom_jxyz))
+        magmom_j = spherical_to_cartesian(entry['properties']['magmom'])
+        magmom_ixyz = spherical_to_cartesian(magmom_i)
+        magmom_jxyz = spherical_to_cartesian(magmom_j)
+        distance = np.sum(angle_between_vectors(magmom_ixyz, magmom_jxyz))
         distance /= len(self.mag_atoms)
         return distance
 
@@ -94,13 +93,13 @@ class NonCollinearMagMoms(Population):
 
         entry = self.pcdb.entries.find_one({'_id': entry_id}, {'properties.magmom': 1})
         # Magnetic Momenta are stored in spherical coordinates
-        magmom_i = pychemia.utils.mathematics.spherical_to_cartesian(entry['properties']['magmom'])
+        magmom_i = spherical_to_cartesian(entry['properties']['magmom'])
         # Converted into cartesians
-        magmom_xyz = pychemia.utils.mathematics.spherical_to_cartesian(magmom_i)
+        magmom_xyz = spherical_to_cartesian(magmom_i)
         # Randomly disturbed using the factor
         magmom_xyz += factor * np.random.rand((self.structure.natom, 3)) - factor / 2
         # Reconverting to spherical coordinates
-        magmom_new = pychemia.utils.mathematics.cartesian_to_spherical(magmom_xyz)
+        magmom_new = cartesian_to_spherical(magmom_xyz)
         # Resetting magnitudes
         magmom_new[:, 0] = self.magmom_magnitude
         properties = {'magmom': magmom_new}
@@ -114,17 +113,17 @@ class NonCollinearMagMoms(Population):
         magmom_new_xyz = np.zeros((self.structure.natom, 3))
         entry = self.pcdb.entries.find_one({'_id': entry_id}, {'properties.magmom': 1})
         magmom_i = np.array(entry['properties']['magmom']).reshape((-1, 3))
-        magmom_ixyz = pychemia.utils.mathematics.spherical_to_cartesian(magmom_i)
+        magmom_ixyz = spherical_to_cartesian(magmom_i)
         entry = self.pcdb.entries.find_one({'_id': entry_jd}, {'properties.magmom': 1})
         magmom_j = np.array(entry['properties']['magmom']).reshape((-1, 3))
-        magmom_jxyz = pychemia.utils.mathematics.spherical_to_cartesian(magmom_j)
+        magmom_jxyz = spherical_to_cartesian(magmom_j)
 
         for i in range(self.structure.natom):
             if magmom_ixyz[i][0] > 0 and magmom_jxyz[i][0] > 0:
-                magmom_new_xyz[i] = pychemia.utils.mathematics.rotate_towards_axis(magmom_ixyz[i], magmom_jxyz[i],
+                magmom_new_xyz[i] = rotate_towards_axis(magmom_ixyz[i], magmom_jxyz[i],
                                                                                    fraction=factor)
 
-        magmom_new = pychemia.utils.mathematics.cartesian_to_spherical(magmom_new_xyz)
+        magmom_new = cartesian_to_spherical(magmom_new_xyz)
         magmom_new[:, 0] = self.magmom_magnitude
         properties = {'magmom': magmom_new}
 
@@ -196,3 +195,34 @@ class NonCollinearMagMoms(Population):
         entry_jd = self.new_entry(magmom_jnew, active=True)
 
         return entry_id, entry_jd
+
+    def prepare_folder(self, entry_id, workdir, binary='vasp', source_dir='.'):
+        vj = VaspJob()
+        structure = self.pcdb.get_structure(entry_id)
+        kp = KPoints.optimized_grid(structure.lattice, kp_density=2E4)
+        vj.initialize(structure, workdir=workdir, kpoints=kp, binary=binary)
+        vj.clean()
+        vj.input_variables = read_incar(source_dir + '/INCAR')
+        magmom_sph = self.pcdb.entries.find_one({'_id': entry_id}, {'properties': 1})['properties']['magmom']
+        magmom_car = spherical_to_cartesian(magmom_sph)
+        vj.input_variables.variables['MAGMOM'] = [float(x) for x in magmom_car.flatten()]
+        vj.input_variables.variables['M_CONSTR'] = [float(x) for x in magmom_car.flatten()]
+        vj.input_variables.variables['IBRION'] = -1
+        vj.input_variables.variables['LWAVE'] = True
+        vj.input_variables.variables['EDIFF'] = 1E-5
+        vj.set_inputs()
+
+    def collect_data(self, entry_id, workdir):
+        if os.path.isfile(workdir + '/OUTCAR'):
+            vo = VaspOutput(workdir + '/OUTCAR')
+            if 'energy' in vo.final_data:
+                if 'free_energy' in vo.final_data['energy']:
+                    energy = vo.final_data['energy']['free_energy']
+                    self.pcdb.entries.update_one({'_id': entry_id}, {'properties.energy': energy})
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        else:
+            return False

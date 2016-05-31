@@ -101,8 +101,7 @@ class ConvergenceCutOffEnergy(Task, Convergence):
         self.increment_factor = increment_factor
         self.initial_encut = initial_encut
         if kpoints is None:
-            kp = KPoints()
-            kp.set_optimized_grid(self.structure.lattice, density_of_kpoints=1E4, force_odd=True)
+            kp = KPoints.optimized_grid(self.structure.lattice, kp_density=1E4, force_odd=True)
             self.kpoints = kp
         else:
             self.kpoints = kpoints
@@ -253,7 +252,7 @@ class ConvergenceKPointGrid(Task, Convergence):
         self.convergence_info = []
         while True:
             density = n ** 3
-            kp.optimized_grid(self.structure.lattice, kp_density=density, force_odd=True)
+            kp = KPoints.optimized_grid(self.structure.lattice, kp_density=density, force_odd=True)
             pcm_log.debug('Trial density: %d  Grid: %s' % (density, kp.grid))
             if np.sum(grid) != np.sum(kp.grid):
                 grid = kp.grid
@@ -331,8 +330,7 @@ class ConvergenceKPointGrid(Task, Convergence):
             print('Convergence not completed')
             return None
         else:
-            kp = KPoints()
-            kp.set_optimized_grid(self.structure.lattice, density_of_kpoints=self.convergence_info[-3]['kp_density'],
+            kp = KPoints.optimized_grid(self.structure.lattice, kp_density=self.convergence_info[-3]['kp_density'],
                                   force_odd=True)
             return kp
 

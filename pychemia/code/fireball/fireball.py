@@ -117,7 +117,7 @@ class FireBall(Codes):
         if self.option:
             ret += '&OPTION\n'
             for variable in sorted(self.option):
-                if isinstance(self.option[variable], basestring):
+                if isinstance(self.option[variable], str):
                     ret += "%s = '%s'\n" % (variable, str(self.option[variable]))
                 else:
                     ret += '%s = %s\n' % (variable, str(self.option[variable]))

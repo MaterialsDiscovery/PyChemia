@@ -456,7 +456,7 @@ def shortest_triple_set(n):
             high = factors[int(len(factors) / 2):][::-1]
             # Sum both arrays and sort them before reenter
             factors = np.sort(low * high)
-        return list([int(x) for x in factors])
+        return [int(x) for x in factors]
 
 
 def rotation_matrix_around_axis_angle(axis, theta):

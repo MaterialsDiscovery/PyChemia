@@ -25,8 +25,7 @@ class IdealStrength(Task):
         self.energy_tol = energy_tol
 
         if kp is None:
-            kp = pychemia.crystal.KPoints()
-            kp.set_optimized_grid(structure.lattice, density_of_kpoints=kp_density, force_odd=True)
+            kp = pychemia.crystal.KPoints.optimized_grid(structure.lattice, kp_density=kp_density, force_odd=True)
             self.kpoints = kp
         else:
             self.kpoints = kp
@@ -46,12 +45,11 @@ class IdealStrength(Task):
             lattice = self.structure.lattice
             new_lengths = (ifactor - 1.0) * np.array(self.expansion) * lattice.lengths + lattice.lengths
             newlattice_params = tuple(np.concatenate(new_lengths, lattice.angles))
-            newlattice = pychemia.Lattice.from_parameters_to_cell(*newlattice_params)
+            newlattice = pychemia.crystal.Lattice.from_parameters_to_cell(*newlattice_params)
             newst = pychemia.Structure(cell=newlattice.cell, symbols=self.structure.symbols,
                                        reduced=self.structure.reduced)
 
-            tmpkp = pychemia.crystal.KPoints()
-            tmpkp.set_optimized_grid(newst.lattice, density_of_kpoints=self.kp_density, force_odd=True)
+            tmpkp = pychemia.crystal.KPoints.optimized_grid(newst.lattice, kp_density=self.kp_density, force_odd=True)
 
             if ifactor < 1.0:
                 print('\nCompresing cell to %7.3f percent' % (ifactor * 100))

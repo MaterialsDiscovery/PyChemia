@@ -92,7 +92,7 @@ def main(argv):
 
             formula = st.formula
 
-            symmetry = pychemia.symm.StructureSymmetry(st)
+            symmetry = pychemia.crystal.CrystalSymmetry(st)
             space_group = symmetry.number(symprec=1e-1)
 
             vo = pychemia.code.vasp.VaspOutput(path + os.sep + 'OUTCAR')

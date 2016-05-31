@@ -13,8 +13,7 @@ class StaticCalculation(Task):
 
         self.ecut = ecut
         if kpoints is None:
-            kp = KPoints()
-            kp.set_optimized_grid(structure.lattice, density_of_kpoints=kp_density, force_odd=True)
+            kp = KPoints.optimized_grid(structure.lattice, kp_density=kp_density, force_odd=True)
             self.kpoints = kp
         else:
             self.kpoints = kpoints

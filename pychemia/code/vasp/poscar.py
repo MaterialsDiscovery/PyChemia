@@ -145,7 +145,7 @@ def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None
         pspfiles = []
         for i in comp.species:
             if options is not None and i in options:
-                if isinstance(options[i], basestring):
+                if isinstance(options[i], str):
                     pspfile = psppath + os.sep + i + '_' + options[i] + '/POTCAR'
                 elif isinstance(options[i], list):
                     for j in options[i]:

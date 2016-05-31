@@ -48,7 +48,7 @@ class PBSRunner:
     def set_template(self, template):
         if os.path.isfile(template):
             self.template = open(template).read()
-        elif isinstance(template, basestring):
+        elif isinstance(template, str):
             self.template = template
 
     def write_pbs(self):

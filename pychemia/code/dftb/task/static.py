@@ -15,13 +15,12 @@ class StaticCalculation:
         self.slater_path = slater_path
         self.waiting = waiting
         self.MaxSCCIterations = max_scc_iterations
-        if isinstance(slater_path, basestring):
+        if isinstance(slater_path, str):
             self.slater_path = [slater_path]
         self.results = []
         self.output_file = output_file
         if kpoints is None:
-            self.kpoints = KPoints()
-            self.kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=10000, force_odd=True)
+            self.kpoints = KPoints.optimized_grid(self.structure.lattice, kp_density=10000, force_odd=True)
         else:
             self.kpoints = kpoints
 

@@ -313,7 +313,7 @@ def get_database(db_settings):
 
 
 def object_id(entry_id):
-    if isinstance(entry_id, basestring):
+    if isinstance(entry_id, str):
         return ObjectId(entry_id)
     elif isinstance(entry_id, ObjectId):
         return entry_id

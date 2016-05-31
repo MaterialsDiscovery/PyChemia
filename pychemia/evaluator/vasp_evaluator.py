@@ -32,14 +32,13 @@ class RelaxPopulation:
             if not os.path.isdir(name):
                 os.mkdir(name)
 
-    def create_inputs(self, density_of_kpoints=10000, encut=1.0):
+    def create_inputs(self, kp_density=10000, encut=1.0):
         # kpoints = KPoints(kmode='gamma', grid=[4, 4, 4])
-        kpoints = KPoints()
         for entry in self.population.pcdb.entries.find():
             name = str(entry['_id'])
             workdir = self.basedir + os.sep + name
             structure = self.population.db.get_structure(entry['_id'])
-            kpoints.set_optimized_grid(structure.lattice, density_of_kpoints=density_of_kpoints)
+            kpoints = KPoints.optimized_grid(structure.lattice, kp_density=kp_density)
             print(kpoints)
             vj = VaspJob()
             vj.initialize(workdir=workdir, structure=structure, kpoints=kpoints)
@@ -245,9 +244,9 @@ class RelaxPopulation:
         if not self.is_running:
             self.run(runner)
 
-    def set_run(self, code, runner, basedir, density_of_kpoints=10000, encut=1.1):
+    def set_run(self, code, runner, basedir, kp_density=10000, encut=1.1):
 
         self.runner = runner
 
         self.create_dirs(clean=True)
-        self.create_inputs(density_of_kpoints=density_of_kpoints, encut=encut)
+        self.create_inputs(kp_density=kp_density, encut=encut)

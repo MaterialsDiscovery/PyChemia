@@ -39,8 +39,7 @@ class DFTBplus(Codes):
         self.binary = binary
         self.kp_density = kp_density
         if kpoints is None:
-            kpoints = KPoints()
-            kpoints.set_optimized_grid(self.structure.lattice, density_of_kpoints=self.kp_density, force_odd=True)
+            kpoints = KPoints.optimized_grid(self.structure.lattice, kp_density=self.kp_density, force_odd=True)
         self.kpoints = kpoints
 
     def set_inputs(self):
@@ -193,7 +192,7 @@ class DFTBplus(Codes):
         else:
             ret += ' {\n'
         for ivar in sorted([x for x in block if x != 'method']):
-            if isinstance(block[ivar], basestring):
+            if isinstance(block[ivar], str):
                 ret += ' ' + ivar + ' = ' + DFTBplus._write_string(block[ivar])
             elif isinstance(block[ivar], bool):
                 ret += ' ' + ivar + ' = ' + DFTBplus._write_bool(block[ivar])
@@ -315,7 +314,7 @@ class DFTBplus(Codes):
 
     def set_slater_koster(self, search_paths):
         ret = True
-        if isinstance(search_paths, basestring):
+        if isinstance(search_paths, str):
             search_paths = [search_paths]
         elif not isinstance(search_paths, list):
             raise ValueError('search_path is not an string or list')

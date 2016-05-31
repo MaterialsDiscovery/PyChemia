@@ -12,7 +12,6 @@ from pychemia.utils.periodic import atomic_number, covalent_radius, valence
 
 class StructureAnalysis:
     """
-    This class provides Structure Analysis.
     The set of analysis provided by this class uses only structural information of one
     single structure. The kind of analysis includes coordination numbers, bonds, distances,
     hardness, fingerprints.
@@ -21,6 +20,16 @@ class StructureAnalysis:
     """
 
     def __init__(self, structure, supercell=(1, 1, 1), radius=50):
+        """
+        Takes one pychemia Structure object and will create a StructureAnalysis object. This object is computes the
+        distances between all atoms in the unit cell with replicas extending up to a distance given by 'radius'.
+        A supercell could be needed in cases where full connectivity of the entire crystal is needed.
+
+        :param structure: A pychemia Structure object
+        :param supercell: A supercell to be created from the Structure (Default=(1,1,1))
+        :param radius: Maximal distance computed between two atoms
+        """
+
         assert (isinstance(structure, Structure))
         if supercell != (1, 1, 1):
             self.structure = structure.supercell(supercell)
