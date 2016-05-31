@@ -225,7 +225,7 @@ def mechanical_properties(elastic_moduli):
     # Voigt
     Kv = np.trace(elastic_moduli[:3, :3]) / 90.0 + 2 * np.sum(np.triu(elastic_moduli[:3, :3], 1)) / 90.0
     Gv = np.trace(elastic_moduli[:3, :3]) - np.sum(np.triu(elastic_moduli[:3, :3], 1)) + \
-         3 * np.trace(elastic_moduli[3:6, 3:6])
+                  3 * np.trace(elastic_moduli[3:6, 3:6])
     Gv /= 150
 
     Ev = 1.0 / 3.0 / Gv + 1.0 / 9.0 / Kv

@@ -20,7 +20,7 @@ class MyTestCase(unittest.TestCase):
         from pychemia.utils.computing import read_file
         with self.assertRaises(Exception) as context:
             read_file('/dev/abc')
-        #self.assertTrue('Could not open file: /dev/abc' in context.exception)
+        # self.assertTrue('Could not open file: /dev/abc' in context.exception)
 
         from pychemia.utils.computing import get_float
         with self.assertRaises(Exception) as context:

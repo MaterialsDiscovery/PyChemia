@@ -395,8 +395,7 @@ class RelaxStructures(Population):
                 'value_tol': self.value_tol,
                 'distance_tol': self.distance_tol}
 
-    @staticmethod
-    def from_dict(population_dict):
+    def from_dict(self, population_dict):
         return RelaxStructures(name=population_dict['name'],
                                tag=population_dict['tag'],
                                target_forces=population_dict['target_forces'],

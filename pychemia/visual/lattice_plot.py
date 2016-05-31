@@ -5,7 +5,7 @@ from pychemia import pcm_log
 from mayavi import mlab
 
 
-class LatticePlot():
+class LatticePlot:
     def __init__(self, lattice):
         self.lattice = lattice
 

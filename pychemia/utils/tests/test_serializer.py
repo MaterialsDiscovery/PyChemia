@@ -4,6 +4,7 @@ from pychemia.utils.serializer import generic_serializer
 
 
 class SerializerTest(unittest.TestCase):
+
     def test_serializer(self):
         """
         Tests (pychemia.utils.serializer)                            :

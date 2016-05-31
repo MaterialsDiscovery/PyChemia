@@ -3,7 +3,7 @@ from  pychemia.utils.periodic import covalent_radius
 import numpy as np
 
 
-class StructurePlot():
+class StructurePlot:
     def __init__(self, structure):
         self.structure = structure
 

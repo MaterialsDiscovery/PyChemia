@@ -522,7 +522,7 @@ def rotation_y(theta):
     Example:
     >>> import numpy as np
     >>> m = rotation_y(np.pi/3)
-    >>> np.all(np.round(np.dot(m.T,m),15)==np.eye(3))
+    >>> np.all(np.round(np.dot(m.T, m), 15)==np.eye(3))
     True
 
     """
@@ -668,14 +668,14 @@ def gram_smith(m):
     return ret
 
 
-def gram_smith_qr(ndim):
+def gram_smith_qr(ndim=3):
     """
     Create a Gram-Smith orthoganalized matrix.
     The argument is the dimension of the matrix
     and uses a random matrix and QR decomposition
     to build the orthogonal matrix
 
-    :param m:
+    :param ndim: Dimension of the matrix
     :return:
 
     Example:

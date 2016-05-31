@@ -1,8 +1,8 @@
-import sys
 import math
+import sys
+
 import numpy as np
 from scipy.io import netcdf_file as _netcdf_file
-import sys
 
 if 'matplotlib' not in sys.modules:
     import matplotlib

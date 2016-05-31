@@ -307,7 +307,7 @@ class Composition:
         else:
             comp = self
         if sortby == 'electroneg':
-            electroneg = electronegativity(comp.species)
+            electroneg = list(electronegativity(comp.species))
             for i in range(len(electroneg)):
                 if electroneg[i] is None:
                     electroneg[i] = -1

@@ -1,7 +1,7 @@
-import sys
 import math
-import numpy as np
 import sys
+
+import numpy as np
 
 if 'matplotlib' not in sys.modules:
     import matplotlib

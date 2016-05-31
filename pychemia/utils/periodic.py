@@ -319,7 +319,7 @@ def period(value=None):
     [6, 5]
     >>> period(['Na', 'O', 'Ag', 'La'])
     [3, 2, 5, 6]
-    >>> period(range(1,12))
+    >>> period(range(1, 12))
     [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3]
 
     """
@@ -345,7 +345,7 @@ def group(value=None):
     [11, 15]
     >>> group(['Na', 'O', 'Ag', 'La'])
     [1, 16, 11, -3]
-    >>> group(range(1,12))
+    >>> group(range(1, 12))
     [1, 18, 1, 2, 13, 14, 15, 16, 17, 18, 1]
 
     """
@@ -379,7 +379,7 @@ def block(value=None):
     ['d', 'p']
     >>> block(['Na', 'O', 'Ag', 'La'])
     ['s', 'p', 'd', 'f']
-    >>> block(range(1,12))
+    >>> block(range(1, 12))
     ['s', 'p', 's', 's', 'p', 'p', 'p', 'p', 'p', 'p', 's']
     """
     table = []
@@ -410,7 +410,7 @@ def electronegativity(value=None):
     [2.54, 2.05]
     >>> electronegativity(['Na', 'O', 'Ag', 'La'])
     [0.93, 3.44, 1.93, 1.1]
-    >>> electronegativity(range(1,12))
+    >>> electronegativity(range(1, 12))
     [2.2, 0, 0.98, 1.57, 2.04, 2.55, 3.04, 3.44, 3.98, 0, 0.93]
 
     """
@@ -443,7 +443,7 @@ def covalent_radius(value=None):
     [1.36, 1.39]
     >>> covalent_radius(['Na', 'O', 'Ag', 'La'])
     [1.66, 0.66, 1.45, 2.07]
-    >>> covalent_radius(range(1,12))
+    >>> covalent_radius(range(1, 12))
     [0.31, 0.28, 1.28, 0.96, 0.84, 0.76, 0.71, 0.66, 0.57, 0.58, 1.66]
 
     """
@@ -470,7 +470,7 @@ def atomic_symbol(value=None):
     ['Au', 'Sb']
     >>> atomic_symbol([11, 8, 47, 57])
     ['Na', 'O', 'Ag', 'La']
-    >>> atomic_symbol(range(1,12))
+    >>> atomic_symbol(range(1, 12))
     ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na']
 
     """
@@ -511,7 +511,7 @@ def mass(value=None):
     [196.96654, 121.753]
     >>> mass(['Na', 'O', 'Ag', 'La'])
     [22.989768, 15.9994, 107.8682, 138.9055]
-    >>> mass(range(1,12))
+    >>> mass(range(1, 12))
     [1.00794, 4.002602, 6.941, 9.012182, 10.811, 12.011, 14.00674, 15.9994, 18.9984032, 20.1797, 22.989768]
 
     """
@@ -523,7 +523,7 @@ def atomic_number(arg):
     """
     Atomic number(s) of a symbol or list of atomic symbols
 
-    :param value: Atomic number or list of atomic numbers
+    :param arg: Atomic number or list of atomic numbers
     :return: Atomic number(s) for the atom(s)
     :rtype: (int, list)
 

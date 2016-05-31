@@ -83,4 +83,4 @@ def generic_serializer(value):
     elif isinstance(value, np.float):
         return float(value)
     else:
-        raise ValueError("Could not serialize this: %s of type: " % (value, type(value)))
+        raise ValueError("Could not serialize this: %s of type: %s" % (value, type(value)))

@@ -331,7 +331,7 @@ class ConvergenceKPointGrid(Task, Convergence):
             return None
         else:
             kp = KPoints.optimized_grid(self.structure.lattice, kp_density=self.convergence_info[-3]['kp_density'],
-                                  force_odd=True)
+                                        force_odd=True)
             return kp
 
     def report(self, file_format='html'):
