@@ -119,7 +119,8 @@ class Searcher:
                     self.population.enable(entry_id)
             candidates_per_generation = [len(self.get_generation(i)) for i in range(self.current_generation + 1)]
             pcm_log.debug('Candidates per generation: %s' % candidates_per_generation)
-            print('Current generation: ', self.current_generation, 'Candidates: ', len(self.get_generation()))
+            pcm_log.debug('Current generation: %d Candidates: %d' % (self.current_generation,
+                                                                      len(self.get_generation())))
             assert len(self.get_generation()) == self.generation_size
             assert min(candidates_per_generation) == max(candidates_per_generation)
 
@@ -210,7 +211,6 @@ class Searcher:
                                                                           len(self.get_generation(
                                                                               self.current_generation + 1))))
         else:
-            print('-')
             pcm_log.info(' %s (tag: %s)' % (self.population.name, self.population.tag))
             pcm_log.info(' Current Generation             : %4d' % self.current_generation)
             pcm_log.info(' Population (evaluated/total)   : %4d /%4d' % (len(self.population.evaluated),
@@ -370,8 +370,10 @@ class Searcher:
         self.save_info()
         self.population.save_info()
         best_member = ''
+        survival_for_best=0
 
         while True:
+            print('\nGENERATION: %d' % self.current_generation)
             self.print_status(level='DEBUG')
 
             pcm_log.debug('[%s] Enforcing the size of generation: %d' % (self.searcher_name, self.generation_size))
@@ -401,12 +403,17 @@ class Searcher:
             print('Current best candidate: [%s] %s' % (best_member, self.population.str_entry(best_member)))
             if best_member in self.get_generation():
                 print('This candidate have survived for %d generations' % len(self.generation[best_member]))
-                if len(self.generation[best_member]) > self.stabilization_limit:
+                if len(self.generation[best_member]) >= self.stabilization_limit:
                     self.save_generations()
                     break
             else:
-                print('Best candidate is not in the current generation')
-                raise ValueError()
+                pcm_log.debug('Best candidate %s is not in the current generation' % best_member)
+                pcm_log.debug('Slot: %s' % self.lineage_inv[best_member])
+                pcm_log.debug('Lineage: %s' % self.lineage[self.lineage_inv[best_member]])
+                survival_for_best+=1
+                if survival_for_best >= self.stabilization_limit:
+                    self.save_generations()
+                    break
 
             if self.target_value is not None:
                 if self.population.value(best_member) <= self.target_value:
@@ -425,14 +432,15 @@ class Searcher:
             self.print_status()
 
             duplicates = self.population.check_duplicates(self.population.ids_sorted(self.population.actives_evaluated))
-            pcm_log.debug('[%s] Removing duplicates: %d' % (self.searcher_name, len(duplicates)))
             for entry_id in duplicates:
                 change = {'change': 'duplicate', 'to': duplicates[entry_id], 'reason': None}
                 self.write_change(entry_id, change)
                 self.replace_by_random(entry_id, reason='duplicate')
+            pcm_log.info(' Duplicates identified and disabled: %d' % len(duplicates))
             self.print_status(level='INFO')
 
-            pcm_log.debug('[%s] Running one cycle' % self.searcher_name)
+            pcm_log.info(' Running one cycle for %s with %d candidates' % (self.searcher_name,
+                                                                           len(self.actives_in_generation)))
             self.run_one()
             self.update_generation()
 

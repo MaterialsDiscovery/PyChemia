@@ -21,7 +21,7 @@ class RealFunction(Population):
         """
         Population.__init__(self, 'Euclidean', 'global', use_mongo=False)
         self.tag = 'global'
-        self.name = 'Euclidean'
+        self.name = 'Real Function'
         self.function = function
         self.ndim = ndim
         if len(limits) == 2:
@@ -95,6 +95,19 @@ class RealFunction(Population):
             split = np.random.randint(1, self.ndim - 1)
             son1 = np.concatenate((parent1[:split], parent2[split:]))
             son2 = np.concatenate((parent2[:split], parent1[split:]))
+        new_ident1 = self.new_identifier()
+        self.members.append(new_ident1)
+        new_ident2 = self.new_identifier()
+        self.members.append(new_ident2)
+        self.db[new_ident1] = {'x': son1, 'fx': None}
+        self.evaluate_entry(new_ident1)
+        self.db[new_ident2] = {'x': son2, 'fx': None}
+        self.evaluate_entry(new_ident2)
+        if self.db[new_ident1]['fx'] > self.db[new_ident2]['fx']:
+            return new_ident2, new_ident1
+        else:
+            return new_ident1, new_ident2
+
 
     def distance(self, imember, jmember):
         # The trivial metric

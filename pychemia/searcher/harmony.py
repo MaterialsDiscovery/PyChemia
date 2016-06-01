@@ -1,5 +1,4 @@
 import random
-
 from .searcher import Searcher
 from pychemia import pcm_log
 
@@ -62,33 +61,34 @@ class HarmonySearch(Searcher):
         """
         # Get a static selection of the values in the generation that are evaluated
         selection = self.population.ids_sorted(self.actives_in_generation)
-        pcm_log.debug('Size of selection : %d' % len(selection))
+        pcm_log.debug(' Size of selection : %d' % len(selection))
 
         # Automatic promotion for the top ranking members
-        for entry_id in selection[:self.top]:
+        for entry_id in selection[:min(self.top, len(selection))]:
             pcm_log.debug('[HS](%s) Top entry: promoted' % str(entry_id))
             self.pass_to_new_generation(entry_id, reason='Top %d' % self.top)
         # assert(len(self.get_generation(self.current_generation+1)) >= 2)
 
-        # Intermediate members, their fate depends on hmcr and par
-        for entry_id in selection[self.top:-self.tail]:
-            rnd = random.random()
-            pcm_log.debug('[HS](%s) Middle entry: rnd=%4.3f hmcr= %4.3f' % (entry_id, rnd, self.hmcr))
-            if rnd <= self.hmcr:
+        if len(selection) > self.top + self.tail:
+            # Intermediate members, their fate depends on hmcr and par
+            for entry_id in selection[self.top:-self.tail]:
                 rnd = random.random()
-                if rnd < self.par:
-                    pcm_log.debug('[HS](%s) Promoted (modified): rnd= %4.3f < par= %4.3f' % (entry_id, rnd, self.par))
-                    self.replace_by_changed(entry_id, reason='rnd= %4.3f < par= %4.3f' % (rnd, self.par))
+                pcm_log.debug('[HS](%s) Middle entry: rnd=%4.3f hmcr= %4.3f' % (entry_id, rnd, self.hmcr))
+                if rnd <= self.hmcr:
+                    rnd = random.random()
+                    if rnd < self.par:
+                        pcm_log.debug('[HS](%s) Promoted (modified): rnd= %4.3f < par= %4.3f' % (entry_id, rnd, self.par))
+                        self.replace_by_changed(entry_id, reason='rnd= %4.3f < par= %4.3f' % (rnd, self.par))
+                    else:
+                        pcm_log.debug('[HS](%s) Promoted (unmodified): rnd= %4.3f >= par= %4.3f' %
+                                      (entry_id, rnd, self.par))
+                        self.pass_to_new_generation(entry_id, reason='rnd= %4.3f >= par= %4.3f' % (rnd, self.par))
                 else:
-                    pcm_log.debug('[HS](%s) Promoted (unmodified): rnd= %4.3f >= par= %4.3f' %
-                                  (entry_id, rnd, self.par))
-                    self.pass_to_new_generation(entry_id, reason='rnd= %4.3f >= par= %4.3f' % (rnd, self.par))
-            else:
-                pcm_log.debug('[HS](%s) Discarded: rnd= %4.3f > hmcr= %4.3f ' % (entry_id, rnd, self.hmcr))
-                self.replace_by_random(entry_id, reason='rnd= %4.3f > hmcr= %4.3f' % (rnd, self.hmcr))
-        # assert(len(self.get_generation(self.current_generation+1)) <= self.generation_size-2)
+                    pcm_log.debug('[HS](%s) Discarded: rnd= %4.3f > hmcr= %4.3f ' % (entry_id, rnd, self.hmcr))
+                    self.replace_by_random(entry_id, reason='rnd= %4.3f > hmcr= %4.3f' % (rnd, self.hmcr))
 
-        for entry_id in selection[-self.tail:]:
-            pcm_log.debug('[HS](%s) Tail entry: discarded' % entry_id)
-            self.replace_by_random(entry_id, reason='Tail %d' % self.tail)
-            # assert(len(self.get_generation(self.current_generation+1)) == self.generation_size)
+        if len(selection) >= self.top + self.tail:
+            for entry_id in selection[-self.tail:]:
+                pcm_log.debug('[HS](%s) Tail entry: discarded' % entry_id)
+                self.replace_by_random(entry_id, reason='Tail %d' % self.tail)
+                # assert(len(self.get_generation(self.current_generation+1)) == self.generation_size)

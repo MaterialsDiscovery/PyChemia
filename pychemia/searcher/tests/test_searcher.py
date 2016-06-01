@@ -41,6 +41,7 @@ def notest_searcher():
 
 
 class SearcherTest(unittest.TestCase):
+
     def test_harmony(self):
         """
         Tests (pychemia.searcher.harmony)                            :
@@ -48,12 +49,17 @@ class SearcherTest(unittest.TestCase):
         import pychemia
 
         pychemia.pcm_log.debug('HarmonySearch')
+        mini = pychemia.utils.metaheuristics.Sphere().minimum(3)
         popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1],
                                                 local_minimization=False)
-        mini = pychemia.utils.metaheuristics.Sphere().minimum(3)
-        hs = pychemia.searcher.HarmonySearch(popu)
-        hs.run()
-        assert np.linalg.norm(np.array(hs.population.db[hs.population.best_candidate]['x']) - mini) < 0.2
+        searcher = pychemia.searcher.HarmonySearch(popu, generation_size=16, stabilization_limit=5)
+        searcher.run()
+        popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1],
+                                                local_minimization=True)
+
+        searcher = pychemia.searcher.HarmonySearch(popu, generation_size=16, stabilization_limit=5)
+        searcher.run()
+        assert np.linalg.norm(np.array(searcher.population.db[searcher.population.best_candidate]['x']) - mini) < 0.2
 
     def test_swarm(self):
         """
@@ -62,11 +68,16 @@ class SearcherTest(unittest.TestCase):
         import pychemia
 
         pychemia.pcm_log.debug('ParticleSwarm')
-        popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1])
         mini = pychemia.utils.metaheuristics.Sphere().minimum(3)
-        hs = pychemia.searcher.ParticleSwarm(popu)
-        hs.run()
-        assert np.linalg.norm(np.array(hs.population.db[hs.population.best_candidate]['x']) - mini) < 0.2
+        popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1],
+                                                local_minimization=False)
+        searcher = pychemia.searcher.ParticleSwarm(popu, generation_size=16, stabilization_limit=5)
+        searcher.run()
+        popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1],
+                                                local_minimization=True)
+        searcher = pychemia.searcher.ParticleSwarm(popu, generation_size=16, stabilization_limit=5)
+        searcher.run()
+        assert np.linalg.norm(np.array(searcher.population.db[searcher.population.best_candidate]['x']) - mini) < 0.2
 
     def test_firefly(self):
         """
@@ -75,24 +86,35 @@ class SearcherTest(unittest.TestCase):
         import pychemia
 
         pychemia.pcm_log.debug('FireFly')
-        popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1])
         mini = pychemia.utils.metaheuristics.Sphere().minimum(3)
-        hs = pychemia.searcher.FireFly(popu)
-        hs.run()
-        assert np.linalg.norm(np.array(hs.population.db[hs.population.best_candidate]['x']) - mini) < 0.2
+        popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1],
+                                                local_minimization=False)
+        searcher = pychemia.searcher.FireFly(popu, generation_size=16, stabilization_limit=5)
+        searcher.run()
+        popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1],
+                                                local_minimization=True)
+        searcher = pychemia.searcher.FireFly(popu, generation_size=16, stabilization_limit=5)
+        searcher.run()
+        assert np.linalg.norm(np.array(searcher.population.db[searcher.population.best_candidate]['x']) - mini) < 0.2
 
-    def notest_genetic(self):
+    def test_genetic(self):
         """
+
         Tests (pychemia.searcher.genetic)                            :
         """
         import pychemia
 
         pychemia.pcm_log.debug('GeneticAlgorithm')
-        popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1])
         mini = pychemia.utils.metaheuristics.Sphere().minimum(3)
-        hs = pychemia.searcher.GeneticAlgorithm(popu)
-        hs.run()
-        assert np.linalg.norm(np.array(hs.population.db[hs.population.best_candidate]['x']) - mini) < 0.2
+        popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1],
+                                                local_minimization=False)
+        searcher = pychemia.searcher.GeneticAlgorithm(popu, generation_size=16, stabilization_limit=5)
+        searcher.run()
+        popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1],
+                                                local_minimization=True)
+        searcher = pychemia.searcher.GeneticAlgorithm(popu, generation_size=16, stabilization_limit=5)
+        searcher.run()
+        assert np.linalg.norm(np.array(searcher.population.db[searcher.population.best_candidate]['x']) - mini) < 0.2
 
 
 if __name__ == '__main__':

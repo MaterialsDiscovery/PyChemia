@@ -113,7 +113,7 @@ def plot_history_energy(etotal, ekin, fcart, labels, bonds, filep):
 
     left = 0.1
     width = 0.8
-    nbonds = len(bonds_dict.keys())
+    nbonds = len(list(bonds_dict.keys()))
     height = 0.9 / float(nbonds)
     bottom = 0.95 - height
     plt.suptitle("Bonds")
