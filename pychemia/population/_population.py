@@ -169,10 +169,6 @@ class Population:
 
     @property
     def actives_evaluated(self):
-        """
-
-        :rtype: list
-        """
         return [x for x in self.actives if self.is_evaluated(x)]
 
     @property

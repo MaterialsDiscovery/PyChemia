@@ -118,7 +118,7 @@ class Searcher:
                     print('Enabling', entry_id)
                     self.population.enable(entry_id)
             candidates_per_generation = [len(self.get_generation(i)) for i in range(self.current_generation + 1)]
-            print('Candidates per generation: ', candidates_per_generation)
+            pcm_log.debug('Candidates per generation: %s' % candidates_per_generation)
             print('Current generation: ', self.current_generation, 'Candidates: ', len(self.get_generation()))
             assert len(self.get_generation()) == self.generation_size
             assert min(candidates_per_generation) == max(candidates_per_generation)
@@ -398,12 +398,15 @@ class Searcher:
             best_member = self.population.best_candidate
             self.population.refine_progressive(best_member)
 
-            pcm_log.info('Best candidate: [%s] %s' % (best_member, self.population.str_entry(best_member)))
+            print('Current best candidate: [%s] %s' % (best_member, self.population.str_entry(best_member)))
             if best_member in self.get_generation():
-                pcm_log.debug('[%s] Generations %s' % (str(best_member), str(self.generation[best_member])))
+                print('This candidate have survived for %d generations' % len(self.generation[best_member]))
                 if len(self.generation[best_member]) > self.stabilization_limit:
                     self.save_generations()
                     break
+            else:
+                print('Best candidate is not in the current generation')
+                raise ValueError()
 
             if self.target_value is not None:
                 if self.population.value(best_member) <= self.target_value:
@@ -421,7 +424,7 @@ class Searcher:
                 self.replace_by_random(entry_id, reason='no evaluated')
             self.print_status()
 
-            duplicates = self.population.check_duplicates(self.population.actives_evaluated)
+            duplicates = self.population.check_duplicates(self.population.ids_sorted(self.population.actives_evaluated))
             pcm_log.debug('[%s] Removing duplicates: %d' % (self.searcher_name, len(duplicates)))
             for entry_id in duplicates:
                 change = {'change': 'duplicate', 'to': duplicates[entry_id], 'reason': None}
@@ -492,3 +495,8 @@ class Searcher:
 
     def get_all_generations(self):
         return self.pcdb.db.generations.find()
+
+
+    @property
+    def actives_in_generation(self):
+        return [x for x in self.population.actives if self.population.is_evaluated(x) and x in self.get_generation()]

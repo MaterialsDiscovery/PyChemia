@@ -61,7 +61,7 @@ class HarmonySearch(Searcher):
         Run one cycle for the Harmony Search Method
         """
         # Get a static selection of the values in the generation that are evaluated
-        selection = self.population.ids_sorted(self.population.actives_evaluated)
+        selection = self.population.ids_sorted(self.actives_in_generation)
         pcm_log.debug('Size of selection : %d' % len(selection))
 
         # Automatic promotion for the top ranking members

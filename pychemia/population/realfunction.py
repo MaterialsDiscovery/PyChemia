@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import print_function
 import uuid
 import numpy as np
 import scipy.optimize
@@ -64,13 +65,14 @@ class RealFunction(Population):
         return self.new_entry(x), None
 
     def check_duplicates(self, ids):
+        selection = self.ids_sorted(ids)
         ret = {}
         if len(ids) == 0:
             return ret
         for i in range(len(ids)):
-            ident1 = ids[i]
+            ident1 = selection[i]
             for j in range(i + 1, len(ids)):
-                ident2 = ids[j]
+                ident2 = selection[j]
                 distance = self.distance(ident1, ident2)
                 if distance < 1E-2:
                     ret[ident2] = ident1

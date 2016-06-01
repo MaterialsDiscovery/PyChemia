@@ -41,7 +41,7 @@ def notest_searcher():
 
 
 class SearcherTest(unittest.TestCase):
-    def notest_harmony(self):
+    def test_harmony(self):
         """
         Tests (pychemia.searcher.harmony)                            :
         """
@@ -55,7 +55,7 @@ class SearcherTest(unittest.TestCase):
         hs.run()
         assert np.linalg.norm(np.array(hs.population.db[hs.population.best_candidate]['x']) - mini) < 0.2
 
-    def notest_swarm(self):
+    def test_swarm(self):
         """
         Tests (pychemia.searcher.swarm)                              :
         """
@@ -68,7 +68,7 @@ class SearcherTest(unittest.TestCase):
         hs.run()
         assert np.linalg.norm(np.array(hs.population.db[hs.population.best_candidate]['x']) - mini) < 0.2
 
-    def notest_firefly(self):
+    def test_firefly(self):
         """
         Tests (pychemia.searcher.firefly)                            :
         """
@@ -81,7 +81,7 @@ class SearcherTest(unittest.TestCase):
         hs.run()
         assert np.linalg.norm(np.array(hs.population.db[hs.population.best_candidate]['x']) - mini) < 0.2
 
-    def notest_genetic(self):
+    def test_genetic(self):
         """
         Tests (pychemia.searcher.genetic)                            :
         """

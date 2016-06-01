@@ -120,7 +120,8 @@ from . import web
 from . import code
 from . import population
 from .core.from_file import structure_from_file
-from .test import samples
+from pychemia.crystal import samples
+
 
 def info():
     """

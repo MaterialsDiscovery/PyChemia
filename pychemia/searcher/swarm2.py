@@ -45,7 +45,7 @@ class ParticleSwarm(Searcher):
 
     def run_one(self):
         # Get a static selection of the values in the generation that are relaxed
-        selection = self.population.ids_sorted(self.population.actives_evaluated)
+        selection = self.population.ids_sorted(self.actives_in_generation)
 
         # Minus sign because we are searching for minima
         intensity = self.population.get_values(selection)
