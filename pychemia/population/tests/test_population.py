@@ -42,7 +42,7 @@ class PopulationTest(unittest.TestCase):
         popu.add_random()
         popu.pcdb.clean()
 
-    def test_structure(self):
+    def notest_structure(self):
         """
         Tests (pychemia.population.RelaxStructures)                  :
         """
