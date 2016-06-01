@@ -49,7 +49,7 @@ class SearcherTest(unittest.TestCase):
 
         pychemia.pcm_log.debug('HarmonySearch')
         popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1],
-                                                local_minimization=True)
+                                                local_minimization=False)
         mini = pychemia.utils.metaheuristics.Sphere().minimum(3)
         hs = pychemia.searcher.HarmonySearch(popu)
         hs.run()
@@ -81,7 +81,7 @@ class SearcherTest(unittest.TestCase):
         hs.run()
         assert np.linalg.norm(np.array(hs.population.db[hs.population.best_candidate]['x']) - mini) < 0.2
 
-    def test_genetic(self):
+    def notest_genetic(self):
         """
         Tests (pychemia.searcher.genetic)                            :
         """
