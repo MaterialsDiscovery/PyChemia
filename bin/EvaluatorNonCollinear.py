@@ -81,8 +81,6 @@ if __name__ == '__main__':
     print('user      : %s' % args.user)
     print('replicaset: %s' % args.replicaset)
     print('workdir   : %s' % args.workdir)
-    print('nparal    : %d' % args.nparal)
-    print('nmpiparal : %d' % args.nmpiparal)
     print('binary    : %s' % str(args.binary))
     print('ssl       : %s' % str(args.ssl))
 
@@ -91,13 +89,19 @@ if __name__ == '__main__':
 
     while True:
         to_compute=popu.actives_no_evaluated
-        print(to_compute)
+
+        print('Candidates to compute:')
+        for i in to_compute:
+            print(i)
         current_jobs=get_jobs(args.pbs_user)
-        print(current_jobs)
+
+        print('Jobs on PBS:')
+        for i in current_jobs:
+            print(i)
 
         for i in to_compute:
             if str(i) not in current_jobs:
-                data_collected=popu.collect_data()
+                data_collected=popu.collect_data(i, str(i))
                 if not data_collected:
                     print('Preparing and submitting job: %s' % str(i))
                     popu.prepare_folder(i, workdir=str(i))

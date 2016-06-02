@@ -210,6 +210,8 @@ class NonCollinearMagMoms(Population):
         vj.input_variables.variables['IBRION'] = -1
         vj.input_variables.variables['LWAVE'] = True
         vj.input_variables.variables['EDIFF'] = 1E-5
+        vj.input_variables.variables['LAMBDA'] = 10
+        vj.input_variables.variables['I_CONSTRAINED_M'] = 1
         vj.set_inputs()
 
     def collect_data(self, entry_id, workdir):
