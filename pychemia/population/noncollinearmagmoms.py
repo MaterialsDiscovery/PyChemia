@@ -211,6 +211,7 @@ class NonCollinearMagMoms(Population):
         vj.input_variables.variables['LWAVE'] = True
         vj.input_variables.variables['EDIFF'] = 1E-5
         vj.input_variables.variables['LAMBDA'] = 10
+        vj.input_variables.variables['NSW'] = 0
         vj.input_variables.variables['I_CONSTRAINED_M'] = 1
         vj.set_inputs()
 
@@ -220,7 +221,8 @@ class NonCollinearMagMoms(Population):
             if 'energy' in vo.final_data:
                 if 'free_energy' in vo.final_data['energy']:
                     energy = vo.final_data['energy']['free_energy']
-                    self.pcdb.entries.update_one({'_id': entry_id}, {'properties.energy': energy})
+                    print('Uploading energy data for %s' % entry_id)
+                    self.pcdb.entries.update_one({'_id': entry_id}, { '$set': {'properties.energy': energy}})
                     return True
                 else:
                     return False

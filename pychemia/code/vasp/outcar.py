@@ -107,7 +107,7 @@ class VaspOutput:
                 print('Error parsing bands')
         self.bands = bands_dict
 
-        if 'NIONSTEPS' in self.array_sizes:
+        if False and 'NIONSTEPS' in self.array_sizes:
             if len(bands) != self.array_sizes['NBANDS'] * self.array_sizes['ISPIN'] * self.array_sizes['NKPTS'] \
                     * self.array_sizes['NIONSTEPS']:
                 pcm_log.debug('NBANDS: %s != ISPIN: %s x NKPTS: %s x NIONSTEPS: %s' % (self.array_sizes['NBANDS'],

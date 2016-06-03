@@ -88,6 +88,8 @@ if __name__ == '__main__':
     popu = pychemia.population.NonCollinearMagMoms(pcdb, source_dir=args.source_dir)
 
     while True:
+        print('Number of candidates evaluated: %d' % len(popu.actives_evaluated))
+
         to_compute=popu.actives_no_evaluated
 
         print('Candidates to compute:')
@@ -95,9 +97,9 @@ if __name__ == '__main__':
             print(i)
         current_jobs=get_jobs(args.pbs_user)
 
-        print('Jobs on PBS:')
-        for i in current_jobs:
-            print(i)
+        #print('Jobs on PBS:')
+        #for i in current_jobs:
+        #    print(i)
 
         for i in to_compute:
             if str(i) not in current_jobs:
@@ -114,4 +116,4 @@ if __name__ == '__main__':
                     pbs.submit()
             else:
                 print('Job %s is on queue or running' % str(i))
-        time.sleep(600)
+        time.sleep(3600)
