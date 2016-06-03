@@ -9,20 +9,19 @@ import numpy as np
 from pychemia import pcm_log
 from pychemia.crystal import KPoints
 from pychemia.utils.serializer import generic_serializer
-from pychemia.utils.mathematics import round_small
 from ..incar import InputVariables
 from ..outcar import VaspOutput, read_vasp_stdout
 from ..poscar import read_poscar
-from ..vasp import VaspJob, VaspAnalyser
+from ..vasp import VaspJob, VaspAnalyser, VaspOutput
 from ...relaxator import Relaxator
 from ...tasks import Task
 
 __author__ = 'Guillermo Avendano-Franco'
 
 
-class IonRelaxation(Relaxator, Task):
+class IonRelaxation2(Relaxator, Task):
     def __init__(self, structure, workdir='.', target_forces=1E-3, waiting=False, binary='vasp',
-                 encut=1.3, kp_grid=None, kp_density=1E4, relax_cell=True, max_calls=10):
+                 encut=1.3, kp_grid=None, kp_density=1E4, relax_cell=True):
 
         Relaxator.__init__(self, target_forces)
         self.target_forces = target_forces
@@ -36,10 +35,9 @@ class IonRelaxation(Relaxator, Task):
         self.vaspjob.initialize(workdir=workdir, structure=structure, kpoints=self.kpoints, binary=binary)
         self.encut = encut
         self.relax_cell = relax_cell
-        self.max_calls = max_calls
-        task_params = {'target_forces': self.target_forces, 'encut': self.encut, 'relax_cell': self.relax_cell,
-                       'max_calls': self.max_calls}
+        task_params = {'target_forces': self.target_forces, 'encut': self.encut, 'relax_cell': self.relax_cell}
         Task.__init__(self, structure=structure, task_params=task_params, workdir=workdir, binary=binary)
+        self.stage = 1
 
     def create_dirs(self, clean=False):
         if not os.path.isdir(self.workdir):
@@ -57,94 +55,87 @@ class IonRelaxation(Relaxator, Task):
         """
         vj = self.vaspjob
 
-        if os.path.isfile(self.workdir + os.sep + 'OUTCAR'):
-            vj.get_outputs()
+        if self.stage == 1:
 
-        max_force, max_stress = self.get_max_force_stress()
-        if max_force is not None and max_stress is not None:
-            pcm_log.debug('Max Force: %9.3E Stress: %9.3E' % (max_force, max_stress))
-            vo = VaspOutput(self.workdir + os.sep + 'OUTCAR')
-            info = vo.relaxation_info()
-            pcm_log.debug('Avg Force: %9.3E Stress: %9.3E %9.3E' % (info['avg_force'],
-                                                                    info['avg_stress_diag'],
-                                                                    info['avg_stress_non_diag']))
-        else:
-            print('Failure to get forces and stress')
-            return False
+            vj.input_variables.variables['PREC'] = 'LOW'
+            vj.input_variables.variables['EDIFF'] = 1e-2
+            vj.input_variables.variables['EDIFFG'] = 1e-1
+            vj.input_variables.set_encut(1.0, POTCAR=self.workdir + os.sep + 'POTCAR')
+            vj.input_variables.variables['NSW'] = 65
+            vj.input_variables.variables['ISIF'] = 4
+            vj.input_variables.variables['IBRION'] = 2
+            vj.input_variables.variables['POTIM'] = 0.02
+            vj.input_variables.variables['ISMEAR'] = 1
+            vj.input_variables.variables['SIGMA'] = 0.10
 
-        vo = VaspOutput(self.workdir + os.sep + 'OUTCAR')
-        info = vo.relaxation_info()
-        if len(info) != 3:
-            print(' Missing some data in OUTCAR (forces or stress)')
+        elif self.stage == 2:
+            vj.input_variables.variables['PREC'] = 'NORMAL'
+            vj.input_variables.variables['EDIFF'] = 1e-3
+            vj.input_variables.variables['EDIFFG'] = 1e-2
+            vj.input_variables.set_encut(1.1, POTCAR=self.workdir + os.sep + 'POTCAR')
+            vj.input_variables.variables['NSW'] = 55
+            vj.input_variables.variables['ISIF'] = 4
+            vj.input_variables.variables['IBRION'] = 1
+            vj.input_variables.variables['POTIM'] = 0.30
+            vj.input_variables.variables['ISMEAR'] = 1
+            vj.input_variables.variables['SIGMA'] = 0.08
 
-        # Conditions to consider the structure relaxed
-        if info['avg_force'] < self.target_forces:
-            if info['avg_stress_diag'] < self.target_forces:
-                if info['avg_stress_non_diag'] < self.target_forces:
-                    wf = open(self.workdir + os.sep + 'RELAXED', 'w')
-                    for i in info:
-                        wf.write("%15s %12.3f" % (i, info[i]))
-                    wf.close()
-                    wf = open(self.workdir + os.sep + 'COMPLETE', 'w')
-                    for i in info:
-                        wf.write("%15s %12.3f" % (i, info[i]))
-                    wf.close()
+        elif self.stage == 3:
+            vj.input_variables.variables['PREC'] = 'NORMAL'
+            vj.input_variables.variables['EDIFF'] = 1e-3
+            vj.input_variables.variables['EDIFFG'] = 1e-2
+            vj.input_variables.set_encut(1.2, POTCAR=self.workdir + os.sep + 'POTCAR') # Originally     ENCUT=520.0
+            vj.input_variables.variables['NSW'] = 65
+            vj.input_variables.variables['ISIF'] = 3
+            vj.input_variables.variables['IBRION'] = 2
+            vj.input_variables.variables['POTIM'] = 0.02
+            vj.input_variables.variables['ISMEAR'] = 1
+            vj.input_variables.variables['SIGMA'] = 0.07
 
-        # How to change ISIF
-        if info['avg_force'] < 0.1 and self.relax_cell:
-            if info['avg_stress_diag'] < 0.1:
-                if info['avg_stress_non_diag'] < 0.1:
-                    vj.input_variables.variables['ISIF'] = 3
-                else:
-                    vj.input_variables.variables['ISIF'] = 3
-            else:
-                vj.input_variables.variables['ISIF'] = 3
-        else:
+        elif self.stage == 4:
+            vj.input_variables.variables['PREC'] = 'NORMAL'
+            vj.input_variables.variables['EDIFF'] = 1e-4
+            vj.input_variables.variables['EDIFFG'] = 1e-3
+            vj.input_variables.set_encut(1.3, POTCAR=self.workdir + os.sep + 'POTCAR')  # Originally     ENCUT=600.0
+            vj.input_variables.variables['NSW'] = 55
+            vj.input_variables.variables['ISIF'] = 3
+            vj.input_variables.variables['IBRION'] = 1
+            vj.input_variables.variables['POTIM'] = 0.30
+            vj.input_variables.variables['ISMEAR'] = 1
+            vj.input_variables.variables['SIGMA'] = 0.06
+
+        elif self.stage == 5:
+            vj.input_variables.variables['PREC'] = 'NORMAL'
+            vj.input_variables.variables['EDIFF'] = 1e-4
+            vj.input_variables.variables['EDIFFG'] = 1e-3
+            vj.input_variables.set_encut(1.4, POTCAR=self.workdir + os.sep + 'POTCAR')  # Originally     ENCUT=600.0
+            vj.input_variables.variables['NSW'] = 0
             vj.input_variables.variables['ISIF'] = 2
+            vj.input_variables.variables['IBRION'] = 2
+            vj.input_variables.variables['POTIM'] = 0.02
+            vj.input_variables.variables['ISMEAR'] = 1
+            vj.input_variables.variables['SIGMA'] = 0.05
 
-        # How to change IBRION
-        # if info['avg_force'] < 0.1 and info['avg_stress_diag'] < 0.1 and info['avg_stress_non_diag'] < 0.1:
-        #    vj.input_variables.variables['IBRION'] = 1
-        # elif info['avg_force'] < 1 and info['avg_stress_diag'] < 1 and info['avg_stress_non_diag'] < 1:
-        #    vj.input_variables.variables['IBRION'] = 2
-        # else:
-        #    vj.input_variables.variables['IBRION'] = 3
+        elif self.stage == 6:
+            vj.input_variables.variables['PREC'] = 'NORMAL'
+            vj.input_variables.variables['EDIFF'] = 0.1 * self.target_forces
+            vj.input_variables.variables['EDIFFG'] = 0.5* self.target_forces
+            vj.input_variables.set_encut(1.5, POTCAR=self.workdir + os.sep + 'POTCAR')  # Originally     ENCUT=600.0
+            vj.input_variables.variables['NSW'] = 0
+            vj.input_variables.variables['ISIF'] = 2
+            vj.input_variables.variables['IBRION'] = 2
+            vj.input_variables.variables['POTIM'] = 0.02
+            vj.input_variables.variables['ISMEAR'] = 1
+            vj.input_variables.variables['SIGMA'] = 0.05
 
-        # if vj.input_variables.variables['EDIFFG'] < - 2 * self.target_forces:
-        #     vj.input_variables.variables['EDIFFG'] = round_small(vj.input_variables.variables['EDIFFG'] / 2)
-        # else:
-        #     vj.input_variables.variables['EDIFFG'] = - self.target_forces
-        #
-
-        # How to change EDIFFG
-        if max_force > self.target_forces or max_stress > self.target_forces:
-            if self.relax_cell:
-                vj.input_variables.variables['EDIFFG'] = np.min(round_small(-0.01 * max(max_force, max_stress)),
-                                                                -self.target_forces)
-            else:
-                vj.input_variables.variables['EDIFFG'] = np.min(round_small(-0.01 * max_force),
-                                                                -self.target_forces)
-
-        pcm_log.debug('Current Values: ISIF: %2d   IBRION: %2d   EDIFF: %7.1E \tEDIFFG: %7.1E' %
-                      (vj.input_variables.variables['ISIF'],
+        pcm_log.debug('STAGE: %d Current Values: ISIF: %2d   IBRION: %2d   EDIFF: %7.1E \tEDIFFG: %7.1E' %
+                      (self.stage,
+                       vj.input_variables.variables['ISIF'],
                        vj.input_variables.variables['IBRION'],
                        vj.input_variables.variables['EDIFF'],
                        vj.input_variables.variables['EDIFFG']))
-
-        # How to change EDIFF
-        if vj.input_variables.variables['EDIFF'] > -0.01 * vj.input_variables.variables['EDIFFG']:
-            vj.input_variables.variables['EDIFF'] = round_small(-0.01 * vj.input_variables.variables['EDIFFG'])
-        else:
-            vj.input_variables.variables['EDIFF'] = 1E-4
 
         vj.input_variables.variables['LWAVE'] = False
-
-        # Print new values
-        pcm_log.debug('New Values: ISIF: %2d   IBRION: %2d   EDIFF: %7.1E \tEDIFFG: %7.1E' %
-                      (vj.input_variables.variables['ISIF'],
-                       vj.input_variables.variables['IBRION'],
-                       vj.input_variables.variables['EDIFF'],
-                       vj.input_variables.variables['EDIFFG']))
 
         for i in ['POSCAR', 'INCAR', 'OUTCAR', 'vasprun.xml']:
             if not os.path.exists(self.workdir + os.sep + i):
@@ -155,18 +146,30 @@ class IonRelaxation(Relaxator, Task):
             log.doRollover()
 
         vj.structure = self.get_final_geometry()
-
         vj.set_inputs()
         vj.save_json(self.workdir + os.sep + 'vaspjob.json')
+
+        self.stage += 1
+
         return True
 
     def first_run(self, nparal=4):
-
+        print('FIRST RUN')
+        print('=========')
         vj = self.vaspjob
         vj.clean()
         inp = InputVariables()
         inp.set_rough_relaxation()
         vj.set_input_variables(inp)
+        vj.input_variables.variables['PREC'] = 'LOW'
+        vj.input_variables.variables['EDIFF'] = 1e-2
+        vj.input_variables.variables['EDIFFG'] = 1e-1
+        vj.input_variables.variables['NSW'] = 65
+        vj.input_variables.variables['ISIF'] = 4
+        vj.input_variables.variables['IBRION'] = 2
+        vj.input_variables.variables['POTIM'] = 0.02
+        vj.input_variables.variables['ISMEAR'] = 1
+        vj.input_variables.variables['SIGMA'] = 0.10
         vj.input_variables.variables['LWAVE'] = False
         vj.write_potcar()
         vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir + os.sep + 'POTCAR')
@@ -205,75 +208,77 @@ class IonRelaxation(Relaxator, Task):
                 va = VaspAnalyser(self.workdir)
                 va.run()
 
+                print('READING FORCES AND STRESS')
+
                 max_force, max_stress = self.get_max_force_stress()
-                print('Max Force: %9.3E Stress: %9.3E (target forces= %E)' %
-                      (max_force, max_stress, self.target_forces))
+                if max_force is not None and max_stress is not None:
+                    pcm_log.debug('Max Force: %9.3E Stress: %9.3E' % (max_force, max_stress))
+                    vo = VaspOutput(self.workdir + os.sep + 'OUTCAR')
+                    info = vo.relaxation_info()
+                    pcm_log.debug('Avg Force: %9.3E Stress: %9.3E %9.3E' % (info['avg_force'],
+                                                                            info['avg_stress_diag'],
+                                                                            info['avg_stress_non_diag']))
+                    if self.stage == 7 and info['avg_force'] < self.target_forces and \
+                        info['avg_stress_diag'] < self.target_forces and \
+                        info['avg_stress_non_diag'] < self.target_forces:
+                        break
 
-                if max_force is not None and max_force < self.target_forces:
+                else:
+                    print('Failure to get forces and stress')
 
-                    # Conditions to finish the run
-                    if max_stress < self.target_forces:
-                        self.success = True
-                        break
-                    elif not self.relax_cell:
-                        self.success = True
-                        break
-                    elif ncalls >= self.max_calls:
-                        self.success = False
-                        break
+                print('UPDATING INPUTS FOR NEXT RUN')
 
                 self.update()
 
                 vj.run(use_mpi=True, mpi_num_procs=nparal)
                 if self.waiting:
                     vj.runner.wait()
+
             else:
                 filename = self.workdir + os.sep + 'vasp_stdout.log'
                 if os.path.exists(filename):
                     vasp_stdout = read_vasp_stdout(filename=filename)
                     if len(vasp_stdout['iterations']) > 0:
                         pcm_log.debug('[%s] SCF: %s' % (os.path.basename(self.workdir), str(vasp_stdout['iterations'])))
-                        # if len(vasp_stdout['energies']) > 2:
-                        #     energy_str = ' %9.3E' % vasp_stdout['energies'][0]
-                        #     for i in range(1, len(vasp_stdout['energies'])):
-                        #         if vasp_stdout['energies'][i] < vasp_stdout['energies'][i-1]:
-                        #             energy_str += ' >'
-                        #         else:
-                        #             energy_str += ' <'
-                        #     pcm_log.debug(energy_str)
+
+                #if os.path.isfile(self.workdir + os.sep + 'OUTCAR'):
+                #    vj.get_outputs()
 
                 time.sleep(30)
 
-        outcars = sorted([x for x in os.listdir(self.workdir) if x.startswith('OUTCAR')])[::-1]
-        vo = VaspOutput(self.workdir + os.sep + outcars[0])
-        forces = vo.forces
-        stress = vo.stress
-        if len(outcars) > 1:
-            for i in outcars[1:]:
-                vo = VaspOutput(self.workdir + os.sep + i)
-                forces = np.concatenate((forces, vo.forces))
-                stress = np.concatenate((stress, vo.stress))
 
-        vj.get_outputs()
-        self.output = {'forces': generic_serializer(forces), 'stress': generic_serializer(stress),
-                       'energy': vj.outcar.energy, 'energies': generic_serializer(vj.outcar.energies)}
-        if vj.outcar.is_finished:
-            self.finished = True
+        # outcars = sorted([x for x in os.listdir(self.workdir) if x.startswith('OUTCAR')])[::-1]
+        # vo = VaspOutput(self.workdir + os.sep + outcars[0])
+        # forces = vo.forces
+        # stress = vo.stress
+        # if len(outcars) > 1:
+        #     for i in outcars[1:]:
+        #         vo = VaspOutput(self.workdir + os.sep + i)
+        #         forces = np.concatenate((forces, vo.forces))
+        #         stress = np.concatenate((stress, vo.stress))
+
+#        vj.get_outputs()
+        # self.output = {'forces': generic_serializer(forces), 'stress': generic_serializer(stress),
+        #                'energy': vj.outcar.energy, 'energies': generic_serializer(vj.outcar.energies)}
+#        if vj.outcar.is_finished:
+#            self.finished = True
 
     def get_forces_stress_energy(self):
 
         filename = self.workdir + os.sep + 'OUTCAR'
         if os.path.isfile(filename):
-            self.vaspjob.get_outputs()
-            if self.vaspjob.outcar.has_forces_stress_energy():
-                forces = self.vaspjob.outcar.forces[-1]
-                stress = self.vaspjob.outcar.stress[-1]
-                total_energy = self.vaspjob.outcar.final_data['energy']['free_energy']
+            vo=VaspOutput(filename)
+            if vo.has_forces_stress_energy():
+                forces = vo.forces[-1]
+                stress = vo.stress[-1]
+                total_energy = vo.final_data['energy']['free_energy']
             else:
+                print('ERROR: VaspOuput says no forces')
                 forces = None
                 stress = None
                 total_energy = None
         else:
+            print('ERROR: No OUTCAR')
             forces = None
             stress = None
             total_energy = None
