@@ -55,15 +55,16 @@ class VaspOutput:
             pos_forces.shape = (len(pos_forces), -1, 6)
             forces = pos_forces[:, :, 3:]
             positions = pos_forces[:, :, :3]
-            # pcm_log.debug('Positions from OUTCAR: \n' + str(positions))
-            # pcm_log.debug('Forces from OUTCAR: \n' + str(forces))
+            pcm_log.debug('Positions from OUTCAR: %d iterations' % len(positions))
+            pcm_log.debug('Forces from OUTCAR: %d iterations' % len(forces))
 
             self.forces = forces
             self.positions = positions
             self.array_sizes['NIONSTEPS'] = len(self.forces)
-            # pcm_log.info('Number of Ionic steps: ' + str(self.array_sizes['NIONSTEPS']))
+            pcm_log.debug('Number of Ionic steps: ' + str(self.array_sizes['NIONSTEPS']))
         else:
             print('Forces and Positions could not be parsed : ', pos_forces.shape)
+            print('pos_forces =\n%s ' % pos_forces)
 
         fermi = re.findall(r'E-fermi\s+:\s+([-.\d]+)', self.data)
         fermi = np.array(fermi, dtype=float)
