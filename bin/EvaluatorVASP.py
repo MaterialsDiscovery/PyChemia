@@ -8,7 +8,7 @@ import numpy as np
 
 from pychemia import pcm_log
 from pychemia.analysis import StructureAnalysis
-from pychemia.code.vasp.task import IonRelaxation
+from pychemia.code.vasp.task import IonRelaxation2
 from pychemia.db import get_database
 from pychemia.evaluator import DirectEvaluator
 from pychemia.utils.serializer import generic_serializer
@@ -26,9 +26,9 @@ def worker(db_settings, entry_id, workdir, target_forces, relaxator_params):
     structure = pcdb.get_structure(entry_id)
     structure = structure.scale()
     print('relaxator_params', relaxator_params)
-    relaxer = IonRelaxation(structure, workdir=workdir, target_forces=target_forces, waiting=False,
+    relaxer = IonRelaxation2(structure, workdir=workdir, target_forces=target_forces, waiting=False,
                             binary=relaxator_params['binary'], encut=1.3, kp_grid=None, kp_density=1E4,
-                            relax_cell=True, max_calls=10)
+                            relax_cell=True)
     print('relaxing on:', relaxer.workdir)
     relaxer.run(relaxator_params['nmpiparal'])
     pcm_log.info('[%s]: Finished relaxation. Target forces: %7.3e' % (str(entry_id), target_forces))

@@ -49,6 +49,10 @@ docs/_build/
 #Emacs backups
 *~
 .#*.py
+\#*\#
 
 #Mac Files
 .DS_Store
+
+#Linux Files
+.directory

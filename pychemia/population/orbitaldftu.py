@@ -101,7 +101,7 @@ class OrbitalDFTU(Population):
 
         p = gram_smith_qr(self.ndim)
         eigvec[0] = p
-        eigvec[3] = np.dot(np.diag(self.connection), p)
+        eigvec[4] = np.dot(np.diag(self.connection), p)
 
         p = gram_smith_qr(self.ndim)
         eigvec[1] = p

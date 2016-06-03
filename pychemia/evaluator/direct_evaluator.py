@@ -19,7 +19,7 @@ class DirectEvaluator:
         self.nparal = nparal
         self.target_forces = target_forces
         self.relaxator_params = relaxator_params
-        self.sleeping_time = 30
+        self.sleeping_time = 120
         self.evaluate_failed = evaluate_failed
         self.evaluate_all = evaluate_all
         self.waiting = waiting
@@ -107,13 +107,11 @@ class DirectEvaluator:
                 forces = np.array(entry['properties']['forces']).reshape((-1, 3))
                 max_force = np.max(np.apply_along_axis(np.linalg.norm, 1, forces))
             else:
-                pcm_log.debug('No forces')
                 max_force = 1
             if 'stress' in entry['properties'] and entry['properties']['stress'] is not None:
                 stress = np.array(entry['properties']['stress']).reshape((-1, 3))
                 max_stress = np.max(np.abs(stress.flatten()))
             else:
-                pcm_log.debug('No stress')
                 max_stress = 1
         else:
             pcm_log.debug('Bad entry')
@@ -126,10 +124,13 @@ class DirectEvaluator:
 
     def is_evaluable(self, entry):
         if 'lock' in entry['status']:
+            print('FALSE because %s is locked' % entry['_id'])
             return False
         elif self.evaluate_all:
+            print('TRUE because evaluate all')
             return True
         elif self.get_current_status(entry) > self.target_forces:
+            print('TRUE because forces not converged %f' % self.get_current_status(entry))
             return True
         else:
             return False

@@ -55,15 +55,16 @@ class VaspOutput:
             pos_forces.shape = (len(pos_forces), -1, 6)
             forces = pos_forces[:, :, 3:]
             positions = pos_forces[:, :, :3]
-            # pcm_log.debug('Positions from OUTCAR: \n' + str(positions))
-            # pcm_log.debug('Forces from OUTCAR: \n' + str(forces))
+            pcm_log.debug('Positions from OUTCAR: %d iterations' % len(positions))
+            pcm_log.debug('Forces from OUTCAR: %d iterations' % len(forces))
 
             self.forces = forces
             self.positions = positions
             self.array_sizes['NIONSTEPS'] = len(self.forces)
-            # pcm_log.info('Number of Ionic steps: ' + str(self.array_sizes['NIONSTEPS']))
+            pcm_log.debug('Number of Ionic steps: ' + str(self.array_sizes['NIONSTEPS']))
         else:
             print('Forces and Positions could not be parsed : ', pos_forces.shape)
+            print('pos_forces =\n%s ' % pos_forces)
 
         fermi = re.findall(r'E-fermi\s+:\s+([-.\d]+)', self.data)
         fermi = np.array(fermi, dtype=float)
@@ -107,13 +108,13 @@ class VaspOutput:
                 print('Error parsing bands')
         self.bands = bands_dict
 
-        if 'NIONSTEPS' in self.array_sizes:
+        if False and 'NIONSTEPS' in self.array_sizes:
             if len(bands) != self.array_sizes['NBANDS'] * self.array_sizes['ISPIN'] * self.array_sizes['NKPTS'] \
                     * self.array_sizes['NIONSTEPS']:
                 pcm_log.debug('NBANDS: %s != ISPIN: %s x NKPTS: %s x NIONSTEPS: %s' % (self.array_sizes['NBANDS'],
-                                                                                       self.array_sizes['ISPIN'],
-                                                                                       self.array_sizes['NKPTS'],
-                                                                                       self.array_sizes['NIONSTEPS']))
+                                                                                      self.array_sizes['ISPIN'],
+                                                                                      self.array_sizes['NKPTS'],
+                                                                                      self.array_sizes['NIONSTEPS']))
         # pcm_log.info('Bands : ' + str(bands))
 
         stress = re.findall(r'in\s+kB ([-*.\s\d]+)external', self.data)

@@ -163,6 +163,8 @@ Contributors
 
 1. Guillermo Avendaño-Franco [West Virginia University] (Basic Infraestructure)
 
+1. Adam Payne [West Virginia University] (Bug fixes (Populations, Relaxators, and KPoints) ) 
+
 1. Irais Valencia Jaime [West Virginia University] (Simulation and testing)
 
 1. Sobhit Singh [West Virginia University] (Data-mining)
