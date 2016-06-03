@@ -12,7 +12,7 @@ from pychemia.utils.serializer import generic_serializer
 from ..incar import InputVariables
 from ..outcar import VaspOutput, read_vasp_stdout
 from ..poscar import read_poscar
-from ..vasp import VaspJob, VaspAnalyser
+from ..vasp import VaspJob, VaspAnalyser, VaspOutput
 from ...relaxator import Relaxator
 from ...tasks import Task
 
@@ -60,6 +60,7 @@ class IonRelaxation2(Relaxator, Task):
             vj.input_variables.variables['PREC'] = 'LOW'
             vj.input_variables.variables['EDIFF'] = 1e-2
             vj.input_variables.variables['EDIFFG'] = 1e-1
+            vj.input_variables.set_encut(1.0, POTCAR=self.workdir + os.sep + 'POTCAR')
             vj.input_variables.variables['NSW'] = 65
             vj.input_variables.variables['ISIF'] = 4
             vj.input_variables.variables['IBRION'] = 2
@@ -71,6 +72,7 @@ class IonRelaxation2(Relaxator, Task):
             vj.input_variables.variables['PREC'] = 'NORMAL'
             vj.input_variables.variables['EDIFF'] = 1e-3
             vj.input_variables.variables['EDIFFG'] = 1e-2
+            vj.input_variables.set_encut(1.1, POTCAR=self.workdir + os.sep + 'POTCAR')
             vj.input_variables.variables['NSW'] = 55
             vj.input_variables.variables['ISIF'] = 4
             vj.input_variables.variables['IBRION'] = 1
@@ -82,7 +84,7 @@ class IonRelaxation2(Relaxator, Task):
             vj.input_variables.variables['PREC'] = 'NORMAL'
             vj.input_variables.variables['EDIFF'] = 1e-3
             vj.input_variables.variables['EDIFFG'] = 1e-2
-            vj.input.set_encut(1.8) # Originally     ENCUT=520.0
+            vj.input_variables.set_encut(1.2, POTCAR=self.workdir + os.sep + 'POTCAR') # Originally     ENCUT=520.0
             vj.input_variables.variables['NSW'] = 65
             vj.input_variables.variables['ISIF'] = 3
             vj.input_variables.variables['IBRION'] = 2
@@ -94,7 +96,7 @@ class IonRelaxation2(Relaxator, Task):
             vj.input_variables.variables['PREC'] = 'NORMAL'
             vj.input_variables.variables['EDIFF'] = 1e-4
             vj.input_variables.variables['EDIFFG'] = 1e-3
-            vj.input_variables.set_encut(2.3)  # Originally     ENCUT=600.0
+            vj.input_variables.set_encut(1.3, POTCAR=self.workdir + os.sep + 'POTCAR')  # Originally     ENCUT=600.0
             vj.input_variables.variables['NSW'] = 55
             vj.input_variables.variables['ISIF'] = 3
             vj.input_variables.variables['IBRION'] = 1
@@ -106,7 +108,7 @@ class IonRelaxation2(Relaxator, Task):
             vj.input_variables.variables['PREC'] = 'NORMAL'
             vj.input_variables.variables['EDIFF'] = 1e-4
             vj.input_variables.variables['EDIFFG'] = 1e-3
-            vj.input_variables.set_encut(2.3)  # Originally     ENCUT=600.0
+            vj.input_variables.set_encut(1.4, POTCAR=self.workdir + os.sep + 'POTCAR')  # Originally     ENCUT=600.0
             vj.input_variables.variables['NSW'] = 0
             vj.input_variables.variables['ISIF'] = 2
             vj.input_variables.variables['IBRION'] = 2
@@ -118,7 +120,7 @@ class IonRelaxation2(Relaxator, Task):
             vj.input_variables.variables['PREC'] = 'NORMAL'
             vj.input_variables.variables['EDIFF'] = 0.1 * self.target_forces
             vj.input_variables.variables['EDIFFG'] = 0.5* self.target_forces
-            vj.input_variables.set_encut(2.3)  # Originally     ENCUT=600.0
+            vj.input_variables.set_encut(1.5, POTCAR=self.workdir + os.sep + 'POTCAR')  # Originally     ENCUT=600.0
             vj.input_variables.variables['NSW'] = 0
             vj.input_variables.variables['ISIF'] = 2
             vj.input_variables.variables['IBRION'] = 2
@@ -206,6 +208,26 @@ class IonRelaxation2(Relaxator, Task):
                 va = VaspAnalyser(self.workdir)
                 va.run()
 
+                print('READING FORCES AND STRESS')
+
+                max_force, max_stress = self.get_max_force_stress()
+                if max_force is not None and max_stress is not None:
+                    pcm_log.debug('Max Force: %9.3E Stress: %9.3E' % (max_force, max_stress))
+                    vo = VaspOutput(self.workdir + os.sep + 'OUTCAR')
+                    info = vo.relaxation_info()
+                    pcm_log.debug('Avg Force: %9.3E Stress: %9.3E %9.3E' % (info['avg_force'],
+                                                                            info['avg_stress_diag'],
+                                                                            info['avg_stress_non_diag']))
+                    if self.stage == 7 and info['avg_force'] < self.target_forces and \
+                        info['avg_stress_diag'] < self.target_forces and \
+                        info['avg_stress_non_diag'] < self.target_forces:
+                        break
+
+                else:
+                    print('Failure to get forces and stress')
+
+                print('UPDATING INPUTS FOR NEXT RUN')
+
                 self.update()
 
                 vj.run(use_mpi=True, mpi_num_procs=nparal)
@@ -219,57 +241,44 @@ class IonRelaxation2(Relaxator, Task):
                     if len(vasp_stdout['iterations']) > 0:
                         pcm_log.debug('[%s] SCF: %s' % (os.path.basename(self.workdir), str(vasp_stdout['iterations'])))
 
-                if os.path.isfile(self.workdir + os.sep + 'OUTCAR'):
-                    vj.get_outputs()
+                #if os.path.isfile(self.workdir + os.sep + 'OUTCAR'):
+                #    vj.get_outputs()
 
                 time.sleep(30)
 
-            max_force, max_stress = self.get_max_force_stress()
-            if max_force is not None and max_stress is not None:
-                pcm_log.debug('Max Force: %9.3E Stress: %9.3E' % (max_force, max_stress))
-                vo = VaspOutput(self.workdir + os.sep + 'OUTCAR')
-                info = vo.relaxation_info()
-                pcm_log.debug('Avg Force: %9.3E Stress: %9.3E %9.3E' % (info['avg_force'],
-                                                                        info['avg_stress_diag'],
-                                                                        info['avg_stress_non_diag']))
-                if self.stage == 7 and info['avg_force'] < self.target_forces and \
-                    info['avg_stress_diag'] < self.target_forces and \
-                    info['avg_stress_non_diag'] < self.target_forces:
-                    break
 
-            else:
-                print('Failure to get forces and stress')
+        # outcars = sorted([x for x in os.listdir(self.workdir) if x.startswith('OUTCAR')])[::-1]
+        # vo = VaspOutput(self.workdir + os.sep + outcars[0])
+        # forces = vo.forces
+        # stress = vo.stress
+        # if len(outcars) > 1:
+        #     for i in outcars[1:]:
+        #         vo = VaspOutput(self.workdir + os.sep + i)
+        #         forces = np.concatenate((forces, vo.forces))
+        #         stress = np.concatenate((stress, vo.stress))
 
-        outcars = sorted([x for x in os.listdir(self.workdir) if x.startswith('OUTCAR')])[::-1]
-        vo = VaspOutput(self.workdir + os.sep + outcars[0])
-        forces = vo.forces
-        stress = vo.stress
-        if len(outcars) > 1:
-            for i in outcars[1:]:
-                vo = VaspOutput(self.workdir + os.sep + i)
-                forces = np.concatenate((forces, vo.forces))
-                stress = np.concatenate((stress, vo.stress))
-
-        vj.get_outputs()
-        self.output = {'forces': generic_serializer(forces), 'stress': generic_serializer(stress),
-                       'energy': vj.outcar.energy, 'energies': generic_serializer(vj.outcar.energies)}
-        if vj.outcar.is_finished:
-            self.finished = True
+#        vj.get_outputs()
+        # self.output = {'forces': generic_serializer(forces), 'stress': generic_serializer(stress),
+        #                'energy': vj.outcar.energy, 'energies': generic_serializer(vj.outcar.energies)}
+#        if vj.outcar.is_finished:
+#            self.finished = True
 
     def get_forces_stress_energy(self):
 
         filename = self.workdir + os.sep + 'OUTCAR'
         if os.path.isfile(filename):
-            self.vaspjob.get_outputs()
-            if self.vaspjob.outcar.has_forces_stress_energy():
-                forces = self.vaspjob.outcar.forces[-1]
-                stress = self.vaspjob.outcar.stress[-1]
-                total_energy = self.vaspjob.outcar.final_data['energy']['free_energy']
+            vo=VaspOutput(filename)
+            if vo.has_forces_stress_energy():
+                forces = vo.forces[-1]
+                stress = vo.stress[-1]
+                total_energy = vo.final_data['energy']['free_energy']
             else:
+                print('ERROR: VaspOuput says no forces')
                 forces = None
                 stress = None
                 total_energy = None
         else:
+            print('ERROR: No OUTCAR')
             forces = None
             stress = None
             total_energy = None
