@@ -93,7 +93,9 @@ class SearcherTest(unittest.TestCase):
         searcher.run()
         popu = pychemia.population.RealFunction(pychemia.utils.metaheuristics.Sphere.function, 3, [-1, 1],
                                                 local_minimization=True)
-        searcher = pychemia.searcher.FireFly(popu, generation_size=16, stabilization_limit=5)
+        searcher = pychemia.searcher.FireFly(popu,
+                                             {'delta': 0.1,'gamma': 0.1, 'beta0': 0.8, 'alpha0': 0, 'multi_move': True},
+                                             generation_size=16, stabilization_limit=5)
         searcher.run()
         assert np.linalg.norm(np.array(searcher.population.db[searcher.population.best_candidate]['x']) - mini) < 0.2
 
@@ -116,6 +118,3 @@ class SearcherTest(unittest.TestCase):
         searcher.run()
         assert np.linalg.norm(np.array(searcher.population.db[searcher.population.best_candidate]['x']) - mini) < 0.2
 
-
-if __name__ == '__main__':
-    test_searcher()

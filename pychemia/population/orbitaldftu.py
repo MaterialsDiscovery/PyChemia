@@ -109,7 +109,7 @@ class OrbitalDFTU(Population):
 
         data = {'eigvec': eigvec, 'I': I, 'D': D}
 
-        return self.new_entry(data)
+        return self.new_entry(data), None
 
     def cross(self, ids):
         pass

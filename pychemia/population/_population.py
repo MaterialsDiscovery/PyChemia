@@ -55,7 +55,7 @@ class Population:
             ret[i] = self.value(i)
         return ret
 
-    def get_entry(self, entry_id, with_id=True):
+    def get_entry(self, entry_id, projection=None, with_id=True):
         """
         Return an entry identified by 'entry_id'
 
@@ -63,9 +63,11 @@ class Population:
         :param entry_id: A database identifier
         :return:
         """
-        entry = self.pcdb.entries.find_one({'_id': entry_id})
-        if entry is not None and not with_id:
-            entry.pop('_id')
+        if projection is None:
+            projection = {}
+        if not with_id:
+           projection['_id']=0
+        entry = self.pcdb.entries.find_one({'_id': entry_id}, projection)
         return entry
 
     def ids_sorted(self, selection):

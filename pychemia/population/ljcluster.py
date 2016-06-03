@@ -12,6 +12,7 @@ from ._population import Population
 
 
 class LJCluster(Population):
+
     def __init__(self, name, composition=None, tag='global', target_forces=1E-3, value_tol=1E-2,
                  distance_tol=0.1, minimal_density=70.0, refine=True):
         if composition is not None:

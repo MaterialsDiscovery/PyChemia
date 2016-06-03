@@ -79,9 +79,9 @@ class NonCollinearMagMoms(Population):
         return ret
 
     def distance(self, entry_id, entry_jd):
-        entry = self.pcdb.entries.find_one({'_id': entry_id}, {'properties.magmom': 1})
+        entry = self.get_entry(entry_id, {'properties.magmom': 1})
         magmom_i = spherical_to_cartesian(entry['properties']['magmom'])
-        entry = self.pcdb.entries.find_one({'_id': entry_jd}, {'properties.magmom': 1})
+        entry = self.get_entry(entry_id, {'properties.magmom': 1})
         magmom_j = spherical_to_cartesian(entry['properties']['magmom'])
         magmom_ixyz = spherical_to_cartesian(magmom_i)
         magmom_jxyz = spherical_to_cartesian(magmom_j)
@@ -91,7 +91,7 @@ class NonCollinearMagMoms(Population):
 
     def move_random(self, entry_id, factor=0.2, in_place=False, kind='move'):
 
-        entry = self.pcdb.entries.find_one({'_id': entry_id}, {'properties.magmom': 1})
+        entry = self.get_entry(entry_id, {'properties.magmom': 1})
         # Magnetic Momenta are stored in spherical coordinates
         magmom_i = spherical_to_cartesian(entry['properties']['magmom'])
         # Converted into cartesians
@@ -111,10 +111,10 @@ class NonCollinearMagMoms(Population):
 
     def move(self, entry_id, entry_jd, factor=0.2, in_place=False):
         magmom_new_xyz = np.zeros((self.structure.natom, 3))
-        entry = self.pcdb.entries.find_one({'_id': entry_id}, {'properties.magmom': 1})
+        entry = self.get_entry(entry_id, {'properties.magmom': 1})
         magmom_i = np.array(entry['properties']['magmom']).reshape((-1, 3))
         magmom_ixyz = spherical_to_cartesian(magmom_i)
-        entry = self.pcdb.entries.find_one({'_id': entry_jd}, {'properties.magmom': 1})
+        entry = self.get_entry(entry_id, {'properties.magmom': 1})
         magmom_j = np.array(entry['properties']['magmom']).reshape((-1, 3))
         magmom_jxyz = spherical_to_cartesian(magmom_j)
 
@@ -133,14 +133,14 @@ class NonCollinearMagMoms(Population):
             return self.new_entry(magmom_new, active=False)
 
     def value(self, entry_id):
-        entry = self.pcdb.entries.find_one({'_id': entry_id}, {'properties.energy': 1})
+        entry = self.get_entry(entry_id, {'properties.energy': 1})
         if 'energy' in entry['properties']:
             return entry['properties']['energy']
         else:
             return None
 
     def str_entry(self, entry_id):
-        entry = self.pcdb.entries.find_one({'_id': entry_id}, {'properties.magmom': 1})
+        entry = self.get_entry(entry_id, {'properties.magmom': 1})
         print(np.array(entry['properties']['magmom']).reshape((-1, 3)))
 
     def get_duplicates(self, ids):
@@ -163,7 +163,7 @@ class NonCollinearMagMoms(Population):
             if i not in self.mag_atoms:
                 magmom[i, :] = 0.0
 
-        return self.new_entry(magmom)
+        return self.new_entry(magmom), None
 
     def recover(self):
         data = self.pcdb.db.population_info.find_one({'tag': self.tag})
@@ -176,9 +176,9 @@ class NonCollinearMagMoms(Population):
     def cross(self, ids):
         entry_id = ids[0]
         entry_jd = ids[1]
-        entry = self.pcdb.entries.find_one({'_id': entry_id}, {'properties.magmom': 1})
+        entry = self.get_entry(entry_id, {'properties.magmom': 1})
         magmom_i = np.array(entry['properties']['magmom']).reshape((-1, 3))
-        entry = self.pcdb.entries.find_one({'_id': entry_jd}, {'properties.magmom': 1})
+        entry = self.get_entry(entry_jd, {'properties.magmom': 1})
         magmom_j = np.array(entry['properties']['magmom']).reshape((-1, 3))
         magmom_inew = np.zeros((self.structure.natom, 3))
         magmom_jnew = np.zeros((self.structure.natom, 3))
@@ -203,7 +203,7 @@ class NonCollinearMagMoms(Population):
         vj.initialize(structure, workdir=workdir, kpoints=kp, binary=binary)
         vj.clean()
         vj.input_variables = read_incar(source_dir + '/INCAR')
-        magmom_sph = self.pcdb.entries.find_one({'_id': entry_id}, {'properties': 1})['properties']['magmom']
+        magmom_sph = self.get_entry(entry_id, {'properties.magmom': 1})['properties']['magmom']
         magmom_car = spherical_to_cartesian(magmom_sph)
         vj.input_variables.variables['MAGMOM'] = [float(x) for x in magmom_car.flatten()]
         vj.input_variables.variables['M_CONSTR'] = [float(x) for x in magmom_car.flatten()]
