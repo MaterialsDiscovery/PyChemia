@@ -19,7 +19,7 @@ class DirectEvaluator:
         self.nparal = nparal
         self.target_forces = target_forces
         self.relaxator_params = relaxator_params
-        self.sleeping_time = 30
+        self.sleeping_time = 120
         self.evaluate_failed = evaluate_failed
         self.evaluate_all = evaluate_all
         self.waiting = waiting
