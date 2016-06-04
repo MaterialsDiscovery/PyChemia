@@ -1,5 +1,6 @@
 import unittest
 
+
 class SearcherTest(unittest.TestCase):
 
     def test_harmony(self):

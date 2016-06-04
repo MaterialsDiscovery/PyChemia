@@ -7,6 +7,7 @@ from pychemia.utils.mathematics import spherical_to_cartesian, cartesian_to_sphe
 from pychemia.code.vasp import read_incar, read_poscar, VaspJob, VaspOutput
 from pychemia.crystal import KPoints
 
+
 class NonCollinearMagMoms(Population):
     def __init__(self, name, source_dir='.', mag_atoms=None, magmom_magnitude=2.0, distance_tolerance=0.1):
         Population.__init__(self, name, 'global')
@@ -20,12 +21,11 @@ class NonCollinearMagMoms(Population):
         self.structure = read_poscar(source_dir + os.sep + 'POSCAR')
         if mag_atoms is None:
             self.mag_atoms = list(np.where(np.apply_along_axis(np.linalg.norm, 1, magmom) > 0.0)[0])
-            self.mag_atoms = [ int(x) for x in self.mag_atoms]
+            self.mag_atoms = [int(x) for x in self.mag_atoms]
         else:
             self.mag_atoms = mag_atoms
         self.magmom_magnitude = magmom_magnitude
         self.distance_tolerance = distance_tolerance
-
 
     def __str__(self):
         ret = ' Population NonColl\n\n'
@@ -58,13 +58,14 @@ class NonCollinearMagMoms(Population):
         # Magnetic moments are stored in spherical coordinates
         properties = {'magmom': list(data.flatten())}
         status = {self.tag: active}
-        entry_id = self.pcdb.insert(structure=self.structure, properties=properties, status=status)
+        entry={'structure': self.structure.to_dict, 'properties': properties, 'status': status}
+        entry_id = self.insert_entry(entry)
         pcm_log.debug('Added new entry: %s with tag=%s: %s' % (str(entry_id), self.tag, str(active)))
         return entry_id
 
     def is_evaluated(self, entry_id):
-        structure, properties, status = self.pcdb.get_dicts(entry_id)
-        if 'energy' in properties:
+        entry = self.get_entry(entry_id, {'_id': 0, 'properties': 1})
+        if 'energy' in entry['properties']:
             return True
         else:
             return False
@@ -105,7 +106,7 @@ class NonCollinearMagMoms(Population):
         properties = {'magmom': magmom_new}
 
         if in_place:
-            return self.pcdb.update(entry_id, properties=properties)
+            return self.update_properties(entry_id, new_properties=properties)
         else:
             return self.new_entry(magmom_new, active=False)
 
@@ -128,7 +129,7 @@ class NonCollinearMagMoms(Population):
         properties = {'magmom': magmom_new}
 
         if in_place:
-            return self.pcdb.update(entry_id, properties=properties)
+            return self.update_properties(entry_id, new_properties=properties)
         else:
             return self.new_entry(magmom_new, active=False)
 
@@ -166,7 +167,7 @@ class NonCollinearMagMoms(Population):
         return self.new_entry(magmom), None
 
     def recover(self):
-        data = self.pcdb.db.population_info.find_one({'tag': self.tag})
+        data = self.get_population_info()
         if data is not None:
             self.mag_atoms = data['mag_atoms']
             self.distance_tolerance = data['distance_tolerance']
@@ -198,7 +199,7 @@ class NonCollinearMagMoms(Population):
 
     def prepare_folder(self, entry_id, workdir, binary='vasp', source_dir='.'):
         vj = VaspJob()
-        structure = self.pcdb.get_structure(entry_id)
+        structure = self.get_structure(entry_id)
         kp = KPoints.optimized_grid(structure.lattice, kp_density=2E4)
         vj.initialize(structure, workdir=workdir, kpoints=kp, binary=binary)
         vj.clean()
@@ -222,7 +223,7 @@ class NonCollinearMagMoms(Population):
                 if 'free_energy' in vo.final_data['energy']:
                     energy = vo.final_data['energy']['free_energy']
                     print('Uploading energy data for %s' % entry_id)
-                    self.pcdb.entries.update_one({'_id': entry_id}, { '$set': {'properties.energy': energy}})
+                    self.set_in_properties(entry_id, 'energy', energy)
                     return True
                 else:
                     return False

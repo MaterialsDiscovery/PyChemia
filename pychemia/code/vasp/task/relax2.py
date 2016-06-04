@@ -246,7 +246,6 @@ class IonRelaxation2(Relaxator, Task):
 
                 time.sleep(30)
 
-
         # outcars = sorted([x for x in os.listdir(self.workdir) if x.startswith('OUTCAR')])[::-1]
         # vo = VaspOutput(self.workdir + os.sep + outcars[0])
         # forces = vo.forces
@@ -359,4 +358,4 @@ class IonRelaxation2(Relaxator, Task):
         self.encut = self.task_params['encut']
         self.target_forces = self.task_params['target_forces']
         self.relax_cell = self.task_params['relax_cell']
-        self.max_calls = self.task_params['max_calls']
+
