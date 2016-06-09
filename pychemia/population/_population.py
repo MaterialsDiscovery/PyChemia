@@ -71,7 +71,7 @@ class Population:
             entry['properties']={}
         if 'status' not in entry:
             entry['status']={}
-        self.pcdb.entries.insert(entry)
+        return self.pcdb.entries.insert(entry)
 
     def get_structure(self, entry_id):
         return self.pcdb.get_structure(entry_id)
