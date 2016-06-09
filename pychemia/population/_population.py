@@ -76,6 +76,9 @@ class Population:
     def get_structure(self, entry_id):
         return self.pcdb.get_structure(entry_id)
 
+    def set_structure(self, entry_id, structure):
+        return self.pcdb.update(entry_id, structure=structure)
+
     def get_entry(self, entry_id, projection=None, with_id=True):
         """
         Return an entry identified by 'entry_id'

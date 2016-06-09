@@ -48,7 +48,7 @@ class RelaxStructures(Population):
         Population.__init__(self, name, tag)
 
     def recover(self):
-        data = self.pcdb.db.population_info.find_one({'tag': self.tag})
+        data = self.get_population_info()
         if data is not None:
             self.distance_tol = data['distance_tol']
             self.value_tol = data['value_tol']
@@ -66,12 +66,13 @@ class RelaxStructures(Population):
     def new_entry(self, structure, active=True):
         properties = {'forces': None, 'stress': None, 'energy': None}
         status = {self.tag: active}
-        entry_id = self.pcdb.insert(structure=structure, properties=properties, status=status)
+        entry = {'structure': structure.to_dict, 'properties': properties, 'status': status}
+        entry_id = self.insert_entry(entry)
         pcm_log.debug('Added new entry: %s with tag=%s: %s' % (str(entry_id), self.tag, str(active)))
         return entry_id
 
     def get_max_force_stress(self, entry_id):
-        entry = self.pcdb.entries.find_one({'_id': entry_id}, {'properties': 1})
+        entry = self.get_entry(entry_id, projection={'properties': 1})
         if entry is not None and entry['properties'] is not None:
             properties = entry['properties']
             if 'forces' not in properties or 'stress' not in properties:
@@ -305,7 +306,7 @@ class RelaxStructures(Population):
         else:  # change
             changer.random_change(factor)
         if in_place:
-            return self.pcdb.update(entry_id, structure=changer.new_structure)
+            return self.set_structure(entry_id, changer.new_structure)
         else:
             return self.new_entry(changer.new_structure, active=False)
 
@@ -351,7 +352,7 @@ class RelaxStructures(Population):
         new_symbols = match.structure2.symbols
         new_structure = Structure(reduced=new_reduced, symbols=new_symbols, cell=new_cell)
         if in_place:
-            return self.pcdb.update(entry_id, structure=new_structure)
+            return self.set_structure(entry_id, new_structure)
         else:
             return self.new_entry(new_structure, active=False)
 

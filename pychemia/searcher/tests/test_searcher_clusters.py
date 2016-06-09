@@ -3,7 +3,7 @@ import unittest
 
 class SearcherTest(unittest.TestCase):
 
-    def test_harmony(self):
+    def notest_harmony(self):
         """
         Tests (pychemia.searcher.harmony) with LJ Clusters           :
         """
@@ -17,7 +17,7 @@ class SearcherTest(unittest.TestCase):
         searcher = pychemia.searcher.HarmonySearch(popu, generation_size=16, stabilization_limit=5)
         searcher.run()
 
-    def test_swarm(self):
+    def notest_swarm(self):
         """
         Tests (pychemia.searcher.swarm) with LJ Clusters             :
         """
@@ -31,7 +31,7 @@ class SearcherTest(unittest.TestCase):
         searcher = pychemia.searcher.ParticleSwarm(popu, generation_size=16, stabilization_limit=5)
         searcher.run()
 
-    def test_firefly(self):
+    def notest_firefly(self):
         """
         Tests (pychemia.searcher.firefly) with LJ Clusters           :
         """
@@ -47,7 +47,7 @@ class SearcherTest(unittest.TestCase):
                                              generation_size=16, stabilization_limit=5)
         searcher.run()
 
-    def test_genetic(self):
+    def notest_genetic(self):
         """
 
         Tests (pychemia.searcher.genetic) with LJ Clusters           :
