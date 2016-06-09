@@ -55,17 +55,44 @@ class Population:
             ret[i] = self.value(i)
         return ret
 
-    def get_entry(self, entry_id, with_id=True):
+    def update_properties(self, entry_id, new_properties):
+        self.pcdb.update(entry_id, properties=new_properties)
+
+    def set_in_properties(self, entry_id, field, value):
+        return self.pcdb.entries.update_one({'_id': entry_id}, {'$set': {'properties.'+field: value}})
+
+    def get_population_info(self):
+        return self.pcdb.db.population_info.find_one({'tag': self.tag})
+
+    def insert_entry(self, entry):
+        if 'structure' not in entry:
+            entry['structure']={}
+        if 'properties' not in entry:
+            entry['properties']={}
+        if 'status' not in entry:
+            entry['status']={}
+        self.pcdb.entries.insert(entry)
+
+    def get_structure(self, entry_id):
+        return self.pcdb.get_structure(entry_id)
+
+    def set_structure(self, entry_id, structure):
+        return self.pcdb.update(entry_id, structure=structure)
+
+    def get_entry(self, entry_id, projection=None, with_id=True):
         """
         Return an entry identified by 'entry_id'
 
         :param with_id:
+        :param projection: Insert that projection into the query
         :param entry_id: A database identifier
         :return:
         """
-        entry = self.pcdb.entries.find_one({'_id': entry_id})
-        if entry is not None and not with_id:
-            entry.pop('_id')
+        if projection is None:
+            projection = {}
+        if not with_id:
+           projection['_id']=0
+        entry = self.pcdb.entries.find_one({'_id': entry_id}, projection)
         return entry
 
     def ids_sorted(self, selection):

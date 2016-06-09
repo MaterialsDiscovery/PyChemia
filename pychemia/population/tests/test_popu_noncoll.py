@@ -4,6 +4,7 @@ import os
 import pychemia
 from pychemia import HAS_PYMONGO
 
+
 def test_popu_noncoll():
     """
     Tests (pychemia.population.NonCollinearMagMoms)              :

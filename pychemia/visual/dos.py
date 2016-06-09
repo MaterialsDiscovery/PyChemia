@@ -4,6 +4,7 @@ import sys
 import numpy as np
 from pychemia import HAS_MATPLOTLIB
 
+
 class DensityOfStates:
     """
     Stores the density of states

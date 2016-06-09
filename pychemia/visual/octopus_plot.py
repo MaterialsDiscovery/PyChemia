@@ -2,7 +2,6 @@ import os
 import numpy as np
 
 
-
 def plot_energy(path):
     import matplotlib.pylab as plt
     if not os.path.isdir(path):

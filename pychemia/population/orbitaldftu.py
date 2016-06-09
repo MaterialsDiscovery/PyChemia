@@ -109,7 +109,7 @@ class OrbitalDFTU(Population):
 
         data = {'eigvec': eigvec, 'I': I, 'D': D}
 
-        return self.new_entry(data)
+        return self.new_entry(data), None
 
     def cross(self, ids):
         pass
@@ -122,7 +122,8 @@ class OrbitalDFTU(Population):
                       'D': list(data['D'].flatten()),
                       'I': list(data['I'].flatten())}
         status = {self.tag: active}
-        entry_id = self.pcdb.insert(structure=self.structure, properties=properties, status=status)
+        entry = {'structure': self.structure.to_dict, 'properties': properties, 'status': status}
+        entry_id = self.insert_entry(entry)
         pcm_log.debug('Added new entry: %s with tag=%s: %s' % (str(entry_id), self.tag, str(active)))
         return entry_id
 

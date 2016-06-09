@@ -108,7 +108,6 @@ class RealFunction(Population):
         else:
             return new_ident1, new_ident2
 
-
     def distance(self, imember, jmember):
         # The trivial metric
         x1 = self.db[imember]['x']
