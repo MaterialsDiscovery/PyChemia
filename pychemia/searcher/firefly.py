@@ -143,13 +143,14 @@ class FireFly(Searcher):
                 moves[entry_id] += 1
 
 
-        pcm_log.info('+----------------+--------------+-------------+-------------+')
-        pcm_log.info('+                |    Minimum   |   Maximum   |   Average   |')
-        pcm_log.info('+----------------+--------------+-------------+-------------+')
-        pcm_log.info('+ Distances      |    %7.2f   |   %7.2f   |   %7.2f   |' % ( np.min(distances), np.max(distances), np.average(distances)))
-        pcm_log.info('+ Intensities    |    %7.2f   |   %7.2f   |   %7.2f   |' % ( np.min(intensities), np.max(intensities), np.average(intensities)))
-        pcm_log.info('+ Attractiveness |    %7.2f   |   %7.2f   |   %7.2f   |' % ( np.min(atractiveness), np.max(atractiveness), np.average(atractiveness)))
-        pcm_log.info('+----------------+--------------+-------------+-------------+')
+        if len(distances)>0:
+            pcm_log.info('+----------------+--------------+-------------+-------------+')
+            pcm_log.info('+                |    Minimum   |   Maximum   |   Average   |')
+            pcm_log.info('+----------------+--------------+-------------+-------------+')
+            pcm_log.info('+ Distances      |    %7.2f   |   %7.2f   |   %7.2f   |' % ( np.min(distances), np.max(distances), np.average(distances)))
+            pcm_log.info('+ Intensities    |    %7.2f   |   %7.2f   |   %7.2f   |' % ( np.min(intensities), np.max(intensities), np.average(intensities)))
+            pcm_log.info('+ Attractiveness |    %7.2f   |   %7.2f   |   %7.2f   |' % ( np.min(atractiveness), np.max(atractiveness), np.average(atractiveness)))
+            pcm_log.info('+----------------+--------------+-------------+-------------+')
 
 
         for entry_id in selection:
