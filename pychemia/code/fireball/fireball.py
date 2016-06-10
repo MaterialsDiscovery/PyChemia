@@ -98,7 +98,7 @@ class FireBall(Codes):
             pcm_log.info('Fireball not finish')
             filename = self.workdir + os.sep + 'fireball.log'
             if os.path.exists(filename):
-                results = read_fireball_stdout(filename=filename)
+                read_fireball_stdout(filename=filename)
             return
         if self.runner.poll() == 0:
             pcm_log.info('Fireball complete normally')
