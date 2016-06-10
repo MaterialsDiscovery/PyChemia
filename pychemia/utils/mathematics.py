@@ -119,7 +119,10 @@ def angle_vector(v1, v2, units='rad'):
 
     v1_u = unit_vector(v1)
     v2_u = unit_vector(v2)
-    angle = np.arccos(np.dot(v1_u, v2_u))
+    dot=np.dot(v1_u, v2_u)
+    if (dot>1.0):
+        dot=1.0
+    angle = np.arccos(dot)
     if np.isnan(angle):
         if (v1_u == v2_u).all():
             return 0.0
@@ -138,7 +141,7 @@ def angle_between_vectors(a, b):
     norms[norms == 0] = 1
     dots = np.sum(a * b, axis=1) / norms
     dots = np.round(dots, 15)
-    dots[dots > 1] = 1.0
+    dots[dots > 1.0] = 1.0
     norms = (np.linalg.norm(a, axis=1) * np.linalg.norm(b, axis=1))
     dots[norms == 0] = 1.0
     return np.arccos(dots)

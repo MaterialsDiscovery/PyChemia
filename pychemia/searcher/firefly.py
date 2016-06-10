@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 from .searcher import Searcher
 from pychemia import pcm_log
@@ -67,6 +68,12 @@ class FireFly(Searcher):
         selection = self.population.ids_sorted(self.actives_in_generation)
         pcm_log.info(' Size of selection : %d' % len(selection))
 
+        # For statistical purposes
+        distances=[]
+        intensities=[]
+        atractiveness=[]
+
+
         # Minus sign because we are searching for minima
         intensity = self.population.get_values(selection)
         for entry_id in intensity:
@@ -88,27 +95,36 @@ class FireFly(Searcher):
             # Moving in the direction of all the brighter fireflies
             if self.multi_move:
 
-                for j in range(0, i):
+                for j in list(range(0, i))[::-1]:
                     entry_jd = selection[j]
 
                     distance = self.population.distance(entry_id, entry_jd)
                     beta = self.beta0 * math.exp(-self.gamma * distance * distance)
-                    # The variation of attractiveness \beta with the distance r
+#                    The variation of attractiveness \beta with the distance r
                     pcm_log.debug('[%s] Distance: %7.3f. Intensity: %7.3f. Atractiveness: %7.3f' % (str(entry_jd),
                                                                                                     distance,
                                                                                                     intensity[entry_jd],
                                                                                                     beta))
+                    # Collecting Statistics
+                    distances.append(distance)
+                    intensities.append(intensity[entry_jd])
+                    atractiveness.append(beta)
+                    
 
                     if new_selection[entry_id] is None:
+#                        print('FIRST MOVE:\n %s' % new_selection)
                         new_selection[entry_id] = self.population.move(entry_id, entry_jd, factor=beta, in_place=False)
                         if self.alpha0 > 0:
                             factor = self.alpha0 * (self.delta ** self.current_generation)
                             self.population.move_random(new_selection[entry_id], factor=factor, in_place=True)
                     else:
+#                        print('CONTINUING MOVE')
+#                        print('entry_id: %s new_selection: %s' % (entry_id, new_selection[entry_id]))
                         self.population.move(new_selection[entry_id], entry_jd, factor=beta, in_place=True)
                         if self.alpha0 > 0:
                             factor = self.alpha0 * (self.delta ** self.current_generation)
                             self.population.move_random(new_selection[entry_id], factor=factor, in_place=True)
+#                    print(new_selection)
                     moves[entry_id] += 1
 
             # Moving in the direction of the closets brighter firefly
@@ -126,13 +142,24 @@ class FireFly(Searcher):
                 self.population.move_random(new_selection[entry_id], factor=factor, in_place=True)
                 moves[entry_id] += 1
 
+
+        if len(distances)>0:
+            pcm_log.info('+----------------+--------------+-------------+-------------+')
+            pcm_log.info('+                |    Minimum   |   Maximum   |   Average   |')
+            pcm_log.info('+----------------+--------------+-------------+-------------+')
+            pcm_log.info('+ Distances      |    %7.2f   |   %7.2f   |   %7.2f   |' % ( np.min(distances), np.max(distances), np.average(distances)))
+            pcm_log.info('+ Intensities    |    %7.2f   |   %7.2f   |   %7.2f   |' % ( np.min(intensities), np.max(intensities), np.average(intensities)))
+            pcm_log.info('+ Attractiveness |    %7.2f   |   %7.2f   |   %7.2f   |' % ( np.min(atractiveness), np.max(atractiveness), np.average(atractiveness)))
+            pcm_log.info('+----------------+--------------+-------------+-------------+')
+
+
         for entry_id in selection:
             if new_selection[entry_id] is not None:
-                pcm_log.debug('[%s] Moved to: %s (%d moves)' %
-                              (str(entry_id), new_selection[entry_id], moves[entry_id]))
+#                pcm_log.debug('[%s] Moved to: %s (%d moves)' %
+#                              (str(entry_id), new_selection[entry_id], moves[entry_id]))
                 self.replace_by_other(entry_id, new_selection[entry_id],
                                       reason='Moved %d times' % moves[entry_id])
                 self.population.enable(new_selection[entry_id])
             else:
-                pcm_log.debug('[%s] Promoted to new generation' % str(entry_id))
+#                pcm_log.debug('[%s] Promoted to new generation' % str(entry_id))
                 self.pass_to_new_generation(entry_id, reason='The best')
