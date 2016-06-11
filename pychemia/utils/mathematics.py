@@ -364,6 +364,22 @@ def round_small(number, ndigits=0):
 
 
 def sieve_atkin(limit):
+    """
+    Computes all prime numbers up to a 'limit'
+    using the Sieve of Atkin
+
+    :param limit:
+    :return:
+
+    Example:
+    >>> p=sieve_atkin(300)
+    >>> len(p)
+    63
+    >>> p[-1]
+    293
+
+    """
+
     ret = [2, 3]
     sieve = [False] * (limit + 1)
     for x in range(1, int(math.sqrt(limit)) + 1):
@@ -611,10 +627,23 @@ def rotation_matrix_weave(axis, theta, mat=None):
 
 
 def rotation_matrix_numpy(axis, theta):
-    mat = np.eye(3, 3)
-    axis /= sqrt(np.dot(axis, axis))
+    """
+
+    :param axis:
+    :param theta:
+    :return:
+
+    Example:
+
+    >>> rotation_matrix_numpy([1,1,1], 3.1415926/4.0)
+    array([[ 0.80473786,  0.50587935, -0.31061722],
+           [-0.31061722,  0.80473786,  0.50587935],
+           [ 0.50587935, -0.31061722,  0.80473786]])
+
+    """
+    uaxis=unit_vector(axis)
     a = cos(theta / 2.)
-    b, c, d = -axis * sin(theta / 2.)
+    b, c, d = -uaxis * sin(theta / 2.)
 
     return np.array([[a * a + b * b - c * c - d * d, 2 * (b * c - a * d), 2 * (b * d + a * c)],
                      [2 * (b * c + a * d), a * a + c * c - b * b - d * d, 2 * (c * d - a * b)],
@@ -755,6 +784,7 @@ def generalized_euler_angles(m):
     # The angles is an ordered list of operations
     # Rotations form a non-abelian group
     angles = OrderedDict()
+
     for i in itertools.combinations(range(n), 2):
         # Compute the angle to align the plane i
         # into the canonical base
@@ -764,7 +794,7 @@ def generalized_euler_angles(m):
         rot = rotation_ndim(n, theta, i)
         # Apply the rotation left side
         mp = np.array(np.dot(rot, mp))
-        retm = rotation_ndim(n, angles)
+    retm = rotation_ndim(n, angles, angles.keys())
 
     # angles is a Ordered dictionary of Generalized Euler Angles
     # mp is a matrix that should be close to Identity

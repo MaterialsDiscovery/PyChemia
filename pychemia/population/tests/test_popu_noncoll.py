@@ -2,36 +2,27 @@
 
 import os
 import pychemia
-from pychemia import HAS_PYMONGO
-
+from pychemia.test import has_local_mongo
 
 def test_popu_noncoll():
     """
     Tests (pychemia.population.NonCollinearMagMoms)              :
     """
-    if not HAS_PYMONGO:
+    if not pychemia.HAS_PYMONGO:
         print('PyChemiaDB was disabled')
         return
-
-    import pymongo
-    try:
-        maxSevSelDelay = 1
-        client = pymongo.MongoClient("localhost", serverSelectionTimeoutMS=maxSevSelDelay)
-        client.server_info()  # force connection on a request as the
-        # connect=True parameter of MongoClient seems
-        # to be useless here
-    except pymongo.errors.ServerSelectionTimeoutError as err:
-        # do whatever you need
-        print(err)
-        return
+    else:
+        if not has_local_mongo():
+            return
 
     source = 'pychemia/test/data/vasp_02'
     assert os.path.isfile(source + os.sep + 'INCAR')
     assert os.path.isfile(source + os.sep + 'POSCAR')
-    popu = pychemia.population.NonCollinearMagMoms('test_PopulationNonColl', source)
-    popu.random_population(32)
+    popu = pychemia.population.NonCollinearMagMoms('test', source)
+    popu.pcdb.clean()
+    popu.random_population(16)
 
-    assert len(popu) == 32
+    assert len(popu) == 16
     popu.pcdb.clean()
 
 

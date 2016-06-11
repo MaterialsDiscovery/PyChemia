@@ -9,7 +9,7 @@ from pychemia.crystal import KPoints
 
 
 class NonCollinearMagMoms(Population):
-    def __init__(self, name, source_dir='.', mag_atoms=None, magmom_magnitude=2.0, distance_tolerance=0.1):
+    def __init__(self, name, source_dir='.', mag_atoms=None, magmom_magnitude=2.0, distance_tolerance=0.1, debug=False):
         Population.__init__(self, name, 'global')
         if not os.path.isfile(source_dir + os.sep + 'INCAR'):
             raise ValueError("INCAR not found")
@@ -26,6 +26,7 @@ class NonCollinearMagMoms(Population):
             self.mag_atoms = mag_atoms
         self.magmom_magnitude = magmom_magnitude
         self.distance_tolerance = distance_tolerance
+        self.debug = debug
 
     def __str__(self):
         ret = ' Population NonColl\n\n'
@@ -53,20 +54,22 @@ class NonCollinearMagMoms(Population):
                                  magmom_magnitude=population_dict['magmom_magnitude'],
                                  distance_tolerance=population_dict['distance_tolerance'])
 
-    def fake_evaluation(self, magmom_sph):
-        magmom_car=spherical_to_cartesian(magmom_sph)
-        good_magmom = np.zeros((self.structure.natom, 3))
-        good_magmom[0]=[ 1.15470054,  1.15470054,  1.15470054]
-        good_magmom[1]=[ -1.15470054,  -1.15470054,  -1.15470054]
-        distance = np.sum(angle_between_vectors(magmom_car, good_magmom))
-        distance /= len(self.mag_atoms)
-        return distance-np.pi
-
+    def debug_evaluation(self, magmom_sph):
+        if self.debug:
+            magmom_car=spherical_to_cartesian(magmom_sph)
+            good_magmom = np.zeros((self.structure.natom, 3))
+            for i in self.mag_atoms:
+                good_magmom[i] = (-1**i) * 1.15470054 * np.ones(3)
+            distance = np.sum(angle_between_vectors(magmom_car, good_magmom))
+            distance /= len(self.mag_atoms)
+            return distance-np.pi
+        else:
+            return None
 
     def new_entry(self, data, active=True):
         # Magnetic moments are stored in spherical coordinates
         data = np.array(data)
-        properties = {'magmom': list(data.flatten()), 'energy': self.fake_evaluation(data) }
+        properties = {'magmom': list(data.flatten()), 'energy': self.debug_evaluation(data)}
         status = {self.tag: active}
         entry={'structure': self.structure.to_dict, 'properties': properties, 'status': status}
         entry_id = self.insert_entry(entry)
@@ -116,13 +119,13 @@ class NonCollinearMagMoms(Population):
         # Converted into cartesians
         magmom_xyz = spherical_to_cartesian(magmom_i)
         # Randomly disturbed using the factor
-        magmom_xyz += factor * np.random.rand((self.structure.natom, 3)) - factor / 2
+        magmom_xyz += factor * np.random.random((self.structure.natom, 3)) - factor / 2
         # Reconverting to spherical coordinates
         magmom_new = cartesian_to_spherical(magmom_xyz)
         # Resetting magnitudes
         magmom_new[:, 0] = self.magmom_magnitude
 
-        properties = {'magmom': magmom_new, 'energy': self.fake_evaluation(magmom_new)}
+        properties = {'magmom': list(magmom_new.flatten()), 'energy': self.debug_evaluation(magmom_new)}
 
         if in_place:
             return self.update_properties(entry_id, new_properties=properties)
@@ -155,7 +158,7 @@ class NonCollinearMagMoms(Population):
 #        print('Final spherical:\n %s' % magmom_new[self.mag_atoms])
         magmom_new[:, 0] = self.magmom_magnitude
 
-        properties = {'magmom': list(magmom_new.flatten()), 'energy': self.fake_evaluation(magmom_new)}
+        properties = {'magmom': list(magmom_new.flatten()), 'energy': self.debug_evaluation(magmom_new)}
 
         if in_place:
             self.update_properties(entry_id, new_properties=properties)
