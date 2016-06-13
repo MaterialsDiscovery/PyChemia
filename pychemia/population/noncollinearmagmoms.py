@@ -66,7 +66,7 @@ class NonCollinearMagMoms(Population):
     def new_entry(self, data, active=True):
         # Magnetic moments are stored in spherical coordinates
         data = np.array(data)
-        properties = {'magmom': list(data.flatten()), 'energy': self.fake_evaluation(data) }
+        properties = {'magmom': list(data.flatten())} #properties = {'magmom': list(data.flatten()), 'energy': self.fake_evaluation(data) }
         status = {self.tag: active}
         entry={'structure': self.structure.to_dict, 'properties': properties, 'status': status}
         entry_id = self.insert_entry(entry)
@@ -122,7 +122,7 @@ class NonCollinearMagMoms(Population):
         # Resetting magnitudes
         magmom_new[:, 0] = self.magmom_magnitude
 
-        properties = {'magmom': magmom_new, 'energy': self.fake_evaluation(magmom_new)}
+        properties = {'magmom': magmom_new}# properties = {'magmom': magmom_new, 'energy': self.fake_evaluation(magmom_new)}
 
         if in_place:
             return self.update_properties(entry_id, new_properties=properties)
@@ -155,7 +155,7 @@ class NonCollinearMagMoms(Population):
 #        print('Final spherical:\n %s' % magmom_new[self.mag_atoms])
         magmom_new[:, 0] = self.magmom_magnitude
 
-        properties = {'magmom': list(magmom_new.flatten()), 'energy': self.fake_evaluation(magmom_new)}
+        properties = {'magmom': list(magmom_new.flatten())} #properties = {'magmom': magmom_new, 'energy': self.fake_evaluation(magmom_new)}
 
         if in_place:
             self.update_properties(entry_id, new_properties=properties)
