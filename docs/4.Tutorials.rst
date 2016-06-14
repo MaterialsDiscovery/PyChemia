@@ -6,4 +6,6 @@ a given objective.
 
 .. toctree::
 
+    tutorial.cookbook
+    tutorial.ljclusters
     tutorial.structural_search

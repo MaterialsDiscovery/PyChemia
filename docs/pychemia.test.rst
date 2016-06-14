@@ -17,14 +17,6 @@ pychemia.test.doctest_2to3 module
     :undoc-members:
     :show-inheritance:
 
-pychemia.test.samples module
-----------------------------
-
-.. automodule:: pychemia.test.samples
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pychemia.test.test_00 module
 ----------------------------
 

@@ -525,7 +525,7 @@ def atomic_number(arg):
 
     :param arg: Atomic number or list of atomic numbers
     :return: Atomic number(s) for the atom(s)
-    :rtype: int
+    :rtype: int, list
 
     Examples:
     >>> atomic_number('C')

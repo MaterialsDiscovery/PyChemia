@@ -47,6 +47,7 @@ class Composition(Mapping):
         0
 
         """
+        self._composition = {}
         if value is not None:
             value = deep_unicode(value)
         if isinstance(value, str):
@@ -70,10 +71,25 @@ class Composition(Mapping):
         return len(self._composition)
 
     def __getitem__(self, item):
-        return self._composition[item]
+        if item in self._composition:
+            return self._composition[item]
+        else:
+            return 0
+
+    def __repr__(self):
+        return 'Composition(' + str(self.composition) + ')'
+
+    def __str__(self):
+        ret = ''
+        for i in self.species:
+            ret += " %3s: %4d  " % (i, self.composition[i])
+        return ret
 
     def __iter__(self):
-        return self._composition.__iter__()
+        return iter(self.composition)
+
+    def __contains__(self, item):
+        return item in self._composition
 
     def _set_composition(self, value):
         """
@@ -104,6 +120,72 @@ class Composition(Mapping):
         :rtype: str
         """
         return self.sorted_formula(sortby='alpha', reduced=True)
+
+    @property
+    def gcd(self):
+        """
+        The number of formulas that can be extracted from a composition
+        The greatest common denominator for the composition.
+
+        :rtype: (int)
+
+        Example:
+        >>> import pychemia
+        >>> comp = pychemia.Composition('NaCl')
+        >>> comp.gcd
+        1
+        >>> comp = pychemia.Composition('Na2Cl2')
+        >>> comp.gcd
+        2
+        >>> comp = pychemia.Composition()
+        >>> comp.gcd is None
+        True
+
+        """
+        if self.natom > 0:
+            return reduce(_gcd, self.values)
+        else:
+            return None
+
+    @property
+    def symbols(self):
+        ret = []
+        for specie in self:
+            number_atoms_specie = self.composition[specie]
+            for i in range(number_atoms_specie):
+                ret.append(specie)
+        return sorted(deep_unicode(ret))
+
+    @property
+    def species(self):
+        """
+        :return: The list of species
+
+        :rtype: list
+        """
+        return [ deep_unicode(x) for x in self._composition ]
+
+    @property
+    def nspecies(self):
+        return len(self.species)
+
+    @property
+    def values(self):
+        """
+        :return: The number of atoms of each specie
+
+        :rtype: list
+        """
+        return [self._composition[x] for x in self._composition]
+
+    @property
+    def natom(self):
+        """
+        :return: The number of atoms in the composition
+
+        :rtype: int
+        """
+        return sum(self.values)
 
     @staticmethod
     def formula_parser(value):
@@ -197,71 +279,6 @@ class Composition(Mapping):
 
         return composition
 
-    @property
-    def gcd(self):
-        """
-        The number of formulas that can be extracted from a composition
-        The greatest common denominator for the composition.
-
-        :rtype: (int)
-
-        Example:
-        >>> import pychemia
-        >>> comp = pychemia.Composition('NaCl')
-        >>> comp.gcd
-        1
-        >>> comp = pychemia.Composition('Na2Cl2')
-        >>> comp.gcd
-        2
-        >>> comp = pychemia.Composition()
-        >>> comp.gcd is None
-        True
-
-        """
-        if self.natom > 0:
-            return reduce(_gcd, self.values)
-        else:
-            return None
-
-    @property
-    def symbols(self):
-        ret = []
-        for specie in self:
-            number_atoms_specie = self.composition[specie]
-            for i in range(number_atoms_specie):
-                ret.append(specie)
-        return sorted(deep_unicode(ret))
-
-    @property
-    def species(self):
-        """
-        :return: The list of species
-
-        :rtype: list
-        """
-        return deep_unicode(sorted(list(self._composition.keys())))
-
-    @property
-    def nspecies(self):
-        return len(self.species)
-
-    @property
-    def values(self):
-        """
-        :return: The number of atoms of each specie
-
-        :rtype: list
-        """
-        return [self._composition[x] for x in self._composition]
-
-    @property
-    def natom(self):
-        """
-        :return: The number of atoms in the composition
-
-        :rtype: int
-        """
-        return sum(self.values)
 
     def sorted_formula(self, sortby='alpha', reduced=True):
         """
@@ -337,31 +354,55 @@ class Composition(Mapping):
                 ret += "%d" % comp.composition[specie]
         return deep_unicode(ret)
 
-    def species_bin(self):
-        spec_bin = 0
-        for i in atomic_number(self.species):
-            spec_bin += 2 ** i
-        return spec_bin
-
-    def species_hex(self):
-        spec_hex = 0
+    def species_encoded(self, base):
+        ret = 0
         i = 0
         for atom_number in sorted(atomic_number(self.species)):
-            spec_hex += atom_number * (256 ** i)
+            ret += atom_number * (base ** i)
             i += 1
-        return spec_hex
-
-    def __repr__(self):
-        return 'Composition(' + str(self.composition) + ')'
-
-    def __str__(self):
-        ret = ''
-        for i in self.species:
-            ret += " %3s: %4d  " % (i, self.composition[i])
         return ret
 
-    def __iter__(self):
-        return iter(self.composition)
+    def species_hex(self):
+        """
+        Encodes the species into a hexadecimal representation where
+        each specie is stored on a 2-Byte slot ordered by atomic
+        number.
+        This is a 'confortable' encoding where each 2 characters
+        from the hexadecimal will encode a single species and the
+        species are ordered by atomic number making the codification
+        unique.
+
+        :return: str
+
+        Example:
+        >>> comp = Composition('YBa2Cu3O7')
+        >>> comp.species_hex()
+        '0x38271d08'
+
+        """
+        enc = self.species_encoded(256)
+        return hex(enc)
+
+    @staticmethod
+    def get_species_from_hex(arg):
+        """
+        Return a set of species from the encoded species hexadecimal
+        representation.
+
+        :param arg: str String with hexadecimal representation of list of species.
+        :return:
+
+        Example:
+        >>> Composition.get_species_from_hex('0x38271d08')
+        [8, 29, 39, 56]
+
+        """
+        num = int(arg,16)
+        ret = []
+        while num>0:
+            ret.append(num % 256)
+            num = (num-ret[-1])//256
+        return ret
 
     def covalent_volume(self, packing='cubes'):
         """
