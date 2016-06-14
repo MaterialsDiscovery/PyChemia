@@ -6,7 +6,11 @@ import numpy as np
 __author__ = 'Guillermo Avendano Franco'
 
 
-def get_point_group(st):
+def get_point_group(st, executable='symmol'):
+
+    if not cmd_exists(executable):
+        return 'no symmol'
+
     wf = open('symmol.in', 'w')
     wf.write(' %9.5f %9.5f %9.5f %9.5f %9.5f %9.5f\n' % (1, 1, 1, 90, 90, 90))
     wf.write(' %d %d %9.6f %9.6f\n' % (1, 1, 0.2, 0.2))
@@ -20,12 +24,17 @@ def get_point_group(st):
     if np.max(np.abs(st.positions.flatten())) >= 100:
         return 'ERR'
 
-    data = subprocess.check_output(['./symmol.exe'], stdin=rf)
+    data = subprocess.check_output([executable], stdin=rf)
+    data = data.decode('utf-8')
     ans = re.findall('Schoenflies symbol =([\d\w\s]+)CSM', data)
     rf.close()
     if len(ans) != 1:
-        pg = 'x'
+        pg = 'no symmetry'
     else:
         pg = ans[0].strip()
         os.remove('symmol.in')
     return pg
+
+
+def cmd_exists(cmd):
+    return subprocess.call("type " + cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0

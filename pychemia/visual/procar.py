@@ -1063,12 +1063,12 @@ class ProcarSelect:
         """
         value is a list with the values of Ispin to select.
 
-        Examples
+        Examples:
+        >>> foo = ProcarParser()
+        >>> foo.readFile("PROCAR")
+        >>> bar = ProcarSelect(foo)
+        >>> bar.selectIspin([0])  # just the density
 
->>> foo = ProcarParser()
->>> foo.readFile("PROCAR")
->>> bar = ProcarSelect(foo)
->>> bar.selectIspin([0])  # just the density
         """
         # all kpoint, all bands, VALUE spin, all the rest
         self.log.debug("selectIspin: ...")
@@ -1095,13 +1095,12 @@ class ProcarSelect:
         (`=False`, default) or a fortran-like 1-based (`=True`) is
         provided in `value`.
 
-        Examples
-
->>> foo = ProcarParser()
->>> foo.readFile("PROCAR")
->>> bar = ProcarSelect(foo)
->>> bar.selectIspin([...])
->>> bar.selectAtoms([0, 1, 2])  # atom0+atom1+atom2
+        Examples:
+        >>> foo = ProcarParser()
+        >>> foo.readFile("PROCAR")
+        >>> bar = ProcarSelect(foo)
+        >>> bar.selectIspin([...])
+        >>> bar.selectAtoms([0, 1, 2])  # atom0+atom1+atom2
 
         Note: this method should be called after select.Ispin
         """
@@ -1132,20 +1131,20 @@ class ProcarSelect:
         """
         value is a list with the values of orbital to select.
 
-        Examples
-
->>> foo = ProcarParser()
->>> foo.readFile("PROCAR")
->>> bar = ProcarSelect(foo)
->>> bar.selectIspin([...])
->>> bar.selectAtoms([...])
->>> bar.selectOrbital([-1])  # the last (`tot`) field
+        Examples:
+        >>> foo = ProcarParser()
+        >>> foo.readFile("PROCAR")
+        >>> bar = ProcarSelect(foo)
+        >>> bar.selectIspin([...])
+        >>> bar.selectAtoms([...])
+        >>> bar.selectOrbital([-1])  # the last (`tot`) field
 
         to select "p" orbitals just change the argument in the last line
         to [2,3,4] or as needed
 
         Note: this method should be called after `select.Ispin` and
         `select.Atoms`
+
         """
         self.log.debug("selectOrbital: ...")
         self.log.debug("Changing the orbital `values` to have a 0-based indexes")

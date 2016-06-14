@@ -9,6 +9,10 @@ from pychemia.utils.mathematics import gram_smith_qr
 
 
 class OrbitalDFTU(Population):
+
+    def evaluate_entry(self, entry_id):
+        pass
+
     def __init__(self, name, abinit_input='abinit.in', natpawu=None, oxidations=None):
 
         Population.__init__(self, name, 'global')

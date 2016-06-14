@@ -17,11 +17,12 @@ class Population:
     Generations
     """
 
-    def __init__(self, name, tag, use_mongo=True):
+    def __init__(self, name, tag, use_mongo=True, direct_evaluation=False):
 
         name = deep_unicode(name)
         self.tag = tag
         self.pcdb = None
+        self.direct_evaluation = direct_evaluation
         if isinstance(name, str):
             self.name = name
             if use_mongo:
@@ -48,6 +49,8 @@ class Population:
 
     def enable(self, entry_id):
         self.pcdb.entries.update({'_id': entry_id}, {'$set': {'status.' + self.tag: True}})
+        if self.direct_evaluation:
+            self.evaluate_entry(entry_id)
 
     def get_values(self, selection):
         ret = {}
@@ -66,18 +69,24 @@ class Population:
 
     def insert_entry(self, entry):
         if 'structure' not in entry:
-            entry['structure']={}
+            entry['structure'] = {}
         if 'properties' not in entry:
-            entry['properties']={}
+            entry['properties'] = {}
         if 'status' not in entry:
-            entry['status']={}
+            entry['status'] = {}
         return self.pcdb.entries.insert(entry)
+
+    def set_entry(self, entry):
+        return self.insert_entry(entry)
 
     def get_structure(self, entry_id):
         return self.pcdb.get_structure(entry_id)
 
     def set_structure(self, entry_id, structure):
         return self.pcdb.update(entry_id, structure=structure)
+
+    def unset_properties(self, entry_id):
+        return self.pcdb.update(entry_id, properties={})
 
     def get_entry(self, entry_id, projection=None, with_id=True):
         """
@@ -88,8 +97,6 @@ class Population:
         :param entry_id: A database identifier
         :return:
         """
-        if projection is None:
-            projection = {}
         if not with_id:
            projection['_id']=0
         entry = self.pcdb.entries.find_one({'_id': entry_id}, projection)
@@ -152,6 +159,10 @@ class Population:
 
     @abstractmethod
     def distance(self, entry_id, entry_jd):
+        pass
+
+    @abstractmethod
+    def evaluate_entry(self, entry_id):
         pass
 
     @abstractmethod

@@ -1,5 +1,6 @@
 import pymongo
 
+
 def has_local_mongo():
     try:
         maxSevSelDelay = 1

@@ -27,8 +27,8 @@ def worker(db_settings, entry_id, workdir, target_forces, relaxator_params):
     structure = structure.scale()
     print('relaxator_params', relaxator_params)
     relaxer = IonRelaxation2(structure, workdir=workdir, target_forces=target_forces, waiting=False,
-                            binary=relaxator_params['binary'], encut=1.3, kp_grid=None, kp_density=1E4,
-                            relax_cell=True)
+                             binary=relaxator_params['binary'], encut=1.3, kp_grid=None, kp_density=1E4,
+                             relax_cell=True)
     print('relaxing on:', relaxer.workdir)
     relaxer.run(relaxator_params['nmpiparal'])
     pcm_log.info('[%s]: Finished relaxation. Target forces: %7.3e' % (str(entry_id), target_forces))

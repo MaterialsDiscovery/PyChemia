@@ -1,7 +1,9 @@
 import numpy as np
-import pychemia
+from pychemia import pcm_log
 import scipy.optimize
 import scipy.spatial
+from pychemia.utils.mathematics import length_vectors
+from pychemia.utils.periodic import mass
 
 
 class LennardJones:
@@ -26,19 +28,20 @@ class LennardJones:
         return lj_forces(self.structure.positions, self.sigmas, self.epsilons, self.cp).reshape((-1, 3))
 
     def get_magnitude_forces(self):
-        return pychemia.utils.mathematics.length_vectors(self.get_forces())
+        return length_vectors(self.get_forces())
 
     def steepest_descent(self, dt=1, tolerance=1E-3):
         forces = self.get_forces()
         while np.max(self.get_magnitude_forces()) > tolerance:
             for i in range(self.structure.natom):
-                mass = pychemia.utils.periodic.mass(self.structure.symbols[i])
-                self.structure.positions[i] += 0.5 * forces[i] / mass * dt ** 2
+                imass = mass(self.structure.symbols[i])
+                self.structure.positions[i] += 0.5 * forces[i] / imass * dt ** 2
 
             forces = self.get_forces()
             maxforce = np.max(self.get_magnitude_forces())
             dt = max(100.0 / maxforce, 1.0)
-            print('Steepest Descent maxforce= %9.3E   density=%7.4f dt=%7.3f' % (maxforce, self.structure.density, dt))
+            pcm_log.debug('Steepest Descent maxforce= %9.3E   density=%7.4f dt=%7.3f' % (maxforce,
+                                                                                         self.structure.density, dt))
 
     def get_sigma_epsilon(self, i, j):
         specie1 = self.structure.symbols[i]
@@ -76,7 +79,7 @@ class LennardJones:
 
             if method in ['BFGS', 'CG']:
                 maxforce = np.max(np.apply_along_axis(np.linalg.norm, 1, np.array(res.jac).reshape((-1, 3))))
-                print('[%2d/%2d] MaxForce/gtol= %9.3E/%9.3E  Value= %12.5f' % (soft_call,
+                pcm_log.debug('[%2d/%2d] MaxForce/gtol= %9.3E/%9.3E  Value= %12.5f' % (soft_call,
                                                                                soft_max_ncalls,
                                                                                maxforce, gtol,
                                                                                res.fun))
@@ -87,15 +90,15 @@ class LennardJones:
                 if maxforce < gtol:
                     break
                 if soft_call > soft_max_ncalls:
-                    print('Anomalous condition, maxforce= %9.3E gtol= %9.3E' % (maxforce, gtol))
+                    pcm_log.debug('Anomalous condition, maxforce= %9.3E gtol= %9.3E' % (maxforce, gtol))
                     pos = np.array(x0).reshape((-1, 3))
                     mindis = np.min(np.array(np.array(scipy.spatial.distance_matrix(pos, pos)) +
                                              100 * np.eye(len(pos))).flatten())
                     x0 = np.array(1.0 / mindis * pos).flatten()
                     soft_call = 1
                 if hard_call > hard_max_ncalls:
-                    print('Could not reach target forces, maxforce= %9.3E gtol= %9.3E' % (maxforce, gtol))
-                    print('Hard limit reached, aborting local minimization')
+                    pcm_log.debug('Could not reach target forces, maxforce= %9.3E gtol= %9.3E' % (maxforce, gtol))
+                    pcm_log.debug('Hard limit reached, aborting local minimization')
                     break
             else:
                 break
@@ -115,6 +118,9 @@ def lj_forces(pos, sigmas, epsilons, cp=0.0):
         for j in range(i + 1, n):
             vector = pos[j] - pos[i]
             distance = np.linalg.norm(vector)
+            if distance < 1E-8:
+                print('ERROR: Too small distance between atoms')
+                distance = 1E-8
             sr6 = (sigmas[i, j] / distance) ** 6
             magnitude = 24 * epsilons[i, j] / distance * (2.0 * sr6 ** 2 - sr6)
             ret[i] -= magnitude * vector / distance
@@ -152,18 +158,18 @@ def lj_compact_evaluate(structure, gtol, minimal_density):
     k = 1
     while structure.density < minimal_density:
         iniden = structure.density
-        lj = pychemia.code.LennardJones(structure, cp=k)
+        lj = LennardJones(structure, cp=k)
         relax = lj.local_minimization(gtol=gtol)
         structure.set_positions(relax.x.reshape((-1, 3)))
         finden = structure.density
-        print('Compacting Cluster (target_density=%7.3f): Density I= %7.3f   F= %7.3f' % (minimal_density,
+        pcm_log.debug('Compacting Cluster (target_density=%7.3f): Density I= %7.3f   F= %7.3f' % (minimal_density,
                                                                                           iniden, finden))
         k += 1
         if k > 10:
-            print('I tried too much...')
+            pcm_log.debug('I tried too much...')
             break
 
-    lj = pychemia.code.LennardJones(structure)
+    lj = LennardJones(structure)
     relax = lj.local_minimization(gtol=gtol)
     # Return relaxed positions, forces and energy
     return relax.x.reshape((-1, 3)), relax.jac.reshape((-1, 3)), relax.fun

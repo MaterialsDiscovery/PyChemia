@@ -432,7 +432,7 @@ def covalent_radius(value=None):
 
     :param value: Atom symbol, atom number or list of atoms
     :return: Covalent radius in angstrom for the atom or atoms
-    :rtype: (float, list)
+    :rtype: float
 
     Examples:
     >>> covalent_radius('C')
@@ -500,7 +500,7 @@ def mass(value=None):
 
     :param value: Atomic mass or list of atomic masses
     :return: Atomic mass(es) for the atom(s)
-    :rtype: (float, list)
+    :rtype: float
 
     Examples:
     >>> mass(6)
@@ -525,7 +525,7 @@ def atomic_number(arg):
 
     :param arg: Atomic number or list of atomic numbers
     :return: Atomic number(s) for the atom(s)
-    :rtype: (int, list)
+    :rtype: int
 
     Examples:
     >>> atomic_number('C')

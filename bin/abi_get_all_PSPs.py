@@ -25,7 +25,6 @@ else:
     raise ImportError('scipy could not be found')
 
 
-
 def get_rpath_psp(kind, exchange, atomicnumber=None):
     """
     Get the ftp path to get the PSP

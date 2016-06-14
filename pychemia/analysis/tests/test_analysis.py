@@ -10,6 +10,7 @@ def notest_analysis():
     struc_dist_x, fp_oganov=sa.fp_oganov(delta=0.1, sigma=0.1)
     assert len(fp_oganov)==3
 
+
 def notest_match():
     """
     Tests (pychemia.analysis.match)                              :

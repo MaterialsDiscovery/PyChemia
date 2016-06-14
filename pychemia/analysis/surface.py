@@ -243,7 +243,7 @@ def get_center_vector(structure, facet):
 def attach_to_facet(structure, facet):
     (v0, v1, v2), facet_center, facet_vector = get_center_vector(structure, facet)
 
-    rnd = np.random.rand()
+    rnd = np.random.random()
     if rnd < 0.4:
         return facet_center, facet_vector, tuple(facet)
     elif rnd < 0.6:

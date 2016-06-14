@@ -9,6 +9,10 @@ from pychemia.crystal import KPoints
 
 
 class NonCollinearMagMoms(Population):
+
+    def evaluate_entry(self, entry_id):
+        pass
+
     def __init__(self, name, source_dir='.', mag_atoms=None, magmom_magnitude=2.0, distance_tolerance=0.1, debug=False):
         Population.__init__(self, name, 'global')
         if not os.path.isfile(source_dir + os.sep + 'INCAR'):
@@ -96,9 +100,9 @@ class NonCollinearMagMoms(Population):
 
     def distance(self, entry_id, entry_jd):
         entry = self.get_entry(entry_id, {'properties.magmom': 1})
-        magmom_i = np.array(entry['properties']['magmom']).reshape((-1,3))
+        magmom_i = np.array(entry['properties']['magmom']).reshape((-1, 3))
         entry = self.get_entry(entry_jd, {'properties.magmom': 1})
-        magmom_j = np.array(entry['properties']['magmom']).reshape((-1,3))
+        magmom_j = np.array(entry['properties']['magmom']).reshape((-1, 3))
 
         #print(entry_id)
         #print(magmom_i[self.mag_atoms])
@@ -192,8 +196,8 @@ class NonCollinearMagMoms(Population):
         """
         n = self.structure.natom
         a = self.magmom_magnitude * np.ones(n)
-        b = 2 * np.pi * np.random.rand(n) - np.pi 
-        c = np.pi * np.random.rand(n)
+        b = 2 * np.pi * np.random.random(n) - np.pi
+        c = np.pi * np.random.random(n)
         magmom = np.vstack((a, b, c)).T
         for i in range(self.structure.natom):
             if i not in self.mag_atoms:
@@ -219,7 +223,7 @@ class NonCollinearMagMoms(Population):
         magmom_inew = np.zeros((self.structure.natom, 3))
         magmom_jnew = np.zeros((self.structure.natom, 3))
         for i in range(self.structure.natom):
-            rnd = np.random.rand()
+            rnd = np.random.random()
             if rnd < 0.5:
                 magmom_inew[i] = magmom_j[i]
                 magmom_jnew[i] = magmom_i[i]

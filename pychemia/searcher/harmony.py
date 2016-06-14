@@ -87,8 +87,9 @@ class HarmonySearch(Searcher):
                     pcm_log.debug('[HS](%s) Discarded: rnd= %4.3f > hmcr= %4.3f ' % (entry_id, rnd, self.hmcr))
                     self.replace_by_random(entry_id, reason='rnd= %4.3f > hmcr= %4.3f' % (rnd, self.hmcr))
 
-        if len(selection) >= self.top + self.tail:
-            for entry_id in selection[-self.tail:]:
+        tail = min(len(selection)-self.top, self.tail)
+        if len(selection) > self.top:
+            for entry_id in selection[-tail:]:
                 pcm_log.debug('[HS](%s) Tail entry: discarded' % entry_id)
                 self.replace_by_random(entry_id, reason='Tail %d' % self.tail)
                 # assert(len(self.get_generation(self.current_generation+1)) == self.generation_size)

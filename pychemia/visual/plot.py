@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def plot_evolution_circular(searcher, target_function='energy_pa', tags='spacegroup'):
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(10, 10))

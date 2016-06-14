@@ -106,7 +106,7 @@ class ClusterMatch:
         species = self.structure1.species
         species = list(np.array(species)[np.array(atomic_number(species)).argsort()])
 
-        permutation = np.zeros(len(self.structure1.positions))
+        permutation = np.zeros(len(self.structure1.positions), dtype=int)
         num = 0
         for ispecie in species:
 
@@ -128,4 +128,4 @@ class ClusterMatch:
             num += len(pos1)
 
         # print permutation
-        self.structure2.sort_sites_using_list(list(permutation))
+        self.structure2.sort_sites_using_list(permutation)

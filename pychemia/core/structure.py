@@ -640,6 +640,7 @@ Empty structure
         self.reduced = np.array(reduced).reshape([-1, 3])
 
     def sort_sites_using_list(self, sorted_indices):
+        sorted_indices = np.array([int(x) for x in sorted_indices])
         self.symbols = list(np.array(self.symbols)[sorted_indices])
         self.positions = self.positions[sorted_indices]
         if self.is_periodic:

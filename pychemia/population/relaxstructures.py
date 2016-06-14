@@ -16,6 +16,10 @@ if HAS_PYMONGO:
 
 
 class RelaxStructures(Population):
+
+    def evaluate_entry(self, entry_id):
+        pass
+
     def __init__(self, name, composition=None, tag='global', target_forces=1E-3, value_tol=1E-2,
                  distance_tol=0.3, min_comp_mult=2, max_comp_mult=8, pcdb_source=None):
         """

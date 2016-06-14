@@ -101,18 +101,19 @@ def write_poscar(structure, filepath='POSCAR', newformat=True):
     """
     ret = ''
     comp = structure.get_composition()
-    for i in comp.species:
+    species = list(comp.species)
+    for i in species:
         ret += ' ' + i
     ret += '\n'
     ret += '1.0\n'
     for i in range(3):
         ret += ' %20.16f %20.16f %20.16f\n' % tuple(structure.cell[i])
     if newformat:
-        for i in comp.species:
+        for i in species:
             ret += ' ' + i
         ret += '\n'
-    for i in comp.values:
-        ret += ' ' + str(i)
+    for i in species:
+        ret += ' ' + str(comp.composition[i])
     ret += '\n'
     ret += 'Direct\n'
     for i in range(structure.natom):

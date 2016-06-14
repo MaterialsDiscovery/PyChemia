@@ -90,26 +90,22 @@ if __name__ == '__main__':
     while True:
         print('Number of candidates evaluated: %d' % len(popu.actives_evaluated))
 
-        to_compute=popu.actives_no_evaluated
+        to_compute = popu.actives_no_evaluated
 
         print('Candidates to compute:')
         for i in to_compute:
             print(i)
-        current_jobs=get_jobs(args.pbs_user)
-
-        #print('Jobs on PBS:')
-        #for i in current_jobs:
-        #    print(i)
+        current_jobs = get_jobs(args.pbs_user)
 
         for i in to_compute:
             if str(i) not in current_jobs:
-                data_collected=popu.collect_data(i, str(i))
+                data_collected = popu.collect_data(i, str(i))
                 if not data_collected:
                     print('Preparing and submitting job: %s' % str(i))
                     popu.prepare_folder(i, workdir=str(i))
 
                     pbs = pychemia.runner.PBSRunner(str(i))
-                    pbs.initialize(ppn=args.pbs_ppn, walltime=[args.pbs_nhours,0,0], mail=args.pbs_mail, 
+                    pbs.initialize(ppn=args.pbs_ppn, walltime=[args.pbs_nhours, 0, 0], mail=args.pbs_mail,
                                    queue=args.pbs_queue)
                     pbs.set_template('template.pbs')
                     pbs.write_pbs()

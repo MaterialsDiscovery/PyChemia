@@ -69,7 +69,7 @@ class GeneticAlgorithm(Searcher):
             self.pass_to_new_generation(entry_id, reason='Elite')
 
         jump = 0
-        for i in range(min(len(self.crossing_sets),len(selection))):
+        for i in range(min(len(self.crossing_sets), len(selection))):
             for j in range(self.crossing_sets[i]):
                 entry_id = selection[i]
 

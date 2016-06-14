@@ -182,8 +182,6 @@ class CrystalSymmetry(object):
         sym2 = CrystalSymmetry(new_bravais)
         return sym2.find_primitive()
 
-
-
         # def get_symmetry_dataset(self, symprec=1e-5, angle_tolerance=-1.0):
         #
         #     keys = ('number',

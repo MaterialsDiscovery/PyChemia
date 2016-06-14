@@ -11,6 +11,7 @@ if HAS_SCIPY:
 else:
     raise ImportError('scipy could not be found')
 
+
 def input2xyz(abivar, basename, datasets):
     """
     Take an input object 'av' and write the

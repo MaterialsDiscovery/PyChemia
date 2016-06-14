@@ -48,6 +48,7 @@ def deep_unicode(value):
     else:
         return value
 
+
 def convert_color(s):
     """
     Convert a string hexadecimal representation of a color into a tuple

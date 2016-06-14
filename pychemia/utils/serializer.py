@@ -6,6 +6,7 @@ import numpy as np
 from pychemia.utils.computing import deep_unicode
 from numbers import Integral, Real
 
+
 class PyChemiaJsonable(object):
     """
     Abstract base class specifying how to convert objects from/to dictionaries.

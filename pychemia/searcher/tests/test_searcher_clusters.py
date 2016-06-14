@@ -1,63 +1,92 @@
 import unittest
+import time
+import multiprocessing
+from pychemia import pcm_log, HAS_PYMONGO, HAS_GRIDFS
+from pychemia.searcher import HarmonySearch, FireFly, GeneticAlgorithm, ParticleSwarm
+from pychemia.population import LJCluster
+
+
+def evaluator():
+    from pychemia.evaluator import cluster_launcher
+    dbsettings = {'name': 'test'}
+    cluster_launcher(dbsettings, 4)
+
+
+def searcher():
+    popu = LJCluster('test', 'Ar13', refine=False, minimal_density=40)
+    popu.pcdb.clean()
+    hs = HarmonySearch(popu, generation_size=8, stabilization_limit=3)
+    hs.run()
+
+
+def notest_searcher():
+    """
+    Testing HarmonySearch               :
+    """
+    if not HAS_PYMONGO or not HAS_GRIDFS:
+        print('PyChemiaQueue was disabled')
+        return
+
+    p1 = multiprocessing.Process(target=searcher)
+    p2 = multiprocessing.Process(target=evaluator)
+
+    p1.start()
+    time.sleep(10)
+    p2.start()
 
 
 class SearcherTest(unittest.TestCase):
 
-    def notest_harmony(self):
-        """
-        Tests (pychemia.searcher.harmony) with LJ Clusters           :
-        """
-        import pychemia
-
-        pychemia.pcm_log.debug('HarmonySearch')
-        popu = pychemia.population.LJCluster('LJ', composition='Xe17')
-        searcher = pychemia.searcher.HarmonySearch(popu, generation_size=16, stabilization_limit=5)
-        searcher.run()
-        popu.pcdb.clean()
-        searcher = pychemia.searcher.HarmonySearch(popu, generation_size=16, stabilization_limit=5)
-        searcher.run()
-
-    def notest_swarm(self):
-        """
-        Tests (pychemia.searcher.swarm) with LJ Clusters             :
-        """
-        import pychemia
-
-        pychemia.pcm_log.debug('ParticleSwarm')
-        popu = pychemia.population.LJCluster('LJ', composition='Xe17')
-        searcher = pychemia.searcher.ParticleSwarm(popu, generation_size=16, stabilization_limit=5)
-        searcher.run()
-        popu.pcdb.clean()
-        searcher = pychemia.searcher.ParticleSwarm(popu, generation_size=16, stabilization_limit=5)
-        searcher.run()
-
-    def notest_firefly(self):
+    def test_firefly(self):
         """
         Tests (pychemia.searcher.firefly) with LJ Clusters           :
         """
-        import pychemia
 
-        pychemia.pcm_log.debug('FireFly')
-        popu = pychemia.population.LJCluster('LJ', composition='Xe17')
-        searcher = pychemia.searcher.FireFly(popu, generation_size=16, stabilization_limit=5)
+        pcm_log.debug('FireFly')
+        popu = LJCluster('test', composition='Xe13', refine=True, direct_evaluation=True)
+        popu.pcdb.clean()
+        searcher = FireFly(popu, generation_size=8, stabilization_limit=5)
         searcher.run()
         popu.pcdb.clean()
-        searcher = pychemia.searcher.FireFly(popu,
-                                             {'delta': 0.1,'gamma': 0.1, 'beta0': 0.8, 'alpha0': 0, 'multi_move': True},
-                                             generation_size=16, stabilization_limit=5)
+        searcher = FireFly(popu, {'delta': 0.1, 'gamma': 0.1, 'beta0': 0.8, 'alpha0': 0, 'multi_move': True},
+                            generation_size=8, stabilization_limit=5)
         searcher.run()
+        popu.pcdb.clean()
 
-    def notest_genetic(self):
+    def test_genetic(self):
         """
 
         Tests (pychemia.searcher.genetic) with LJ Clusters           :
         """
-        import pychemia
 
-        pychemia.pcm_log.debug('GeneticAlgorithm')
-        popu = pychemia.population.LJCluster('LJ', composition='Xe17')
-        searcher = pychemia.searcher.GeneticAlgorithm(popu, generation_size=16, stabilization_limit=5)
+        pcm_log.debug('GeneticAlgorithm')
+        popu = LJCluster('test', composition='Xe13', refine=False, direct_evaluation=True)
+        popu.pcdb.clean()
+        searcher = GeneticAlgorithm(popu, generation_size=8, stabilization_limit=5)
         searcher.run()
         popu.pcdb.clean()
-        searcher = pychemia.searcher.GeneticAlgorithm(popu, generation_size=16, stabilization_limit=5)
+
+    def test_harmony(self):
+        """
+        Tests (pychemia.searcher.harmony) with LJ Clusters           :
+        """
+
+        pcm_log.debug('HarmonySearch')
+        popu = LJCluster('test', composition='Xe13', refine=False, direct_evaluation=True)
+        popu.pcdb.clean()
+        searcher = HarmonySearch(popu, generation_size=8, stabilization_limit=5)
         searcher.run()
+        popu.pcdb.clean()
+
+    def test_swarm(self):
+        """
+        Tests (pychemia.searcher.swarm) with LJ Clusters             :
+        """
+
+        pcm_log.debug('ParticleSwarm')
+        popu = LJCluster('test', composition='Xe13', refine=False, direct_evaluation=True)
+        popu.pcdb.clean()
+        searcher = ParticleSwarm(popu, generation_size=8, stabilization_limit=5)
+        searcher.run()
+        popu.pcdb.clean()
+

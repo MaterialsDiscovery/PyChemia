@@ -371,7 +371,7 @@ class Searcher:
         self.population.save_info()
         best_member = ''
         best_recorded = None
-        survival_for_best=0
+        survival_for_best = 0
 
         while True:
             print('\nGENERATION: %d' % self.current_generation)
@@ -401,7 +401,7 @@ class Searcher:
             best_member = self.population.best_candidate
             self.population.refine_progressive(best_member)
 
-            print('Current best candidate: [%s] %s' % (best_member, self.population.str_entry(best_member)))
+            print('Current best candidate: [%s]:\n%s' % (best_member, self.population.str_entry(best_member)))
             if best_member in self.get_generation():
                 print('This candidate have survived for %d generations' % len(self.generation[best_member]))
                 if len(self.generation[best_member]) >= self.stabilization_limit:
@@ -418,6 +418,7 @@ class Searcher:
                     survival_for_best+=1
 
                 if survival_for_best >= self.stabilization_limit:
+                    print('This candidate have survived for %d generations' % survival_for_best)
                     self.save_generations()
                     break
 
@@ -451,7 +452,7 @@ class Searcher:
             self.update_generation()
 
         print('Searcher ended after %d iterations' % self.current_generation)
-        print('Best candidate: [%s] %s' % (best_member, self.population.str_entry(best_member)))
+        print('Best candidate: [%s]:\n%s' % (best_member, self.population.str_entry(best_member)))
 
     def write_change(self, entry_id, change):
         if self.pcdb is not None:
@@ -509,7 +510,6 @@ class Searcher:
 
     def get_all_generations(self):
         return self.pcdb.db.generations.find()
-
 
     @property
     def actives_in_generation(self):

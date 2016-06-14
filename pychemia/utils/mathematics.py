@@ -120,7 +120,7 @@ def angle_vector(v1, v2, units='rad'):
     v1_u = unit_vector(v1)
     v2_u = unit_vector(v2)
     dot=np.dot(v1_u, v2_u)
-    if (dot>1.0):
+    if dot>1.0:
         dot=1.0
     angle = np.arccos(dot)
     if np.isnan(angle):
@@ -522,7 +522,7 @@ def rotation_x(theta):
     Examples:
     >>> import numpy as np
     >>> m = rotation_x(np.pi/3)
-    >>> np.all(np.round(np.dot(m.T,m),15)==np.eye(3))
+    >>> np.all(np.round(np.dot(m.T, m), 15)==np.eye(3))
     True
 
     """
@@ -560,7 +560,7 @@ def rotation_z(theta):
     Examples:
     >>> import numpy as np
     >>> m = rotation_z(np.pi/3)
-    >>> np.all(np.round(np.dot(m.T,m),15)==np.eye(3))
+    >>> np.all(np.round(np.dot(m.T, m), 15)==np.eye(3))
     True
 
     """
@@ -635,7 +635,7 @@ def rotation_matrix_numpy(axis, theta):
 
     Example:
 
-    >>> rotation_matrix_numpy([1,1,1], 3.1415926/4.0)
+    >>> rotation_matrix_numpy([1, 1, 1], 3.1415926/4.0)
     array([[ 0.80473786,  0.50587935, -0.31061722],
            [-0.31061722,  0.80473786,  0.50587935],
            [ 0.50587935, -0.31061722,  0.80473786]])
@@ -684,8 +684,8 @@ def gram_smith(m):
 
     Example:
     >>> import numpy as np
-    >>> o = gram_smith(np.random.rand(3,3))
-    >>> np.round(np.abs(np.linalg.det(o)),10)==1.0
+    >>> o = gram_smith(np.random.rand(3, 3))
+    >>> np.round(np.abs(np.linalg.det(o)), 10)==1.0
     True
 
     """
