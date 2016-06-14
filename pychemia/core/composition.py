@@ -6,9 +6,9 @@ from pychemia.utils.periodic import atomic_symbols, electronegativity, atomic_nu
 from pychemia.utils.computing import deep_unicode
 from builtins import str
 from functools import reduce
+from collections import Mapping
 
-
-class Composition:
+class Composition(Mapping):
     u"""
     The class Composition is basically a dictionary with species as keys and
     number of atoms of that specie as values. The methods provided for Composition objects should
@@ -30,21 +30,21 @@ class Composition:
         :rtype: Composition
 
         Example:
-    >>> import pychemia
-    >>> comp = pychemia.Composition({'Ba': 2, 'Cu': 3, 'O': 7, 'Y': 1})
-    >>> comp.formula
-    u'Ba2Cu3O7Y'
-    >>> comp = pychemia.Composition('Ba2Cu3O7Y')
-    >>> comp2 = pychemia.Composition(comp)
-    >>> len(comp2)
-    4
-    >>> comp.nspecies
-    4
-    >>> comp = pychemia.Composition()
-    >>> comp.composition
-    {}
-    >>> len(comp)
-    0
+        >>> import pychemia
+        >>> comp = pychemia.Composition({'Ba': 2, 'Cu': 3, 'O': 7, 'Y': 1})
+        >>> comp.formula
+        u'Ba2Cu3O7Y'
+        >>> comp = pychemia.Composition('Ba2Cu3O7Y')
+        >>> comp2 = pychemia.Composition(comp)
+        >>> len(comp2)
+        4
+        >>> comp.nspecies
+        4
+        >>> comp = pychemia.Composition()
+        >>> comp.composition
+        {}
+        >>> len(comp)
+        0
 
         """
         if value is not None:
@@ -68,6 +68,12 @@ class Composition:
 
     def __len__(self):
         return len(self._composition)
+
+    def __getitem__(self, item):
+        return self._composition[item]
+
+    def __iter__(self):
+        return self._composition.__iter__()
 
     def _set_composition(self, value):
         """

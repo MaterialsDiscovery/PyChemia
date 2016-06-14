@@ -4,6 +4,7 @@ import pychemia.core.structure
 
 def load(filename):
     symbols = _np.loadtxt(filename, skiprows=2, usecols=[0], dtype='|S2', ndmin=1)
+    symbols = [ x.decode('utf-8') for x in symbols]
     positions = _np.loadtxt(filename, skiprows=2, usecols=(1, 2, 3), ndmin=2)
     natom = len(symbols)
     periodicity = 3 * [False]

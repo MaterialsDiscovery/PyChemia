@@ -382,6 +382,7 @@ Empty structure
     def lattice(self):
         return self.get_cell()
 
+
     def get_composition(self, gcd=True):
         """
         Computes the composition of the Structure
@@ -866,14 +867,17 @@ Empty structure
     def __eq__(self, other):
         if self.natom != other.natom:
             ret = False
-        elif not np.array_equal(self.cell, other.cell):
-            ret = False
         elif not np.array_equal(self.positions, other.positions):
-            ret = False
-        elif not np.array_equal(self.reduced, other.reduced):
             ret = False
         elif not np.array_equal(self.periodicity, other.periodicity):
             ret = False
+        elif self.is_periodic and other.is_periodic:
+            if not np.array_equal(self.reduced, other.reduced):
+                ret = False
+            elif not np.array_equal(self.cell, other.cell):
+                ret = False
+            else:
+                ret = True
         else:
             ret = True
         return ret

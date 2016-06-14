@@ -111,13 +111,10 @@ def save(struct, filep, cartesian=True, long_format=True, angdeg=False):
 
     # write cell
     cell = struct.cell
-    print(cell)
     if angdeg:
         ddd = cell_to_cellpar(cell)
     else:
         ddd = cell_to_reduced(cell)
-
-    print(ddd)
 
     f.write("%.14f %.14f %.14f\n" % (ddd[0], ddd[1], ddd[2]))
     f.write("%.14f %.14f %.14f\n" % (ddd[3], ddd[4], ddd[5]))
@@ -157,7 +154,7 @@ def cell_to_reduced(full):
     from numpy import zeros
     from numpy.linalg import norm
 
-    xcoord = full[0]
+    xcoord = full[0].copy()
 
     # Compute the Y vector of the new basis, orthogonal to xcoord an coplanar with xcoord and old y vector
     u = zeros(3)
@@ -203,7 +200,7 @@ def cell_to_reduced(full):
     z[1] = xcoord[2] * y[0] - xcoord[0] * y[2]
     z[2] = xcoord[0] * y[1] - xcoord[1] * y[0]
 
-    # Normlize vectors
+    # Normalize vectors
     xcoord /= norm(xcoord)
     y /= norm(y)
     z /= norm(z)
