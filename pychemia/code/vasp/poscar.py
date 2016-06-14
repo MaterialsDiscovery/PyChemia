@@ -108,6 +108,7 @@ def write_poscar(structure, filepath='POSCAR', newformat=True):
     ret += '1.0\n'
     for i in range(3):
         ret += ' %20.16f %20.16f %20.16f\n' % tuple(structure.cell[i])
+
     if newformat:
         for i in species:
             ret += ' ' + i
