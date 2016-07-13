@@ -3,19 +3,128 @@
 import argparse
 import logging
 import os
-
+import re
+import shutil
 import numpy as np
-
-from pychemia import pcm_log
+import subprocess
+from pychemia import pcm_log, Structure
 from pychemia.analysis import StructureAnalysis
+from pychemia.code.vasp import write_poscar, read_poscar
 from pychemia.code.vasp.task import IonRelaxation
 from pychemia.db import get_database
 from pychemia.evaluator import DirectEvaluator
 from pychemia.utils.serializer import generic_serializer
 from pychemia.utils.periodic import atomic_number
 
+def worker_maise(db_settings, entry_id, workdir, target_forces, relaxator_params):
 
-def worker(db_settings, entry_id, workdir, target_forces, relaxator_params):
+    max_ncalls = 6
+    pcdb = get_database(db_settings)
+    pcm_log.info('[%s]: Starting relaxation. Target forces: %7.3e' % (str(entry_id), target_forces))
+
+    if pcdb.is_locked(entry_id):
+        return
+    else:
+        pcdb.lock(entry_id)
+    structure = pcdb.get_structure(entry_id)
+    status = pcdb.get_dicts(entry_id)[2]
+
+    if 'ncalls' in status:
+        ncalls = status['ncalls'] + 1 
+    else:
+        ncalls = 1 
+
+    #print('Current directory: '+os.getcwd() )
+    #print('Working directory: '+workdir)
+    write_poscar(structure,workdir+os.sep+'POSCAR')
+    if not os.path.exists(workdir+os.sep+'setup'):
+        shutil.copy2('setup', workdir)
+    if not os.path.exists(workdir+os.sep+'INI'):
+        os.symlink(os.getcwd()+os.sep+'INI', workdir+os.sep+'INI')
+    if not os.path.exists(workdir+os.sep+'maise'):
+        os.symlink(os.getcwd()+os.sep+'maise', workdir+os.sep+'maise')
+    cwd=os.getcwd()
+    os.chdir(workdir)
+    wf=open('maise.stdout','w')
+    subprocess.call(['./maise'], stdout=wf)
+    wf.close()
+    if os.path.isfile('OSZICAR'):
+        energies=np.loadtxt('OSZICAR')
+    else:
+        energies=None
+    if os.path.isfile('OUTCAR'):
+        rf = open('OUTCAR', 'r')
+        data = rf.read()
+        
+        pos_forces = re.findall(r'TOTAL-FORCE \(eV/Angst\)\s*-*\s*([-.\d\s]+)\s+-{2}', data)
+        pos_forces = np.array([x.split() for x in pos_forces], dtype=float)
+
+        if len(pos_forces) > 0 and len(pos_forces[-1]) % 7 == 0:
+            pos_forces.shape = (len(pos_forces), -1, 7)
+            forces = pos_forces[:, :, 3:6]
+            positions = pos_forces[:, :, :3]
+        else:
+            print('Forces and Positions could not be parsed : ', pos_forces.shape)
+            print('pos_forces =\n%s ' % pos_forces)
+            
+        str_stress=re.findall('Total([\.\d\s-]*)in',data)
+        if len(str_stress)==2:
+            stress = np.array([[float(y) for y in x.split()] for x in str_stress])
+        str_stress=re.findall('in kB([\.\d\s-]*)energy',data)
+        if len(str_stress)==2:
+            stress_kB = np.array([[float(y) for y in x.split()] for x in str_stress])
+    else:
+        forces=None
+        stress=None
+        stress_kB=None
+
+    new_structure=read_poscar('CONTCAR')
+    if np.min(new_structure.distance_matrix()+np.eye(new_structure.natom))<0.23:
+        print('WARNING: Structure collapse 2 atoms, creating a new random structure')
+        new_structure=Structure.random_cell(new_structure.composition)
+    if ncalls > max_ncalls:
+        print('WARNING: Too many calls to MAISE and no relaxation succeeded, replacing structure')
+        new_structure=Structure.random_cell(new_structure.composition)
+        pcdb.entries.update({'_id': entry_id}, {'$set': {'status.ncalls': 0}})
+    else:
+        pcdb.entries.update({'_id': entry_id}, {'$set': {'status.ncalls': ncalls}})
+    pcdb.update(entry_id, structure=new_structure)
+
+    
+    if energies is not None and forces is not None and stress is not None:
+
+        te = energies[1]
+        pcdb.entries.update({'_id': entry_id},
+                            {'$set': {'status.relaxation': 'succeed',
+                                      'status.target_forces': target_forces,
+                                      'properties.initial_forces': generic_serializer(forces[0]),
+                                      'properties.initial_stress': generic_serializer(stress[0]),
+                                      'properties.initial_stress_kB': generic_serializer(stress_kB[0]),
+                                      'properties.forces': generic_serializer(forces[1]),
+                                      'properties.stress': generic_serializer(stress[1]),
+                                      'properties.stress_kB': generic_serializer(stress_kB[1]),
+                                      'properties.energy': te,
+                                      'properties.energy_pa': te / new_structure.natom,
+                                      'properties.energy_pf': te / new_structure.get_composition().gcd}})
+
+    for ifile in ['POSCAR', 'CONTCAR', 'setup', 'OUTCAR', 'maise.stdout', 'list.dat']:
+        if not os.path.exists(ifile):
+            wf = open(ifile, 'w')
+            wf.write('')
+            wf.close()
+        n=1
+        while True:
+           if os.path.exists(ifile+ ('_%03d' % n)):
+               n+=1
+           else:
+               break
+        os.rename(ifile,ifile+('_%03d' % n))
+
+
+    pcm_log.info('[%s]: Unlocking the entry' % str(entry_id))
+    pcdb.unlock(entry_id)
+
+def worker_vasp(db_settings, entry_id, workdir, target_forces, relaxator_params):
     pcdb = get_database(db_settings)
     pcm_log.info('[%s]: Starting relaxation. Target forces: %7.3e' % (str(entry_id), target_forces))
 
@@ -186,11 +295,27 @@ if __name__ == '__main__':
     print('ssl           : %s' % str(args.ssl))
 
     print(db_settings)
-    evaluator = DirectEvaluator(db_settings, args.workdir,
-                                target_forces=args.target_forces,
-                                nparal=args.nparal,
-                                relaxator_params=relaxator_params,
-                                worker=worker,
-                                evaluate_all=args.evaluate_all,
-                                waiting=args.waiting)
+
+    if args.binary[:4].lower() == 'vasp':
+
+        evaluator = DirectEvaluator(db_settings, args.workdir,
+                                    target_forces=args.target_forces,
+                                    nparal=args.nparal,
+                                    relaxator_params=relaxator_params,
+                                    worker=worker_vasp,
+                                    evaluate_all=args.evaluate_all,
+                                    waiting=args.waiting)
+    elif args.binary[:4].lower() == 'mais':
+        evaluator = DirectEvaluator(db_settings, args.workdir,
+                                    target_forces=args.target_forces,
+                                    nparal=args.nparal,
+                                    relaxator_params=relaxator_params,
+                                    worker=worker_maise,
+                                    evaluate_all=args.evaluate_all,
+                                    waiting=args.waiting)
+    else:
+        print('I could not recognize the binary you pretent to use')
+        print('Use a binary such as vasp* or maise')
+        exit(1)
+
     evaluator.run()

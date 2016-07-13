@@ -847,16 +847,18 @@ Empty structure
 
     def distance_matrix(self):
         if self.is_periodic:
-            dm = np.zeros(self.nsites, self.nsites)
-            for i in range(1, self.nsites - 1):
+            dm = np.zeros((self.nsites, self.nsites))
+            for i in range(self.nsites - 1):
                 for j in range(i + 1, self.nsites):
-                    dm[i, j] = self.lattice.distance2(self.reduced[i], self.reduced[j])
+                    d=self.lattice.distance2(self.reduced[i], self.reduced[j], limits=[1,1,1])
+                    dm[i, j] = min([ d[x]['distance'] for x in d ])
                     dm[j, i] = dm[i, j]
         else:
             if HAS_SCIPY:
-                return scipy.spatial.distance_matrix(self.positions, self.positions)
+                dm = scipy.spatial.distance_matrix(self.positions, self.positions)
             else:
                 raise NotImplementedError
+        return dm
 
     def valence_electrons(self):
         ret = 0

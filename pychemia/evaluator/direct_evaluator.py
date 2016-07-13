@@ -101,7 +101,7 @@ class DirectEvaluator:
     def is_evaluated(self, entry):
         return self.get_current_status(entry) < self.target_forces
 
-    def get_current_status(self, entry):
+    def get_current_status(self, entry, verbose=False):
         if entry is not None and 'properties' in entry and entry['properties'] is not None:
             if 'forces' in entry['properties'] and entry['properties']['forces'] is not None:
                 forces = np.array(entry['properties']['forces']).reshape((-1, 3))
@@ -118,7 +118,7 @@ class DirectEvaluator:
             print(entry)
             max_force = 1
             max_stress = 1
-        if max(max_force, max_stress) > self.target_forces:
+        if max(max_force, max_stress) > self.target_forces and verbose:
             print('Status for %s: forces: %9.2E stress: %9.2E' % (entry['_id'], max_force, max_stress))
         return max(max_force, max_stress)
 
@@ -129,7 +129,7 @@ class DirectEvaluator:
         elif self.evaluate_all:
             print('TRUE because evaluate all')
             return True
-        elif self.get_current_status(entry) > self.target_forces:
+        elif self.get_current_status(entry, verbose=True) > self.target_forces:
             print('TRUE because forces not converged %f' % self.get_current_status(entry))
             return True
         else:
