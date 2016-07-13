@@ -1,7 +1,7 @@
 import numpy as np
+from pychemia.crystal import CrystalSymmetry
 
-
-def plot_evolution_circular(searcher, target_function='energy_pa', tags='spacegroup'):
+def plot_evolution_circular(searcher, target_function='energy_pa', tag='spacegroup'):
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(10, 10))
     ax.cla()
@@ -22,8 +22,17 @@ def plot_evolution_circular(searcher, target_function='energy_pa', tags='spacegr
             _id = entry['_id']
             entries[_id] = {}
             entries[_id][target_function] = entry['properties'][target_function]
-            if tags is not None:
-                entries[_id][tags] = entry['properties'][tags]
+            if tag is not None:
+                if tag in entry['properties']:
+                    entries[_id][tag] = entry['properties'][tag]
+                elif tag in entry['structure']:
+                    entries[_id][tag] = entry['structure'][tag]
+                elif tag=='spacegroup':
+                    st=searcher.population.get_structure(_id)
+                    ss=CrystalSymmetry(st)
+                    entries[_id][tag] = ss.number(1E-3)
+                else:
+                    raise ValueError('Tag not found')
             entries[_id]['x'] = np.cos(counter * 2 * np.pi / nele)
             entries[_id]['y'] = np.sin(counter * 2 * np.pi / nele)
             counter += 1
@@ -35,14 +44,14 @@ def plot_evolution_circular(searcher, target_function='energy_pa', tags='spacegr
         C = np.array([entries[i][target_function] for i in ids])
         best_candidate = entries[ids[C.argsort()[0]]]
         plt.scatter(radius * X, radius * Y, s=radius ** 2 * A, c=C, alpha=0.5 * radius, edgecolors='none')
-        if tags is not None:
+        if tag is not None:
             for i in entries:
                 if i == best_candidate:
-                    ax.text(radius * entries[i]['x'], radius * entries[i]['y'], str(entries[i]['spacegroup']),
+                    ax.text(radius * entries[i]['x'], radius * entries[i]['y'], str(entries[i][tag]),
                             va='center',
                             ha='center', size=int(radius * 24), color='red')
                 else:
-                    ax.text(radius * entries[i]['x'], radius * entries[i]['y'], str(entries[i]['spacegroup']),
+                    ax.text(radius * entries[i]['x'], radius * entries[i]['y'], str(entries[i][tag]),
                             va='center',
                             ha='center', size=int(radius * 14))
     plt.savefig(searcher.population.name + '_circular.png')
