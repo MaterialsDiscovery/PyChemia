@@ -45,6 +45,14 @@ except ImportError:
     HAS_MATPLOTLIB = False
 
 try:
+    import mayavi
+
+    HAS_MAYAVI = True
+except ImportError:
+    #print("Library 'pyhull' could not be found")
+    HAS_MAYAVI = False
+
+try:
     import pyhull
 
     HAS_PYHULL = True
