@@ -23,10 +23,10 @@ before_install:
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
   - sudo apt-get -qq update
-  - sudo apt-get install -y gcc gfortran m4 autoconf automake libtool
+  # sudo apt-get install -y gcc gfortran m4 autoconf automake libtool
 
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coverage future networkx
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coverage future
   - pip install pymongo
   - pip install -e "git+https://github.com/atztogo/spglib.git#egg=spglib&subdirectory=python"
   - pip install -e "git+https://github.com/z4r/python-coveralls.git#egg=coveralls"
