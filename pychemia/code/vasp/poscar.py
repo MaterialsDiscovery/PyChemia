@@ -99,9 +99,10 @@ def write_poscar(structure, filepath='POSCAR', newformat=True):
     :param filepath: (str) Filename of POSCAR file to create
     :param newformat: (bool) If the new VASP format is used to create the POSCAR
     """
-    ret = ''
     comp = structure.get_composition()
-    species = list(comp.species)
+    species = get_species_list(structure)
+
+    ret = ''
     for i in species:
         ret += ' ' + i
     ret += '\n'
@@ -123,6 +124,17 @@ def write_poscar(structure, filepath='POSCAR', newformat=True):
     wf.write(ret)
     wf.close()
 
+def get_species_list(structure):
+    while True:
+        species=[]
+        for i in structure.symbols:
+            if i not in species:
+                species.append(i)
+        if len(species) == len(structure.species):
+            break
+        else:
+            structure.sort_sites()
+
 
 def get_species(path):
     species = []
@@ -137,7 +149,8 @@ def get_species(path):
 
 
 def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None, pspfiles=None):
-    comp = structure.get_composition()
+
+    species = get_species_list(structure)
     ret = ''
     psppath = os.getenv('HOME') + '/.vasp/PP-VASP/' + pspdir
     if not os.path.exists(psppath):
@@ -145,7 +158,7 @@ def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None
 
     if pspfiles is None:
         pspfiles = []
-        for i in comp.species:
+        for i in species:
             if options is not None and i in options:
                 if isinstance(options[i], str):
                     pspfile = psppath + os.sep + i + '_' + options[i] + '/POTCAR'

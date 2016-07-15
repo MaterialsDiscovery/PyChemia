@@ -1044,15 +1044,15 @@ Empty structure
 
     def inertia_matrix(self):
 
-        Ixx = self.moment_of_inertia(0)
-        Iyy = self.moment_of_inertia(1)
-        Izz = self.moment_of_inertia(2)
-        Ixy = self.product_of_inertia(2)
-        Ixz = self.product_of_inertia(1)
-        Iyz = self.product_of_inertia(0)
+        im_xx = self.moment_of_inertia(0)
+        im_yy = self.moment_of_inertia(1)
+        im_zz = self.moment_of_inertia(2)
+        im_xy = self.product_of_inertia(2)
+        im_xz = self.product_of_inertia(1)
+        im_yz = self.product_of_inertia(0)
 
-        I = np.array([[Ixx, -Ixy, -Ixz], [-Ixy, Iyy, -Iyz], [-Ixz, -Iyz, Izz]])
-        return I
+        im = np.array([[im_xx, -im_xy, -im_xz], [-im_xy, im_yy, -im_yz], [-im_xz, -im_yz, im_zz]])
+        return im
 
     def signature(self):
         comp = self.get_composition()

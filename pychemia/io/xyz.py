@@ -1,15 +1,20 @@
-import numpy as _np
-import pychemia.core.structure
+from numpy import loadtxt
+from pychemia.utils.periodic import atomic_symbol
+from pychemia import Structure
 
 
 def load(filename):
-    symbols = _np.loadtxt(filename, skiprows=2, usecols=[0], dtype='|S2', ndmin=1)
+    symbols = loadtxt(filename, skiprows=2, usecols=[0], dtype='|S2', ndmin=1)
     symbols = [ x.decode('utf-8') for x in symbols]
-    positions = _np.loadtxt(filename, skiprows=2, usecols=(1, 2, 3), ndmin=2)
+
+    for i in range(len(symbols)):
+        if symbols[i].isdigit():
+            symbols[i] = atomic_symbol(int(symbols[i]))
+
+    positions = loadtxt(filename, skiprows=2, usecols=(1, 2, 3), ndmin=2)
     natom = len(symbols)
     periodicity = 3 * [False]
-
-    return pychemia.core.Structure(symbols=symbols, positions=positions, periodicity=periodicity, natom=natom)
+    return Structure(symbols=symbols, positions=positions, periodicity=periodicity, natom=natom)
 
 
 def save(structure, filename):

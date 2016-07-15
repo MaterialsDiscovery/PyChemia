@@ -4,7 +4,7 @@ import pychemia
 import itertools
 import scipy.spatial
 from scipy.spatial import qhull
-
+from pychemia.utils.periodic import covalent_radius
 
 # return [x, y, d], that ax + by = d, d = gcd(a, b)
 def ext_gcd(a, b):
@@ -135,6 +135,42 @@ def get_surface_atoms(structure):
     surface = [i for i in range(structure.natom) if -1 in voro.regions[voro.point_region[i]]]
     return surface
 
+def get_surface_atoms_new(structure, use_covalent_radius=False):
+    dln = scipy.spatial.Delaunay(structure.positions)
+
+    if use_covalent_radius:
+        simplices = []
+        for j in dln.simplices:
+            discard = False
+            for ifacet in list(itertools.combinations(j, 3)):
+                for ipair in itertools.combinations(ifacet, 2):
+                    distance = np.linalg.norm(structure.positions[ipair[0]] - structure.positions[ipair[1]])
+                    cov_distance = covalent_radius(structure.symbols[ipair[0]]) + covalent_radius(
+                        structure.symbols[ipair[1]])
+                    if distance > 3.0*cov_distance:
+                        print('Distance: %f Cov-distance: %f' % (distance, cov_distance))
+                        discard = True
+                        break
+            if not discard:
+                print(j)
+                simplices.append(j)
+    else:
+        simplices=dln.simplices
+
+    c = np.array([[sorted(list(y)) for y in (itertools.combinations(x, 3))] for x in simplices])
+    d = [list(x) for x in c.reshape((-1, 3))]
+
+    ret = []
+    dups = []
+    for i in range(len(d) - 1):
+        if d[i] in d[i+1:]:
+            dups.append(d[i])
+    for i in d:
+        if i not in dups:
+            ret.append(i)
+    return np.unique(np.array(ret).flatten())
+
+
 
 def get_onion_layers(structure):
     """
@@ -154,6 +190,15 @@ def get_onion_layers(structure):
             core = range(cur_st.natom)
             layers.append(core)
             break
+
+        st = pychemia.Structure(positions=pos, symbols=len(pos)*['H'], periodicity=False)
+        st.canonical_form()
+        print('The current volume is %7.3f' % st.volume)
+        if st.volume < 0.1:
+            core = range(cur_st.natom)
+            layers.append(core)
+            break
+
         try:
             voro = scipy.spatial.Voronoi(pos)
             surface = [i for i in range(cur_st.natom) if -1 in voro.regions[voro.point_region[i]]]
@@ -262,51 +307,60 @@ def random_attaching(structure, seed, target_species, natom_crystal, radius=1.8,
     lys = pychemia.analysis.surface.get_onion_layers(structure)
     surface = lys[0]
 
-    if seed not in surface:
-        print('Current Seed not in surface, searching a new seed')
-        seed = find_new_seed(structure, surface, seed, natom_crystal)
-
-    tol = basetol
-    facets = []
+    counter = 0
     while True:
-        facets, mintol = get_facets(structure, surface, seed, distance_tolerance=tol)
-        if len(facets) > 0:
-            print('Possible Facets', facets)
-            break
-        elif mintol > 2 * basetol:
-            return None, None, None, None
-        else:
-            tol = mintol
-            print('No facets found, increasing tolerance to ', tol)
+        if seed not in surface or counter > 0:
+            print('Current Seed not in surface, searching a new seed')
+            seed = find_new_seed(structure, surface, seed, natom_crystal)
 
-    while True:
-        rnd = np.random.randint(len(facets))
-        facet_chosen = facets[rnd]
-        print('Seed: %3d     Number of facets: %3d     Facet chosen: %s' % (seed, len(facets), facet_chosen))
+        tol = basetol
+        facets = []
+        while True:
+            facets, mintol = get_facets(structure, surface, seed, distance_tolerance=tol)
+            if len(facets) > 0:
+                print('Possible Facets', facets)
+                break
+            elif mintol > 2 * basetol:
+                return None, None, None, None
+            else:
+                tol = mintol
+                print('No facets found, increasing tolerance to ', tol)
 
-        center, uvector, atoms_facet = attach_to_facet(structure, facet_chosen)
+        counter = 0
+        while True:
+            counter += 1
+            rnd = np.random.randint(len(facets))
+            facet_chosen = facets[rnd]
+            print('Seed: %3d     Number of facets: %3d     Facet chosen: %s' % (seed, len(facets), facet_chosen))
 
-        new_sts = {}
-        good_pos = 0
-        for specie in target_species:
-            cov_rad = pychemia.utils.periodic.covalent_radius(specie)
-            vec = center + radius * cov_rad * uvector
-            new_symbols = list(structure.symbols) + [specie]
-            new_positions = np.concatenate((structure.positions, [vec]))
+            center, uvector, atoms_facet = attach_to_facet(structure, facet_chosen)
 
-            dist_matrix = scipy.spatial.distance_matrix(new_positions, new_positions)
-            identity = np.eye(len(new_positions), len(new_positions))
-            mindist = np.min((dist_matrix + 100 * identity).flatten())
-            if mindist > cov_rad:
-                good_pos += 1
-                print('We have a minimal distance of', mindist)
-            new_sts[specie] = pychemia.Structure(symbols=new_symbols, positions=new_positions, periodicity=False)
+            new_sts = {}
+            good_pos = 0
+            for specie in target_species:
+                cov_rad = pychemia.utils.periodic.covalent_radius(specie)
+                vec = center + radius * cov_rad * uvector
+                new_symbols = list(structure.symbols) + [specie]
+                new_positions = np.concatenate((structure.positions, [vec]))
 
+                dist_matrix = scipy.spatial.distance_matrix(new_positions, new_positions)
+                identity = np.eye(len(new_positions), len(new_positions))
+                mindist = np.min((dist_matrix + 100 * identity).flatten())
+                if mindist > cov_rad:
+                    good_pos += 1
+                    print('We have a minimal distance of', mindist)
+                new_sts[specie] = pychemia.Structure(symbols=new_symbols, positions=new_positions, periodicity=False)
+
+            if good_pos == len(target_species):
+                print('Good position selected for all species')
+                break
+            else:
+                print('No enough good positions: %d. One bad position, choosing a new facet' % good_pos)
+                if counter > len(facets):
+                    break
         if good_pos == len(target_species):
-            print('Good position selected for all species')
             break
-        else:
-            print('One bad position, choosing a new facet')
+
 
     return new_sts, facet_chosen, center, uvector
 

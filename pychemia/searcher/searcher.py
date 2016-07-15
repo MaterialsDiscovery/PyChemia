@@ -508,8 +508,12 @@ class Searcher:
     def replace_failed(self):
         self.pcdb.replace_failed()
 
-    def get_all_generations(self):
-        return self.pcdb.db.generations.find()
+    def get_all_generations(self, generation_number=None):
+        if generation_number is None:
+            return self.pcdb.db.generations.find()
+        else:
+            return self.pcdb.db.generations.find({self.population.tag: generation_number})
+
 
     @property
     def actives_in_generation(self):
