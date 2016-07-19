@@ -134,6 +134,7 @@ def get_species_list(structure):
             break
         else:
             structure.sort_sites()
+    return species
 
 
 def get_species(path):
