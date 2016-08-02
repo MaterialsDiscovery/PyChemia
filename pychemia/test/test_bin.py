@@ -44,8 +44,8 @@ def test_plot_bonds():
     """
     if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
         script = 'bin/abi_plot_bonds.py'
-        arg1 = path + '/abinit_01/abinit.files:11'
-        arg2 = path + '/abinit_01/abinit.files:21'
+        arg1 = path + '/abinit_05/abinit.files:11'
+        arg2 = path + '/abinit_05/abinit.files:21'
         subprocess.call(['python', script, arg1, arg2])
         os.remove("bonds.txt")
         os.remove("bonds.pdf")
@@ -57,7 +57,7 @@ def test_plot_hist():
     """
     if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
         script = 'bin/abi_plot_hist.py'
-        arg1 = path + '/abinit_01/abinit.files'
+        arg1 = path + '/abinit_05/abinit.files'
         arg2 = '11'
         subprocess.call(['python', script, arg1, arg2])
-        os.remove(path + '/abinit_01/abinit-o_DS11.pdf')
+        os.remove(path + '/abinit_05/abinit-o_DS11.pdf')

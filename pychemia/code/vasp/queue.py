@@ -20,7 +20,7 @@ def write_from_queue(queue, entry_id, destination=None):
     inpvars = queue.get_input_variables(entry_id)
 
     vi = InputVariables()
-    vi.variables = inpvars
+    vi._variables = inpvars
 
     write_poscar(st, dest + os.sep + 'POSCAR')
     vi.write(dest + os.sep + 'INCAR')

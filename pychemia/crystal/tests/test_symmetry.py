@@ -10,7 +10,7 @@ class CrystalSymmetryTest(unittest.TestCase):
         """
         from pychemia import pcm_log
         pcm_log.debug("CrystalSymmetryTest")
-        st = pychemia.code.vasp.read_poscar('./data/SbBi/POSCAR')
+        st = pychemia.code.vasp.read_poscar('pychemia/test/data/SbBi/POSCAR')
         cs = pychemia.crystal.CrystalSymmetry(st)
         assert cs.number() == 160
         assert cs.symbol() == u'R3m'

@@ -93,7 +93,7 @@ class VaspJob(Codes):
 
     @property
     def variables(self):
-        return self.input_variables.variables
+        return self.input_variables.get_defined_variables()
 
     @property
     def to_dict(self):

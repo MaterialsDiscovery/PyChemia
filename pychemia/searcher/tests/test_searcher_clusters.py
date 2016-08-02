@@ -45,11 +45,11 @@ class SearcherTest(unittest.TestCase):
         pcm_log.debug('FireFly')
         popu = LJCluster('test', composition='Xe13', refine=True, direct_evaluation=True)
         popu.pcdb.clean()
-        searcher = FireFly(popu, generation_size=8, stabilization_limit=5)
+        searcher = FireFly(popu, generation_size=8, stabilization_limit=3)
         searcher.run()
         popu.pcdb.clean()
         searcher = FireFly(popu, {'delta': 0.1, 'gamma': 0.1, 'beta0': 0.8, 'alpha0': 0, 'multi_move': True},
-                            generation_size=8, stabilization_limit=5)
+                            generation_size=8, stabilization_limit=3)
         searcher.run()
         popu.pcdb.clean()
 
@@ -62,7 +62,7 @@ class SearcherTest(unittest.TestCase):
         pcm_log.debug('GeneticAlgorithm')
         popu = LJCluster('test', composition='Xe13', refine=False, direct_evaluation=True)
         popu.pcdb.clean()
-        searcher = GeneticAlgorithm(popu, generation_size=8, stabilization_limit=5)
+        searcher = GeneticAlgorithm(popu, generation_size=8, stabilization_limit=3)
         searcher.run()
         popu.pcdb.clean()
 
@@ -74,7 +74,7 @@ class SearcherTest(unittest.TestCase):
         pcm_log.debug('HarmonySearch')
         popu = LJCluster('test', composition='Xe13', refine=False, direct_evaluation=True)
         popu.pcdb.clean()
-        searcher = HarmonySearch(popu, generation_size=8, stabilization_limit=5)
+        searcher = HarmonySearch(popu, generation_size=8, stabilization_limit=3)
         searcher.run()
         popu.pcdb.clean()
 
@@ -86,7 +86,7 @@ class SearcherTest(unittest.TestCase):
         pcm_log.debug('ParticleSwarm')
         popu = LJCluster('test', composition='Xe13', refine=False, direct_evaluation=True)
         popu.pcdb.clean()
-        searcher = ParticleSwarm(popu, generation_size=8, stabilization_limit=5)
+        searcher = ParticleSwarm(popu, generation_size=8, stabilization_limit=3)
         searcher.run()
         popu.pcdb.clean()
 

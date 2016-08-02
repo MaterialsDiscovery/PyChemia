@@ -20,7 +20,9 @@ class NonCollinearMagMoms(Population):
         if not os.path.isfile(source_dir + os.sep + 'POSCAR'):
             raise ValueError("POSCAR not found")
         self.input = read_incar(source_dir + os.sep + 'INCAR')
-        magmom = np.array(self.input.get_value('MAGMOM')).reshape((-1, 3))
+        if 'MAGMOM' not in self.input:
+            raise ValueError('INCAR should define the MAGMOM variable')
+        magmom = np.array(self.input.MAGMOM).reshape((-1, 3))
 
         self.structure = read_poscar(source_dir + os.sep + 'POSCAR')
         if mag_atoms is None:

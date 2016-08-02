@@ -3,6 +3,7 @@ from builtins import str
 import math
 import os
 import re
+from collections import MutableMapping
 from numbers import Number
 from pychemia.utils.computing import deep_unicode
 
@@ -31,8 +32,7 @@ def read_incar(filename='INCAR'):
     elif os.path.isdir(filename) and os.path.isfile(filename + '/INCAR'):
         filename += '/INCAR'
     else:
-        print('INCAR path not found on ', filename)
-        return
+        raise ValueError('[ERROR] INCAR path not found: %s' % filename)
 
     iv = InputVariables(filename=filename)
     return iv
@@ -56,7 +56,7 @@ def write_incar(iv, filepath='INCAR'):
     iv.write(filename)
 
 
-class InputVariables:
+class InputVariables(MutableMapping):
     """
     VASP INCAR object
 
@@ -74,14 +74,11 @@ class InputVariables:
             set_value = Set the value of a particular variable
     """
 
-    variables = {}
-
     def __init__(self, filename=None, variables=None):
 
-        if variables is None:
-            self.variables = {}
-        else:
-            self.variables = variables
+        if variables is not None:
+            for i in variables:
+                self.__dict__[i] = variables[i]
 
         if filename is not None and os.path.isfile(filename):
             try:
@@ -90,11 +87,11 @@ class InputVariables:
                 print('File format not identified')
 
     def _clean_variables(self):
-        for i in self.variables:
-            value = self.variables[i]
+        for i in self.__dict__:
+            value = self.__dict__[i]
             if isinstance(value, list):
                 if len(value) == 1:
-                    self.variables[i] = value[0]
+                    self.__dict__[i] = value[0]
 
     def __import_input(self, filename):
         rf = open(filename, 'r')
@@ -107,19 +104,19 @@ class InputVariables:
                 if value[-1] == ';':
                     value = value[:-1]
                 if varname == '$SYSTEM':
-                    self.variables[varname] = value
+                    self.__dict__[varname] = value
                 elif value.upper() == '.FALSE.':
-                    self.variables[varname] = False
+                    self.__dict__[varname] = False
                 elif value.upper() == '.TRUE.':
-                    self.variables[varname] = True
+                    self.__dict__[varname] = True
                 else:
                     try:
-                        self.variables[varname] = int(value)
+                        self.__dict__[varname] = int(value)
                     except ValueError:
                         try:
-                            self.variables[varname] = round(float(value), 10)
+                            self.__dict__[varname] = round(float(value), 10)
                         except ValueError:
-                            self.variables[varname] = self._deep_parsing(value)
+                            self.__dict__[varname] = self._deep_parsing(value)
         rf.close()
         self._clean_variables()
 
@@ -161,16 +158,6 @@ class InputVariables:
         wf.write(self.__str__())
         wf.close()
 
-    def __str__(self):
-
-        ret = ''
-        thekeys = self.variables.keys()
-
-        for i in sorted(thekeys):
-            ret += self.write_key(i)
-
-        return ret
-
     def write_key(self, varname):
         """
         Receives an input variable and write their contents
@@ -181,11 +168,10 @@ class InputVariables:
                 The name of the input variable
         """
         ret = (varname.ljust(15)) + " =  "
-        if varname not in self.variables:
-            print("[ERROR] input variable: '%s' contains no elements" % varname)
-            return
+        if varname not in self.__dict__:
+            raise ValueError("[ERROR] input variable: '%s' is not declared" % varname)
 
-        value = self.variables[varname]
+        value = self.__dict__[varname]
         value = deep_unicode(value)
         if isinstance(value, bool):
             if value:
@@ -205,7 +191,7 @@ class InputVariables:
             compact = True
 
             # Get the general kind of values for the input variable
-            for j in self.variables[varname]:
+            for j in self.__dict__[varname]:
 
                 try:
                     if not float(j).is_integer():
@@ -224,11 +210,11 @@ class InputVariables:
                     real = False
                     string = True
 
-            if len(self.variables[varname]) > 1:
+            if len(self.__dict__[varname]) > 1:
 
-                tmp = [(self.variables[varname][0], 1)]
-                prev = self.variables[varname][0]
-                for i in self.variables[varname][1:]:
+                tmp = [(self.__dict__[varname][0], 1)]
+                prev = self.__dict__[varname][0]
+                for i in self.__dict__[varname][1:]:
                     if i == prev:
                         tmp[-1] = (i, tmp[-1][1] + 1)
                     else:
@@ -280,7 +266,7 @@ class InputVariables:
         return ret
 
     def set_encut(self, ENCUT=300, POTCAR=None):
-        self.variables['ENCUT'] = ENCUT
+        self.__dict__['ENCUT'] = ENCUT
         if POTCAR is not None and ENCUT < 10:
             maxvalue = 0
             if not os.path.isfile(POTCAR):
@@ -298,72 +284,96 @@ class InputVariables:
                         maxvalue = value
             rf.close()
             if ENCUT < 10:
-                self.variables['ENCUT'] = int(math.ceil(ENCUT * maxvalue))
+                self.__dict__['ENCUT'] = int(math.ceil(ENCUT * maxvalue))
             else:
-                self.variables['ENCUT'] = maxvalue
+                self.__dict__['ENCUT'] = maxvalue
                 # pcm_log.debug('ENCUT: %7.3f' % self.variables['ENCUT'])
 
     def set_ismear(self, kpoints):
         if np.prod(kpoints.grid) > 27:
-            self.variables['ISMEAR'] = -5
+            self.__dict__['ISMEAR'] = -5
         else:
-            self.variables['ISMEAR'] = 0
+            self.__dict__['ISMEAR'] = 0
 
     def set_ion_relax(self, NSW=50, ISIF=2, IBRION=2, EDIFFG=-1E-3):
-        self.variables['IBRION'] = IBRION
-        self.variables['NSW'] = NSW
-        self.variables['ISIF'] = ISIF
-        self.variables['EDIFFG'] = EDIFFG
+        self.__dict__['IBRION'] = IBRION
+        self.__dict__['NSW'] = NSW
+        self.__dict__['ISIF'] = ISIF
+        self.__dict__['EDIFFG'] = EDIFFG
 
     def set_electron_scf(self, NELM=60, NELMIN=2, EDIFF=1E-4, IALGO=48):
-        self.variables['NELMIN'] = NELMIN
-        self.variables['NELM'] = NELM
-        self.variables['EDIFF'] = EDIFF
-        self.variables['IALGO'] = IALGO
+        self.__dict__['NELMIN'] = NELMIN
+        self.__dict__['NELM'] = NELM
+        self.__dict__['EDIFF'] = EDIFF
+        self.__dict__['IALGO'] = IALGO
 
     def set_rough_relaxation(self):
         self.set_minimum(PREC='Normal', ISPIN=1, LREAL=False, ISMEAR=0, LORBIT=11)
         self.set_electron_scf(NELM=60, NELMIN=2, EDIFF=1E-4, IALGO=48)
         self.set_ion_relax(NSW=50, ISIF=2, IBRION=2, EDIFFG=-1E-2)
-        self.variables['NPAR'] = 2
+        self.__dict__['NPAR'] = 2
 
     def set_mit_settings(self):
         self.set_minimum(PREC='Accurate', ISPIN=2, LREAL=False, ISMEAR=-5, LORBIT=11)
         self.set_electron_scf(NELM=100, NELMIN=6, EDIFF=5E-5, IALGO=48)
         self.set_ion_relax(NSW=99, ISIF=3, IBRION=2, EDIFFG=-1E-3)
-        self.variables['LWAVE'] = False
-        self.variables['SIGMA'] = 0.05
-        self.variables['LDAU'] = True
-        self.variables['LDAUTYPE'] = 2
-        self.variables['ICHARG'] = 1
+        self.__dict__['LWAVE'] = False
+        self.__dict__['SIGMA'] = 0.05
+        self.__dict__['LDAU'] = True
+        self.__dict__['LDAUTYPE'] = 2
+        self.__dict__['ICHARG'] = 1
 
     def set_minimum(self, PREC='Normal', ISPIN=2, LREAL=False, ISMEAR=0, LORBIT=11):
-        self.variables['PREC'] = PREC
+        self.__dict__['PREC'] = PREC
         if LREAL is not None:
-            self.variables['LREAL'] = LREAL
+            self.__dict__['LREAL'] = LREAL
         else:
-            self.variables['LREAL'] = 'Auto'
-        self.variables['ISMEAR'] = ISMEAR
-        self.variables['ISPIN'] = ISPIN
-        self.variables['LORBIT'] = LORBIT
-        self.variables['NPAR'] = 2
-        self.variables['LASPH'] = True
+            self.__dict__['LREAL'] = 'Auto'
+        self.__dict__['ISMEAR'] = ISMEAR
+        self.__dict__['ISPIN'] = ISPIN
+        self.__dict__['LORBIT'] = LORBIT
+        self.__dict__['NPAR'] = 2
+        self.__dict__['LASPH'] = True
 
     def set_density_for_restart(self):
-        self.variables['ICHARG'] = 1
+        self.__dict__['ICHARG'] = 1
 
-    def get_value(self, varname, return_iterable=False):
+    def get_defined_variables(self):
+        return list(self.keys())
 
-        if varname not in self.variables:
-            raise ValueError('Input variables does not contain value for "%s"' % varname)
+    # The next five methods are requirements of the ABC.
+    def __setitem__(self, key, value):
+        self.__dict__[key] = value
 
-        value = self.variables[varname]
-        value = deep_unicode(value)
-        if return_iterable and isinstance(value, (int, float, str)):
-            value = [value]
+    def __getitem__(self, key):
+        return self.__dict__[key]
 
-        return value
+    def __delitem__(self, key):
+        del self.__dict__[key]
 
+    def __iter__(self):
+        return iter(self.__dict__)
+
+    def __len__(self):
+        return len(self.__dict__)
+
+    # The final two methods aren't required, but nice for demo purposes:
+    def __str__(self):
+        """
+        returns simple dict representation of the mapping
+        """
+        ret = ''
+        for i in sorted(self.__dict__.keys()):
+            ret += self.write_key(i)
+        return ret
+
+    def __repr__(self):
+        """
+        echoes class, id, & reproducible representation in the REPL
+        """
+        return '{}, {}(variables={})'.format(super(self.__class__, self).__repr__(),
+                                             self.__class__.__name__,
+                                             self.__dict__)
 
 def get_potcar_info(filename='POTCAR'):
     rf = open(filename)

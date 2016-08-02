@@ -52,11 +52,11 @@ def test_abinit_utils():
     if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
         from pychemia.code.abinit import xyz2input, netcdf2dict, psp_name
 
-        filename = "pychemia/test/data/abinit_01/abinit-o_OUT.nc"
+        filename = "pychemia/test/data/abinit_05/abinit-o_OUT.nc"
         print(len(netcdf2dict(filename)))
         assert len(netcdf2dict(filename)) == 310
         assert psp_name(1, 'LDA', 'FHI') == '01-H.LDA.fhi'
-        filename = "pychemia/test/data/abinit_01/abinit_DS11.xyz"
+        filename = "pychemia/test/data/abinit_05/abinit_DS11.xyz"
         assert xyz2input(filename).variables['natom'] == 2
 
 

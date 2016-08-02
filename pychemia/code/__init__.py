@@ -11,6 +11,7 @@ from . import dftb
 from .lennardjones import LennardJones
 from . import fireball
 from pychemia import HAS_SCIPY
+from . import sprkkr
 
 if HAS_SCIPY:
     from . import abinit

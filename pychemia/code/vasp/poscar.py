@@ -149,11 +149,14 @@ def get_species(path):
     return species
 
 
-def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None, pspfiles=None):
+def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None, pspfiles=None, basepsp=None):
 
     species = get_species_list(structure)
     ret = ''
-    psppath = os.getenv('HOME') + '/.vasp/PP-VASP/' + pspdir
+    if basepsp is not None:
+        psppath = basepsp + os.sep + pspdir
+    else:
+        psppath = os.getenv('HOME') + '/.vasp/PP-VASP/' + pspdir
     if not os.path.exists(psppath):
         raise ValueError("The path for VASP Pseudo-potentials does not exists: " + psppath)
 

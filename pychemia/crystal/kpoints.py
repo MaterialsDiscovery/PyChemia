@@ -168,7 +168,7 @@ class KPoints(PyChemiaJsonable):
         if shifts is None:
             self.shifts = [0, 0, 0]
         else:
-            self.shifts = generic_serializer(np.array(shifts).reshape((-1, 3)))
+            self.shifts = generic_serializer(np.array(shifts).reshape(3))
 
     @property
     def number_of_kpoints(self):
