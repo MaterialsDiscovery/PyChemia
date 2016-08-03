@@ -21,7 +21,8 @@ class RelaxStructures(Population):
         pass
 
     def __init__(self, name, composition=None, tag='global', target_forces=1E-3, value_tol=1E-2,
-                 distance_tol=0.3, min_comp_mult=2, max_comp_mult=8, pcdb_source=None):
+                 distance_tol=0.3, min_comp_mult=2, max_comp_mult=8, pcdb_source=None, pressure=0.0,
+                 target_stress=None):
         """
         Defines a population of PyChemia Structures,
 
@@ -48,6 +49,11 @@ class RelaxStructures(Population):
         self.max_comp_mult = max_comp_mult
         self.pcdb_source = pcdb_source
         self.source_blacklist = []
+        self.pressure = pressure
+        if target_stress is None:
+            self.target_stress = target_forces
+        else:
+            self.target_stress = target_stress
         self.name = name
         Population.__init__(self, name, tag)
 
@@ -99,7 +105,7 @@ class RelaxStructures(Population):
         max_force, max_stress = self.get_max_force_stress(entry_id)
         if max_force is None or max_stress is None:
             return False
-        elif max_force < self.target_forces and max_stress < self.target_forces:
+        elif max_force < self.target_forces and max_stress < self.target_stress + self.pressure:
             return True
         else:
             return False

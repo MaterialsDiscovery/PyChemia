@@ -12,6 +12,7 @@ from .lennardjones import LennardJones
 from . import fireball
 from pychemia import HAS_SCIPY
 from . import sprkkr
+from . import phonopy
 
 if HAS_SCIPY:
     from . import abinit
