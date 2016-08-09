@@ -67,22 +67,25 @@ class StructureMatch:
                         best[specie] = i
             else:
                 # Only consider permutations of 2 positions
-                for ipar in itertools.permutations(range(len(distance_matrix)), 2):
-                    i = list(range(len(distance_matrix)))
-                    i[ipar[0]] = ipar[1]
-                    i[ipar[1]] = ipar[0]
-                    if distance_matrix[:, np.array(i)].trace() < min_trace:
-                        min_trace = distance_matrix[:, np.array(i)].trace()
-                        best[specie] = i
-                for ipar in itertools.permutations(range(len(distance_matrix)), 4):
-                    i = list(range(len(distance_matrix)))
-                    i[ipar[0]] = ipar[1]
-                    i[ipar[1]] = ipar[0]
-                    i[ipar[2]] = ipar[3]
-                    i[ipar[3]] = ipar[2]
-                    if distance_matrix[:, np.array(i)].trace() < min_trace:
-                        min_trace = distance_matrix[:, np.array(i)].trace()
-                        best[specie] = i
+                if len(distance_matrix) > 1:
+                    for ipar in itertools.permutations(range(len(distance_matrix)), 2):
+                        i = list(range(len(distance_matrix)))
+                        i[ipar[0]] = ipar[1]
+                        i[ipar[1]] = ipar[0]
+                        if distance_matrix[:, np.array(i)].trace() < min_trace:
+                            min_trace = distance_matrix[:, np.array(i)].trace()
+                            best[specie] = i
+                    for ipar in itertools.permutations(range(len(distance_matrix)), 4):
+                        i = list(range(len(distance_matrix)))
+                        i[ipar[0]] = ipar[1]
+                        i[ipar[1]] = ipar[0]
+                        i[ipar[2]] = ipar[3]
+                        i[ipar[3]] = ipar[2]
+                        if distance_matrix[:, np.array(i)].trace() < min_trace:
+                            min_trace = distance_matrix[:, np.array(i)].trace()
+                            best[specie] = i
+                else:
+                    best[specie] = [0]
 
             print('For specie %s best permutation is %s' % (specie, str(best[specie])))
 

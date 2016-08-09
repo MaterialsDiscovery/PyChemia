@@ -22,7 +22,7 @@ class RelaxStructures(Population):
 
     def __init__(self, name, composition=None, tag='global', target_forces=1E-3, value_tol=1E-2,
                  distance_tol=0.3, min_comp_mult=2, max_comp_mult=8, pcdb_source=None, pressure=0.0,
-                 target_stress=None):
+                 target_stress=None, target_diag_stress=None, target_nondiag_stress=None):
         """
         Defines a population of PyChemia Structures,
 
@@ -54,6 +54,14 @@ class RelaxStructures(Population):
             self.target_stress = target_forces
         else:
             self.target_stress = target_stress
+        if target_diag_stress is None:
+            self.target_diag_stress = self.target_stress
+        else:
+            self.target_diag_stress = target_diag_stress
+        if target_diag_stress is None:
+            self.target_nondiag_stress = self.target_stress
+        else:
+            self.target_nondiag_stress = target_nondiag_stress
         self.name = name
         Population.__init__(self, name, tag)
 
@@ -83,29 +91,27 @@ class RelaxStructures(Population):
 
     def get_max_force_stress(self, entry_id):
         entry = self.get_entry(entry_id, projection={'properties': 1})
+        max_force = None
+        max_diag_stress = None
+        max_nondiag_stress = None
         if entry is not None and entry['properties'] is not None:
             properties = entry['properties']
-            if 'forces' not in properties or 'stress' not in properties:
-                max_force = None
-                max_stress = None
-            elif properties['forces'] is None or properties['stress'] is None:
-                max_force = None
-                max_stress = None
-            else:
+            if 'forces' in properties and 'stress' in properties and \
+                            properties['forces'] is not None and properties['stress'] is not None:
                 forces = np.array(entry['properties']['forces'])
-                stress = np.array(entry['properties']['stress'])
+                stress = np.array(entry['properties']['stress']).reshape((3,3))
                 max_force = np.max(np.apply_along_axis(np.linalg.norm, 1, forces))
-                max_stress = np.max(np.abs(stress.flatten()))
-        else:
-            max_force = None
-            max_stress = None
-        return max_force, max_stress
+                max_diag_stress = np.max(np.abs(np.diag(stress)))
+                max_nondiag_stress = np.max(np.abs(stress - np.diag(stress)))
+
+        return max_force, max_diag_stress, max_nondiag_stress
 
     def is_evaluated(self, entry_id):
-        max_force, max_stress = self.get_max_force_stress(entry_id)
-        if max_force is None or max_stress is None:
+        max_force, max_diag_stress, max_nondiag_stress = self.get_max_force_stress(entry_id)
+        if max_force is None or max_diag_stress is None or max_nondiag_stress is None:
             return False
-        elif max_force < self.target_forces and max_stress < self.target_stress + self.pressure:
+        elif max_force < self.target_forces and max_diag_stress < self.target_diag_stress + self.pressure and \
+                        max_nondiag_stress < self.target_nondiag_stress:
             return True
         else:
             return False
