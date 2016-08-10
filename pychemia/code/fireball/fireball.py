@@ -291,3 +291,49 @@ def get_fdata_info(fdata_path='Fdata'):
         elif key == 'Atomic energy':
             res[cur_atom]['Atomic energy'] = float(value)
     return res
+
+
+def read_fireball_in(fpath='fireball.in'):
+
+    rf = open(fpath)
+    data = rf.readlines()
+    ret = {}
+
+    for iline in data:
+        if iline.startswith('&'):
+            if iline.startswith('&END'):
+                curkey=None
+            else:
+                curkey=iline[1:].strip()
+        elif '=' in iline:
+            varname = iline.split('=')[0].strip()
+            value = iline.split('=')[1].strip()
+            if curkey is not None and curkey not in ret:
+                ret[curkey]={}
+            ret[curkey][varname] = value
+    return ret
+
+
+def read_eigen(fpath='eigen.dat'):
+
+    rf =open(fpath)
+    data=rf.read()
+    # Number of Eigenvalues
+    nval = int(data.split()[1])
+    # The eigenvalues
+    eigen = [float(x) for x in data.split()[7:]]
+    assert(len(eigen) == nval)
+    return eigen
+
+
+def read_final_fireball_relax(fpath):
+
+    output = read_fireball_stdout(fpath)
+    ret = {}
+    ret['energetics'] = output['energetics'][-1]
+    ret['forces'] = output['forces'][-1]
+    ret['rms_force'] = output['rms_force'][-1]
+    ret['max_force'] = output['max_force'][-1]
+    st = Structure(symbols=output['symbols'], positions=output['initial_positions'], periodicity=False)
+    ret['initial_structures'] = st.to_dict
+    return ret
