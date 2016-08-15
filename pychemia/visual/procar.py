@@ -34,8 +34,7 @@ Implemented Classes:
 # basic modules. Should be present
 import logging
 import re
-
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 
 

@@ -55,6 +55,7 @@ def worker_maise(db_settings, entry_id, workdir, target_forces, relaxator_params
     if os.path.isfile('OUTCAR'):
         rf = open('OUTCAR', 'r')
         data = rf.read()
+    	state_dist=re.findall(r'Total CPU', data)                                       #WIH
         
         pos_forces = re.findall(r'TOTAL-FORCE \(eV/Angst\)\s*-*\s*([-.\d\s]+)\s+-{2}', data)
         pos_forces = np.array([x.split() for x in pos_forces], dtype=float)
@@ -70,21 +71,29 @@ def worker_maise(db_settings, entry_id, workdir, target_forces, relaxator_params
         str_stress=re.findall('Total([\.\d\s-]*)in',data)
         if len(str_stress)==2:
             stress = np.array([[float(y) for y in x.split()] for x in str_stress])
+        else:
+            stress = None
         str_stress=re.findall('in kB([\.\d\s-]*)energy',data)
         if len(str_stress)==2:
             stress_kB = np.array([[float(y) for y in x.split()] for x in str_stress])
+        else:
+            stress_kB = None
     else:
         forces=None
         stress=None
         stress_kB=None
+	state_dist='F'                                                #WIH
 
     new_structure=read_poscar('CONTCAR')
-    if np.min(new_structure.distance_matrix()+np.eye(new_structure.natom))<0.23:
-        print('WARNING: Structure collapse 2 atoms, creating a new random structure')
-        new_structure=Structure.random_cell(new_structure.composition)
+    if len(state_dist)==0:                                                             #WIH
+	print('WARNING: MAISE found distances too short in structure:', entry_id)          #WIH
+	new_structure=Structure.random_cell(structure.composition)                     #WIH
+    #if np.min(new_structure.distance_matrix()+np.eye(new_structure.natom))<0.23:           #WIH
+    #    print('WARNING: Structure collapse 2 atoms, creating a new random structure')      #WIH
+    #    new_structure=Structure.random_cell(new_structure.composition)                     #WIH
     if ncalls > max_ncalls:
-        print('WARNING: Too many calls to MAISE and no relaxation succeeded, replacing structure')
-        new_structure=Structure.random_cell(new_structure.composition)
+        print('WARNING: Too many calls to MAISE and no relaxation succeeded, replacing structure: ', entry_id)    # WIH
+        new_structure=Structure.random_cell(structure.composition)                      #WIH
         pcdb.entries.update({'_id': entry_id}, {'$set': {'status.ncalls': 0}})
     else:
         pcdb.entries.update({'_id': entry_id}, {'$set': {'status.ncalls': ncalls}})
@@ -242,6 +251,9 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--target_forces',
                         default=1E-3, metavar='x', type=float,
                         help='Target Forces (default: 1E-3)')
+    parser.add_argument('--pressure_kB',
+                        default=0.0, metavar='x', type=float,
+                        help='Imposed Pressure (default: 0.0 kB)')
     parser.add_argument('-n', '--nparal',
                         default=1, metavar='N', type=int,
                         help='Number of parallel processes (default: 1)')
@@ -290,6 +302,7 @@ if __name__ == '__main__':
     print('nmpiparal : %d' % args.nmpiparal)
     print('binary    : %s' % str(args.binary))
     print('target-forces : %.2E' % args.target_forces)
+    print('pressure_kB   : %.2E' % args.pressure_kB)
     print('evaluate_all  : %s' % str(args.evaluate_all))
     print('waiting       : %s' % str(args.waiting))
     print('ssl           : %s' % str(args.ssl))
@@ -304,7 +317,8 @@ if __name__ == '__main__':
                                     relaxator_params=relaxator_params,
                                     worker=worker_vasp,
                                     evaluate_all=args.evaluate_all,
-                                    waiting=args.waiting)
+                                    waiting=args.waiting,
+                                    pressure=args.pressure_kB)
     elif args.binary[:4].lower() == 'mais':
         evaluator = DirectEvaluator(db_settings, args.workdir,
                                     target_forces=args.target_forces,
@@ -312,7 +326,8 @@ if __name__ == '__main__':
                                     relaxator_params=relaxator_params,
                                     worker=worker_maise,
                                     evaluate_all=args.evaluate_all,
-                                    waiting=args.waiting)
+                                    waiting=args.waiting,
+                                    pressure=args.pressure_kB)
     else:
         print('I could not recognize the binary you pretent to use')
         print('Use a binary such as vasp* or maise')

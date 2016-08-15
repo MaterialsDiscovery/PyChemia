@@ -12,7 +12,7 @@ if HAS_PYMONGO:
 
 class DirectEvaluator:
     def __init__(self, database_settings, basedir, target_forces, nparal, relaxator_params, worker,
-                 evaluate_failed=False, evaluate_all=False, waiting=False):
+                 evaluate_failed=False, evaluate_all=False, waiting=False, pressure=0.0):
 
         self.database_settings = database_settings
         self.basedir = basedir
@@ -24,6 +24,8 @@ class DirectEvaluator:
         self.evaluate_all = evaluate_all
         self.waiting = waiting
         self.worker = worker
+        # Pressure in kB
+        self.pressure = pressure
 
     def run(self):
 
@@ -41,7 +43,6 @@ class DirectEvaluator:
         print('Number of entries: ', pcdb.entries.count())
 
         while True:
-
             to_relax = []
 
             for entry in pcdb.entries.find({}):
@@ -102,35 +103,42 @@ class DirectEvaluator:
         return self.get_current_status(entry) < self.target_forces
 
     def get_current_status(self, entry, verbose=False):
+
+        max_force = 1
+        max_diag_stress = 1
+        max_nondiag_stress = 1
+        
         if entry is not None and 'properties' in entry and entry['properties'] is not None:
             if 'forces' in entry['properties'] and entry['properties']['forces'] is not None:
                 forces = np.array(entry['properties']['forces']).reshape((-1, 3))
                 max_force = np.max(np.apply_along_axis(np.linalg.norm, 1, forces))
-            else:
-                max_force = 1
             if 'stress' in entry['properties'] and entry['properties']['stress'] is not None:
                 stress = np.array(entry['properties']['stress']).reshape((-1, 3))
-                max_stress = np.max(np.abs(stress.flatten()))
-            else:
-                max_stress = 1
+                assert(stress.shape==(2,3))
+                max_diag_stress=np.abs(np.max(np.abs(stress[0])) - (self.pressure/1602.1766208))
+                max_nondiag_stress=np.max(np.abs(stress[1]))
         else:
             pcm_log.debug('Bad entry')
             print(entry)
-            max_force = 1
-            max_stress = 1
-        if max(max_force, max_stress) > self.target_forces and verbose:
-            print('Status for %s: forces: %9.2E stress: %9.2E' % (entry['_id'], max_force, max_stress))
-        return max(max_force, max_stress)
+        if max(max_force, max_diag_stress, max_nondiag_stress) > self.target_forces and verbose:
+            if (max_force*max_diag_stress*max_nondiag_stress) == 1.0:
+                print('No forces/stress information for entry: %s' % entry['_id'])
+            else:
+                print('Convergence status for entry: %s' % entry['_id'])
+                print('Max Interatomic Force: %9.2E [eV/Ang]' % max_force)
+                print('Max Diag stress      : %9.2E with pressure: %9.2E [eV/Ang^3]' % (max_diag_stress, self.pressure/1602.1766208 ))
+                print('Max NonDiag stress   : %9.2E [eV/Ang^3]' % max_nondiag_stress)
+        return max(max_force, max_diag_stress, max_nondiag_stress)
 
     def is_evaluable(self, entry):
         if 'lock' in entry['status']:
-            print('FALSE because %s is locked' % entry['_id'])
+            print('Entry is not evaluable because %s is locked' % entry['_id'])
             return False
         elif self.evaluate_all:
-            print('TRUE because evaluate all')
+            print('Entry is evaluable because evaluate all')
             return True
         elif self.get_current_status(entry, verbose=True) > self.target_forces:
-            print('TRUE because forces not converged %f' % self.get_current_status(entry))
+            print('Entry is evaluable because forces not converged %f' % self.get_current_status(entry))
             return True
         else:
             return False

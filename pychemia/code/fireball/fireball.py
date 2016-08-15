@@ -310,7 +310,7 @@ def read_fireball_in(fpath='fireball.in'):
             value = iline.split('=')[1].strip()
             if curkey is not None and curkey not in ret:
                 ret[curkey]={}
-            ret[curkey][varname] = value
+            ret[curkey][varname] = convert_value(value)
     return ret
 
 
@@ -336,4 +336,38 @@ def read_final_fireball_relax(fpath):
     ret['max_force'] = output['max_force'][-1]
     st = Structure(symbols=output['symbols'], positions=output['initial_positions'], periodicity=False)
     ret['initial_structures'] = st.to_dict
+    return ret
+
+def convert_value(value):
+
+    ret=None
+    try:
+        ret=int(value)
+    except ValueError:
+        try:
+            ret=float(value)
+        except ValueError:
+            try:
+                ret=[ int(x) for x in value.split()]
+            except ValueError:
+                ret=value
+    return ret
+
+def read_param(fpath='param.dat'):
+    rf=open(fpath)
+    data=rf.readlines()
+    ret={}
+    for line in data:
+        if ':' in line:
+            key = line.split(':')[0].strip()
+            value = line.split(':')[1].strip()
+            if value=='':
+                curkey=key
+            else:
+                if curkey not in ret:
+                    ret[curkey]={}
+                    ret[curkey][key]=convert_value(value)
+        else:
+            if '=' not in line and len(line.strip())>0:
+                curkey=line.strip()
     return ret
