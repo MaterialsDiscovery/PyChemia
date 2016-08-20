@@ -2,11 +2,11 @@
 Routines related to Report generation
 """
 from pychemia import HAS_MATPLOTLIB, HAS_MAYAVI
+from .dos import DensityOfStates, plot_one_dos, plot_many_dos
 
 if HAS_MAYAVI:
     from .structure_plot import StructurePlot
 
-from .dos import DensityOfStates, plot_one_dos, plot_many_dos
 # from _pyprocar import BandStructure
 
 if HAS_MATPLOTLIB:

@@ -124,9 +124,10 @@ def write_poscar(structure, filepath='POSCAR', newformat=True):
     wf.write(ret)
     wf.close()
 
+
 def get_species_list(structure):
     while True:
-        species=[]
+        species = []
         for i in structure.symbols:
             if i not in species:
                 species.append(i)

@@ -99,7 +99,7 @@ class RelaxStructures(Population):
             if 'forces' in properties and 'stress' in properties and \
                             properties['forces'] is not None and properties['stress'] is not None:
                 forces = np.array(entry['properties']['forces'])
-                stress = np.array(entry['properties']['stress']).reshape((3,3))
+                stress = np.array(entry['properties']['stress']).reshape((3, 3))
                 max_force = np.max(np.apply_along_axis(np.linalg.norm, 1, forces))
                 max_diag_stress = np.max(np.abs(np.diag(stress)))
                 max_nondiag_stress = np.max(np.abs(stress - np.diag(stress)))

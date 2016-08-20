@@ -354,8 +354,8 @@ Empty structure
 
         for i in range(self.natom):
             if i in list_of_atoms:
-                total_mass = total_mass + mass(atomicnumber[i])
-                center_of_mass = center_of_mass + mass(atomicnumber[i]) * self.positions[i]
+                total_mass += mass(atomicnumber[i])
+                center_of_mass += mass(atomicnumber[i]) * self.positions[i]
 
         return center_of_mass / total_mass
 
@@ -851,7 +851,7 @@ Empty structure
             for i in range(self.nsites - 1):
                 for j in range(i + 1, self.nsites):
                     d=self.lattice.distance2(self.reduced[i], self.reduced[j], limits=[1,1,1])
-                    dm[i, j] = min([ d[x]['distance'] for x in d ])
+                    dm[i, j] = min([d[x]['distance'] for x in d])
                     dm[j, i] = dm[i, j]
         else:
             if HAS_SCIPY:

@@ -2,6 +2,7 @@ import subprocess
 import numpy as np
 from pychemia.code.vasp import write_poscar
 
+
 class PhonopyJob:
 
     def __init__(self, structure, dim=(2, 2, 2)):

@@ -16,6 +16,7 @@ from pychemia.evaluator import DirectEvaluator
 from pychemia.utils.serializer import generic_serializer
 from pychemia.utils.periodic import atomic_number
 
+
 def worker_maise(db_settings, entry_id, workdir, target_forces, relaxator_params):
 
     max_ncalls = 6
@@ -34,28 +35,28 @@ def worker_maise(db_settings, entry_id, workdir, target_forces, relaxator_params
     else:
         ncalls = 1 
 
-    #print('Current directory: '+os.getcwd() )
-    #print('Working directory: '+workdir)
-    write_poscar(structure,workdir+os.sep+'POSCAR')
+    # print('Current directory: '+os.getcwd() )
+    # print('Working directory: '+workdir)
+    write_poscar(structure, workdir+os.sep+'POSCAR')
     if not os.path.exists(workdir+os.sep+'setup'):
         shutil.copy2('setup', workdir)
     if not os.path.exists(workdir+os.sep+'INI'):
         os.symlink(os.getcwd()+os.sep+'INI', workdir+os.sep+'INI')
     if not os.path.exists(workdir+os.sep+'maise'):
         os.symlink(os.getcwd()+os.sep+'maise', workdir+os.sep+'maise')
-    cwd=os.getcwd()
+    cwd = os.getcwd()
     os.chdir(workdir)
-    wf=open('maise.stdout','w')
+    wf = open('maise.stdout', 'w')
     subprocess.call(['./maise'], stdout=wf)
     wf.close()
     if os.path.isfile('OSZICAR'):
-        energies=np.loadtxt('OSZICAR')
+        energies = np.loadtxt('OSZICAR')
     else:
-        energies=None
+        energies = None
     if os.path.isfile('OUTCAR'):
         rf = open('OUTCAR', 'r')
         data = rf.read()
-    	state_dist=re.findall(r'Total CPU', data)                                       #WIH
+        state_dist = re.findall(r'Total CPU', data)                                       # WIH
         
         pos_forces = re.findall(r'TOTAL-FORCE \(eV/Angst\)\s*-*\s*([-.\d\s]+)\s+-{2}', data)
         pos_forces = np.array([x.split() for x in pos_forces], dtype=float)
@@ -68,38 +69,37 @@ def worker_maise(db_settings, entry_id, workdir, target_forces, relaxator_params
             print('Forces and Positions could not be parsed : ', pos_forces.shape)
             print('pos_forces =\n%s ' % pos_forces)
             
-        str_stress=re.findall('Total([\.\d\s-]*)in',data)
-        if len(str_stress)==2:
+        str_stress = re.findall('Total([\.\d\s-]*)in', data)
+        if len(str_stress) == 2:
             stress = np.array([[float(y) for y in x.split()] for x in str_stress])
         else:
             stress = None
-        str_stress=re.findall('in kB([\.\d\s-]*)energy',data)
-        if len(str_stress)==2:
-            stress_kB = np.array([[float(y) for y in x.split()] for x in str_stress])
+        str_stress = re.findall('in kB([\.\d\s-]*)energy', data)
+        if len(str_stress) == 2:
+            stress_kb = np.array([[float(y) for y in x.split()] for x in str_stress])
         else:
-            stress_kB = None
+            stress_kb = None
     else:
-        forces=None
-        stress=None
-        stress_kB=None
-	state_dist='F'                                                #WIH
+        forces = None
+        stress = None
+        stress_kb = None
+    state_dist = 'F'                                                                      # WIH
 
-    new_structure=read_poscar('CONTCAR')
-    if len(state_dist)==0:                                                             #WIH
-	print('WARNING: MAISE found distances too short in structure:', entry_id)          #WIH
-	new_structure=Structure.random_cell(structure.composition)                     #WIH
-    #if np.min(new_structure.distance_matrix()+np.eye(new_structure.natom))<0.23:           #WIH
-    #    print('WARNING: Structure collapse 2 atoms, creating a new random structure')      #WIH
-    #    new_structure=Structure.random_cell(new_structure.composition)                     #WIH
+    new_structure = read_poscar('CONTCAR')
+    if len(state_dist) == 0:                                                              # WIH
+        print('WARNING: MAISE found distances too short in structure:', entry_id)           # WIH
+        new_structure = Structure.random_cell(structure.composition)                          # WIH
+    #if np.min(new_structure.distance_matrix()+np.eye(new_structure.natom))<0.23:       # WIH
+    #    print('WARNING: Structure collapse 2 atoms, creating a new random structure')  # WIH
+    #    new_structure=Structure.random_cell(new_structure.composition)                 # WIH
     if ncalls > max_ncalls:
         print('WARNING: Too many calls to MAISE and no relaxation succeeded, replacing structure: ', entry_id)    # WIH
-        new_structure=Structure.random_cell(structure.composition)                      #WIH
+        new_structure = Structure.random_cell(structure.composition)                      #WIH
         pcdb.entries.update({'_id': entry_id}, {'$set': {'status.ncalls': 0}})
     else:
         pcdb.entries.update({'_id': entry_id}, {'$set': {'status.ncalls': ncalls}})
     pcdb.update(entry_id, structure=new_structure)
 
-    
     if energies is not None and forces is not None and stress is not None:
 
         te = energies[1]
@@ -108,10 +108,10 @@ def worker_maise(db_settings, entry_id, workdir, target_forces, relaxator_params
                                       'status.target_forces': target_forces,
                                       'properties.initial_forces': generic_serializer(forces[0]),
                                       'properties.initial_stress': generic_serializer(stress[0]),
-                                      'properties.initial_stress_kB': generic_serializer(stress_kB[0]),
+                                      'properties.initial_stress_kB': generic_serializer(stress_kb[0]),
                                       'properties.forces': generic_serializer(forces[1]),
                                       'properties.stress': generic_serializer(stress[1]),
-                                      'properties.stress_kB': generic_serializer(stress_kB[1]),
+                                      'properties.stress_kB': generic_serializer(stress_kb[1]),
                                       'properties.energy': te,
                                       'properties.energy_pa': te / new_structure.natom,
                                       'properties.energy_pf': te / new_structure.get_composition().gcd}})
@@ -121,17 +121,17 @@ def worker_maise(db_settings, entry_id, workdir, target_forces, relaxator_params
             wf = open(ifile, 'w')
             wf.write('')
             wf.close()
-        n=1
+        n = 1
         while True:
-           if os.path.exists(ifile+ ('_%03d' % n)):
-               n+=1
-           else:
-               break
-        os.rename(ifile,ifile+('_%03d' % n))
-
+            if os.path.exists(ifile + ('_%03d' % n)):
+                n += 1
+            else:
+                break
+        os.rename(ifile, ifile+('_%03d' % n))
 
     pcm_log.info('[%s]: Unlocking the entry' % str(entry_id))
     pcdb.unlock(entry_id)
+
 
 def worker_vasp(db_settings, entry_id, workdir, target_forces, relaxator_params):
     pcdb = get_database(db_settings)

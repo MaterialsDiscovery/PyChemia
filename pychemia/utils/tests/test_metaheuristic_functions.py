@@ -11,7 +11,7 @@ class MetaheuristicFunctionTest(unittest.TestCase):
         for i in ['Sphere', 'Ackley', 'Rosenbrock', 'Beale', 'GoldsteinPrice', 'Booth', 'BukinN6', 'Matyas', 'LeviN13',
                   'ThreeHump', 'Easom', 'CrossInTray', 'Eggholder', 'HolderTable', 'McCormick', 'SchafferN2',
                   'SchafferN4', 'StyblinskiTang']:
-            func=eval('pychemia.utils.metaheuristics.'+i+'()')
+            func = eval('pychemia.utils.metaheuristics.'+i+'()')
 
             print(i)
             print(func.mindim)

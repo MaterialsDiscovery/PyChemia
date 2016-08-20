@@ -329,13 +329,10 @@ def read_eigen(fpath='eigen.dat'):
 def read_final_fireball_relax(fpath):
 
     output = read_fireball_stdout(fpath)
-    ret = {}
-    ret['energetics'] = output['energetics'][-1]
-    ret['forces'] = output['forces'][-1]
-    ret['rms_force'] = output['rms_force'][-1]
-    ret['max_force'] = output['max_force'][-1]
-    st = Structure(symbols=output['symbols'], positions=output['initial_positions'], periodicity=False)
-    ret['initial_structures'] = st.to_dict
+    ret = {'energetics': output['energetics'][-1],
+           'forces': output['forces'][-1],
+           'rms_force': output['rms_force'][-1],
+           'max_force': output['max_force'][-1]}
     return ret
 
 def convert_value(value):
@@ -366,7 +363,7 @@ def read_param(fpath='param.dat'):
             else:
                 if curkey not in ret:
                     ret[curkey]={}
-                    ret[curkey][key]=convert_value(value)
+                ret[curkey][key]=convert_value(value)
         else:
             if '=' not in line and len(line.strip())>0:
                 curkey=line.strip()

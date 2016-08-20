@@ -7,7 +7,6 @@ class sprkkr:
     def __init__(self, structure):
         self.structure = structure
 
-
     def write_sys(self):
         name = self.structure.formula
         wf = open(name + '.sys', 'w')

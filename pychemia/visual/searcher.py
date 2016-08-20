@@ -5,6 +5,7 @@ import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
 
+
 def get_all_status(population):
     ret = []
     for entry in population.pcdb.entries.find({}, {'status': 1}):
@@ -98,7 +99,7 @@ def get_generation(searcher, tag):
     a given searcher tag
 
     :param searcher:
-    :param n:
+    :param tag:
     :return:
     """
     lista = [x['_id'] for x in searcher.get_all_generations(tag) if searcher.population.is_evaluated(x['_id'])]
@@ -214,7 +215,6 @@ def plot_generation_chart(searcher, gen_size):
     plt.xticks(range(fingen))
     pdf.savefig()
     plt.close()
-
 
 
 def plot_evolution_circular(searcher, target_function='energy_pa', tag='spacegroup'):

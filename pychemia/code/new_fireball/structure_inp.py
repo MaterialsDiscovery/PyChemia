@@ -1,7 +1,7 @@
 
 def write_inp(structure, filename):
 
-    wf=open(filename, 'w')
+    wf = open(filename, 'w')
 
     if structure.is_crystal:
         periodicity_tag = 0

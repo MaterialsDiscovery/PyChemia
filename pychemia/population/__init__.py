@@ -17,6 +17,8 @@ from .realfunction import RealFunction
 
 if HAS_PYMONGO:
     from .relaxstructures import RelaxStructures
-    from .orbitaldftu import OrbitalDFTU, dmatpawu2params, params2dmatpawu, get_pattern, params_reshaped
+    from .orbitaldftu import OrbitalDFTU
     from .noncollinearmagmoms import NonCollinearMagMoms
     from .ljcluster import LJCluster
+
+from . import orbitaldftu

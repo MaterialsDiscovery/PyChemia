@@ -3,6 +3,7 @@ import pychemia
 import tempfile
 import unittest
 
+
 class MyTestCase(unittest.TestCase):
 
     def test_incar(self):
@@ -18,7 +19,7 @@ class MyTestCase(unittest.TestCase):
         wf.close()
         iv4dir = pychemia.code.vasp.read_incar('pychemia/test/data/vasp_01')
         self.assertEqual(iv, iv4dir)
-        self.assertRaises(ValueError, pychemia.code.vasp.read_incar,'pychemia/test/data')
+        self.assertRaises(ValueError, pychemia.code.vasp.read_incar, 'pychemia/test/data')
         iv3 = pychemia.code.vasp.InputVariables(variables={'EDIFF': 1E-6})
         self.assertEqual(iv3.EDIFF, 1E-6)
         iv = pychemia.code.vasp.read_incar('pychemia/test/data/vasp_02')
@@ -34,7 +35,6 @@ class MyTestCase(unittest.TestCase):
         vo = pychemia.code.vasp.VaspOutput('pychemia/test/data/vasp_04/OUTCAR')
         self.assertTrue(vo.is_finished)
 
-
     def test_encut_setup(self):
         """
         Tests (pychemia.code.vasp) [ENCUT setup]                     :
@@ -43,7 +43,7 @@ class MyTestCase(unittest.TestCase):
         iv.set_encut(ENCUT=1.2, POTCAR='pychemia/test/data/vasp_06/POTCAR')
         self.assertEqual(iv.ENCUT, 307)
         iv.set_rough_relaxation()
-        self.assertEqual(iv.EDIFFG,-1E-2)
+        self.assertEqual(iv.EDIFFG, -1E-2)
         iv.set_mit_settings()
 
     def test_vaspjob(self):

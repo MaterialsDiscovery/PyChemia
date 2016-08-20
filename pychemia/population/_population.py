@@ -98,7 +98,7 @@ class Population:
         :return:
         """
         if not with_id:
-           projection['_id']=0
+            projection['_id'] = 0
         entry = self.pcdb.entries.find_one({'_id': entry_id}, projection)
         return entry
 

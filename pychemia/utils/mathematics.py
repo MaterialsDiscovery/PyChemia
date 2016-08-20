@@ -720,8 +720,12 @@ def gram_smith_qr(ndim=3):
     matrix_a = np.random.rand(ndim, ndim)
     while np.linalg.det(matrix_a) < 1E-5:
         matrix_a = np.random.rand(ndim, ndim)
-    return np.linalg.qr(matrix_a)[0]
-
+    ret = np.linalg.qr(matrix_a)[0]
+    if np.linalg.det(ret) < 0:
+        eye = np.eye(ndim)
+        eye[0,0] = -1
+        ret = np.dot(ret, eye)
+    return ret
 
 def cartesian_to_spherical(xyz):
     """
@@ -773,6 +777,7 @@ def rotation_ndim(n, t, indices):
     rot[indices[1], indices[1]] = np.cos(t)
     rot[indices[0], indices[1]] = -np.sin(t)
     rot[indices[1], indices[0]] = np.sin(t)
+    print('Rotation\n %s' % rot)
     return rot
 
 
@@ -788,13 +793,20 @@ def generalized_euler_angles(m):
     for i in itertools.combinations(range(n), 2):
         # Compute the angle to align the plane i
         # into the canonical base
-        theta = np.arctan(mp[i[0], i[1]] / mp[i[0], i[0]])
+        if np.abs(mp[i[0], i[0]])>1E-8:
+            theta = - np.arctan(- mp[i[0], i[1]] / mp[i[0], i[0]])
+        elif mp[i[0], i[1]]<1E-8:
+            theta = 0.0
+        else:
+            theta = np.pi/2
         angles[i] = theta
         # Compute a rotation matrix for plane i
-        rot = rotation_ndim(n, theta, i)
+        rot = rotation_ndim(n, theta, tuple(i))
         # Apply the rotation left side
+        print('Before rotation  for %s is: \n %s' % (tuple(i),mp))
         mp = np.array(np.dot(rot, mp))
-    retm = rotation_ndim(n, angles, angles.keys())
+        print('After rotation for %s is: \n %s' % (tuple(i),mp))
+    retm = rotation_matrix_ndim(n, angles)
 
     # angles is a Ordered dictionary of Generalized Euler Angles
     # mp is a matrix that should be close to Identity
@@ -805,7 +817,7 @@ def generalized_euler_angles(m):
 
 def rotation_matrix_ndim(n, angles):
     ret = np.eye(n)
-    for i in angles.keys()[::-1]:
+    for i in list(angles.keys())[::-1]:
         rot = rotation_ndim(n, angles[i], i)
         ret = np.dot(rot.T, ret)
     return ret

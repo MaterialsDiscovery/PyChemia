@@ -2,6 +2,7 @@ from mayavi import mlab
 from pychemia.utils.periodic import covalent_radius, cpk_color
 import numpy as np
 
+
 class StructurePlot:
 
     def __init__(self, structure):
@@ -11,7 +12,7 @@ class StructurePlot:
         """
         self.structure = structure
 
-    def plot(self, figname=None, size=(300, 325), view=(30, 30), color=(1.0,1.0,1.0)):
+    def plot(self, figname=None, size=(300, 325), view=(30, 30), color=(1.0, 1.0, 1.0)):
 
         fig = mlab.figure(size=size)
         figure = mlab.gcf()

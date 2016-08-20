@@ -8,6 +8,7 @@ from builtins import str
 from functools import reduce
 from collections import Mapping
 
+
 class Composition(Mapping):
     u"""
     The class Composition is basically a dictionary with species as keys and
@@ -163,7 +164,7 @@ class Composition(Mapping):
 
         :rtype: list
         """
-        return [ deep_unicode(x) for x in self._composition ]
+        return [deep_unicode(x) for x in self._composition]
 
     @property
     def nspecies(self):
@@ -278,7 +279,6 @@ class Composition(Mapping):
                 composition.append(m.group(1))
 
         return composition
-
 
     def sorted_formula(self, sortby='alpha', reduced=True):
         """

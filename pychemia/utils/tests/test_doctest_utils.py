@@ -25,7 +25,7 @@ class MyTestCase(unittest.TestCase):
         from pychemia.utils.computing import get_float
         with self.assertRaises(Exception) as context:
             get_float('3i')
-            #self.assertTrue("Could not convert '3i' into a float number" in context.exception)
+            # self.assertTrue("Could not convert '3i' into a float number" in context.exception)
 
 
 def test_periodic():
