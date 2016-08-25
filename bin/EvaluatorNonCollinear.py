@@ -92,7 +92,7 @@ if __name__ == '__main__':
             print('DATABASE: %s' % args.dbname[idb])
             db_settings['name'] = args.dbname[idb]
             pcdb = pychemia.db.get_database(db_settings)
-            popu = pychemia.population.NonCollinearMagMoms(pcdb, source_dir=args.source_dir[i])
+            popu = pychemia.population.NonCollinearMagMoms(pcdb, source_dir=args.source_dir[idb])
 
             print('Number of candidates evaluated: %d' % len(popu.actives_evaluated))
 
@@ -110,7 +110,7 @@ if __name__ == '__main__':
                         print('Preparing and submitting job: %s' % str(ijob))
                         popu.prepare_folder(ijob, workdir=args.source_dir[idb] + os.sep + str(ijob))
 
-                        pbs = pychemia.runner.PBSRunner(args.source_dir[ijob] + os.sep + str(ijob))
+                        pbs = pychemia.runner.PBSRunner(args.source_dir[idb] + os.sep + str(ijob))
                         pbs.initialize(ppn=args.pbs_ppn, walltime=[args.pbs_nhours, 0, 0], mail=args.pbs_mail,
                                        queue=args.pbs_queue)
                         pbs.set_template('template.pbs')
