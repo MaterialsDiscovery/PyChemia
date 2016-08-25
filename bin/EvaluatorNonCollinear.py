@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import logging
 import argparse
 import time
@@ -86,7 +87,7 @@ if __name__ == '__main__':
 
     while True:
 
-        for i in len(args.dbname):
+        for i in range(len(args.dbname)):
 
             print('DATABASE: %s' % args.dbname[i])
             db_settings['name'] = args.dbname[i]
@@ -107,9 +108,9 @@ if __name__ == '__main__':
                     data_collected = popu.collect_data(i, str(i))
                     if not data_collected:
                         print('Preparing and submitting job: %s' % str(i))
-                        popu.prepare_folder(i, workdir=str(i))
+                        popu.prepare_folder(i, workdir=args.source_dir[i] + os.sep + str(i))
 
-                        pbs = pychemia.runner.PBSRunner(str(i))
+                        pbs = pychemia.runner.PBSRunner(args.source_dir[i] + os.sep + str(i))
                         pbs.initialize(ppn=args.pbs_ppn, walltime=[args.pbs_nhours, 0, 0], mail=args.pbs_mail,
                                        queue=args.pbs_queue)
                         pbs.set_template('template.pbs')
