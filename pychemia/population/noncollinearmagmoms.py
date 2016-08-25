@@ -90,7 +90,7 @@ class NonCollinearMagMoms(Population):
 
     def is_evaluated(self, entry_id):
         entry = self.get_entry(entry_id, {'_id': 0, 'properties': 1})
-        if entry['properties']['energy'] is not None:
+        if 'energy' in entry['properties'] and entry['properties']['energy'] is not None:
             return True
         else:
             return False
