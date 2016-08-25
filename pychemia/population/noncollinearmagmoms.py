@@ -254,6 +254,8 @@ class NonCollinearMagMoms(Population):
             os.mkdir(workdir)
 
         for i in ['KPOINTS', 'POSCAR', 'POTCAR']:
+            if os.path.exists(self.source_dir+os.sep+i):
+                os.remove(self.source_dir+os.sep+i)
             os.symlink(os.path.abspath(self.source_dir+os.sep+i) , workdir+os.sep+i)
 
         input = read_incar(self.source_dir + os.sep + 'INCAR')
