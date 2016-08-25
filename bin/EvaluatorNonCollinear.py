@@ -87,10 +87,10 @@ if __name__ == '__main__':
 
     while True:
 
-        for i in range(len(args.dbname)):
+        for idb in range(len(args.dbname)):
 
-            print('DATABASE: %s' % args.dbname[i])
-            db_settings['name'] = args.dbname[i]
+            print('DATABASE: %s' % args.dbname[idb])
+            db_settings['name'] = args.dbname[idb]
             pcdb = pychemia.db.get_database(db_settings)
             popu = pychemia.population.NonCollinearMagMoms(pcdb, source_dir=args.source_dir[i])
 
@@ -99,18 +99,18 @@ if __name__ == '__main__':
             to_compute = popu.actives_no_evaluated
 
             print('Candidates to compute:')
-            for i in to_compute:
-                print(i)
+            for ijob in to_compute:
+                print(ijob)
             current_jobs = get_jobs(args.pbs_user)
 
-            for i in to_compute:
-                if str(i) not in current_jobs:
-                    data_collected = popu.collect_data(i, str(i))
+            for ijob in to_compute:
+                if str(ijob) not in current_jobs:
+                    data_collected = popu.collect_data(ijob, str(ijob))
                     if not data_collected:
-                        print('Preparing and submitting job: %s' % str(i))
-                        popu.prepare_folder(i, workdir=args.source_dir[i] + os.sep + str(i))
+                        print('Preparing and submitting job: %s' % str(ijob))
+                        popu.prepare_folder(ijob, workdir=args.source_dir[idb] + os.sep + str(ijob))
 
-                        pbs = pychemia.runner.PBSRunner(args.source_dir[i] + os.sep + str(i))
+                        pbs = pychemia.runner.PBSRunner(args.source_dir[ijob] + os.sep + str(ijob))
                         pbs.initialize(ppn=args.pbs_ppn, walltime=[args.pbs_nhours, 0, 0], mail=args.pbs_mail,
                                        queue=args.pbs_queue)
                         pbs.set_template('template.pbs')
