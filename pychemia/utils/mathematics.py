@@ -1,7 +1,6 @@
 from __future__ import print_function
 import itertools
 import math
-from collections import OrderedDict
 from fractions import gcd
 from math import cos, sin, sqrt
 import numpy as np
@@ -15,7 +14,8 @@ def length_vector(v):
 
     :rtype : (float) The lenght of the vector
 
-    Examples:
+    Examples
+
     >>> length_vector([1, 2, 3])
     3.7416573867739413
 
@@ -32,7 +32,7 @@ def length_vectors(m):
 
     :rtype : numpy.ndarray
 
-    Examples:
+    Examples
     >>> length_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
     array([  3.74165739,   8.77496439,  13.92838828,   1.        ,   2.        ])
 
@@ -50,8 +50,9 @@ def unit_vector(v):
 
     :rtype : numpy.ndarray
 
-    Examples:
+    Examples
     >>> a = unit_vector([1, 2, 3])
+
     >>> a
     array([ 0.26726124,  0.53452248,  0.80178373])
 
@@ -73,9 +74,11 @@ def unit_vectors(m):
 
     :rtype : numpy.ndarray
 
-    Example:
+    Example
     >>> from pychemia.utils.mathematics import *
+
     >>> b = unit_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
+
     >>> b
     array([[ 0.26726124,  0.53452248,  0.80178373],
            [ 0.45584231,  0.56980288,  0.68376346],
@@ -119,9 +122,9 @@ def angle_vector(v1, v2, units='rad'):
 
     v1_u = unit_vector(v1)
     v2_u = unit_vector(v2)
-    dot=np.dot(v1_u, v2_u)
-    if dot>1.0:
-        dot=1.0
+    dot = np.dot(v1_u, v2_u)
+    if dot > 1.0:
+        dot = 1.0
     angle = np.arccos(dot)
     if np.isnan(angle):
         if (v1_u == v2_u).all():
@@ -159,7 +162,9 @@ def angle_vectors(m, units='rad'):
 
     Examples:
     >>> import pprint
+
     >>> a = angle_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]])
+
     >>> pprint.pprint(a)
     {(0, 1): 0.22572612855273419,
      (0, 2): 0.2858867976945072,
@@ -173,6 +178,7 @@ def angle_vectors(m, units='rad'):
      (3, 4): 1.5707963267948966}
 
     >>> a = angle_vectors([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]], units='deg')
+
     >>> pprint.pprint(a)
     {(0, 1): 12.933154491899135,
      (0, 2): 16.380106926405656,
@@ -224,6 +230,7 @@ def distances(m):
 
     Example:
     >>> import pprint
+
     >>> pprint.pprint(distances([[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 0, 0], [0, 0, 2]]))
     {(0, 1): (array([3, 3, 3]), 5.196152422706632),
      (0, 2): (array([6, 6, 6]), 10.392304845413264),
@@ -347,7 +354,7 @@ def integral_gaussian(a, b, mu, sigma):
     val_floor = 0.5 * (1 + math.erf((a - mu) / (sigma * math.sqrt(2.0))))
 
     # Integral from -\infty to b
-    val_ceil = 0.5 * (1 + math.erf((b - mu) / (sigma * math.sqrt(2.0))))
+    val_ceil = 0.5 * (1 + math.erf((b - mu) / (sigma * sqrt(2.0))))
 
     return val_ceil - val_floor
 
@@ -373,6 +380,7 @@ def sieve_atkin(limit):
 
     Example:
     >>> p=sieve_atkin(300)
+
     >>> len(p)
     63
     >>> p[-1]
@@ -382,8 +390,8 @@ def sieve_atkin(limit):
 
     ret = [2, 3]
     sieve = [False] * (limit + 1)
-    for x in range(1, int(math.sqrt(limit)) + 1):
-        for y in range(1, int(math.sqrt(limit)) + 1):
+    for x in range(1, int(sqrt(limit)) + 1):
+        for y in range(1, int(sqrt(limit)) + 1):
             n = 4 * x * x + y * y
             if n <= limit and (n % 12 == 1 or n % 12 == 5):
                 sieve[n] = not sieve[n]
@@ -393,7 +401,7 @@ def sieve_atkin(limit):
             n = 3 * x * x - y * y
             if x > y and n <= limit and n % 12 == 11:
                 sieve[n] = not sieve[n]
-    for x in range(5, int(math.sqrt(limit))):
+    for x in range(5, int(sqrt(limit))):
         if sieve[x]:
             for y in range(x * x, limit + 1, x * x):
                 sieve[y] = False
@@ -521,8 +529,10 @@ def rotation_x(theta):
 
     Examples:
     >>> import numpy as np
+
     >>> m = rotation_x(np.pi/3)
-    >>> np.all(np.round(np.dot(m.T, m), 15)==np.eye(3))
+
+    >>> np.max(np.dot(m.T, m) - np.eye(3)) < 1E-10
     True
 
     """
@@ -540,8 +550,10 @@ def rotation_y(theta):
 
     Example:
     >>> import numpy as np
+
     >>> m = rotation_y(np.pi/3)
-    >>> np.all(np.round(np.dot(m.T, m), 15)==np.eye(3))
+
+    >>> np.max(np.dot(m.T, m) - np.eye(3)) < 1E-10
     True
 
     """
@@ -560,7 +572,8 @@ def rotation_z(theta):
     Examples:
     >>> import numpy as np
     >>> m = rotation_z(np.pi/3)
-    >>> np.all(np.round(np.dot(m.T, m), 15)==np.eye(3))
+
+    >>> np.max(np.dot(m.T, m) - np.eye(3)) < 1E-10
     True
 
     """
@@ -581,10 +594,11 @@ def apply_rotation(vector, theta_x, theta_y, theta_z):
     :return: (numpy.ndarray)
 
   Example:
-    >>> a=apply_rotation([0.1, 0.2, 0.3], 3.1415/3, 3.1415/4, 3.1415/5)
-    >>> b=apply_rotation(a, -3.1415/3, 0, 0)
-    >>> c=apply_rotation(b, 0, -3.1415/4, 0)
-    >>> d=apply_rotation(c, 0, 0, -3.1415/5)
+    >>> a = apply_rotation([0.1, 0.2, 0.3], 3.1415/3, 3.1415/4, 3.1415/5)
+    >>> b = apply_rotation(a, -3.1415/3, 0, 0)
+    >>> c = apply_rotation(b, 0, -3.1415/4, 0)
+    >>> d = apply_rotation(c, 0, 0, -3.1415/5)
+
     >>> d
     array([ 0.1,  0.2,  0.3])
 
@@ -641,7 +655,7 @@ def rotation_matrix_numpy(axis, theta):
            [ 0.50587935, -0.31061722,  0.80473786]])
 
     """
-    uaxis=unit_vector(axis)
+    uaxis = unit_vector(axis)
     a = cos(theta / 2.)
     b, c, d = -uaxis * sin(theta / 2.)
 
@@ -685,7 +699,8 @@ def gram_smith(m):
     Example:
     >>> import numpy as np
     >>> o = gram_smith(np.random.rand(3, 3))
-    >>> np.round(np.abs(np.linalg.det(o)), 10)==1.0
+
+    >>> np.round(np.abs(np.linalg.det(o)), 10) == 1.0
     True
 
     """
@@ -713,7 +728,7 @@ def gram_smith_qr(ndim=3):
     Example:
     >>> import numpy as np
     >>> o = gram_smith_qr(3)
-    >>> np.round(np.abs(np.linalg.det(o)),10)==1.0
+    >>> np.round(np.abs(np.linalg.det(o)), 10)==1.0
     True
 
     """
@@ -723,9 +738,10 @@ def gram_smith_qr(ndim=3):
     ret = np.linalg.qr(matrix_a)[0]
     if np.linalg.det(ret) < 0:
         eye = np.eye(ndim)
-        eye[0,0] = -1
+        eye[0, 0] = -1
         ret = np.dot(ret, eye)
     return ret
+
 
 def cartesian_to_spherical(xyz):
     """
@@ -793,7 +809,7 @@ def rotation_ndim(ndim, theta, indices):
     return ret
 
 
-def generalized_euler_angles(m, nrounds=1):
+def iterative_rotation_angles(m, nrounds=1):
     # Make a copy of the original matrix
     ident = np.array(m)
     # The dimension of the matrix
@@ -814,15 +830,8 @@ def generalized_euler_angles(m, nrounds=1):
                 theta = 0.0
             elif abs(den) > 1E-18:
                 theta = np.arctan(- num / den)
-
                 if den < 0.0:
                     theta += np.pi
-
-                #num = mp[i[0], i[1]]  # Numerator
-                #den = mp[i[0], i[0]]  # Denominator
-                #theta2 = np.arctan(num / den)
-                #print('Possible angles are: %f and %f' % (theta1, theta2))
-                #theta=0.5*(theta1+theta2)
             else:
                 theta = np.pi/2.0
             rotation_list.append([theta, tuple(i)])
@@ -863,19 +872,19 @@ def gea_angles(uvector):
     :return: n dimensional list of angles, the last one is pi/2
     """
 
-    if np.linalg.norm(uvector)!=1.0:
+    if np.linalg.norm(uvector) != 1.0:
         uvector /= np.linalg.norm(uvector)
 
     tmp = np.array(uvector)
-    angles=[]
+    angles = []
     n = len(uvector)
     if n < 2:
         raise ValueError('Vector need to be at least dim=2')
     for i in range(n-1):
-        if tmp[0]<-1.0:
-            tmp[0]=-1.0
-        if tmp[0]>1.0:
-            tmp[0]=1.0
+        if tmp[0] < -1.0:
+            tmp[0] = -1.0
+        if tmp[0] > 1.0:
+            tmp[0] = 1.0
         theta = np.arcsin(tmp[0])
         if len(tmp) == 2 and tmp[1] < 0.0:
             theta = np.pi - theta
@@ -883,8 +892,18 @@ def gea_angles(uvector):
         if np.abs(np.cos(theta)) < 1E-8:
             print('ALERT: Zero denominator with numerator: %s' % tmp[1:])
         tmp = tmp[1:]/np.cos(theta)
+        if np.abs(np.cos(theta)) < 1E-8:
+            print('ALERT: Zero denominator with numerator: %s %f' % (tmp, max(tmp)))
     angles.append(np.pi/2.0)
     return angles
+
+
+"""
+Generalization of Euler Angles to N‐Dimensional Orthogonal Matrices
+David K. Hoffman, Richard C. Raffenetti, and Klaus Ruedenberg
+Journal of Mathematical Physics 13, 528 (1972)
+doi: 10.1063/1.1666011
+"""
 
 
 def gea_matrix_a(angles):
@@ -911,7 +930,7 @@ def gea_matrix_a(angles):
         for k in range(n-1):
             if i > k:
                 matrix_a[i][k] = -np.tan(angles[i])*np.tan(angles[k])
-                for l in range(k,i+1):
+                for l in range(k, i+1):
                     matrix_a[i][k] *= np.cos(angles[l])
 
     matrix_a[n - 1][n - 1] = np.tan(angles[n-1])
@@ -937,21 +956,20 @@ def gea_all_angles(ortho_matrix):
     n = b.shape[0]
     ret = []
 
-    print('Original matrix\n%s' % b)
-
+    # print('Original matrix\n%s' % b)
     for i in range(1, n):
         # Lets take vectors starting from the last column on ortho_matrix
-        an = b[:,-1]
-        print('Vector: \n%s' % an)
+        an = b[:, -1]
+        # print('Vector: \n%s' % an)
         angles = gea_angles(an)
-        print('Angles: \n%s' % angles)
+        # print('Angles: \n%s' % angles)
         a = gea_matrix_a(angles)
-        print('Matrix a: \n%s' % a)
+        # print('Matrix a: \n%s' % a)
         b = np.dot(b.T, a)
-        print('New matrix b: \n%s' % b)
-        b = b[:-1,:-1]
-        print('New matrix b (fixed): \n%s' % b)
-        ret.append(angles[:-1])
+        # print('New matrix b: \n%s' % b)
+        b = b[:-1, :-1]
+        # print('New matrix b (fixed): \n%s' % b)
+        ret += angles[:-1]
     return ret
 
 
@@ -965,20 +983,29 @@ def gea_orthogonal_from_angles(angles_list):
     Journal of Mathematical Physics 13, 528 (1972)
     doi: 10.1063/1.1666011
 
-    :param ortho_matrix: Orthogonal Matrix
+    :param angles_list: List of angles, for a n-dimensional space the total number
+                        of angles is k*(k-1)/2
     """
 
     b = np.eye(2)
+    n = int(np.sqrt(len(angles_list)*8+1)/2+0.5)
+    tmp = angles_list
 
-    for i in range(1,len(angles_list)+1):
-        angles = angles_list[-i]+[np.pi/2]
+    # For SO(k) there are k*(k-1)/2 angles that are grouped in k-1 sets
+    # { (k-1 angles), (k-2 angles), ... , (1 angle)}
+    for i in range(1, n):
+        print('Counter: %d' % i)
+        angles = tmp[-i:]+[np.pi/2]
+        tmp = tmp[:-i]
+        print(tmp)
         print('Angles: \n%s' % angles)
-        ma = gea_matrix_a(angles) # matrix i+1 x i+1
+        ma = gea_matrix_a(angles)  # matrix i+1 x i+1
         print('Matrix a: \n%s' % ma)
         b = np.dot(b, ma.T).T
-        if i < len(angles_list):
+        # We skip doing making a larger matrix for the last iteration
+        if i < n-1:
             c = np.eye(i+2, i+2)
-            c[:-1,:-1] = b
-            b  = c
+            c[:-1, :-1] = b
+            b = c
         print('New matrix b: \n%s' % b)
     return b
