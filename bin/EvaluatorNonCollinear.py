@@ -71,7 +71,10 @@ if __name__ == '__main__':
         db_settings['user'] = args.user
         db_settings['passwd'] = args.passwd
     print('pyChemia Evaluator using VASP')
+    print('')
     print('dbname    : %s' % args.dbname)
+    print('source_dir: %s' % args.source_dir)
+    print('')
     print('host      : %s' % args.host)
     print('port      : %d' % args.port)
     print('user      : %s' % args.user)
@@ -79,15 +82,16 @@ if __name__ == '__main__':
     print('binary    : %s' % str(args.binary))
     print('ssl       : %s' % str(args.ssl))
 
+    assert(len(args.dbname) == len(args.source_dir))
 
     while True:
 
-        for iname in args.dbname:
+        for i in len(args.dbname):
 
-            print('DATABASE: %s' % iname)
-            db_settings['name'] = iname
+            print('DATABASE: %s' % args.dbname[i])
+            db_settings['name'] = args.dbname[i]
             pcdb = pychemia.db.get_database(db_settings)
-            popu = pychemia.population.NonCollinearMagMoms(pcdb, source_dir=args.source_dir)
+            popu = pychemia.population.NonCollinearMagMoms(pcdb, source_dir=args.source_dir[i])
 
             print('Number of candidates evaluated: %d' % len(popu.actives_evaluated))
 
