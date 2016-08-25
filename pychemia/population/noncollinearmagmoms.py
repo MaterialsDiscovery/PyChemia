@@ -135,7 +135,11 @@ class NonCollinearMagMoms(Population):
         # Reconverting to spherical coordinates
         magmom_new = cartesian_to_spherical(magmom_xyz)
         # Resetting magnitudes
-        magmom_new[:, 0] = self.magmom_magnitude
+        for i in range(len(magmom_i)):
+            if magmom_i[i][0] > 0.0:
+                magmom_new[i, 0] = self.magmom_magnitude
+            else:
+                magmom_new[i, 0] = 0.0
 
         properties = {'magmom': list(magmom_new.flatten()), 'energy': self.debug_evaluation(magmom_new)}
 
@@ -187,11 +191,11 @@ class NonCollinearMagMoms(Population):
 
     def str_entry(self, entry_id):
         entry = self.get_entry(entry_id, {'properties': 1})
-        ret='['
+        ret = '['
         for i in range(len(self.mag_atoms)):
-            ret+= ("[%8.5f %8.5f %8.5f] " % tuple(np.array(entry['properties']['magmom']).reshape((-1, 3))[i]))
-        ret+='] '
-        ret+='Energy= %f' % entry['properties']['energy']
+            ret += ("[%8.5f %8.5f %8.5f] " % tuple(np.array(entry['properties']['magmom']).reshape((-1, 3))[i]))
+        ret += '] '
+        ret += 'Energy= %f' % entry['properties']['energy']
         return ret
 
     def get_duplicates(self, ids):
