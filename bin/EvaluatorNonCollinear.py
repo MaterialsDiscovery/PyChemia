@@ -115,9 +115,10 @@ if __name__ == '__main__':
                         pbs = pychemia.runner.PBSRunner(source_dir + os.sep + str(ijob))
                         pbs.initialize(ppn=args.pbs_ppn, walltime=[args.pbs_nhours, 0, 0], mail=args.pbs_mail,
                                        queue=args.pbs_queue)
-                        pbs.set_template('template.pbs')
+                        pbs.set_template(source_dir+os.sep+'template.pbs')
                         pbs.write_pbs()
                         pbs.submit()
                 else:
-                    print('Job %s is on queue or running' % str(i))
+                    print('Job %s is on queue or running' % str(ijob))
+        print('I will be waiting for 60 minutes before checking new candidates')
         time.sleep(3600)
