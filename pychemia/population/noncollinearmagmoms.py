@@ -250,8 +250,11 @@ class NonCollinearMagMoms(Population):
 
     def prepare_folder(self, entry_id, workdir, binary='vasp', source_dir='.'):
 
+        if not os.path.isdir(workdir):
+            os.mkdir(workdir)
+
         for i in ['KPOINTS', 'POSCAR', 'POTCAR']:
-            os.symlink(self.source_dir+os.sep+i , workdir+os.sep+i)
+            os.symlink(os.path.abspath(self.source_dir+os.sep+i) , workdir+os.sep+i)
 
         input = read_incar(self.source_dir + os.sep + 'INCAR')
         magmom_sph = self.get_entry(entry_id, {'properties.magmom': 1})['properties']['magmom']
