@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import re
 import itertools
 import numpy as np
 from ._population import Population
@@ -179,7 +180,7 @@ class OrbitalDFTU(Population):
                 matrix_d[i] = matrix_d[index]
                 eigvec[i] = eigvec[index]
 
-        data = {'eigvec': eigvec, 'matrix_i': matrix_i, 'matrix_d': matrix_d}
+        data = {'R': eigvec, 'O': matrix_i, 'D': matrix_d}
 
         return self.new_entry(data), None
 
@@ -215,9 +216,9 @@ class OrbitalDFTU(Population):
         :return:
         """
 
-        properties = {'eigvec': list(data['eigvec'].flatten()),
+        properties = {'R': list(data['R'].flatten()),
                       'D': list(data['D'].flatten()),
-                      'I': list(data['I'].flatten())}
+                      'O': list(data['O'].flatten())}
         status = {self.tag: active}
         entry = {'structure': self.structure.to_dict, 'properties': properties, 'status': status}
         entry_id = self.insert_entry(entry)
@@ -324,10 +325,10 @@ def params_reshaped(params, ndim):
     :param ndim:
     :return:
     """
-    iii = np.array(params['I'], dtype=int).reshape((-1, ndim))
-    ddd = np.array(params['D']).reshape((-1, ndim))
-    eigvec = np.array(params['eigvec']).reshape((-1, ndim, ndim))
-    return iii, ddd, eigvec
+    matrix_o = np.array(params['O'], dtype=int).reshape((-1, ndim))
+    matrix_d = np.array(params['D']).reshape((-1, ndim))
+    matrix_r = np.array(params['R']).reshape((-1, ndim, ndim))
+    return matrix_o, matrix_d, matrix_r
 
 
 def params2dmatpawu(params, ndim):
@@ -339,7 +340,7 @@ def params2dmatpawu(params, ndim):
                 5 for 'd' orbitals, 7 for 'f' orbitals
     :return:
     """
-    iii, ddd, eigvec = params_reshaped(params, ndim)
+    matrix_o, ddd, eigvec = params_reshaped(params, ndim)
 
     eigval = np.array(iii, dtype=float)
     for i in range(len(eigval)):
@@ -356,8 +357,11 @@ def params2dmatpawu(params, ndim):
 
 def dmatpawu2params(dmatpawu, ndim):
     """
-    Takes the contents of the variable 'dmatpawu' and return their components as a set of integers 'I', deltas 'D' and
-    rotation matrix 'eigen'
+    Takes the contents of the variable 'dmatpawu' and return their components as a set of occupations 'O', deltas 'D' and
+    rotation matrix 'R'.
+    The rotation matrix R is ensured to be an element of SO(ndim), ie det(R)=1.
+    When the eigenvectors return a matrix with determinant -1 a mirror on the first dimension is applied.
+    Such condition has no effect on the physical result of the correlation matrix
 
     :param dmatpawu: The contents of the variable 'dmatpawu'. A list of number representing N matrices ndim x ndim
     :param ndim: ndim is 5 for 'd' orbitals and 7 for 'f' orbitals
@@ -365,19 +369,25 @@ def dmatpawu2params(dmatpawu, ndim):
     """
     dm = np.array(dmatpawu).reshape((-1, ndim, ndim))
     eigval = np.array([np.linalg.eigh(x)[0] for x in dm])
-    iii = np.array(np.round(eigval), dtype=int)
-    ddd = np.abs(eigval - iii)
-    eigvec = np.array([np.linalg.eigh(x)[1] for x in dm])
+    matrix_o = np.array(np.round(eigval), dtype=int)
+    matrix_d = np.abs(eigval - matrix_o)
+    matrix_r = np.array([np.linalg.eigh(x)[1] for x in dm])
 
-    params = {'I': list(iii.flatten()),
-              'D': list(ddd.flatten()),
-              'eigvec': list(eigvec.flatten())}
+    mirror = np.eye(ndim)
+    mirror[0,0] = -1
+
+    for i in range(len(matrix_r)):
+        if np.linalg.det(matrix_r[i])<0:
+            matrix_r[i]= np.dot(matrix_r[i], mirror)
+
+    params = {'O': list(matrix_o.flatten()),
+              'D': list(matrix_d.flatten()),
+              'R': list(matrix_r.flatten())}
     return params
 
 
 def get_pattern(params, ndim):
     """
-
 
     :param params:
     :param ndim:
@@ -409,3 +419,36 @@ def get_pattern(params, ndim):
                 pattern[j, i] = 0
 
     return connection, pattern
+
+
+def get_final_correlation_matrices_from_output(filename):
+    rf = open(filename)
+    data = rf.read()
+    mainblock = re.findall('LDA\+U DATA[\s\w\d\-\.=,>:]*\n\n\n', data)
+    assert len(mainblock)==1
+
+    pattern = """For Atom\s*(\d+), occupations for correlated orbitals. lpawu =\s*([\d]+)\s*Atom\s*[\d]+\s*. Occ. for lpawu and for spin\s*\d+\s*=\s*([\d\.]+)\s*Atom\s*[\d]+\s*. Occ. for lpawu and for spin\s*\d+\s*=\s*([\d\.]+)\s*=> On atom\s*\d+\s*,  local Mag. for lpawu is[\s\d\w\.\-]*== Occupation matrix for correlated orbitals:\s*Occupation matrix for spin  1\s*([\d\.\-\s]*)Occupation matrix for spin  2\s*([\d\.\-\s]*)"""
+    ans = re.findall(pattern, mainblock[0])
+    print(ans)
+
+    ret=[]
+    for i in ans:
+        atom_data = {}
+        atom_data['atom number'] = int(i[0])
+        atom_data['orbital'] = int(i[1])
+        atom_data['occ spin 1'] = float(i[2])
+        atom_data['occ spin 2'] = float(i[3])
+        matrix=[float(x) for x in i[4].split()]
+        atom_data['matrix spin 1'] = list(matrix)
+        matrix=[float(x) for x in i[5].split()]
+        atom_data['matrix spin 2'] = list(matrix)
+        ret.append(atom_data)
+    return ret
+
+
+def get_final_dmatpawu(filename):
+    ret = get_final_correlation_matrices_from_output(filename)
+    dmatpawu = []
+    for i in ret:
+        dmatpawu += i['matrix spin 1']
+    return dmatpawu

@@ -771,53 +771,214 @@ def spherical_to_cartesian(spherical):
     return xyz
 
 
-def rotation_ndim(n, t, indices):
-    rot = np.eye(n)
-    rot[indices[0], indices[0]] = np.cos(t)
-    rot[indices[1], indices[1]] = np.cos(t)
-    rot[indices[0], indices[1]] = -np.sin(t)
-    rot[indices[1], indices[0]] = np.sin(t)
-    print('Rotation\n %s' % rot)
-    return rot
+def rotation_ndim(ndim, theta, indices):
+    """
+    Return a rotation matrix for the Euclidean space in ndim dimensions.
+    The angle 'theta' is in radians and the indices should be a list of two
+    values where defining the plane of rotation
+
+    :param ndim: Dimension of the matrix
+    :param theta: Angle of rotation in radians
+    :param indices: Indices of the plane where the rotation takes place.
+    :return:
+    """
+
+    ret = np.eye(ndim)
+    if abs(theta) > 1E-20:
+        ret[indices[0], indices[0]] = np.cos(theta)
+        ret[indices[1], indices[1]] = np.cos(theta)
+        ret[indices[0], indices[1]] = -np.sin(theta)
+        ret[indices[1], indices[0]] = np.sin(theta)
+    # print('Rotation of angle %f on plane %s\n %s' % (theta, indices, rot))
+    return ret
 
 
-def generalized_euler_angles(m):
+def generalized_euler_angles(m, nrounds=1):
     # Make a copy of the original matrix
-    mp = np.array(m)
+    ident = np.array(m)
     # The dimension of the matrix
     n = m.shape[0]
     # The angles is an ordered list of operations
     # Rotations form a non-abelian group
-    angles = OrderedDict()
+    rotation_list = []
+    inverse = np.eye(n)
 
-    for i in itertools.combinations(range(n), 2):
-        # Compute the angle to align the plane i
-        # into the canonical base
-        if np.abs(mp[i[0], i[0]])>1E-8:
-            theta = - np.arctan(- mp[i[0], i[1]] / mp[i[0], i[0]])
-        elif mp[i[0], i[1]]<1E-8:
-            theta = 0.0
-        else:
-            theta = np.pi/2
-        angles[i] = theta
-        # Compute a rotation matrix for plane i
-        rot = rotation_ndim(n, theta, tuple(i))
-        # Apply the rotation left side
-        print('Before rotation  for %s is: \n %s' % (tuple(i),mp))
-        mp = np.array(np.dot(rot, mp))
-        print('After rotation for %s is: \n %s' % (tuple(i),mp))
-    retm = rotation_matrix_ndim(n, angles)
+    for j in range(nrounds):
+        for i in itertools.combinations(range(n), 2):
+            # Compute the angle to align the plane i
+            # into the canonical base
+            num = ident[i[1], i[0]]  # Numerator
+            den = ident[i[1], i[1]]  # Denominator
+            print('Numerator: %f Denominator: %f' % (num, den))
+            if abs(num) < 1E-18:
+                theta = 0.0
+            elif abs(den) > 1E-18:
+                theta = np.arctan(- num / den)
 
-    # angles is a Ordered dictionary of Generalized Euler Angles
-    # mp is a matrix that should be close to Identity
-    # retm is the return matrix, the matrix that should be
-    # close to the original one
-    return angles, mp, retm
+                if den < 0.0:
+                    theta += np.pi
+
+                #num = mp[i[0], i[1]]  # Numerator
+                #den = mp[i[0], i[0]]  # Denominator
+                #theta2 = np.arctan(num / den)
+                #print('Possible angles are: %f and %f' % (theta1, theta2))
+                #theta=0.5*(theta1+theta2)
+            else:
+                theta = np.pi/2.0
+            rotation_list.append([theta, tuple(i)])
+            # Compute a rotation matrix for plane i
+            rot = rotation_ndim(n, theta, tuple(i))
+            # Apply the rotation left side
+            # print('Before rotation  for %s with angle %f \n %s' % (tuple(i), theta, mp))
+            ident = np.array(np.dot(ident, rot))
+            inverse = np.dot(inverse, rot)
+            # print('After rotation for %s with angle %f \n %s' % (tuple(i), theta, mp))
+
+    # rotation_list is a list of Generalized Euler Angles
+    # ident is a matrix that should be close to Identity
+    # inverse is the return matrix, the matrix that should be
+    # close to the inverse (tranpose) of the original matrix
+    return rotation_list, ident, inverse
 
 
-def rotation_matrix_ndim(n, angles):
-    ret = np.eye(n)
-    for i in list(angles.keys())[::-1]:
-        rot = rotation_ndim(n, angles[i], i)
-        ret = np.dot(rot.T, ret)
+def rotation_matrix_ndim(ndim, rotation_list):
+    ret = np.eye(ndim)
+    for rotation in rotation_list:
+        rot = rotation_ndim(ndim, rotation[0], rotation[1])
+        ret = np.dot(ret, rot)
     return ret
+
+
+def gea_angles(uvector):
+    """
+    Generalized Euler Angles
+    Return the parametric angles decribed on Eq. 1 from the paper:
+
+    Generalization of Euler Angles to N‐Dimensional Orthogonal Matrices
+    David K. Hoffman, Richard C. Raffenetti, and Klaus Ruedenberg
+    Journal of Mathematical Physics 13, 528 (1972)
+    doi: 10.1063/1.1666011
+
+    :param uvector: A n-dimensional vector
+    :return: n dimensional list of angles, the last one is pi/2
+    """
+
+    if np.linalg.norm(uvector)!=1.0:
+        uvector /= np.linalg.norm(uvector)
+
+    tmp = np.array(uvector)
+    angles=[]
+    n = len(uvector)
+    if n < 2:
+        raise ValueError('Vector need to be at least dim=2')
+    for i in range(n-1):
+        if tmp[0]<-1.0:
+            tmp[0]=-1.0
+        if tmp[0]>1.0:
+            tmp[0]=1.0
+        theta = np.arcsin(tmp[0])
+        if len(tmp) == 2 and tmp[1] < 0.0:
+            theta = np.pi - theta
+        angles.append(theta)
+        if np.abs(np.cos(theta)) < 1E-8:
+            print('ALERT: Zero denominator with numerator: %s' % tmp[1:])
+        tmp = tmp[1:]/np.cos(theta)
+    angles.append(np.pi/2.0)
+    return angles
+
+
+def gea_matrix_a(angles):
+    """
+    Generalized Euler Angles
+    Return the parametric angles decribed on Eqs. 15-19 from the paper:
+
+    Generalization of Euler Angles to N‐Dimensional Orthogonal Matrices
+    David K. Hoffman, Richard C. Raffenetti, and Klaus Ruedenberg
+    Journal of Mathematical Physics 13, 528 (1972)
+    doi: 10.1063/1.1666011
+
+    """
+    n = len(angles)
+    matrix_a = np.eye(n)
+
+    for i in range(n-1):
+        matrix_a[i][i] = np.cos(angles[i])
+        matrix_a[i][n-1] = np.tan(angles[i])
+        for j in range(i+1):
+            matrix_a[i][n-1] *= np.cos(angles[j])
+
+    for i in range(n):
+        for k in range(n-1):
+            if i > k:
+                matrix_a[i][k] = -np.tan(angles[i])*np.tan(angles[k])
+                for l in range(k,i+1):
+                    matrix_a[i][k] *= np.cos(angles[l])
+
+    matrix_a[n - 1][n - 1] = np.tan(angles[n-1])
+    for j in range(n):
+        matrix_a[n - 1][n - 1] *= np.cos(angles[j])
+
+    return matrix_a
+
+
+def gea_all_angles(ortho_matrix):
+    """
+    Generalized Euler Angles
+    Return the generalized angles decribed from the paper
+
+    Generalization of Euler Angles to N‐Dimensional Orthogonal Matrices
+    David K. Hoffman, Richard C. Raffenetti, and Klaus Ruedenberg
+    Journal of Mathematical Physics 13, 528 (1972)
+    doi: 10.1063/1.1666011
+
+    :param ortho_matrix: Orthogonal Matrix
+    """
+    b = np.array(ortho_matrix)
+    n = b.shape[0]
+    ret = []
+
+    print('Original matrix\n%s' % b)
+
+    for i in range(1, n):
+        # Lets take vectors starting from the last column on ortho_matrix
+        an = b[:,-1]
+        print('Vector: \n%s' % an)
+        angles = gea_angles(an)
+        print('Angles: \n%s' % angles)
+        a = gea_matrix_a(angles)
+        print('Matrix a: \n%s' % a)
+        b = np.dot(b.T, a)
+        print('New matrix b: \n%s' % b)
+        b = b[:-1,:-1]
+        print('New matrix b (fixed): \n%s' % b)
+        ret.append(angles[:-1])
+    return ret
+
+
+def gea_orthogonal_from_angles(angles_list):
+    """
+    Generalized Euler Angles
+    Return the orthogonal matrix from its generalized angles
+
+    Generalization of Euler Angles to N‐Dimensional Orthogonal Matrices
+    David K. Hoffman, Richard C. Raffenetti, and Klaus Ruedenberg
+    Journal of Mathematical Physics 13, 528 (1972)
+    doi: 10.1063/1.1666011
+
+    :param ortho_matrix: Orthogonal Matrix
+    """
+
+    b = np.eye(2)
+
+    for i in range(1,len(angles_list)+1):
+        angles = angles_list[-i]+[np.pi/2]
+        print('Angles: \n%s' % angles)
+        ma = gea_matrix_a(angles) # matrix i+1 x i+1
+        print('Matrix a: \n%s' % ma)
+        b = np.dot(b, ma.T).T
+        if i < len(angles_list):
+            c = np.eye(i+2, i+2)
+            c[:-1,:-1] = b
+            b  = c
+        print('New matrix b: \n%s' % b)
+    return b
