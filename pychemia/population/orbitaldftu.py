@@ -437,9 +437,9 @@ def get_final_correlation_matrices_from_output(filename):
                      'orbital': int(i[1]),
                      'occ spin 1': float(i[2]),
                      'occ spin 2': float(i[3])}
-        matrix=[float(x) for x in i[4].split()]
+        matrix = [float(x) for x in i[4].split()]
         atom_data['matrix spin 1'] = list(matrix)
-        matrix=[float(x) for x in i[5].split()]
+        matrix = [float(x) for x in i[5].split()]
         atom_data['matrix spin 2'] = list(matrix)
         ret.append(atom_data)
     return ret

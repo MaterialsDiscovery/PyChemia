@@ -19,7 +19,13 @@ class NonCollinearMagMoms(Population):
             raise ValueError("INCAR not found")
         if not os.path.isfile(source_dir + os.sep + 'POSCAR'):
             raise ValueError("POSCAR not found")
+        if not os.path.isfile(source_dir + os.sep + 'POTCAR'):
+            raise ValueError("POTCAR not found")
+        if not os.path.isfile(source_dir + os.sep + 'KPOINTS'):
+            raise ValueError("KPOINTS not found")
         self.input = read_incar(source_dir + os.sep + 'INCAR')
+        self.source_dir = source_dir
+
         if 'MAGMOM' not in self.input:
             raise ValueError('INCAR should define the MAGMOM variable')
         magmom = np.array(self.input.MAGMOM).reshape((-1, 3))
@@ -239,23 +245,22 @@ class NonCollinearMagMoms(Population):
         return entry_id, entry_jd
 
     def prepare_folder(self, entry_id, workdir, binary='vasp', source_dir='.'):
-        vj = VaspJob()
-        structure = self.get_structure(entry_id)
-        kp = KPoints.optimized_grid(structure.lattice, kp_density=2E4)
-        vj.initialize(structure, workdir=workdir, kpoints=kp, binary=binary)
-        vj.clean()
-        vj.input_variables = read_incar(source_dir + '/INCAR')
+
+        for i in ['KPOINTS', 'POSCAR', 'POTCAR']:
+            os.symlink(self.source_dir+os.sep+i , workdir+os.sep+i)
+
+        input = read_incar(self.source_dir + os.sep + 'INCAR')
         magmom_sph = self.get_entry(entry_id, {'properties.magmom': 1})['properties']['magmom']
         magmom_car = spherical_to_cartesian(magmom_sph)
-        vj.input_variables.variables['MAGMOM'] = [float(x) for x in magmom_car.flatten()]
-        vj.input_variables.variables['M_CONSTR'] = [float(x) for x in magmom_car.flatten()]
-        vj.input_variables.variables['IBRION'] = -1
-        vj.input_variables.variables['LWAVE'] = True
-        vj.input_variables.variables['EDIFF'] = 1E-5
-        vj.input_variables.variables['LAMBDA'] = 10
-        vj.input_variables.variables['NSW'] = 0
-        vj.input_variables.variables['I_CONSTRAINED_M'] = 1
-        vj.set_inputs()
+        input['MAGMOM'] = [float(x) for x in magmom_car.flatten()]
+        input['M_CONSTR'] = [float(x) for x in magmom_car.flatten()]
+        input['IBRION'] = -1
+        input['LWAVE'] = True
+        input['EDIFF'] = 1E-5
+        input['LAMBDA'] = 10
+        input['NSW'] = 0
+        input['I_CONSTRAINED_M'] = 1
+        input.write(workdir+ os.sep + 'INCAR')
 
     def collect_data(self, entry_id, workdir):
         if os.path.isfile(workdir + '/OUTCAR'):
