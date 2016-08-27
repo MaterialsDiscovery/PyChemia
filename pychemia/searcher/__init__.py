@@ -2,7 +2,6 @@
 Routines related to stochastic optimization techniques
 """
 
-from pychemia import HAS_MATPLOTLIB
 from .annealing import SimulatedAnnealing
 from .bee import BeeAlgorithm
 from .firefly import FireFly

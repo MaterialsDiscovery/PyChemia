@@ -1,5 +1,5 @@
 from mayavi import mlab
-from pychemia.utils.periodic import covalent_radius, cpk_color
+from pychemia.utils.periodic import covalent_radius
 import numpy as np
 
 

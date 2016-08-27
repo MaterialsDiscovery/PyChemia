@@ -39,11 +39,11 @@ def cif2structure(filename, primitive=False, symprec=0.001):
     :param symprec: (float) Desired precision for computing the primitive cell
     :return:
     """
-    aseatoms = _ase.io.read(filename)
+    aseatoms = ase.io.read(filename)
     if primitive and USE_SPGLIB:
         lattice, scaled_positions, numbers = spg.find_primitive(aseatoms, symprec)
         if lattice is not None and scaled_positions is not None and numbers is not None:
-            fin_atoms = _ase.atoms.Atoms(cell=lattice, scaled_positions=scaled_positions, numbers=numbers, pbc=True)
+            fin_atoms = ase.atoms.Atoms(cell=lattice, scaled_positions=scaled_positions, numbers=numbers, pbc=True)
         else:
             fin_atoms = aseatoms
     else:
@@ -74,4 +74,4 @@ def pychemia2ase(structure):
     cell = structure.cell
     scaled_positions = structure.reduced
     symbols = structure.symbols
-    return _ase.atoms.Atoms(cell=cell, scaled_positions=scaled_positions, symbols=symbols)
+    return ase.atoms.Atoms(cell=cell, scaled_positions=scaled_positions, symbols=symbols)

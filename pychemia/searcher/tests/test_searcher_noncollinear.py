@@ -2,7 +2,7 @@ import os
 import unittest
 from pychemia import pcm_log, HAS_PYMONGO
 from pychemia.population import NonCollinearMagMoms
-from pychemia.searcher import HarmonySearch, FireFly, ParticleSwarm, GeneticAlgorithm
+from pychemia.searcher import HarmonySearch, FireFly, GeneticAlgorithm
 from pychemia.test import has_local_mongo
 import logging
 

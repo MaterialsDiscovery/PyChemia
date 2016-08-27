@@ -8,7 +8,7 @@ from pychemia.utils.computing import hashfile
 from pychemia import HAS_PYMONGO, HAS_GRIDFS
 
 
-def notest_queue():
+def test_queue():
     """
     Testing PyChemiaQueue               :
     """

@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-import numpy as np
 import spglib as spg
 from pychemia.utils.serializer import generic_serializer
 from pychemia.utils.computing import deep_unicode

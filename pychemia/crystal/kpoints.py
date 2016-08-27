@@ -239,10 +239,10 @@ class KPoints(PyChemiaJsonable):
         :return:
         """
 
-        lengths = [sqrt(sum(map(lambda y: y ** 2, structure.cell[i]))) for i in xrange(3)]
+        lengths = [sqrt(sum(map(lambda y: y ** 2, structure.cell[i]))) for i in range(3)]
         ngrid = kpoints_per_atom / structure.natom
         mult = (ngrid * lengths[0] * lengths[1] * lengths[2]) ** (1.0 / 3.0)
-        num_div = [int(ceil(1.0 / lengths[i] * mult)) for i in xrange(3)]
+        num_div = [int(ceil(1.0 / lengths[i] * mult)) for i in range(3)]
         num_div = [i if i > 0 else 1 for i in num_div]
         return num_div[0], num_div[1], num_div[2]
 

@@ -21,7 +21,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(iv, iv4dir)
         self.assertRaises(ValueError, pychemia.code.vasp.read_incar, 'pychemia/test/data')
         iv3 = pychemia.code.vasp.InputVariables(variables={'EDIFF': 1E-6})
-        self.assertEqual(iv3.EDIFF, 1E-6)
+        self.assertEqual(iv3['EDIFF'], 1E-6)
         iv = pychemia.code.vasp.read_incar('pychemia/test/data/vasp_02')
         iv.EDIFF *= 1.3
         td = tempfile.TemporaryDirectory()

@@ -1,19 +1,36 @@
 import os
 import numpy as np
 from ._population import Population
-from pychemia import pcm_log
 from pychemia.utils.mathematics import spherical_to_cartesian, cartesian_to_spherical, rotate_towards_axis, \
     angle_between_vectors
-from pychemia.code.vasp import read_incar, read_poscar, VaspJob, VaspOutput
-from pychemia.crystal import KPoints
+from pychemia.code.vasp import read_incar, read_poscar, VaspOutput
 
 
 class NonCollinearMagMoms(Population):
 
-    def evaluate_entry(self, entry_id):
-        pass
+    def __init__(self, name, source_dir='.', mag_atoms=None, magmom_magnitude=2.0, distance_tolerance=0.1,
+                 var_lambda=10, debug=False):
+        """
+        This class provides a population of Magnetic Moment vectors for the same structure and was created to be used
+        on VASP.
+        The magnetic moment is set in cartesian coordinates with 3 numbers for each atom in the unit cell.
+        This population provides methods to manipulate the magnetic moments between different candidates in order to
+        optimize the magnetic orientations using the global-search methods implemented on PyChemia.
 
-    def __init__(self, name, source_dir='.', mag_atoms=None, magmom_magnitude=2.0, distance_tolerance=0.1, debug=False):
+        :param name: The name of the database to be created or directly the PyChemiaDB database object.
+                     The name is used when the database can be created without username, password and no encryption.
+                     Otherwise the datbase must be create first and its object be 'name' argument.
+        :param source_dir: Directory that contains the basic 4 files for VASP: 'POSCAR', 'POTCAR', 'KPOINTS' and 'INCAR'
+                            Except for 'INCAR' the files are linked symbolically on each directory that will run VASP
+                            The input variables on 'INCAR' changing only MAGMOM, I_CONSTRAINED_M and LAMBDA.
+        :param mag_atoms: List of atoms for which the Magnetic Moments are changed. If the variable is None, the list
+                            is infered from the original INCAR file. The numbering of atoms start with 0.
+        :param magmom_magnitude: Fix value for the magnitude of the magnetic moment imposed for all the atoms in
+                                'mag_atoms' list
+        :param distance_tolerance: Maximal distance in magnetic moments to consider two candidates as equivalent.
+        :param var_lambda: The value of LAMBDA on INCAR that controls the strenght of the magnetic contrain
+        :param debug: If True produce a verbose output during the different calls to the methods.
+        """
         Population.__init__(self, name, 'global')
         if not os.path.isfile(source_dir + os.sep + 'INCAR'):
             raise ValueError("INCAR not found")
@@ -38,6 +55,7 @@ class NonCollinearMagMoms(Population):
             self.mag_atoms = mag_atoms
         self.magmom_magnitude = magmom_magnitude
         self.distance_tolerance = distance_tolerance
+        self.var_lambda = var_lambda
         self.debug = debug
 
     def __str__(self):
@@ -56,6 +74,7 @@ class NonCollinearMagMoms(Population):
         return {'name': self.name,
                 'tag': self.tag,
                 'mag_atoms': self.mag_atoms,
+                'var_lambda': self.var_lambda,
                 'magmom_magnitude': self.magmom_magnitude,
                 'distance_tolerance': self.distance_tolerance}
 
@@ -63,10 +82,19 @@ class NonCollinearMagMoms(Population):
     def from_dict(self, population_dict):
         return NonCollinearMagMoms(name=population_dict['name'],
                                  mag_atoms=population_dict['mag_atoms'],
+                                 var_lambda=population_dict['var_lambda'],
                                  magmom_magnitude=population_dict['magmom_magnitude'],
                                  distance_tolerance=population_dict['distance_tolerance'])
 
     def debug_evaluation(self, magmom_sph):
+        """
+        For debugging ONLY:
+        Fake evaluation of total energy using a magnetic configuration as the minimal
+        energy, the numerical distance with other candidates defines their energy.
+
+        :param magmom_sph:
+        :return:
+        """
         if self.debug:
             magmom_car=spherical_to_cartesian(magmom_sph)
             good_magmom = np.zeros((self.structure.natom, 3))
@@ -78,8 +106,17 @@ class NonCollinearMagMoms(Population):
         else:
             return None
 
+    def evaluate_entry(self, entry_id):
+        pass
+
     def new_entry(self, data, active=True):
-        # Magnetic moments are stored in spherical coordinates
+        """
+        Creates a new entry on the database
+
+        :param data: Magnetic moments stored in spherical coordinates
+        :param active:
+        :return:
+        """
         data = np.array(data)
         properties = {'magmom': list(data.flatten()), 'energy': self.debug_evaluation(data)}
         status = {self.tag: active}
@@ -89,6 +126,12 @@ class NonCollinearMagMoms(Population):
         return entry_id
 
     def is_evaluated(self, entry_id):
+        """
+        One candidate is considered evaluated if it contains any finite value of energy on the properties.energy field
+
+        :param entry_id:
+        :return:
+        """
         entry = self.get_entry(entry_id, {'_id': 0, 'properties': 1})
         if 'energy' in entry['properties'] and entry['properties']['energy'] is not None:
             return True
@@ -96,6 +139,13 @@ class NonCollinearMagMoms(Population):
             return False
 
     def check_duplicates(self, ids):
+        """
+        Returns a dictionary of non-equivalent candidates as keys and associated to each key
+        the list of candidates whose distance is less that the 'distance_tolerance' argument.
+
+        :param ids:
+        :return:
+        """
         selection = self.ids_sorted(ids)
         ret = {}
         for i in range(len(ids) - 1):
@@ -107,6 +157,14 @@ class NonCollinearMagMoms(Population):
         return ret
 
     def distance(self, entry_id, entry_jd):
+        """
+        Compute the distance between 2 candidates as the average angular movement
+        between the magnetic moments for all the atoms considered magnetic ('mag_atoms')
+
+        :param entry_id:
+        :param entry_jd:
+        :return:
+        """
         entry = self.get_entry(entry_id, {'properties.magmom': 1})
         magmom_i = np.array(entry['properties']['magmom']).reshape((-1, 3))
         entry = self.get_entry(entry_jd, {'properties.magmom': 1})
@@ -124,7 +182,16 @@ class NonCollinearMagMoms(Population):
         return distance
 
     def move_random(self, entry_id, factor=0.2, in_place=False, kind='move'):
+        """
+        Change the magnetic orientation randomly for all the atoms considered magnetic 'mag_atoms'
+        The 'factor' argument scales the intensite of the movement.
 
+        :param entry_id:
+        :param factor:
+        :param in_place:
+        :param kind:
+        :return:
+        """
         entry = self.get_entry(entry_id, {'properties.magmom': 1})
         # Magnetic Momenta are stored in spherical coordinates
         magmom_i = spherical_to_cartesian(entry['properties']['magmom'])
@@ -149,9 +216,15 @@ class NonCollinearMagMoms(Population):
             return self.new_entry(magmom_new, active=False)
 
     def move(self, entry_id, entry_jd, factor=0.2, in_place=False):
+        """
+        Move the magnetic moments from one candidate in the direction of another.
 
-#FAKE FACTOR
-#        factor=1.0
+        :param entry_id:
+        :param entry_jd:
+        :param factor:
+        :param in_place:
+        :return:
+        """
         magmom_new_xyz = np.zeros((self.structure.natom, 3)) 
         entry = self.get_entry(entry_id, {'properties.magmom': 1})
         magmom_i = np.array(entry['properties']['magmom']).reshape((-1, 3))
@@ -172,7 +245,11 @@ class NonCollinearMagMoms(Population):
 
         magmom_new = cartesian_to_spherical(magmom_new_xyz)
 #        print('Final spherical:\n %s' % magmom_new[self.mag_atoms])
+
         magmom_new[:, 0] = self.magmom_magnitude
+        for i in range(self.structure.natom):
+            if i not in self.mag_atoms:
+                magmom_new[i, :] = 0.0
 
         properties = {'magmom': list(magmom_new.flatten()), 'energy': self.debug_evaluation(magmom_new)}
 
@@ -183,6 +260,12 @@ class NonCollinearMagMoms(Population):
             return self.new_entry(magmom_new, active=False)
 
     def value(self, entry_id):
+        """
+        Return the energy value associated to the candidate with identifier 'entry_id'
+
+        :param entry_id:
+        :return:
+        """
         entry = self.get_entry(entry_id, {'properties.energy': 1})
         if 'energy' in entry['properties']:
             return entry['properties']['energy']
@@ -203,6 +286,7 @@ class NonCollinearMagMoms(Population):
 
     def add_random(self):
         """
+        Creates a new candidate with random orientiations for the magnetic moments of all the atoms in 'mag_atoms'
 
         :return:
         """
@@ -266,7 +350,7 @@ class NonCollinearMagMoms(Population):
         input['IBRION'] = -1
         input['LWAVE'] = True
         input['EDIFF'] = 1E-5
-        input['LAMBDA'] = 10
+        input['LAMBDA'] = self.var_lambda
         input['NSW'] = 0
         input['I_CONSTRAINED_M'] = 1
         input.write(workdir + os.sep + 'INCAR')

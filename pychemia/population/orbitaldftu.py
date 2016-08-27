@@ -350,8 +350,8 @@ def params2dmatpawu(params, ndim):
 
 def dmatpawu2params(dmatpawu, ndim):
     """
-    Takes the contents of the variable 'dmatpawu' and return their components as a set of occupations 'O', deltas 'D' and
-    rotation matrix 'R'.
+    Takes the contents of the variable 'dmatpawu' and return their components as a set of occupations 'O', deltas 'D'
+    and rotation matrix 'R'.
     The rotation matrix R is ensured to be an element of SO(ndim), ie det(R)=1.
     When the eigenvectors return a matrix with determinant -1 a mirror on the first dimension is applied.
     Such condition has no effect on the physical result of the correlation matrix
@@ -370,8 +370,8 @@ def dmatpawu2params(dmatpawu, ndim):
     mirror[0, 0] = -1
 
     for i in range(len(matrix_r)):
-        if np.linalg.det(matrix_r[i])<0:
-            matrix_r[i]= np.dot(matrix_r[i], mirror)
+        if np.linalg.det(matrix_r[i]) < 0:
+            matrix_r[i] = np.dot(matrix_r[i], mirror)
 
     params = {'O': list(matrix_o.flatten()),
               'D': list(matrix_d.flatten()),
@@ -418,13 +418,13 @@ def get_final_correlation_matrices_from_output(filename):
     rf = open(filename)
     data = rf.read()
     mainblock = re.findall('LDA\+U DATA[\s\w\d\-\.=,>:]*\n\n\n', data)
-    assert len(mainblock)==1
+    assert len(mainblock) == 1
 
     pattern = """For Atom\s*(\d+), occupations for correlated orbitals. lpawu =\s*([\d]+)\s*Atom\s*[\d]+\s*. Occ. for lpawu and for spin\s*\d+\s*=\s*([\d\.]+)\s*Atom\s*[\d]+\s*. Occ. for lpawu and for spin\s*\d+\s*=\s*([\d\.]+)\s*=> On atom\s*\d+\s*,  local Mag. for lpawu is[\s\d\w\.\-]*== Occupation matrix for correlated orbitals:\s*Occupation matrix for spin  1\s*([\d\.\-\s]*)Occupation matrix for spin  2\s*([\d\.\-\s]*)"""
     ans = re.findall(pattern, mainblock[0])
     print(ans)
 
-    ret=[]
+    ret = []
     for i in ans:
         atom_data = {'atom number': int(i[0]),
                      'orbital': int(i[1]),
