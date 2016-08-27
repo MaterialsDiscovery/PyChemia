@@ -71,7 +71,7 @@ class PopulationTest(unittest.TestCase):
         if not has_connection():
             return
         print(os.getcwd())
-        popu = OrbitalDFTU('test', './data/abinit_05/abinit.in', oxidations=[-1, 1])
+        popu = OrbitalDFTU('test', './data/abinit_05/abinit.in')
         popu.add_random()
         popu.add_random()
         popu.pcdb.clean()

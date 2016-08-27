@@ -263,7 +263,8 @@ class KPoints(PyChemiaJsonable):
         :param lattice: (pychemia.Lattice) A PyChemia Lattice object, if the argument is a pychemia.Structure
                         object, its lattice will be used instead.
         :param kp_density: (float) A density of kpoints (default: 1E5)
-        :param nkpoints: (int) Aproximate number of kpoints to use, if this argument is present the kp_density will be ignored
+        :param nkpoints: (int) Aproximate number of kpoints to use, if this argument is present the kp_density
+                                will be ignored
         :param force_odd: (bool) If True, force the grid to be odd for the three directions.
         """
         if nkpoints is not None:

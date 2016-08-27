@@ -6,6 +6,7 @@ import scipy.spatial
 from scipy.spatial import qhull
 from pychemia.utils.periodic import covalent_radius
 
+
 # return [x, y, d], that ax + by = d, d = gcd(a, b)
 def ext_gcd(a, b):
     v1 = [1, 0, a]
@@ -135,6 +136,7 @@ def get_surface_atoms(structure):
     surface = [i for i in range(structure.natom) if -1 in voro.regions[voro.point_region[i]]]
     return surface
 
+
 def get_surface_atoms_new(structure, use_covalent_radius=False):
     dln = scipy.spatial.Delaunay(structure.positions)
 
@@ -155,7 +157,7 @@ def get_surface_atoms_new(structure, use_covalent_radius=False):
                 print(j)
                 simplices.append(j)
     else:
-        simplices=dln.simplices
+        simplices = dln.simplices
 
     c = np.array([[sorted(list(y)) for y in (itertools.combinations(x, 3))] for x in simplices])
     d = [list(x) for x in c.reshape((-1, 3))]
@@ -169,7 +171,6 @@ def get_surface_atoms_new(structure, use_covalent_radius=False):
         if i not in dups:
             ret.append(i)
     return np.unique(np.array(ret).flatten())
-
 
 
 def get_onion_layers(structure):
@@ -360,8 +361,6 @@ def random_attaching(structure, seed, target_species, natom_crystal, radius=1.8,
                     break
         if good_pos == len(target_species):
             break
-
-
     return new_sts, facet_chosen, center, uvector
 
 

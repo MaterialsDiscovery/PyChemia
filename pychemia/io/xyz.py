@@ -5,7 +5,7 @@ from pychemia import Structure
 
 def load(filename):
     symbols = loadtxt(filename, skiprows=2, usecols=[0], dtype='|S2', ndmin=1)
-    symbols = [ x.decode('utf-8') for x in symbols]
+    symbols = [x.decode('utf-8') for x in symbols]
 
     for i in range(len(symbols)):
         if symbols[i].isdigit():

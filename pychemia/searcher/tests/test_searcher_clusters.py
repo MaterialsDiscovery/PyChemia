@@ -49,7 +49,7 @@ class SearcherTest(unittest.TestCase):
         searcher.run()
         popu.pcdb.clean()
         searcher = FireFly(popu, {'delta': 0.1, 'gamma': 0.1, 'beta0': 0.8, 'alpha0': 0, 'multi_move': True},
-                            generation_size=8, stabilization_limit=3)
+                           generation_size=8, stabilization_limit=3)
         searcher.run()
         popu.pcdb.clean()
 

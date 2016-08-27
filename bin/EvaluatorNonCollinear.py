@@ -107,7 +107,7 @@ if __name__ == '__main__':
 
             for ijob in to_compute:
                 if str(ijob) not in current_jobs:
-                    data_collected = popu.collect_data(ijob, str(ijob))
+                    data_collected = popu.collect_data(ijob, workdir=source_dir + os.sep + str(ijob))
                     if not data_collected:
                         print('Preparing and submitting job: %s' % str(ijob))
                         popu.prepare_folder(ijob, workdir=source_dir + os.sep + str(ijob))

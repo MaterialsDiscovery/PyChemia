@@ -11,7 +11,7 @@ from pychemia.utils.mathematics import gram_smith_qr
 
 class OrbitalDFTU(Population):
 
-    def __init__(self, name, num_electrons_spin, connections, abinit_input='abinit.in'):
+    def __init__(self, name, abinit_input='abinit.in', number_noneq_sites=None, connections=None):
 
         """
         Creates a population of ABINIT inputs, the candidates have the same structure and
@@ -28,14 +28,7 @@ class OrbitalDFTU(Population):
         :param abinit_input: The abinit input file, all the variables will be preserve for all new candidates, except
                         for 'dmatpawu' the only variable that changes.
 
-        :param num_electrons_spin: Number of electrons for each atom where U is applied. They number of elements must
-                        be equal to the number of matrices defined on dmatpawu and they correspond to the number of
-                        electrons for the spin channel associated with the matrix defined on dmatpawu. Notice that
-                        several cases uses different number of matrices on 'dmatpawu' and their spin definition changes.
-                        The code currently is not checking the correctness of the numbers you enter here.
-        :param connections: The occupation matrices could be related between different atoms. The connection array
-                        defines which matrices are identical and their identity is enforced when new random 'dmatpawu'
-                        is created or changed.
+
         """
         # Call the parent class initializer to link the PychemiaDB that will be used
         Population.__init__(self, name, 'global')
@@ -374,7 +367,7 @@ def dmatpawu2params(dmatpawu, ndim):
     matrix_r = np.array([np.linalg.eigh(x)[1] for x in dm])
 
     mirror = np.eye(ndim)
-    mirror[0,0] = -1
+    mirror[0, 0] = -1
 
     for i in range(len(matrix_r)):
         if np.linalg.det(matrix_r[i])<0:

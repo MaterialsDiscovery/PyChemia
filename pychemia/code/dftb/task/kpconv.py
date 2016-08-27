@@ -44,7 +44,7 @@ class KPointConvergence:
 
         while True:
             density = n ** 3
-            kpoints=KPoints.optimized_grid(self.structure.lattice, kp_density=density, force_odd=True)
+            kpoints = KPoints.optimized_grid(self.structure.lattice, kp_density=density, force_odd=True)
             if np.sum(grid) != np.sum(kpoints.grid):
                 pcm_log.debug('Trial density: %d  Grid: %s' % (density, kpoints.grid))
                 grid = list(kpoints.grid)

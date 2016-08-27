@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from pychemia.crystal import CrystalSymmetry
 import matplotlib.pyplot as plt
@@ -56,10 +57,11 @@ def label(ax, xy, spacegroup, energy):
     ax.text(xy[0], y, "%.3f" % energy, ha="center", family='sans-serif', size=8)
 
 
-def add_structure(patches, position, spacegroup, energy):
+def add_structure(ax, patches, position, spacegroup, energy):
     """
     Add one polygon to the patches list
 
+    :param ax:
     :param patches:
     :param position:
     :param spacegroup:
@@ -68,7 +70,7 @@ def add_structure(patches, position, spacegroup, energy):
     """
     polygon = mpatches.RegularPolygon(position, spacegroup2poly(spacegroup), 0.5, clip_on=True)
     patches.append(polygon)
-    label(position, spacegroup, energy)
+    label(ax, position, spacegroup, energy)
 
 
 def change_symbol(change):
@@ -122,6 +124,8 @@ def get_generation_limits(searcher, gen_size):
 
 def plot_generation_chart(searcher, gen_size):
     colors = []
+    patches = []
+    population = searcher.population
 
     inigen, fingen = get_generation_limits(searcher, gen_size)
 
@@ -145,7 +149,7 @@ def plot_generation_chart(searcher, gen_size):
             spacegroup = properties['spacegroup']
             energy = properties['energy_pa']
             energies.append(energy)
-            add_structure([i, -2 * j], spacegroup, energy)
+            add_structure(ax, patches, [i, -2 * j], spacegroup, energy)
             colors.append(energy)
         avg_energies[j] = np.mean(energies[:navg_energy])
 
@@ -242,9 +246,9 @@ def plot_evolution_circular(searcher, target_function='energy_pa', tag='spacegro
                     entries[_id][tag] = entry['properties'][tag]
                 elif tag in entry['structure']:
                     entries[_id][tag] = entry['structure'][tag]
-                elif tag=='spacegroup':
-                    st=searcher.population.get_structure(_id)
-                    ss=CrystalSymmetry(st)
+                elif tag == 'spacegroup':
+                    st = searcher.population.get_structure(_id)
+                    ss = CrystalSymmetry(st)
                     entries[_id][tag] = ss.number(1E-3)
                 else:
                     raise ValueError('Tag not found')

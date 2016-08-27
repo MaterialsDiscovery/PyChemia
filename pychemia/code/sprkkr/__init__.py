@@ -2,7 +2,7 @@ import pychemia
 import datetime
 
 
-class sprkkr:
+class CodeSPRKKR:
 
     def __init__(self, structure):
         self.structure = structure
@@ -20,7 +20,7 @@ class sprkkr:
         wf.write("Bravais lattice \n")
         wf.write('12 %s primitive %s %s\n' % (sym.crystal_system().lower(), sym.symbol(), sym.get_symmetry_dataset()['pointgroup']))
         wf.write('space group number (ITXC and AP)\n')
-        wf.write(' %4d %4d\n' % (0,0))
+        wf.write(' %4d %4d\n' % (0, 0))
         wf.write('structure type\n')
         wf.write('UNKNOWN\n')
         wf.write('lattice parameter A  [a.u.] \n')
@@ -31,9 +31,9 @@ class sprkkr:
         wf.write(" %17.12f %17.12f\n" % (b/a, c/a))
         wf.write("lattice parameters  a b c  [a.u.] \n")
         wf.write(" %17.12f %17.12f %17.12f\n" % (a*au, b*au, c*au))
-        alpha,beta,gamma=self.structure.lattice.angles
+        alpha, beta, gamma = self.structure.lattice.angles
         wf.write("lattice angles  alpha beta gamma  [deg] \n")
-        wf.write(' %17.12f %17.12f %17.12f\n' % (alpha,beta, gamma))
+        wf.write(' %17.12f %17.12f %17.12f\n' % (alpha, beta, gamma))
         wf.write("primitive vectors     (cart. coord.) [A]\n")
         wf.write(" %17.12f %17.12f %17.12f\n" % tuple(self.structure.lattice.cell[0]/a))
         wf.write(" %17.12f %17.12f %17.12f\n" % tuple(self.structure.lattice.cell[1]/a))
@@ -47,7 +47,11 @@ class sprkkr:
         rws = dmin / 2.0
         reduced = self.structure.reduced
         for i in range(self.structure.natom):
-            wf.write(" %2d %3d %17.12f %17.12f %17.12f %17.12f %2d %2d %d\n" % (i+1, i+1, reduced[i,0], reduced[i,1], reduced[i,2], rws, 3, 1, i+1))
+            wf.write(" %2d %3d %17.12f %17.12f %17.12f %17.12f %2d %2d %d\n" % (i+1, i+1,
+                                                                                reduced[i, 0],
+                                                                                reduced[i, 1],
+                                                                                reduced[i, 2],
+                                                                                rws, 3, 1, i+1))
 
         wf.write("number of sites classes NCL\n")
         wf.write(" %2d\n" % self.structure.natom)
@@ -58,10 +62,9 @@ class sprkkr:
         wf.write(" %2d\n" % self.structure.natom)
         wf.write(" IT  ZT  TXTT  NAT  CONC  IQAT (sites occupied)\n")
         for i in range(self.structure.natom):
-            Z = pychemia.utils.periodic.atomic_number(self.structure.symbols[i])
-            wf.write(" %2d %3d %6s %7d %5.3f %2d\n" % (i+1, Z, self.structure.symbols[i], 1, 1.0, i+1))
+            atomic_z = pychemia.utils.periodic.atomic_number(self.structure.symbols[i])
+            wf.write(" %2d %3d %6s %7d %5.3f %2d\n" % (i+1, atomic_z, self.structure.symbols[i], 1, 1.0, i+1))
         wf.close()
-
 
     def write_pot(self):
         strdate = str(datetime.datetime.now())
@@ -132,8 +135,7 @@ BASSCALE      1.0000000000    1.0000000000    1.0000000000
 """
         reduced = self.structure.reduced
         for i in range(natom):
-             ret += "%d  %15.10f %15.10f %15.10f\n" % (i+1, reduced[i,0], reduced[i,1], reduced[i,2])
-
+             ret += "%d  %15.10f %15.10f %15.10f\n" % (i+1, reduced[i, 0], reduced[i, 1], reduced[i, 2])
 
         ret += """*******************************************************************************
 OCCUPATION
@@ -176,8 +178,8 @@ TYPES
    IT     TXTT        ZT     NCORT     NVALT    NSEMCORSHLT
 """
         for i in range(natom):
-            Z = pychemia.utils.periodic.atomic_number(self.structure.symbols[i])
-            ret += " %2d %6s %5d %7d %5d %2d\n" % (i+1, self.structure.symbols[i], Z, 18, 8-i, 0)
+            atomic_z = pychemia.utils.periodic.atomic_number(self.structure.symbols[i])
+            ret += " %2d %6s %5d %7d %5d %2d\n" % (i+1, self.structure.symbols[i], atomic_z, 18, 8-i, 0)
 
         wf = open(name + '.pot', 'w')
         wf.write(ret)

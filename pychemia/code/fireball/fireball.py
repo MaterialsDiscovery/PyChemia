@@ -335,6 +335,7 @@ def read_final_fireball_relax(fpath):
            'max_force': output['max_force'][-1]}
     return ret
 
+
 def convert_value(value):
 
     ret=None
@@ -345,10 +346,11 @@ def convert_value(value):
             ret=float(value)
         except ValueError:
             try:
-                ret=[ int(x) for x in value.split()]
+                ret=[int(x) for x in value.split()]
             except ValueError:
                 ret=value
     return ret
+
 
 def read_param(fpath='param.dat'):
     rf=open(fpath)

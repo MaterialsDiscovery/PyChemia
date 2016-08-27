@@ -232,7 +232,10 @@ class Population:
 
     @property
     def best_candidate(self):
-        return self.ids_sorted(self.evaluated)[0]
+        if len(self.evaluated) > 0:
+            return self.ids_sorted(self.evaluated)[0]
+        else:
+            return None
 
     def refine_progressive(self, entry_id):
         pass

@@ -140,7 +140,6 @@ class FireFly(Searcher):
                 self.population.move_random(new_selection[entry_id], factor=factor, in_place=True)
                 moves[entry_id] += 1
 
-
         if len(distances)>0:
             pcm_log.info('+----------------+--------------+-------------+-------------+')
             pcm_log.info('+                |    Minimum   |   Maximum   |   Average   |')

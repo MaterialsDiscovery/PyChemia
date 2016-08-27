@@ -256,7 +256,7 @@ class NonCollinearMagMoms(Population):
         for i in ['KPOINTS', 'POSCAR', 'POTCAR']:
             if os.path.exists(workdir+os.sep+i):
                 os.remove(workdir+os.sep+i)
-            os.symlink(os.path.abspath(self.source_dir+os.sep+i) , workdir+os.sep+i)
+            os.symlink(os.path.abspath(self.source_dir+os.sep+i), workdir+os.sep+i)
 
         input = read_incar(self.source_dir + os.sep + 'INCAR')
         magmom_sph = self.get_entry(entry_id, {'properties.magmom': 1})['properties']['magmom']
@@ -269,7 +269,7 @@ class NonCollinearMagMoms(Population):
         input['LAMBDA'] = 10
         input['NSW'] = 0
         input['I_CONSTRAINED_M'] = 1
-        input.write(workdir+ os.sep + 'INCAR')
+        input.write(workdir + os.sep + 'INCAR')
 
     def collect_data(self, entry_id, workdir):
         if os.path.isfile(workdir + '/OUTCAR'):

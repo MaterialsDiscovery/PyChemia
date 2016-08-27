@@ -44,9 +44,11 @@ class StructurePlot:
                     vector = self.structure.positions[i] - self.structure.positions[j]
                     mvector = np.linalg.norm(vector)
                     uvector = 1.0 / mvector * vector
-                    if 2 * mvector < covalent_radius(self.structure.symbols[i]) + covalent_radius(self.structure.symbols[j]):
+                    if 2 * mvector < covalent_radius(self.structure.symbols[i]) + \
+                            covalent_radius(self.structure.symbols[j]):
                         pair = np.concatenate(
-                            (self.structure.positions[i] - 0.1 * uvector, self.structure.positions[j] + 0.1 * uvector)).reshape((-1, 3))
+                            (self.structure.positions[i] - 0.1 * uvector,
+                             self.structure.positions[j] + 0.1 * uvector)).reshape((-1, 3))
                         mlab.plot3d(pair[:, 0], pair[:, 1], pair[:, 2], tube_radius=0.15, opacity=1.0, color=(1, 1, 1))
 
         mlab.view(distance=12.0)

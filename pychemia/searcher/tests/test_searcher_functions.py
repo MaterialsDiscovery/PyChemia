@@ -53,7 +53,7 @@ class SearcherTest(unittest.TestCase):
         searcher.run()
         popu = RealFunction(Sphere.function, 3, [-1, 1], local_minimization=True)
         searcher = FireFly(popu, {'delta': 0.1, 'gamma': 0.1, 'beta0': 0.8, 'alpha0': 0, 'multi_move': True},
-                                             generation_size=16, stabilization_limit=5)
+                           generation_size=16, stabilization_limit=5)
         searcher.run()
         assert np.linalg.norm(np.array(searcher.population.db[searcher.population.best_candidate]['x']) - mini) < 0.2
 

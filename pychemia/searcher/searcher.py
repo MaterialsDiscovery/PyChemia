@@ -412,10 +412,10 @@ class Searcher:
                 #pcm_log.debug('Slot: %s' % self.lineage_inv[best_member])
                 #pcm_log.debug('Lineage: %s' % self.lineage[self.lineage_inv[best_member]])
                 if best_member != best_recorded:
-                    survival_for_best=0
+                    survival_for_best = 0
                     best_recorded=best_member
                 else:
-                    survival_for_best+=1
+                    survival_for_best += 1
 
                 if survival_for_best >= self.stabilization_limit:
                     print('This candidate have survived for %d generations' % survival_for_best)
@@ -513,7 +513,6 @@ class Searcher:
             return self.pcdb.db.generations.find()
         else:
             return self.pcdb.db.generations.find({self.population.tag: generation_number})
-
 
     @property
     def actives_in_generation(self):

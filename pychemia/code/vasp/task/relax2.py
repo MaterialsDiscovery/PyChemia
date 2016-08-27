@@ -241,8 +241,8 @@ class IonRelaxation2(Relaxator, Task):
                     if len(vasp_stdout['iterations']) > 0:
                         pcm_log.debug('[%s] SCF: %s' % (os.path.basename(self.workdir), str(vasp_stdout['iterations'])))
 
-                #if os.path.isfile(self.workdir + os.sep + 'OUTCAR'):
-                #    vj.get_outputs()
+                # if os.path.isfile(self.workdir + os.sep + 'OUTCAR'):
+                #     vj.get_outputs()
 
                 time.sleep(30)
 

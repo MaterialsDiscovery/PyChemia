@@ -323,7 +323,8 @@ class LJCluster(Population):
                     self.update_properties(entry_id=entry_id, new_properties=properties)
                     return self.set_structure(entry_id, structure)
                 else:
-                    pcm_log.debug('Relaxation raise value %7.3f < %7.3f' % (inivalue, properties['energy'] / structure.natom))
+                    pcm_log.debug('Relaxation raise value %7.3f < %7.3f' % (inivalue, properties['energy'] /
+                                                                            structure.natom))
                 if self.maxforce(entry_id) > gtol:
                     pcm_log.debug('I cannot relax more...')
                     break
