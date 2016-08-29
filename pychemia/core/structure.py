@@ -471,7 +471,8 @@ Empty structure
         return ret
 
     @staticmethod
-    def random_cell(composition, method='stretching', stabilization_number=20, nparal=5, periodic=True):
+    def random_cell(composition, method='stretching', stabilization_number=20, nparal=5, periodic=True,
+                    factor_optimal_volume=8):
         """
         Generate a random cell
         There are two algorithms implemented:
@@ -523,6 +524,9 @@ Empty structure
             ngood = 0
             for structure in ret:
                 if structure is not None:
+                    print('SH:%d Vol:%10.3f Factor:%10.3f' % (stabilization_history,
+                                                              structure.volume,
+                                                              structure.volume / optimal_volume))
                     ngood += 1
                     if best_structure is not None:
                         if structure.volume < best_structure.volume:
@@ -536,6 +540,9 @@ Empty structure
                 stabilization_history = 0
             else:
                 stabilization_history += 1
+
+            if best_volume < factor_optimal_volume * optimal_volume:
+                break
             trial += 1
 
             # log.debug('Trial: %4d  Volume: %7.2f  Optimal Volume: %7.2f  Ratio: %5.2f' %
@@ -849,7 +856,8 @@ Empty structure
             dm = np.zeros((self.nsites, self.nsites))
             for i in range(self.nsites - 1):
                 for j in range(i + 1, self.nsites):
-                    d=self.lattice.distance2(self.reduced[i], self.reduced[j], limits=[1,1,1])
+                    d = self.lattice.distance2(self.reduced[i], self.reduced[j], radius=1E10, limits=[1, 1, 1])
+                    # print("%d %d - %d" % (i,j, len(d)))
                     dm[i, j] = min([d[x]['distance'] for x in d])
                     dm[j, i] = dm[i, j]
         else:
@@ -1167,8 +1175,6 @@ def random_structure(method, composition, periodic=True, best_volume=1E10):
             rpos = np.random.rand(natom, 3)
             mins = [min(rpos[:, i]) for i in range(3)]
             rpos -= mins
-
-            new_lattice = lattice.scale(symbols, rpos, tolerance=1.0)
         else:
             lattice = Lattice.random_cell(comp)
             # Random reduced positions
@@ -1188,6 +1194,9 @@ def random_structure(method, composition, periodic=True, best_volume=1E10):
                         test = False
             if test:
                 new_structure = Structure(symbols=symbols, reduced=rpos, cell=new_lattice.cell, periodicity=True)
+                minimal_distance = np.min(new_structure.distance_matrix() + 10 * np.eye(new_structure.natom))
+                # print(minimal_distance)
+
             else:
                 new_structure = None
     else:

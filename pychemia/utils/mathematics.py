@@ -861,9 +861,9 @@ def rotation_matrix_ndim(ndim, rotation_list):
 def gea_angles(uvector):
     """
     Generalized Euler Angles
-    Return the parametric angles decribed on Eq. 1 from the paper:
+    Return the parametric angles decribed on Eq. 1 from the paper
 
-    Generalization of Euler Angles to N‐Dimensional Orthogonal Matrices
+    Generalization of Euler Angles to N-Dimensional Orthogonal Matrices
     David K. Hoffman, Richard C. Raffenetti, and Klaus Ruedenberg
     Journal of Mathematical Physics 13, 528 (1972)
     doi: 10.1063/1.1666011
@@ -899,7 +899,7 @@ def gea_angles(uvector):
 
 
 """
-Generalization of Euler Angles to N‐Dimensional Orthogonal Matrices
+Generalization of Euler Angles to N-Dimensional Orthogonal Matrices
 David K. Hoffman, Richard C. Raffenetti, and Klaus Ruedenberg
 Journal of Mathematical Physics 13, 528 (1972)
 doi: 10.1063/1.1666011
@@ -909,9 +909,9 @@ doi: 10.1063/1.1666011
 def gea_matrix_a(angles):
     """
     Generalized Euler Angles
-    Return the parametric angles decribed on Eqs. 15-19 from the paper:
+    Return the parametric angles described on Eqs. 15-19 from the paper:
 
-    Generalization of Euler Angles to N‐Dimensional Orthogonal Matrices
+    Generalization of Euler Angles to N-Dimensional Orthogonal Matrices
     David K. Hoffman, Richard C. Raffenetti, and Klaus Ruedenberg
     Journal of Mathematical Physics 13, 528 (1972)
     doi: 10.1063/1.1666011
@@ -943,9 +943,9 @@ def gea_matrix_a(angles):
 def gea_all_angles(ortho_matrix):
     """
     Generalized Euler Angles
-    Return the generalized angles decribed from the paper
+    Return the generalized angles described from the paper
 
-    Generalization of Euler Angles to N‐Dimensional Orthogonal Matrices
+    Generalization of Euler Angles to N-Dimensional Orthogonal Matrices
     David K. Hoffman, Richard C. Raffenetti, and Klaus Ruedenberg
     Journal of Mathematical Physics 13, 528 (1972)
     doi: 10.1063/1.1666011
@@ -978,7 +978,7 @@ def gea_orthogonal_from_angles(angles_list):
     Generalized Euler Angles
     Return the orthogonal matrix from its generalized angles
 
-    Generalization of Euler Angles to N‐Dimensional Orthogonal Matrices
+    Generalization of Euler Angles to N-Dimensional Orthogonal Matrices
     David K. Hoffman, Richard C. Raffenetti, and Klaus Ruedenberg
     Journal of Mathematical Physics 13, 528 (1972)
     doi: 10.1063/1.1666011

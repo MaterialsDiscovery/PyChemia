@@ -128,13 +128,13 @@ class RelaxStructures(Population):
         rnd = random.random()
         natom_limit = self.max_comp_mult * self.composition.natom / self.composition.gcd
         condition = {'structure.nspecies': self.composition.nspecies,
-                     'structure.natom': {'$lte': natom_limit}}
+                     'structure.natom': {'$eq': int(self.composition.natom / self.composition.gcd)}}
 
         if self.pcdb_source is None or self.pcdb_source.entries.find(condition).count() <= len(self.source_blacklist):
             rnd = 0
         origin = None
 
-        if self.pcdb_source is None or rnd < random_probability or self.composition.nspecies > 1:
+        if self.pcdb_source is None or rnd < random_probability or self.composition.nspecies > 2:
             pcm_log.debug('Random Structure')
             factor = np.random.randint(self.min_comp_mult, self.max_comp_mult + 1)
             for i in comp:
