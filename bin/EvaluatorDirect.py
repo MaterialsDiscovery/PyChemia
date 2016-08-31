@@ -16,7 +16,8 @@ from pychemia.evaluator import DirectEvaluator
 from pychemia.utils.serializer import generic_serializer
 from pychemia.utils.periodic import atomic_number
 from pychemia.code.vasp.task import IonRelaxation2
-
+from pychemia.code.dftb.task import Relaxation
+from pychemia.code.dftb import read_detailed_out
 
 def worker_maise(db_settings, entry_id, workdir, relaxator_params):
     """

@@ -51,8 +51,8 @@ if __name__ == "__main__":
 
     pychemia.code.vasp.write_poscar(surf, outputfile)
 
-    symmetry = pychemia.symm.StructureSymmetry(structure)
+    symmetry = pychemia.crystal.CrystalSymmetry(structure)
     print('SpaceGroup (Original): ', symmetry.number())
 
-    symmetry = pychemia.symm.StructureSymmetry(surf)
+    symmetry = pychemia.crystal.CrystalSymmetry(surf)
     print('SpaceGroup (Final)   : ', symmetry.number())

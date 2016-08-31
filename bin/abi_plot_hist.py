@@ -128,7 +128,7 @@ def plot_history_energy(etotal, ekin, fcart, labels, bonds, filep):
         ax1.grid(True)
         plt.ylabel(i)
         (xmin, xmax) = ax1.get_xlim()
-        if i != bonds_dict.keys()[-1]:
+        if i != list(bonds_dict.keys())[-1]:
             ax1.set_xticklabels([])
         if xmax < 20:
             plt.xticks(range(int(xmax)))

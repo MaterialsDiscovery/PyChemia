@@ -6,13 +6,10 @@ from ._population import Population
 from pychemia import Composition, Structure, pcm_log
 from pychemia.analysis import StructureAnalysis, StructureChanger, StructureMatch
 from pychemia.analysis.splitting import SplitMatch
-from pychemia import HAS_PYMONGO
 from pychemia.utils.mathematics import unit_vector
 from pychemia.utils.periodic import atomic_number, covalent_radius
-
-if HAS_PYMONGO:
-    import pymongo
-    from pychemia.db import get_database
+from pymongo import ASCENDING
+from pychemia.db import get_database
 
 
 class RelaxStructures(Population):
@@ -48,7 +45,7 @@ class RelaxStructures(Population):
         self.min_comp_mult = min_comp_mult
         self.max_comp_mult = max_comp_mult
         self.pcdb_source = pcdb_source
-        self.source_blacklist = []
+        self.source_blacklist = {}
         self.pressure = pressure
         if target_stress is None:
             self.target_stress = target_forces
@@ -96,14 +93,13 @@ class RelaxStructures(Population):
         max_nondiag_stress = None
         if entry is not None and entry['properties'] is not None:
             properties = entry['properties']
-            if 'forces' in properties and 'stress' in properties and \
-                            properties['forces'] is not None and \
-                            properties['stress'] is not None:
-                forces = np.array(entry['properties']['forces'])
-                stress = np.array(entry['properties']['stress']).reshape((3, 3))
-                max_force = np.max(np.apply_along_axis(np.linalg.norm, 1, forces))
-                max_diag_stress = np.max(np.abs(np.diag(stress)))
-                max_nondiag_stress = np.max(np.abs(stress - np.diag(stress)))
+            if 'forces' in properties and 'stress' in properties:
+                if properties['forces'] is not None and properties['stress'] is not None:
+                    forces = np.array(entry['properties']['forces'])
+                    stress = np.array(entry['properties']['stress'])
+                    max_force = np.max(np.apply_along_axis(np.linalg.norm, 1, forces))
+                    max_diag_stress = np.max(np.abs(stress[:3]))
+                    max_nondiag_stress = np.max(np.abs(stress[4:]))
 
         return max_force, max_diag_stress, max_nondiag_stress
 
@@ -111,9 +107,11 @@ class RelaxStructures(Population):
         max_force, max_diag_stress, max_nondiag_stress = self.get_max_force_stress(entry_id)
         if max_force is None or max_diag_stress is None or max_nondiag_stress is None:
             return False
-        elif max_force < self.target_forces and max_diag_stress < self.target_diag_stress + self.pressure and \
-                        max_nondiag_stress < self.target_nondiag_stress:
-            return True
+        elif max_force < self.target_forces and max_diag_stress < self.target_diag_stress + self.pressure:
+            if max_nondiag_stress < self.target_nondiag_stress:
+                return True
+            else:
+                return False
         else:
             return False
 
@@ -121,47 +119,60 @@ class RelaxStructures(Population):
         """
         Add one random structure to the population
         """
+        origin = None
         structure = Structure()
         if self.composition is None:
             raise ValueError('No composition associated to this population')
+        factor = np.random.randint(self.min_comp_mult, self.max_comp_mult + 1)
         comp = self.composition.composition.copy()
-        rnd = random.random()
-        natom_limit = self.max_comp_mult * self.composition.natom / self.composition.gcd
-        condition = {'structure.nspecies': self.composition.nspecies,
-                     'structure.natom': {'$eq': int(self.composition.natom / self.composition.gcd)}}
+        for i in comp:
+            comp[i] *= factor
+        new_comp = Composition(comp)
 
-        if self.pcdb_source is None or self.pcdb_source.entries.find(condition).count() <= len(self.source_blacklist):
-            rnd = 0
-        origin = None
+        while True:
+            rnd = random.random()
+            condition = {'structure.nspecies': new_comp.nspecies,
+                         'structure.natom': new_comp.natom}
+            if self.pcdb_source is None:
+                rnd = 0
+            if self.pcdb_source.entries.find(condition).count() <= len(self.source_blacklist[factor]):
+                condition = {'structure.natom': comp.natom}
+                if self.pcdb_source.entries.find(condition).count() <= len(self.source_blacklist[factor]):
+                    rnd = 0
 
-        if self.pcdb_source is None or rnd < random_probability or self.composition.nspecies > 2:
-            pcm_log.debug('Random Structure')
-            factor = np.random.randint(self.min_comp_mult, self.max_comp_mult + 1)
-            for i in comp:
-                comp[i] *= factor
-            structure = Structure.random_cell(comp, method='stretching', stabilization_number=5, nparal=5,
-                                              periodic=True)
-        else:
-            pcm_log.debug('From source')
-            while True:
-
+            if self.pcdb_source is None or rnd < random_probability:
+                pcm_log.debug('Random Structure')
+                structure = Structure.random_cell(new_comp, method='stretching', stabilization_number=5, nparal=5,
+                                                  periodic=True)
+                break
+            else:
                 entry = None
-                condition['properties.spacegroup'] = random.randint(1, 230)
-                print('Trying', condition['properties.spacegroup'])
-                for ientry in self.pcdb_source.entries.find(condition):
-                    if ientry['_id'] not in self.source_blacklist:
-                        entry = ientry
+                pcm_log.debug('From source')
+                ntrials = 0
+                while True:
+                    entry = None
+                    condition['properties.spacegroup'] = random.randint(1, 230)
+                    print('Trying', condition['properties.spacegroup'])
+                    for ientry in self.pcdb_source.entries.find(condition):
+                        if ientry['_id'] not in self.source_blacklist[factor]:
+                            entry = ientry
+                            break
+                        else:
+                            ntrials += 1
+                    if ntrials >= len(self.source_blacklist[factor]):
                         break
+
                 if entry is not None:
                     origin = entry['_id']
                     structure = self.pcdb_source.get_structure(entry['_id'])
-                    factor = covalent_radius(self.composition.species[0]) / covalent_radius(structure.species[0])
+                    scale_factor = float(np.max(covalent_radius(new_comp.species)) /
+                                         np.max(covalent_radius(structure.species)))
                     print('From source: %s Spacegroup: %d Scaling: %7.3f' % (structure.formula,
                                                                              entry['properties']['spacegroup'],
-                                                                             factor))
+                                                                             scale_factor))
                     structure.set_cell(np.dot(factor * np.eye(3), structure.cell))
-                    structure.symbols = structure.natom * self.composition.species
-                    self.source_blacklist.append(entry['_id'])
+                    structure.symbols = new_comp.symbols
+                    self.source_blacklist[factor].append(entry['_id'])
                     break
 
         return self.new_entry(structure), origin
@@ -261,7 +272,7 @@ class RelaxStructures(Population):
         ids_pair = [entry_id, entry_jd]
         ids_pair.sort()
         distance_entry = self.pcdb.db.distances.find_one({'pair': ids_pair}, {'distance': 1})
-        self.pcdb.db.distances.create_index([("pair", pymongo.ASCENDING)])
+        self.pcdb.db.distances.create_index([("pair", ASCENDING)])
 
         if distance_entry is None:
             print('Distance not in DB')

@@ -66,7 +66,7 @@ def run_one(a):
     except ValueError:
         spacegroup_number = None
 
-    symm = pychemia.symm.StructureSymmetry(structure)
+    symm = pychemia.crystal.CrystalSymmetry(structure)
     sym2 = symm.number(1E-2)
 
     properties = {'oqmd': {'structure_id': structure_id,

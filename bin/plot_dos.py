@@ -54,17 +54,17 @@ if __name__ == '__main__':
 
     print(figname)
     for i in filelist:
-        a = pychemia.plotting.DensityOfStates().read(i)
+        a = pychemia.visual.DensityOfStates().read(i)
         doslist.append(a)
 
     if len(doslist) == 0:
         helper()
         sys.exit(1)
     elif len(doslist) == 1:
-        fig, ax = pychemia.plotting.plot_one_dos(doslist[0], ax=None, horizontal=True,
+        fig, ax = pychemia.visual.plot_one_dos(doslist[0], ax=None, horizontal=True,
                                                  figwidth=figwidth, figheight=figheight)
         # fig.savefig(figname)
     else:
-        fig, ax = pychemia.plotting.plot_many_dos(doslist, minenergy=minenergy, maxenergy=maxenergy,
+        fig, ax = pychemia.visual.plot_many_dos(doslist, minenergy=minenergy, maxenergy=maxenergy,
                                                   figwidth=figwidth, figheight=figheight)
         # fig.savefig(figname)

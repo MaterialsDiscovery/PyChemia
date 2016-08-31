@@ -62,9 +62,9 @@ if __name__ == '__main__':
     nparal = 4
     nhours = 24
 
-    for i in range(1, len(sys.argv)):
-        if sys.argv[i].startswith('--'):
-            option = sys.argv[i][2:]
+    for istruct in range(1, len(sys.argv)):
+        if sys.argv[istruct].startswith('--'):
+            option = sys.argv[istruct][2:]
             # fetch sys.argv[1] but without the first two characters
             if option == 'version':
                 print(version)
@@ -73,19 +73,19 @@ if __name__ == '__main__':
                 help_info()
                 sys.exit()
             elif option == 'user':
-                user = sys.argv[i + 1]
+                user = sys.argv[istruct + 1]
             elif option == 'mail':
-                mail = sys.argv[i + 1]
+                mail = sys.argv[istruct + 1]
             elif option == 'queue':
-                queue = sys.argv[i + 1]
+                queue = sys.argv[istruct + 1]
             elif option == 'path':
-                path = sys.argv[i + 1]
+                path = sys.argv[istruct + 1]
             elif option == 'binary':
-                binary = sys.argv[i + 1]
+                binary = sys.argv[istruct + 1]
             elif option == 'nparal':
-                nparal = int(sys.argv[i + 1])
+                nparal = int(sys.argv[istruct + 1])
             elif option == 'nhours':
-                nhours = int(sys.argv[i + 1])
+                nhours = int(sys.argv[istruct + 1])
             else:
                 print('Unknown option. --' + option)
 
@@ -96,20 +96,20 @@ if __name__ == '__main__':
     xmldata = ElementTree.fromstring(data)
     jobs = [i.find('Job_Name').text for i in xmldata.findall('Job')]
 
-    ret = find_structures(path)
+    found_structures = find_structures(path)
 
-    for i in ret:
-        if os.path.isfile(i + os.sep + 'lock'):
-            print("Locked:    %s" % i)
-        elif os.path.basename(i) in jobs:
-            print('Submitted: %s' % i)
+    for istruct in found_structures:
+        if os.path.isfile(istruct + os.sep + 'lock'):
+            print("Locked:    %s" % istruct)
+        elif os.path.basename(istruct) in jobs:
+            print('Submitted: %s' % istruct)
         else:
-            print('To submit: %s' % i)
-            rr = pychemia.runner.PBSRunner(i)
+            print('To submit: %s' % istruct)
+            rr = pychemia.runner.PBSRunner(istruct)
             rr.initialize(nodes=1, ppn=nparal, mail=mail, queue=queue, walltime=[0, nhours, 0, 0])
-            structure_file = get_structure_file(i)
+            structure_file = get_structure_file(istruct)
             if structure_file is None:
-                print('No suitable structure was found on: ', i)
+                print('No suitable structure was found on: ', istruct)
             rr.set_template('pcm_vasp_relaxator.py --binary %s --nparal %d --structure_file %s'
                             % (binary, nparal, structure_file))
             rr.write_pbs()

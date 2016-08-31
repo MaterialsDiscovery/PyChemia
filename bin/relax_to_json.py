@@ -43,7 +43,7 @@ for idir in dirs:
         print('No OUTCAR found @ ' + idir)
         continue
 
-    spacegroup = pychemia.symm.StructureSymmetry(st).number()
+    spacegroup = pychemia.crystal.CrystalSymmetry(st).number()
     energy_pa = vo.final_data['energy']['free_energy'] / st.natom
 
     data = {'id': idir, 'energy_pa': energy_pa, 'natom': st.natom, 'spacegroup': spacegroup,
