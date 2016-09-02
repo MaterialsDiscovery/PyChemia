@@ -525,9 +525,9 @@ Empty structure
             ngood = 0
             for structure in ret:
                 if structure is not None:
-                    print('SH:%d Vol:%10.3f Factor:%10.3f' % (stabilization_history,
-                                                              structure.volume,
-                                                              structure.volume / optimal_volume))
+                    # print('SH:%d Vol:%10.3f Factor:%10.3f' % (stabilization_history,
+                    #                                          structure.volume,
+                    #                                          structure.volume / optimal_volume))
                     ngood += 1
                     if best_structure is not None:
                         if structure.volume < best_structure.volume:

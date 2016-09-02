@@ -1,0 +1,38 @@
+system   =  LiAu
+PREC      =  High
+NELMIN    =  8
+NELM      =  100
+EDIFF     =  1E-07
+#EDIFFG    =  -1E-06
+ISIF      =  7
+LREAL     = .FALSE.
+NSW       = 0
+ISMEAR    = 0           
+SIGMA     =  0.02
+IBRION    = -1
+
+ENCUT     = 550
+
+LELF      = .TRUE.
+
+
+ISPIN     =  2
+
+###GGA = PS
+LASPH = .TRUE.
+
+LORBIT    =  11
+
+LMAXMIX   =  4
+
+PAW controls
+        ADDGRID = .TRUE.
+
+###Spin-Orbit Coupling###
+##LSORBIT    = .TRUE.
+##SAXIS      = 0 0 1
+##GGA_COMPAT = .FALSE.
+
+
+NSIM   = 2
+NPAR   = 4

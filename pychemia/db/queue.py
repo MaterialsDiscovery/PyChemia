@@ -92,11 +92,12 @@ class PyChemiaQueue:
 
     def set_input(self, entry_id, code, inputvar):
 
-        for i in inputvar.variables.keys():
+        for i in inputvar:
             if i.startswith('$'):
-                value = inputvar.variables.pop(i)
-                inputvar.variables[i[1:]] = value
-        self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'input.variables': inputvar.variables,
+                value = inputvar.pop(i)
+                inputvar[i[1:]] = value
+        print('INPUTVAR:\n %s %s' % (inputvar, dict(inputvar)))
+        self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'input.variables': dict(inputvar),
                                                                      'input.code': code.lower()}})
 
     def new_entry(self, structure=None, variables=None, code=None, files=None, priority=0, dbname=None, db_id=None):

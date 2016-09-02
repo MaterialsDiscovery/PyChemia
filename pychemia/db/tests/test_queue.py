@@ -10,7 +10,7 @@ from pychemia import HAS_PYMONGO, HAS_GRIDFS
 
 def test_queue():
     """
-    Testing PyChemiaQueue               :
+    Tests (pychemia.db.PyChemiaQueue)                            :
     """
     if not HAS_PYMONGO or not HAS_GRIDFS:
         print('PyChemiaQueue was disabled')

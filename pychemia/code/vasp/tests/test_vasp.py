@@ -52,8 +52,8 @@ class MyTestCase(unittest.TestCase):
         """
         td = tempfile.TemporaryDirectory()
         st = pychemia.code.vasp.read_poscar('pychemia/test/data/vasp_06')
-        self.assertEqual(kp.number_of_kpoints, 693)
         kp = pychemia.code.vasp.read_kpoints('pychemia/test/data/vasp_06')
+        self.assertEqual(kp.number_of_kpoints, 693)
         iv = pychemia.code.vasp.read_incar('pychemia/test/data/vasp_06')
         vj = pychemia.code.vasp.VaspJob()
         vj.initialize(st, workdir=td.name, kpoints=kp)
