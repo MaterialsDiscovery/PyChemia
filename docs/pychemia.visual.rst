@@ -48,14 +48,6 @@ pychemia.visual.octopus_visual module
     :undoc-members:
     :show-inheritance:
 
-pychemia.visual.plot module
----------------------------
-
-.. automodule:: pychemia.visual.plot
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pychemia.visual.povray module
 -----------------------------
 

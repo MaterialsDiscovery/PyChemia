@@ -12,24 +12,18 @@ import json
 import os
 import struct
 import sys
+import numpy as np
+from pychemia import HAS_SCIPY
+from collections import MutableSequence
 from itertools import combinations, repeat
 from math import sin, cos
 from multiprocessing import Pool
-import numpy as np
 from pychemia import pcm_log
 from pychemia.crystal.lattice import Lattice
 from pychemia.core.composition import Composition
 from pychemia.core.delaunay import get_reduced_bases
 from pychemia.utils.computing import deep_unicode
 from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence, atomic_symbols
-
-
-try:
-    import scipy
-
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
 if HAS_SCIPY:
     import scipy.spatial
@@ -43,13 +37,18 @@ __status__ = "Development"
 __date__ = "May 13, 2016"
 
 
-class Structure:
+class Structure(MutableSequence):
     """
     Define an object that contains information about atomic positions,
     cell parameters and periodicity and provides methods to manipulate
     those elements
 
-    Represents a molecule, cluster, wire, slab or crystal structure
+    A Structure is basically a set of sites with eventually a lattice
+    each site could have one or more species with occupations equal
+    or lower than one.
+
+    A Structure could represents a molecule, cluster, wire, slab,
+    crystal structure or alloy with define sites.
     The positions of the atoms and their atomic symbols are declared
     in 'positions' and 'symbols' respectively.
 
@@ -57,10 +56,6 @@ class Structure:
     and cell parameters in 'cell'
 
     Magnetic moments can be associated in the array vector_info['magnetic_moments'].
-
-    This object contains no dynamical information. That information
-    is supported by the child class DynamicStructure
-
     """
 
     def __init__(self, **kwargs):
@@ -227,8 +222,20 @@ Empty structure
         ret += ')'
         return ret
 
+    def __delitem__(self, key):
+        self.del_atom(key)
+
+    def __setitem__(self, key, value):
+        self.add_atom(value['symbols'], value['positions'])
+
+    def __getitem__(self, item):
+        return SiteSet(self)[item]
+
     def __iter__(self):
         return iter(SiteSet(self))
+
+    def insert(self, index, value):
+        self.add_atom(value['symbols'], value['positions'])
 
     def _autocomplete(self):
         if self.natom is None:
@@ -330,7 +337,8 @@ Empty structure
         assert (abs(index) < self.natom)
         self.symbols.pop(index)
         np.delete(self.positions, index, 0)
-        np.delete(self.reduced, index, 0)
+        if self.is_periodic:
+            np.delete(self.reduced, index, 0)
         self.natom -= 1
         self._composition = None
 

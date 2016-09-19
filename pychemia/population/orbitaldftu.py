@@ -6,18 +6,25 @@ import numpy as np
 from ._population import Population
 from pychemia import pcm_log
 from pychemia.code.abinit import InputVariables
-from pychemia.utils.mathematics import gram_smith_qr
+from pychemia.utils.mathematics import gram_smith_qr, gea_all_angles
 
 
 class OrbitalDFTU(Population):
 
-    def __init__(self, name, abinit_input='abinit.in', number_noneq_sites=None, connections=None):
+    def __init__(self, name, abinit_input='abinit.in', num_electrons_dftu=None, num_indep_matrices=None, connections=None):
 
         """
-        Creates a population of ABINIT inputs, the candidates have the same structure and
-        uses the same input variables with exception of dmatpawu, the purpose of the
+        This population is created with the purpose of global optimization of correlated orbitals 'd'
+        and 'f'.
+
+
+        The population is basically a collection of ABINIT inputs, the candidates have the same structure and
+        uses the same input variables with exception of 'dmatpawu', the purpose of the
         population is to use global-population searchers to find the correlation matrices
         'dmatpawu' that minimizes the energy.
+
+        The variable 'dmatpawu' is a list of numbers that can be arranged into N matrices.
+        The matrices are 5x5 for 'd' orbitals and 7x7 for 'f' orbitals.
 
         :param name: The name of the 'PyChemiaDB' database created to stored the different
                         set of variables and the resulting output from abinit.
@@ -40,18 +47,26 @@ class OrbitalDFTU(Population):
         self.input = InputVariables(abinit_input)
         self.structure = self.input.get_structure()
 
+        print('Orbital population:')
+        print('Species [znucl]: %s' % self.input['znucl'])
+
+        self.natpawu = 0
+        print('Orbitals corrected:')
+        for i in range(self.input['ntypat']):
+            if self.input['lpawu'][i] == -1:
+                print("%3s : False" % self.input['znucl'][i])
+            else:
+                print("%3s : True (l=%d)" % (self.input['znucl'][i], self.input['lpawu'][i]))
+                self.natpawu += sum([1 for x in self.input['typat'] if x == i+1])
+        print('Number of atoms where DFT+U is applied: %d' % self.natpawu)
+
         # Computing the orbital that will be corrected
         # 2 (d-orbitals) or 3 (f-orbitals)
-        self.maxlpawu = max(self.input.get_value('lpawu'))
-
-        # natpawu is computed from the values of spinat
-        spinat = self.input.get_value('spinat')
-        if spinat is None:
-            print('I could not determine the number of atoms playing a role in the DFT+U calculation')
-            raise ValueError('Could not determine natpawu')
-        else:
-            spinat = np.array(spinat).reshape((-1, 3))
-            self.natpawu = np.sum(np.apply_along_axis(np.linalg.norm, 1, spinat) != 0)
+        self.maxlpawu = max(self.input['lpawu'])
+        if self.maxlpawu == 2:
+            print("Correlation of 'd' orbitals")
+        elif self.maxlpawu == 3:
+            print("Correlation of 'f' orbitals")
 
         # nsppol is the number of independent spin polarisations. Can take the values 1 or 2
         if self.input.has_variable('nsppol'):
@@ -99,15 +114,28 @@ class OrbitalDFTU(Population):
             # They contain the "spin-up" and "spin-down" occupations;
             self.nmatrices = 2*self.natpawu
 
-        self.num_electrons_spin = list(num_electrons_spin)
-        if len(self.num_electrons_spin) != self.nmatrices:
-            raise ValueError('Number of electrons on each spin channel is not consistent with the number of matrices '
-                             'defined on dmatpawu')
+        print('Variables controling the total number of matrices')
+        print('nsppol : %d' % self.nsppol)
+        print('nspinor: %d' % self.nspinor)
+        print('nspden : %d' % self.nspden)
+        print('Total number of matrices expected on dmatpawu: %d' % self.nmatrices )
 
-        self.connections = list(connections)
-        if len(self.num_electrons_spin) != self.nmatrices:
-            raise ValueError('Number of connections between matrices is not consistent with the number of matrices '
+        self.num_electrons_dftu = list(num_electrons_dftu)
+
+        if num_indep_matrices is not None:
+            self.num_indep_matrices = list(num_indep_matrices)
+        else:
+            self.num_indep_matrices = self.nmatrices
+        print('Number of independent matrices: %d' % self.num_indep_matrices)
+
+        if connections is not None:
+            self.connections = list(connections)
+            if len(self.connections) != self.nmatrices:
+                raise ValueError('Number of connections between matrices is not consistent with the number of matrices '
                              'defined on dmatpawu')
+            print('Connections: %s' % self.connections)
+        else:
+            self.connections = range(self.nmatrices)
 
     def __str__(self):
         ret = ' Population LDA+U\n\n'
@@ -115,8 +143,10 @@ class OrbitalDFTU(Population):
         ret += ' Tag:                %s\n' % self.tag
         ret += ' Formula:            %s\n' % self.structure.formula
         ret += ' natpawu:            %d\n' % self.natpawu
+        ret += ' nmatrices:          %d\n' % self.nmatrices
+        ret += ' maxlpawu:           %d\n' % self.maxlpawu
+        ret += ' num_indep_matrices: %s\n' % self.num_indep_matrices
         ret += ' connections:        %s\n' % self.connections
-        ret += ' num_electrons_spin: %s\n' % self.num_electrons_spin
 
         ret += ' Members:            %d\n' % len(self.members)
         ret += ' Actives:            %d\n' % len(self.actives)
@@ -145,35 +175,23 @@ class OrbitalDFTU(Population):
         """
         matrices_defined = []
 
-        matrix_i = self.nmatrices*[None]
-        matrix_d = self.nmatrices*[None]
-        eigvec = self.nmatrices*[None]
+        matrix_i = self.num_indep_matrices*[None]
+        matrix_d = self.num_indep_matrices*[None]
+        euler = self.num_indep_matrices*[None]
 
-        for i in range(self.nmatrices):
+        for i in range(self.num_indep_matrices):
 
-            if self.connections[i] not in matrices_defined:
-                matrix_i = np.zeros((self.natpawu, self.ndim), dtype=int)
-                matrix_d = np.zeros((self.natpawu, self.ndim))
-                eigvec = np.zeros((self.natpawu, self.ndim, self.ndim))
-                nelect = self.num_electrons_spin[i]
+            nelect = self.num_electrons_dftu[i]
+            val = [x for x in list(itertools.product(range(2), repeat=self.ndim)) if sum(x) == nelect]
+            ii = val[np.random.randint(len(val))]
+            dd = np.zeros(self.ndim)
+            matrix_i[i] = list(ii.flatten())
+            matrix_d[i] = list(dd.flatten())
+            matrices_defined.append(self.connections[i])
+            p = gram_smith_qr(self.ndim)
+            euler[i] = gea_all_angles(p)
 
-                val = [x for x in list(itertools.product(range(2), repeat=self.ndim)) if sum(x) == nelect]
-                ii = val[np.random.randint(len(val))]
-                dd = np.zeros(self.ndim)
-                matrix_i[i] = list(ii.flatten())
-                matrix_d[i] = list(dd.flatten())
-                matrices_defined.append(self.connections[i])
-                p = gram_smith_qr(self.ndim)
-                eigvec[i] = list(p.flatten())
-
-            else:
-                # Search the connection and use it to fill the matrices
-                index = self.connections.index(self.connections[i])
-                matrix_i[i] = matrix_i[index]
-                matrix_d[i] = matrix_d[index]
-                eigvec[i] = eigvec[index]
-
-        data = {'R': eigvec, 'O': matrix_i, 'D': matrix_d}
+        data = {'E': euler, 'O': matrix_i, 'D': matrix_d}
 
         return self.new_entry(data), None
 
@@ -204,9 +222,10 @@ class OrbitalDFTU(Population):
         Creates a new entry on the population database from given data.
 
         :param data: dictionary with 3 keys 'D' for deltas, 'I' for the integers
-        and eigen for the rotation matrix applied to the orbitals
+                        and eigen for the rotation matrix applied to the orbitals
         :param active: if True, the entry is enabled on the DB to be evaluated.
         :return:
+
         """
 
         properties = {'R': list(data['R'].flatten()),
