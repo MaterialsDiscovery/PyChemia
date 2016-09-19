@@ -221,6 +221,9 @@ class PyChemiaDB:
 
         return structure_dict, properties, status
 
+    def get_entry(self, entry_id):
+        return self.entries.find_one({'_id': entry_id})
+
     def is_locked(self, entry_id):
         """
         Return if a given entry is locked by someone
