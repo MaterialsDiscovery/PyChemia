@@ -506,7 +506,7 @@ if __name__ == '__main__':
                         default=None, metavar='name', type=str,
                         help='ReplicaSet  (default: None)')
     parser.add_argument('-s', '--source_dir',
-                        default=None, metavar='path', type=str, nargs='+',
+                        default=None, metavar='path', type=str,
                         help='Working Directory  (default: None)')
     parser.add_argument('-l', '--slater_path',
                         default=None, metavar='path', type=str,
