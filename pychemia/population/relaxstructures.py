@@ -165,6 +165,7 @@ class RelaxStructures(Population):
                 structure.set_cell(np.dot(scale_factor * np.eye(3), structure.cell))
                 structure.symbols = new_comp.symbols
                 self.sources[factor].remove(entry_id)
+                break
 
         return self.new_entry(structure), origin
 
