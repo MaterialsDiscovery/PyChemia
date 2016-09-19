@@ -123,7 +123,6 @@ class DirectEvaluator:
                 # The second component of each pair in to_evaluate is the entry_id
                 entry_id = to_evaluate[index][1]
                 print('DB: %10s Entry: %s' % (dbname, entry_id))
-                print("%s %s" % (self.source_dir,dbname))
 
                 if not os.path.exists(self.source_dir + os.sep + dbname):
                     os.mkdir(self.source_dir + os.sep + dbname)
@@ -140,7 +139,7 @@ class DirectEvaluator:
 
                 # The function is_evaluated needs two arguments, the database object and entry identifier and
                 # must return a boolean to decide if the candidate should be evaluated.
-                if self.is_evaluated(pcdb, entry_id, self.worker_args) or self.evaluate_all:
+                if not self.is_evaluated(pcdb, entry_id, self.worker_args) or self.evaluate_all:
                     pcm_log.debug('Evaluable: %s:%s. Relaxing entry %d of %d' % (dbname,
                                                                                  str(entry_id),
                                                                                  index,
