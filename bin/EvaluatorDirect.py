@@ -556,7 +556,7 @@ if __name__ == '__main__':
     print(relaxator_params)
 
     worker = None
-    if args.binary[:4].lower() == 'maise':
+    if args.binary[:4].lower() == 'mais':
         worker = worker_maise
     elif args.binary[:4].lower() == 'dftb':
             worker = worker_dftb

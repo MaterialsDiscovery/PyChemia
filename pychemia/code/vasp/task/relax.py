@@ -94,57 +94,57 @@ class IonRelaxation(Relaxator, Task):
         if info['avg_force'] < 0.1 and self.relax_cell:
             if info['avg_stress_diag'] < 0.1:
                 if info['avg_stress_non_diag'] < 0.1:
-                    vj.input_variables.variables['ISIF'] = 3
+                    vj.input_variables['ISIF'] = 3
                 else:
-                    vj.input_variables.variables['ISIF'] = 3
+                    vj.input_variables['ISIF'] = 3
             else:
-                vj.input_variables.variables['ISIF'] = 3
+                vj.input_variables['ISIF'] = 3
         else:
-            vj.input_variables.variables['ISIF'] = 2
+            vj.input_variables['ISIF'] = 2
 
         # How to change IBRION
         # if info['avg_force'] < 0.1 and info['avg_stress_diag'] < 0.1 and info['avg_stress_non_diag'] < 0.1:
-        #    vj.input_variables.variables['IBRION'] = 1
+        #    vj.input_variables['IBRION'] = 1
         # elif info['avg_force'] < 1 and info['avg_stress_diag'] < 1 and info['avg_stress_non_diag'] < 1:
-        #    vj.input_variables.variables['IBRION'] = 2
+        #    vj.input_variables['IBRION'] = 2
         # else:
-        #    vj.input_variables.variables['IBRION'] = 3
+        #    vj.input_variables['IBRION'] = 3
 
-        # if vj.input_variables.variables['EDIFFG'] < - 2 * self.target_forces:
-        #     vj.input_variables.variables['EDIFFG'] = round_small(vj.input_variables.variables['EDIFFG'] / 2)
+        # if vj.input_variables['EDIFFG'] < - 2 * self.target_forces:
+        #     vj.input_variables['EDIFFG'] = round_small(vj.input_variables['EDIFFG'] / 2)
         # else:
-        #     vj.input_variables.variables['EDIFFG'] = - self.target_forces
+        #     vj.input_variables['EDIFFG'] = - self.target_forces
         #
 
         # How to change EDIFFG
         if max_force > self.target_forces or max_stress > self.target_forces:
             if self.relax_cell:
-                vj.input_variables.variables['EDIFFG'] = np.min(round_small(-0.01 * max(max_force, max_stress)),
+                vj.input_variables['EDIFFG'] = np.min(round_small(-0.01 * max(max_force, max_stress)),
                                                                 -self.target_forces)
             else:
-                vj.input_variables.variables['EDIFFG'] = np.min(round_small(-0.01 * max_force),
+                vj.input_variables['EDIFFG'] = np.min(round_small(-0.01 * max_force),
                                                                 -self.target_forces)
 
         pcm_log.debug('Current Values: ISIF: %2d   IBRION: %2d   EDIFF: %7.1E \tEDIFFG: %7.1E' %
-                      (vj.input_variables.variables['ISIF'],
-                       vj.input_variables.variables['IBRION'],
-                       vj.input_variables.variables['EDIFF'],
-                       vj.input_variables.variables['EDIFFG']))
+                      (vj.input_variables['ISIF'],
+                       vj.input_variables['IBRION'],
+                       vj.input_variables['EDIFF'],
+                       vj.input_variables['EDIFFG']))
 
         # How to change EDIFF
-        if vj.input_variables.variables['EDIFF'] > -0.01 * vj.input_variables.variables['EDIFFG']:
-            vj.input_variables.variables['EDIFF'] = round_small(-0.01 * vj.input_variables.variables['EDIFFG'])
+        if vj.input_variables['EDIFF'] > -0.01 * vj.input_variables['EDIFFG']:
+            vj.input_variables['EDIFF'] = round_small(-0.01 * vj.input_variables['EDIFFG'])
         else:
-            vj.input_variables.variables['EDIFF'] = 1E-4
+            vj.input_variables['EDIFF'] = 1E-4
 
-        vj.input_variables.variables['LWAVE'] = False
+        vj.input_variables['LWAVE'] = False
 
         # Print new values
         pcm_log.debug('New Values: ISIF: %2d   IBRION: %2d   EDIFF: %7.1E \tEDIFFG: %7.1E' %
-                      (vj.input_variables.variables['ISIF'],
-                       vj.input_variables.variables['IBRION'],
-                       vj.input_variables.variables['EDIFF'],
-                       vj.input_variables.variables['EDIFFG']))
+                      (vj.input_variables['ISIF'],
+                       vj.input_variables['IBRION'],
+                       vj.input_variables['EDIFF'],
+                       vj.input_variables['EDIFFG']))
 
         for i in ['POSCAR', 'INCAR', 'OUTCAR', 'vasprun.xml']:
             if not os.path.exists(self.workdir + os.sep + i):
@@ -167,7 +167,7 @@ class IonRelaxation(Relaxator, Task):
         inp = InputVariables()
         inp.set_rough_relaxation()
         vj.set_input_variables(inp)
-        vj.input_variables.variables['LWAVE'] = False
+        vj.input_variables['LWAVE'] = False
         vj.write_potcar()
         vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir + os.sep + 'POTCAR')
         vj.input_variables.set_density_for_restart()
