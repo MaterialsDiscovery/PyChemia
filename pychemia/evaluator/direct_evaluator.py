@@ -132,6 +132,7 @@ class DirectEvaluator:
                     for j in range(self.nconcurrent):
                         if procs[j] is None or not procs[j].is_alive():
                             slot = j
+                            break
                     if slot is None:
                         time.sleep(self.sleeping_time)
                     else:
@@ -140,10 +141,10 @@ class DirectEvaluator:
                 # The function is_evaluated needs two arguments, the database object and entry identifier and
                 # must return a boolean to decide if the candidate should be evaluated.
                 if not self.is_evaluated(pcdb, entry_id, self.worker_args) or self.evaluate_all:
-                    pcm_log.debug('Evaluable: %s:%s. Relaxing entry %d of %d' % (dbname,
+                    pcm_log.debug('Evaluable: %s:%s. Relaxing entry %d of %d Slot: %d' % (dbname,
                                                                                  str(entry_id),
                                                                                  index,
-                                                                                 len(to_evaluate)))
+                                                                                 len(to_evaluate), slot))
                     ids_running[slot] = entry_id
                     workdir = self.source_dir + os.sep + dbname + os.sep + str(entry_id)
                     if not os.path.exists(workdir):
@@ -152,8 +153,9 @@ class DirectEvaluator:
 
                     # This is the actual call to the worker, it must be a function with 4 arguments:
                     # The database settings, the entry identifier, the working directory and arguments for the worker
-                    procs[j] = Process(target=self.worker, args=(db_settings, entry_id, workdir, self.worker_args))
-                    procs[j].start()
+                    procs[slot] = Process(target=self.worker, args=(db_settings, entry_id, workdir, self.worker_args))
+                    procs[slot].start()
+                    time.sleep(1)
                 else:
                     pcm_log.debug('Not evaluable: %s' % str(entry_id))
                 index += 1
