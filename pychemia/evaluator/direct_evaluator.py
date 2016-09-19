@@ -123,6 +123,7 @@ class DirectEvaluator:
                 # The second component of each pair in to_evaluate is the entry_id
                 entry_id = to_evaluate[index][1]
                 print('DB: %10s Entry: %s' % (dbname, entry_id))
+                print("%s %s" % (self.source_dir,dbname))
 
                 if not os.path.exists(self.source_dir + os.sep + dbname):
                     os.mkdir(self.source_dir + os.sep + dbname)
