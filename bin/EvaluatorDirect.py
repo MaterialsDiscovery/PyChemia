@@ -426,8 +426,8 @@ def worker(db_settings, entry_id, workdir, target_forces, relaxator_params):
 
 def is_evaluated(pcdb, entry_id, relaxator_params):
     status=get_current_status(pcdb, entry_id, relaxator_params)
-    print(status)
-    print(relaxator_params)
+    #print(status)
+    #print(relaxator_params)
     return status < relaxator_params['target_forces']
 
 
