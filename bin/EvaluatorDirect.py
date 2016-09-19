@@ -425,7 +425,9 @@ def worker(db_settings, entry_id, workdir, target_forces, relaxator_params):
 
 
 def is_evaluated(pcdb, entry_id, relaxator_params):
-    return get_current_status(pcdb, entry_id, relaxator_params) < relaxator_params['target_forces']
+    status=get_current_status(pcdb, entry_id, relaxator_params)
+    print(status)
+    return status < relaxator_params['target_forces']
 
 
 def get_current_status(pcdb, entry_id, relaxator_params, verbose=False):
@@ -434,7 +436,6 @@ def get_current_status(pcdb, entry_id, relaxator_params, verbose=False):
     max_nondiag_stress = 1
     entry = pcdb.get_entry(entry_id)
 
-    print(entry)
     if entry is not None and 'properties' in entry and entry['properties'] is not None:
         if 'forces' in entry['properties'] and entry['properties']['forces'] is not None:
             forces = np.array(entry['properties']['forces']).reshape((-1, 3))
