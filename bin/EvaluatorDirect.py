@@ -427,6 +427,7 @@ def worker(db_settings, entry_id, workdir, target_forces, relaxator_params):
 def is_evaluated(pcdb, entry_id, relaxator_params):
     status=get_current_status(pcdb, entry_id, relaxator_params)
     print(status)
+    print(relaxator_params)
     return status < relaxator_params['target_forces']
 
 
@@ -554,6 +555,7 @@ if __name__ == '__main__':
     print('slater-path   : %s' % str(args.slater_path))
 
     print(db_settings)
+    print(relaxator_params)
 
     worker = None
     if args.binary[:4].lower() == 'maise':
