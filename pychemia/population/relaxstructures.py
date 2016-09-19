@@ -128,7 +128,7 @@ class RelaxStructures(Population):
         """
         Add one random structure to the population
         """
-        origin = None
+        entry_id = None
         structure = Structure()
         if self.composition is None:
             raise ValueError('No composition associated to this population')
@@ -159,7 +159,8 @@ class RelaxStructures(Population):
 
                 scale_factor = float(np.max(covalent_radius(new_comp.species)) /
                                          np.max(covalent_radius(structure.species)))
-                print('From source: %s Spacegroup: %d Scaling: %7.3f' % (structure.formula,
+                print('Mult: %d natom: %d From source: %s Spacegroup: %d Scaling: %7.3f' % (factor, structure.natom,
+                                                                            structure.formula,
                                                                              sym.number(),
                                                                              scale_factor))
                 structure.set_cell(np.dot(scale_factor * np.eye(3), structure.cell))
@@ -167,7 +168,7 @@ class RelaxStructures(Population):
                 self.sources[factor].remove(entry_id)
                 break
 
-        return self.new_entry(structure), origin
+        return self.new_entry(structure), entry_id
 
     def check_duplicates(self, ids):
         """
