@@ -434,6 +434,7 @@ def get_current_status(pcdb, entry_id, relaxator_params, verbose=False):
     max_nondiag_stress = 1
     entry = pcdb.get_entry(entry_id)
 
+    print(entry)
     if entry is not None and 'properties' in entry and entry['properties'] is not None:
         if 'forces' in entry['properties'] and entry['properties']['forces'] is not None:
             forces = np.array(entry['properties']['forces']).reshape((-1, 3))

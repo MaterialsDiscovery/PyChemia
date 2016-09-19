@@ -71,6 +71,7 @@ class DirectEvaluator:
         """
         ret = []
         for idb in self.dbnames:
+            print(idb)
             db_settings = dict(self.db_settings)
             db_settings['name'] = idb
             pcdb = get_database(db_settings)
@@ -80,6 +81,7 @@ class DirectEvaluator:
                 if self.is_evaluated(pcdb, entry_id, self.worker_args) or self.evaluate_all:
                     pcm_log.debug('Adding entry %s from db %s' % (str(entry_id), pcdb.name))
                     ret.append([idb, entry_id])
+        print('Found %d entries to evaluate' % len(ret))
         return ret
 
     def run(self):
