@@ -78,7 +78,7 @@ class DirectEvaluator:
 
             for entry in pcdb.entries.find({}, {'_id': 1}):
                 entry_id = entry['_id']
-                if self.is_evaluated(pcdb, entry_id, self.worker_args) or self.evaluate_all:
+                if not self.is_evaluated(pcdb, entry_id, self.worker_args) or self.evaluate_all:
                     pcm_log.debug('Adding entry %s from db %s' % (str(entry_id), pcdb.name))
                     ret.append([idb, entry_id])
         print('Found %d entries to evaluate' % len(ret))
