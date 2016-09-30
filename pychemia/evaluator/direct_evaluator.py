@@ -122,7 +122,18 @@ class DirectEvaluator:
                 pcdb = get_database(db_settings)
                 # The second component of each pair in to_evaluate is the entry_id
                 entry_id = to_evaluate[index][1]
-                print('DB: %10s Entry: %s' % (dbname, entry_id))
+
+                for j in range(self.nconcurrent):
+                    if procs[j] is None or not procs[j].is_alive():
+                        print('This jobs is not running anymore: %s' % ids_running[j])
+                        ids_running[j] = None
+
+                if entry_id in ids_running:
+                    print('Already executing: %s' % entry_id)
+                    index+=1
+                    continue
+                else:
+                    print('DB: %10s Entry: %s' % (dbname, entry_id))
 
                 if not os.path.exists(self.source_dir + os.sep + dbname):
                     os.mkdir(self.source_dir + os.sep + dbname)
