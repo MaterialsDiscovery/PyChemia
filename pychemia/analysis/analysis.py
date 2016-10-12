@@ -108,11 +108,17 @@ class StructureAnalysis:
 
         if self._all_distances is None:
             ret = {}
+            if not self.structure.is_periodic:
+                dist_matrix = self.structure.distance_matrix()
             for i, j in itertools.combinations_with_replacement(range(self.structure.natom), 2):
                 pair = (i, j)
-                ret[pair] = self.structure.lattice.distances_in_sphere(self.structure.reduced[i],
-                                                                       self.structure.reduced[j],
-                                                                       radius=self.radius)
+                if self.structure.is_periodic:
+                    ret[pair] = self.structure.lattice.distances_in_sphere(self.structure.reduced[i],
+                                                                           self.structure.reduced[j],
+                                                                           radius=self.radius)
+                else:
+                    ret[pair] = dist_matrix[i,j]
+
             self._all_distances = ret
 
         return self._all_distances
@@ -127,13 +133,21 @@ class StructureAnalysis:
         for ipair in all_distances:
             key = tuple(sorted(symbols_indexed[np.array(ipair)]))
             # print ipair, key
-            if key in ret:
-                ret[key] = np.concatenate((ret[key], all_distances[ipair]['distance']))
+            if self.structure.is_periodic:
+                if key in ret:
+                    ret[key] = np.concatenate((ret[key], all_distances[ipair]['distance']))
+                else:
+                    ret[key] = all_distances[ipair]['distance'].copy()
             else:
-                ret[key] = all_distances[ipair]['distance'].copy()
+                if key in ret:
+                    ret[key].append(all_distances[ipair])
+                else:
+                    ret[key] = [all_distances[ipair]]
+
         # Sorting arrays
         for key in ret:
             ret[key].sort()
+            ret[key] = np.array(ret[key])
 
         return ret
 
