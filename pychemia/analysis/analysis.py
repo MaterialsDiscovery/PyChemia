@@ -7,8 +7,8 @@ import numpy.linalg
 
 from pychemia import Structure, pcm_log
 from pychemia.utils.mathematics import integral_gaussian
-from pychemia.utils.periodic import atomic_number, covalent_radius, valence
-
+from pychemia.utils.periodic import atomic_number, covalent_radius, valence, atomic_symbol
+from collections import OrderedDict
 
 class StructureAnalysis:
     """
@@ -126,23 +126,20 @@ class StructureAnalysis:
     def all_distances_by_species(self):
 
         all_distances = self.all_distances()
-        ret = {}
-        symbols_indexed = np.array([self.structure.species.index(x) for x in self.structure.symbols])
-        # print self.structure.symbols
+        ret = OrderedDict()
+
+        atom_numbers = atomic_number(self.structure.species)
+        a = list(itertools.combinations_with_replacement(atom_numbers, 2))
+        keys=sorted([tuple(sorted(list(x))) for x in a])
+        for key in keys:
+            ret[key] = []
 
         for ipair in all_distances:
-            key = tuple(sorted(symbols_indexed[np.array(ipair)]))
-            # print ipair, key
+            key = tuple(sorted(atomic_number([self.structure.symbols[ipair[0]], self.structure.symbols[ipair[1]]])))
             if self.structure.is_periodic:
-                if key in ret:
-                    ret[key] = np.concatenate((ret[key], all_distances[ipair]['distance']))
-                else:
-                    ret[key] = all_distances[ipair]['distance'].copy()
+                ret[key] = np.concatenate((ret[key], all_distances[ipair]['distance']))
             else:
-                if key in ret:
-                    ret[key].append(all_distances[ipair])
-                else:
-                    ret[key] = [all_distances[ipair]]
+                ret[key].append(all_distances[ipair])
 
         # Sorting arrays
         for key in ret:
@@ -153,7 +150,7 @@ class StructureAnalysis:
 
     def structure_distances(self, delta=0.01, sigma=0.01, integrated=True):
         dist_spec = self.all_distances_by_species()
-        discrete_rdf = {}
+        discrete_rdf = OrderedDict()
         nbins = int((self.radius + 5 * delta) / delta)
         discrete_rdf_x = np.arange(0, nbins * delta, delta)
         for spec_pair in dist_spec:
@@ -183,8 +180,8 @@ class StructureAnalysis:
         vol = self.structure.volume
         for spec_pair in struc_dist:
             for i in range(len(struc_dist[spec_pair])):
-                specie0 = self.structure.species[spec_pair[0]]
-                specie1 = self.structure.species[spec_pair[1]]
+                specie0 = atomic_symbol(spec_pair[0])
+                specie1 = atomic_symbol(spec_pair[1])
                 number_atoms0 = self.structure.composition[specie0]
                 number_atoms1 = self.structure.composition[specie1]
                 fp_oganov[spec_pair][i] *= vol / (delta * number_atoms0 * number_atoms1)
