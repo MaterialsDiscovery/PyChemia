@@ -18,12 +18,19 @@ def load(filename):
 
 
 def save(structure, filename):
-    xyz = str(structure.natom) + '\n\n'
-    for i in range(structure.natom):
-        xyz += " %2s %15.7f %15.7f %15.7f\n" % (structure.symbols[i],
-                                                structure.positions[i, 0],
-                                                structure.positions[i, 1],
-                                                structure.positions[i, 2])
+
+    if isinstance(structure,Structure):
+        sts = [structure]
+    else:
+        sts = structure
+
     wf = open(filename, 'w')
-    wf.write(xyz)
+    for st in sts:
+        xyz = str(st.natom) + '\n\n'
+        for i in range(structure.natom):
+            xyz += " %2s %15.7f %15.7f %15.7f\n" % (structure.symbols[i],
+                                                    structure.positions[i, 0],
+                                                    structure.positions[i, 1],
+                                                    structure.positions[i, 2])
+        wf.write(xyz)
     wf.close()
