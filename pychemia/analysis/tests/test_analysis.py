@@ -1,5 +1,5 @@
 import pychemia
-
+import os
 
 def notest_analysis():
     """
@@ -27,7 +27,8 @@ def test_distances():
     """
     Tests (pychemia.analysis.match)                              :
     """
-    st=pychemia.io.xyz.load('test/data/xyz/chlorophyll.xyz')
+    print(os.getcwd())
+    st=pychemia.io.xyz.load('pychemia/test/data/xyz/chlorophyll.xyz')
     sa=pychemia.analysis.StructureAnalysis(st)
     distances = sa.all_distances()
     assert len(distances) == int(st.natom*(st.natom+1)/2)
