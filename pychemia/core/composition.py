@@ -155,7 +155,10 @@ class Composition(Mapping):
             number_atoms_specie = self.composition[specie]
             for i in range(number_atoms_specie):
                 ret.append(specie)
-        return sorted(deep_unicode(ret))
+        #return sorted(deep_unicode(ret))
+#BEGIN WILFREDO
+        return deep_unicode(ret)
+#END WILFREDO
 
     @property
     def species(self):
