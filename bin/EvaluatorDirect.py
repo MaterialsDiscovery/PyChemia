@@ -81,7 +81,6 @@ def worker_maise(db_settings, entry_id, workdir, relaxator_params):
     if os.path.isfile('OUTCAR'):
         rf = open('OUTCAR', 'r')
         data = rf.read()
-        # state_dist = re.findall(r'Total CPU', data)
         
         pos_forces = re.findall(r'TOTAL-FORCE \(eV/Angst\)\s*-*\s*([-.\d\s]+)\s+-{2}', data)
         pos_forces = np.array([x.split() for x in pos_forces], dtype=float)
@@ -100,21 +99,41 @@ def worker_maise(db_settings, entry_id, workdir, relaxator_params):
         str_stress = re.findall('in kB([\.\d\s-]*)energy', data)
         if len(str_stress) == 2:
             stress_kb = np.array([[float(y) for y in x.split()] for x in str_stress])
-    state_dist = 'F'
 
-    new_structure = read_poscar('CONTCAR')
-    if len(state_dist) == 0:
-        print('WARNING: MAISE found distances too short in structure:', entry_id)
+    create_new=False
+    if not os.path.isfile('CONTCAR') or os.path.getsize("CONTCAR")==0:
+        create_new=True
+        print('CONTCAR not found')
+        i=1
+        while True:
+            if not os.path.isfile('POSCAR-failed-%03d' % str(i)):
+                os.rename('POSCAR', 'POSCAR-failed-%03d' % str(i))
+                break
+            else:
+                index+=1
+    else:
+        new_structure = read_poscar('CONTCAR')
+        #min_dist = np.min(new_structure.distance_matrix+np.ones((new_structure.natom,new_structure.natom)))
+        #min_dist = np.min(new_structure.distance_matrix+np.eye(new_structure.natom))
+	#print(min_dist)
+
+        #if min_dist < 1.0:
+            #print('ERROR: MAISE finished with and structure with distances too close:', entry_id)
+            #create_new=True
+
+    if create_new:
         new_structure = Structure.random_cell(structure.composition)
 
     if ncalls > max_ncalls:
         print('WARNING: Too many calls to MAISE and no relaxation succeeded, replacing structure: ', entry_id)    # WIH
         new_structure = Structure.random_cell(structure.composition)
         pcdb.entries.update({'_id': entry_id}, {'$set': {'status.ncalls': 0}})
+        create_new=True
     else:
         pcdb.entries.update({'_id': entry_id}, {'$set': {'status.ncalls': ncalls}})
-    pcdb.update(entry_id, structure=new_structure)
+    pcdb.update(entry_id, structure=new_structure, properties={})
 
+    #if not create_new and energies is not None and forces is not None and stress is not None:
     if energies is not None and forces is not None and stress is not None:
 
         te = energies[1]
