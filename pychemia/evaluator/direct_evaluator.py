@@ -125,7 +125,7 @@ class DirectEvaluator:
 
                 for j in range(self.nconcurrent):
                     if procs[j] is None or not procs[j].is_alive():
-                        print('This jobs is not running anymore: %s' % ids_running[j])
+                        #print('This jobs is not running anymore: %s' % ids_running[j]) #WIH
                         ids_running[j] = None
 
                 if entry_id in ids_running:
