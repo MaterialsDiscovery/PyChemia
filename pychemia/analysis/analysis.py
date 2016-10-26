@@ -4,6 +4,7 @@ import sys
 
 import numpy as np
 import numpy.linalg
+import functools
 
 from pychemia import Structure, pcm_log
 from pychemia.utils.mathematics import integral_gaussian
@@ -342,7 +343,7 @@ class StructureAnalysis:
     def hardness_XX(self, initial_cutoff_radius=0.8, use_laplacian=True):
 
         bonds, coordination, cutoff_radius = self.bonds_coordination(initial_cutoff_radius=initial_cutoff_radius,
-                                                                     use_laplacian=use_laplacian)
+                                                                     use_laplacian=use_laplacian, verbose=True)
 
         sigma = 3.0
         c_hard = 1300.0
@@ -390,8 +391,8 @@ class StructureAnalysis:
 
         return round(hardness_value, 3), cutoff_radius, coordination
 
-    def hardness(self, verbose=False, initial_cutoff_radius=0.8, ensure_conectivity=False, use_laplacian=True,
-                 use_jump=True):
+    def hardness(self, verbose=True, initial_cutoff_radius=0.8, ensure_conectivity=False, use_laplacian=True,
+                 use_jump=True, tol=1E-15):
         """
         Calculates the hardness of a structure based in the model of XX
         We use the covalent radii from pychemia.utils.periodic.
@@ -413,7 +414,7 @@ class StructureAnalysis:
         bonds, coordination, all_distances, tolerances, cutoff_radius = \
             self.get_bonds_coordination(initial_cutoff_radius=initial_cutoff_radius,
                                         ensure_conectivity=ensure_conectivity,
-                                        use_laplacian=use_laplacian, verbose=verbose, use_jump=use_jump)
+                                        use_laplacian=use_laplacian, verbose=verbose, use_jump=use_jump, tol=tol)
 
         if verbose:
             print('Structure coordination : ', coordination)
@@ -442,7 +443,7 @@ class StructureAnalysis:
         f = 1.0 - (len(atomicnumbers) * f_n ** (1.0 / len(atomicnumbers)) / f_d) ** 2
 
         # Selection of different bonds
-        diff_bonds = np.unique(np.array(reduce(lambda xx, y: xx + y, bonds)))
+        diff_bonds = np.unique(np.array(functools.reduce(lambda xx, y: xx + y, bonds)))
         if verbose:
             print('Number of different bonds : ', len(diff_bonds))
 
