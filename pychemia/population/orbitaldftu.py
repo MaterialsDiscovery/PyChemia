@@ -6,7 +6,7 @@ import numpy as np
 from ._population import Population
 from pychemia import pcm_log
 from pychemia.code.abinit import InputVariables
-from pychemia.utils.mathematics import gram_smith_qr, gea_all_angles
+from pychemia.utils.mathematics import gram_smith_qr, gea_all_angles, gea_orthogonal_from_angles
 
 
 class OrbitalDFTU(Population):
@@ -185,8 +185,8 @@ class OrbitalDFTU(Population):
             val = [x for x in list(itertools.product(range(2), repeat=self.ndim)) if sum(x) == nelect]
             ii = val[np.random.randint(len(val))]
             dd = np.zeros(self.ndim)
-            matrix_i[i] = list(ii.flatten())
-            matrix_d[i] = list(dd.flatten())
+            matrix_i[i] = list(ii)
+            matrix_d[i] = list(dd)
             matrices_defined.append(self.connections[i])
             p = gram_smith_qr(self.ndim)
             euler[i] = gea_all_angles(p)
@@ -328,21 +328,6 @@ class OrbitalDFTU(Population):
         return None
 
 
-def params_reshaped(params, ndim):
-    """
-    Reorder and reshape the contents of the dictionary 'params' and prepare the matrices
-    to build a consistent dmatpawu variable.
-
-    :param params:
-    :param ndim:
-    :return:
-    """
-    matrix_o = np.array(params['O'], dtype=int).reshape((-1, ndim))
-    matrix_d = np.array(params['D']).reshape((-1, ndim))
-    matrix_r = np.array(params['R']).reshape((-1, ndim, ndim))
-    return matrix_o, matrix_d, matrix_r
-
-
 def params2dmatpawu(params, ndim):
     """
     Build the variable dmatpawu from the components stored in params
@@ -352,26 +337,28 @@ def params2dmatpawu(params, ndim):
                 5 for 'd' orbitals, 7 for 'f' orbitals
     :return:
     """
-    matrix_o, ddd, eigvec = params_reshaped(params, ndim)
+    num_matrices = params['num_matrices']
+    ret = np.zeros((num_matrices, ndim, ndim))
 
-    eigval = np.array(iii, dtype=float)
-    for i in range(len(eigval)):
+    for i in range(num_matrices):
+        eigval = np.diag(params['occupations'][i])
         for j in range(ndim):
-            if iii[i, j] == 0:
-                eigval[i, j] += ddd[i, j]
-            else:
-                eigval[i, j] -= ddd[i, j]
-    dm = np.zeros((len(eigvec), ndim, ndim))
-    for i in range(len(eigvec)):
-        dm[i] = np.dot(eigvec[i], np.dot(np.diag(eigval[i]), np.linalg.inv(eigvec[i])))
-    return dm
+                if eigval[j, j] == 0:
+                    eigval[j, j] += params['deltas'][i, j]
+                else:
+                    eigval[j, j] -= params['deltas'][i, j]
+        rotation = gea_orthogonal_from_angles(params['euler_angles'][i])
+        correlation = np.dot(rotation, np.dot(np.diag(eigval), rotation.T))
+        ret[i] = correlation
+    return ret
 
 
 def dmatpawu2params(dmatpawu, ndim):
     """
-    Takes the contents of the variable 'dmatpawu' and return their components as a set of occupations 'O', deltas 'D'
-    and rotation matrix 'R'.
-    The rotation matrix R is ensured to be an element of SO(ndim), ie det(R)=1.
+    Takes the contents of the variable 'dmatpawu' and return their components as a set of 'occupations', 'deltas'
+    and 'euler_angles'
+    The Euler angles is a ordered list of angles that can rebuild a rotation matrix 'R'
+    The rotation matrix 'R' is ensured to be an element of SO(ndim), ie det(R)=1.
     When the eigenvectors return a matrix with determinant -1 a mirror on the first dimension is applied.
     Such condition has no effect on the physical result of the correlation matrix
 
@@ -380,22 +367,22 @@ def dmatpawu2params(dmatpawu, ndim):
     :return:
     """
     dm = np.array(dmatpawu).reshape((-1, ndim, ndim))
+    num_matrices = dm.shape[0]
     eigval = np.array([np.linalg.eigh(x)[0] for x in dm])
-    matrix_o = np.array(np.round(eigval), dtype=int)
-    matrix_d = np.abs(eigval - matrix_o)
-    matrix_r = np.array([np.linalg.eigh(x)[1] for x in dm])
+    occupations = np.array(np.round(eigval), dtype=int)
+    deltas = np.abs(eigval - occupations)
+    rotations = np.array([np.linalg.eigh(x)[1] for x in dm])
 
     mirror = np.eye(ndim)
     mirror[0, 0] = -1
 
-    for i in range(len(matrix_r)):
-        if np.linalg.det(matrix_r[i]) < 0:
-            matrix_r[i] = np.dot(matrix_r[i], mirror)
+    for i in range(len(rotations)):
+        if np.linalg.det(rotations[i]) < 0:
+            rotations[i] = np.dot(rotations[i], mirror)
 
-    params = {'O': list(matrix_o.flatten()),
-              'D': list(matrix_d.flatten()),
-              'R': list(matrix_r.flatten())}
-    return params
+    euler_angles = np.array([list(gea_all_angles(p)) for p in rotations])
+
+    return {'occupations': occupations, 'deltas': deltas, 'euler_angles': euler_angles, 'num_matrices': num_matrices}
 
 
 def get_pattern(params, ndim):
