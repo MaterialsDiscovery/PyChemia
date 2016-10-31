@@ -17,9 +17,9 @@ before_install:
     fi
   - chmod +x miniconda.sh && ./miniconda.sh -b
   - if [ "${TRAVIS_PYTHON_VERSION}" = "2.7" ]; then 
-    export PATH=$HOME/miniconda2/bin:$PATH; ls $HOME/miniconda2/bin
+    export PATH=$HOME/miniconda2/bin:$PATH; ls $HOME/miniconda2/bin;
     else
-    export PATH=$HOME/miniconda3/bin:$PATH; ls $HOME/miniconda3/bin
+    export PATH=$HOME/miniconda3/bin:$PATH; ls $HOME/miniconda3/bin;
     fi
   - echo $PATH
   - pwd
