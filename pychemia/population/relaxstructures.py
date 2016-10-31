@@ -173,7 +173,7 @@ class RelaxStructures(Population):
 
                 scale_factor = float(np.max(covalent_radius(new_comp.species)) /
                                          np.max(covalent_radius(structure.species)))
-		reduce_scale = scale_factor ** (1. / 3)    #WIH
+                reduce_scale = scale_factor ** (1. / 3)    #WIH
                 print('Mult: %d natom: %d From source: %s Spacegroup: %d Scaling: %7.3f' % (factor, structure.natom,
                                                                             structure.formula,
                                                                              sym.number(),
