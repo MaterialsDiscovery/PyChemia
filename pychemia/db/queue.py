@@ -115,7 +115,8 @@ class PyChemiaQueue:
                                                                 'db_id': db_id}}
         entry_id = self.db.pychemia_entries.insert(entry)
 
-        self.db.pychemia_entries.update_one({'_id': entry_id}, {'$currentDate': {'meta.CreationDate': True}})
+        # Commented for compatibility with mongo 2.4
+        # self.db.pychemia_entries.update_one({'_id': entry_id}, {'$currentDate': {'meta.CreationDate': True}})
 
         if structure is not None:
             self.set_input_structure(entry_id, structure)

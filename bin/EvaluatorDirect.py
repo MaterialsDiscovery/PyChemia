@@ -47,14 +47,25 @@ def worker_maise(db_settings, entry_id, workdir, relaxator_params):
     structure = pcdb.get_structure(entry_id)
     status = pcdb.get_dicts(entry_id)[2]
 
-    if 'ncalls' in status:
+    if 'ncalls' in status and status['ncalls'] > 0:
         ncalls = status['ncalls'] + 1 
+	print('ncalls = ', status['ncalls'])
     else:
         ncalls = 1 
+	print('Verifing initial structure...')
+	while np.min(structure.distance_matrix()+(np.eye(structure.natom)*5)) < 1.9:
+   		print('ERROR: Bad initial guess, two atoms are to close. Creating new random structure for id: %s' % str(entry_id))
+		write_poscar(structure, workdir + os.sep + 'Fail_initial_POSCAR') #WIH
+		structure=Structure.random_cell(structure.composition)
 
     write_poscar(structure, workdir + os.sep + 'POSCAR')
-    if not os.path.exists(workdir + os.sep + 'setup'):
-        shutil.copy2(source_dir + os.sep + 'setup', workdir)
+    if not os.path.exists(workdir + os.sep + 'setup') and ncalls == 1:     #WIH
+	print('First run.') #WIH
+	print('Verifying that everything runs smoothly') #WIH
+	print(workdir + os.sep + 'setup')
+        shutil.copy2(source_dir + os.sep + 'setup_1', workdir + os.sep + 'setup')   #WIH
+    elif ncalls > 1:   #WIH
+	shutil.copy2(source_dir + os.sep + 'setup_2', workdir + os.sep + 'setup')   #WIH
     if not os.path.exists(workdir + os.sep + 'INI'):
         os.symlink(source_dir + os.sep + 'INI', workdir + os.sep + 'INI')
     if not os.path.exists(workdir + os.sep + 'maise'):
@@ -81,7 +92,6 @@ def worker_maise(db_settings, entry_id, workdir, relaxator_params):
     if os.path.isfile('OUTCAR'):
         rf = open('OUTCAR', 'r')
         data = rf.read()
-        # state_dist = re.findall(r'Total CPU', data)
         
         pos_forces = re.findall(r'TOTAL-FORCE \(eV/Angst\)\s*-*\s*([-.\d\s]+)\s+-{2}', data)
         pos_forces = np.array([x.split() for x in pos_forces], dtype=float)
@@ -100,21 +110,43 @@ def worker_maise(db_settings, entry_id, workdir, relaxator_params):
         str_stress = re.findall('in kB([\.\d\s-]*)energy', data)
         if len(str_stress) == 2:
             stress_kb = np.array([[float(y) for y in x.split()] for x in str_stress])
-    state_dist = 'F'
 
-    new_structure = read_poscar('CONTCAR')
-    if len(state_dist) == 0:
-        print('WARNING: MAISE found distances too short in structure:', entry_id)
+    create_new=False
+    if not os.path.isfile('CONTCAR') or os.path.getsize("CONTCAR")==0:
+        create_new=True
+        print('CONTCAR not found in entry: %s' % str(entry_id))
+        i=001
+        while True:
+            if not os.path.isfile('POSCAR-failed-%03s' % str(i)):
+                os.rename('POSCAR', 'POSCAR-failed-%03s' % str(i))
+                break
+            else:
+                i+=1
+    else:
+        new_structure = read_poscar('CONTCAR')
+        #min_dist = np.min(new_structure.distance_matrix+np.ones((new_structure.natom,new_structure.natom)))
+	min_dist = np.min(new_structure.distance_matrix()+(np.eye(new_structure.natom)*5))   #WIH
+	print('Minimal distance= %8.7f' % min_dist)   #WIH
+
+	if min_dist < 2.0:
+		print('ERROR: MAISE finished with and structure with distances too close:', entry_id)  #WIH
+		write_poscar(new_structure, workdir + os.sep + 'Collapsed_CONTCAR') #WIH
+		create_new=True   #WIH
+
+    if create_new:
         new_structure = Structure.random_cell(structure.composition)
+	ncalls = 0    #WIH
 
     if ncalls > max_ncalls:
         print('WARNING: Too many calls to MAISE and no relaxation succeeded, replacing structure: ', entry_id)    # WIH
         new_structure = Structure.random_cell(structure.composition)
         pcdb.entries.update({'_id': entry_id}, {'$set': {'status.ncalls': 0}})
+        create_new=True
     else:
         pcdb.entries.update({'_id': entry_id}, {'$set': {'status.ncalls': ncalls}})
-    pcdb.update(entry_id, structure=new_structure)
+    pcdb.update(entry_id, structure=new_structure, properties={})
 
+    #if not create_new and energies is not None and forces is not None and stress is not None:
     if energies is not None and forces is not None and stress is not None:
 
         te = energies[1]
@@ -425,7 +457,8 @@ def worker(db_settings, entry_id, workdir, target_forces, relaxator_params):
 
 
 def is_evaluated(pcdb, entry_id, relaxator_params):
-    return get_current_status(pcdb, entry_id, relaxator_params) < relaxator_params['target_forces']
+    status=get_current_status(pcdb, entry_id, relaxator_params)
+    return status < relaxator_params['target_forces']
 
 
 def get_current_status(pcdb, entry_id, relaxator_params, verbose=False):
@@ -503,7 +536,7 @@ if __name__ == '__main__':
                         default=None, metavar='name', type=str,
                         help='ReplicaSet  (default: None)')
     parser.add_argument('-s', '--source_dir',
-                        default=None, metavar='path', type=str, nargs='+',
+                        default=None, metavar='path', type=str,
                         help='Working Directory  (default: None)')
     parser.add_argument('-l', '--slater_path',
                         default=None, metavar='path', type=str,
@@ -552,9 +585,10 @@ if __name__ == '__main__':
     print('slater-path   : %s' % str(args.slater_path))
 
     print(db_settings)
+    print(relaxator_params)
 
     worker = None
-    if args.binary[:4].lower() == 'maise':
+    if args.binary[:4].lower() == 'mais':
         worker = worker_maise
     elif args.binary[:4].lower() == 'dftb':
             worker = worker_dftb

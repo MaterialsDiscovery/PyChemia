@@ -4,11 +4,12 @@ import sys
 
 import numpy as np
 import numpy.linalg
+import functools
 
 from pychemia import Structure, pcm_log
 from pychemia.utils.mathematics import integral_gaussian
-from pychemia.utils.periodic import atomic_number, covalent_radius, valence
-
+from pychemia.utils.periodic import atomic_number, covalent_radius, valence, atomic_symbol
+from collections import OrderedDict
 
 class StructureAnalysis:
     """
@@ -108,11 +109,17 @@ class StructureAnalysis:
 
         if self._all_distances is None:
             ret = {}
+            if not self.structure.is_periodic:
+                dist_matrix = self.structure.distance_matrix()
             for i, j in itertools.combinations_with_replacement(range(self.structure.natom), 2):
                 pair = (i, j)
-                ret[pair] = self.structure.lattice.distances_in_sphere(self.structure.reduced[i],
-                                                                       self.structure.reduced[j],
-                                                                       radius=self.radius)
+                if self.structure.is_periodic:
+                    ret[pair] = self.structure.lattice.distances_in_sphere(self.structure.reduced[i],
+                                                                           self.structure.reduced[j],
+                                                                           radius=self.radius)
+                else:
+                    ret[pair] = dist_matrix[i,j]
+
             self._all_distances = ret
 
         return self._all_distances
@@ -120,26 +127,31 @@ class StructureAnalysis:
     def all_distances_by_species(self):
 
         all_distances = self.all_distances()
-        ret = {}
-        symbols_indexed = np.array([self.structure.species.index(x) for x in self.structure.symbols])
-        # print self.structure.symbols
+        ret = OrderedDict()
+
+        atom_numbers = atomic_number(self.structure.species)
+        a = list(itertools.combinations_with_replacement(atom_numbers, 2))
+        keys=sorted([tuple(sorted(list(x))) for x in a])
+        for key in keys:
+            ret[key] = []
 
         for ipair in all_distances:
-            key = tuple(sorted(symbols_indexed[np.array(ipair)]))
-            # print ipair, key
-            if key in ret:
+            key = tuple(sorted(atomic_number([self.structure.symbols[ipair[0]], self.structure.symbols[ipair[1]]])))
+            if self.structure.is_periodic:
                 ret[key] = np.concatenate((ret[key], all_distances[ipair]['distance']))
             else:
-                ret[key] = all_distances[ipair]['distance'].copy()
+                ret[key].append(all_distances[ipair])
+
         # Sorting arrays
         for key in ret:
             ret[key].sort()
+            ret[key] = np.array(ret[key])
 
         return ret
 
     def structure_distances(self, delta=0.01, sigma=0.01, integrated=True):
         dist_spec = self.all_distances_by_species()
-        discrete_rdf = {}
+        discrete_rdf = OrderedDict()
         nbins = int((self.radius + 5 * delta) / delta)
         discrete_rdf_x = np.arange(0, nbins * delta, delta)
         for spec_pair in dist_spec:
@@ -169,8 +181,8 @@ class StructureAnalysis:
         vol = self.structure.volume
         for spec_pair in struc_dist:
             for i in range(len(struc_dist[spec_pair])):
-                specie0 = self.structure.species[spec_pair[0]]
-                specie1 = self.structure.species[spec_pair[1]]
+                specie0 = atomic_symbol(spec_pair[0])
+                specie1 = atomic_symbol(spec_pair[1])
                 number_atoms0 = self.structure.composition[specie0]
                 number_atoms1 = self.structure.composition[specie1]
                 fp_oganov[spec_pair][i] *= vol / (delta * number_atoms0 * number_atoms1)
@@ -331,7 +343,7 @@ class StructureAnalysis:
     def hardness_XX(self, initial_cutoff_radius=0.8, use_laplacian=True):
 
         bonds, coordination, cutoff_radius = self.bonds_coordination(initial_cutoff_radius=initial_cutoff_radius,
-                                                                     use_laplacian=use_laplacian)
+                                                                     use_laplacian=use_laplacian, verbose=True)
 
         sigma = 3.0
         c_hard = 1300.0
@@ -379,8 +391,8 @@ class StructureAnalysis:
 
         return round(hardness_value, 3), cutoff_radius, coordination
 
-    def hardness(self, verbose=False, initial_cutoff_radius=0.8, ensure_conectivity=False, use_laplacian=True,
-                 use_jump=True):
+    def hardness(self, verbose=True, initial_cutoff_radius=0.8, ensure_conectivity=False, use_laplacian=True,
+                 use_jump=True, tol=1E-15):
         """
         Calculates the hardness of a structure based in the model of XX
         We use the covalent radii from pychemia.utils.periodic.
@@ -402,7 +414,7 @@ class StructureAnalysis:
         bonds, coordination, all_distances, tolerances, cutoff_radius = \
             self.get_bonds_coordination(initial_cutoff_radius=initial_cutoff_radius,
                                         ensure_conectivity=ensure_conectivity,
-                                        use_laplacian=use_laplacian, verbose=verbose, use_jump=use_jump)
+                                        use_laplacian=use_laplacian, verbose=verbose, use_jump=use_jump, tol=tol)
 
         if verbose:
             print('Structure coordination : ', coordination)
@@ -431,7 +443,7 @@ class StructureAnalysis:
         f = 1.0 - (len(atomicnumbers) * f_n ** (1.0 / len(atomicnumbers)) / f_d) ** 2
 
         # Selection of different bonds
-        diff_bonds = np.unique(np.array(reduce(lambda xx, y: xx + y, bonds)))
+        diff_bonds = np.unique(np.array(functools.reduce(lambda xx, y: xx + y, bonds)))
         if verbose:
             print('Number of different bonds : ', len(diff_bonds))
 

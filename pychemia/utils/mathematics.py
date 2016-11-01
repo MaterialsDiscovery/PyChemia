@@ -886,8 +886,13 @@ def gea_angles(uvector):
         if tmp[0] > 1.0:
             tmp[0] = 1.0
         theta = np.arcsin(tmp[0])
+        print('Sin: %f Angle: %f'% (tmp[0], theta))
         if len(tmp) == 2 and tmp[1] < 0.0:
-            theta = np.pi - theta
+            if theta > 0:
+                theta = np.pi - theta
+            elif theta < 0:
+                theta = - np.pi - theta
+        print('Sin: %f Angle: %f %s'% (tmp[0], theta, tmp))
         angles.append(theta)
         if np.abs(np.cos(theta)) < 1E-8:
             print('ALERT: Zero denominator with numerator: %s' % tmp[1:])
@@ -956,7 +961,7 @@ def gea_all_angles(ortho_matrix):
     n = b.shape[0]
     ret = []
 
-    # print('Original matrix\n%s' % b)
+    #print('Original matrix\n%s' % b)
     for i in range(1, n):
         # Lets take vectors starting from the last column on ortho_matrix
         an = b[:, -1]

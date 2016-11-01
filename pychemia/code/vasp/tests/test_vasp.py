@@ -1,4 +1,5 @@
 import os
+import shutil
 import pychemia
 import tempfile
 import unittest
@@ -24,9 +25,10 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(iv3['EDIFF'], 1E-6)
         iv = pychemia.code.vasp.read_incar('pychemia/test/data/vasp_02')
         iv.EDIFF *= 1.3
-        td = tempfile.TemporaryDirectory()
-        pychemia.code.vasp.write_incar(iv, td.name)
+        td = tempfile.mkdtemp()
+        pychemia.code.vasp.write_incar(iv, td)
         self.assertRaises(ValueError, iv.write_key, 'EDIF')
+        shutil.rmtree(td)
 
     def test_bad_outcar(self):
         """
@@ -50,17 +52,18 @@ class MyTestCase(unittest.TestCase):
         """
         Tests (pychemia.code.vasp) [VaspJob]                         :
         """
-        td = tempfile.TemporaryDirectory()
+        td = tempfile.mkdtemp()
         st = pychemia.code.vasp.read_poscar('pychemia/test/data/vasp_06')
         kp = pychemia.code.vasp.read_kpoints('pychemia/test/data/vasp_06')
         self.assertEqual(kp.number_of_kpoints, 693)
         iv = pychemia.code.vasp.read_incar('pychemia/test/data/vasp_06')
         vj = pychemia.code.vasp.VaspJob()
-        vj.initialize(st, workdir=td.name, kpoints=kp)
+        vj.initialize(st, workdir=td, kpoints=kp)
         vj.set_input_variables(iv)
         vj.write_poscar()
         vj.write_kpoints()
         vj.write_incar()
+        shutil.rmtree(td)
 
     def test_poscar(self):
         """

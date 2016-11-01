@@ -6,33 +6,7 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull
-import getopt
-
-
-def usage(name):
-    print("""
-NAME
-
-    %s
-
-DESCRIPTION
-    Make a Convex Hull from the data stored in the collected 'results.json' file
-
-OPTIONS
-
-    --help, -h
-        Return information on the options and use of this script
-
-    --ylim_bottom, -b <float>
-        Lower limit on y axis
-
-    --ylim_top, -t <float>
-        Higher limit on y axis
-
-    --output_file, -o <string> (Default: ConvexHull.pdf)
-        Name of the figure that will be created
-
-""" % os.path.basename(name))
+import argparse
 
 
 def spcgrp_props(space_group):
@@ -84,42 +58,17 @@ def spcgrp_props(space_group):
         cst_color = '#ff0000'
     return cst_marker, cst_color, cst_label, cst_marker_size, cst_zorder, cst_fillstyle
 
+def formation_energy(energy, x, energy_left, energy_right):
+    return energy - (1 - x) * energy_left - x * energy_right
 
-def main(argv):
-    try:
-        opts, args = getopt.getopt(argv[1:], "hb:t:o:", ["help", "ylim_bottom=", "ylim_top=", "output_file="])
-    except getopt.GetoptError:
-        usage(argv[0])
-        sys.exit(2)
 
-    # if len(opts) == 0:
-    #    usage(argv[0])
-    #    sys.exit(2)
+def create_convex(bottom, top, energy_left, energy_right, input, output):
 
-    # Default Values
-    ylim_bottom = None
-    ylim_top = None
-    output_file = 'ConvexHull.pdf'
+    if not os.path.isfile(input):
+        print('File not found %s' % input)
 
-    for opt, arg in opts:
-        if opt in ("-h", "--help"):
-            usage(argv[0])
-            sys.exit()
-        elif opt in ("-b", "--ylim_bottom"):
-            ylim_bottom = float(arg)
-        elif opt in ("-t", "--ylim_top"):
-            ylim_top = float(arg)
-        elif opt in ("-o", "--output_file"):
-            output_file = arg
-
-    if not os.path.isfile('results.json'):
-        print('File not found %s' % 'results.json')
-
-    data = json.load(open('results.json'))
+    data = json.load(open(input))
     plt.figure(figsize=(11, 8.5))
-
-    energy_left = None
-    energy_right = None
 
     for idata in data:
         if idata['ratio'] == 0:
@@ -132,6 +81,7 @@ def main(argv):
                 energy_right = idata['energy_pa']
                 print('Energy per atom for %2s: %9.3f' % (idata['formula'], energy_right))
 
+
     if energy_left is None or energy_right is None:
         print('Pure elements not found, formation energy cannot be computed')
         sys.exit(1)
@@ -141,9 +91,12 @@ def main(argv):
         x = idata['ratio']
         spcgrp = idata['spcgrp']
         marker, color, lab, m, z, fs = spcgrp_props(spcgrp)
-        y = idata['energy_pa'] - (1 - x) * energy_left - x * energy_right
+        y = formation_energy(idata['energy_pa'], x, energy_left, energy_right)
         plt.plot(x, y, marker=marker, ms=m, color=color, fillstyle=fs, zorder=z)
-        points.append([x, idata['energy_pa'] - (1 - x) * energy_left - x * energy_right])
+        points.append([x, formation_energy(idata['energy_pa'], x, energy_left, energy_right)])
+
+    points.append([0.0, 0.0])
+    points.append([1.0, 0.0])
 
     points = np.array(points)
     hull = ConvexHull(points)
@@ -155,10 +108,10 @@ def main(argv):
             plt.plot(points[simplex, 0], points[simplex, 1], 'k-', zorder=1)
 
     ylims = plt.ylim()
-    if ylim_bottom is None:
-        ylim_bottom = ylims[0]
-    if ylim_top is None:
-        ylim_top = ylims[1]
+    if bottom is None:
+        bottom = ylims[0]
+    if top is None:
+        top = ylims[1]
 
     for spcgrp in [15, 74, 142, 167, 194, 230]:
         marker, color, lab, m, z, fs = spcgrp_props(spcgrp)
@@ -166,14 +119,45 @@ def main(argv):
         plt.plot(-100, -100, marker, ms=m, fillstyle=fs, color=color, label=lab)
 
     plt.xlim(-0.05, 1.05)
-    print('Limits', ylim_bottom, ylim_top)
-    plt.ylim(ylim_bottom, ylim_top)
+    print('Limits', bottom, top)
+    plt.ylim(bottom, top)
     plt.legend(loc=9, prop={'size': 10}, numpoints=1)
     plt.subplots_adjust(left=0.12, bottom=0.13, right=0.98, top=0.96, wspace=None, hspace=None)
     plt.xlabel(r'Composition balance')
     plt.ylabel(r'Formation Energy [eV]')
-    plt.savefig(output_file)
+    plt.savefig(output)
+    return plt.gcf()
+
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+
+    description = """Collect structures from several databases for plotting convex hulls"""
+
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('-t', '--top',
+                        default=None, metavar='ymax', type=float,
+                        help='Maximum value of formation energy')
+    parser.add_argument('-b', '--bottom',
+                        default=None, metavar='ymax', type=float,
+                        help='Minimum value of formation energy')
+    parser.add_argument('-l', '--left_energy_pa',
+                        default=None, metavar='energy_pa', type=float,
+                        help='Energy per atom of left specie')
+    parser.add_argument('-r', '--right_energy_pa',
+                        default=None, metavar='energy_pa', type=float,
+                        help='Energy per atom right specie')
+    parser.add_argument('-i', '--input',
+                        default='convex.json', metavar='convex.json', type=str,
+                        help='Input file for the Convex Hull (JSON file)')
+    parser.add_argument('-o', '--output',
+                        default='convex.pdf', metavar='convex.pdf', type=str,
+                        help='Output file (default: convex.pdf)')
+
+    args = parser.parse_args()
+    if not os.path.isfile(args.input):
+        parser.print_help()
+        exit(1)
+    print(args)
+
+    create_convex(args.bottom, args.top, args.left_energy_pa, args.right_energy_pa, args.input, args.output)

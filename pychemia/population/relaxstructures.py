@@ -10,6 +10,7 @@ from pychemia.utils.mathematics import unit_vector
 from pychemia.utils.periodic import atomic_number, covalent_radius
 from pymongo import ASCENDING
 from pychemia.db import get_database
+from pychemia.crystal import CrystalSymmetry
 
 
 class RelaxStructures(Population):
@@ -45,7 +46,6 @@ class RelaxStructures(Population):
         self.min_comp_mult = min_comp_mult
         self.max_comp_mult = max_comp_mult
         self.pcdb_source = pcdb_source
-        self.source_blacklist = {}
         self.pressure = pressure
         if target_stress is None:
             self.target_stress = target_forces
@@ -61,6 +61,15 @@ class RelaxStructures(Population):
             self.target_nondiag_stress = target_nondiag_stress
         self.name = name
         Population.__init__(self, name, tag)
+
+        if self.pcdb_source is not None:
+            self.sources={}
+            for i in range(min_comp_mult, max_comp_mult+1):
+                self.sources[i] = []
+                for entry in self.pcdb_source.entries.find({'structure.natom': i*self.composition.natom,
+                                                        'structure.nspecies': self.composition.nspecies},{'_id':1}):
+                    self.sources[i].append(entry['_id'])
+
 
     def recover(self):
         data = self.get_population_info()
@@ -119,15 +128,28 @@ class RelaxStructures(Population):
         """
         Add one random structure to the population
         """
-        origin = None
+        entry_id = None
         structure = Structure()
         if self.composition is None:
             raise ValueError('No composition associated to this population')
         factor = np.random.randint(self.min_comp_mult, self.max_comp_mult + 1)
         comp = self.composition.composition.copy()
+        print("Initail composition: %s" % comp)
+        print(Composition(comp))
+        print(Composition(comp).symbols)
         for i in comp:
             comp[i] *= factor
         new_comp = Composition(comp)
+        for i in range(len(new_comp.symbols)):
+            if new_comp.symbols[i]=="Mg":
+               new_comp.symbols[i]="Ca"
+            else:
+               new_comp.symbols[i]="Mg"
+        print(new_comp.symbols)
+        
+        print("###############################################################")
+        print("New comp symbols= ", new_comp.symbols)
+        print("###############################################################")
 
         while True:
             rnd = random.random()
@@ -135,47 +157,36 @@ class RelaxStructures(Population):
                          'structure.natom': new_comp.natom}
             if self.pcdb_source is None:
                 rnd = 0
-            if self.pcdb_source.entries.find(condition).count() <= len(self.source_blacklist[factor]):
-                condition = {'structure.natom': comp.natom}
-                if self.pcdb_source.entries.find(condition).count() <= len(self.source_blacklist[factor]):
-                    rnd = 0
-
+            if len(self.sources[factor])==0:
+                rnd = 0
             if self.pcdb_source is None or rnd < random_probability:
                 pcm_log.debug('Random Structure')
                 structure = Structure.random_cell(new_comp, method='stretching', stabilization_number=5, nparal=5,
                                                   periodic=True)
                 break
             else:
-                entry = None
                 pcm_log.debug('From source')
-                ntrials = 0
-                while True:
-                    entry = None
-                    condition['properties.spacegroup'] = random.randint(1, 230)
-                    print('Trying', condition['properties.spacegroup'])
-                    for ientry in self.pcdb_source.entries.find(condition):
-                        if ientry['_id'] not in self.source_blacklist[factor]:
-                            entry = ientry
-                            break
-                        else:
-                            ntrials += 1
-                    if ntrials >= len(self.source_blacklist[factor]):
-                        break
+                entry_id = self.sources[factor][np.random.randint(0, len(self.sources[factor]))]
+                structure = self.pcdb_source.get_structure(entry_id)
+                print("chosen structure from database =",structure)
+                sym = CrystalSymmetry(structure)
 
-                if entry is not None:
-                    origin = entry['_id']
-                    structure = self.pcdb_source.get_structure(entry['_id'])
-                    scale_factor = float(np.max(covalent_radius(new_comp.species)) /
+                scale_factor = float(np.max(covalent_radius(new_comp.species)) /
                                          np.max(covalent_radius(structure.species)))
-                    print('From source: %s Spacegroup: %d Scaling: %7.3f' % (structure.formula,
-                                                                             entry['properties']['spacegroup'],
+                reduce_scale = scale_factor ** (1. / 3)    #WIH
+                print('Mult: %d natom: %d From source: %s Spacegroup: %d Scaling: %7.3f' % (factor, structure.natom,
+                                                                            structure.formula,
+                                                                             sym.number(),
                                                                              scale_factor))
-                    structure.set_cell(np.dot(factor * np.eye(3), structure.cell))
-                    structure.symbols = new_comp.symbols
-                    self.source_blacklist[factor].append(entry['_id'])
-                    break
+                #structure.set_cell(np.dot(scale_factor * np.eye(3), structure.cell)) #WIH
+                structure.set_cell(np.dot(reduce_scale * np.eye(3), structure.cell))  #WIH
+                print("symbols before change = ",structure.symbols)
+                structure.symbols = new_comp.symbols
+                print("symbols after change = ",structure.symbols)
+                self.sources[factor].remove(entry_id)
+                break
 
-        return self.new_entry(structure), origin
+        return self.new_entry(structure), entry_id
 
     def check_duplicates(self, ids):
         """

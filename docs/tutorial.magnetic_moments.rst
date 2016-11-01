@@ -1,0 +1,76 @@
+Optimization of Magnetic Moments (VASP)
+---------------------------------------
+
+This tutorial shows how to perform global search for optimal magnetic
+moments on VASP.
+
+In VASP there are two variables that control the magnetic moments imposed on
+atoms and for contrain magnetic moments along predefined directions.
+
+Lets start with one INCAR file that looks like this::
+
+        $SYSTEM   =  CaMnO3 Pnma
+        PREC      =  Accurate
+        NELMIN    =  6
+        NELM      =  100
+        EDIFF     =  1E-09
+        EDIFFG    = -5E-6
+        IBRION    =  1
+        ISIF      =  2
+        LREAL     = .FALSE.
+        ADDGRID   = .TRUE.
+        NSW       =  0
+        ISMEAR    = -5
+        ENCUT     =  500
+        ISPIN     =  2
+        LORBIT    =  11
+        LMAXMIX   =  4
+        ISYM      =  0
+        LSORBIT   = .TRUE.
+        RWIGS     = 2.00 1.87 1.78 1.24 # d-d/2
+        SAXIS     = 0 0 1
+        LPLANE    = .TRUE.
+        NPAR      = 2
+        LSCALU    = .FALSE.
+        NSIM      = 4
+        LWAVE     = .FALSE.
+        AMIX      = 0.8
+        BMIX      = 0.9
+        AMIX_MAG  = 0.4
+        BMIX_MAG  = 0.9
+
+        MAGMOM    = 12*0
+                    0.0000000 0.0416472 2.3859677
+                    0.0000000 0.0416472 -2.3859677
+                    0.0000000 0.0416472 -2.3859677
+                    0.0000000 0.0416472 2.3859677
+                    60*0
+        M_CONSTR  = 12*0
+                    0.0000000 0.0416472 2.3859677
+                    0.0000000 0.0416472 -2.3859677
+                    0.0000000 0.0416472 -2.3859677
+                    0.0000000 0.0416472 2.3859677
+                    60*0
+        I_CONSTRAINED_M = 1
+        LAMBDA    = 10
+
+        #LDAU      =  .TRUE.
+        #LDAUTYPE  =  1
+        #LDAUL     =  -1  2 -1
+        #LDAUU     =  0.0 4.0 0.0
+        #LDAUJ     =  0.0 0.0 0.0
+        #LDAUPRINT =  2
+
+We have commented the variables related with LDA+U but the procedure works enabling those variables too.
+The variables MAGMOM and M_CONSTR controls the initial direction of Magnetic Moments and the constrained direction using
+LAMBDA as a parameter to control the intensity of the contrain.
+
+Now, for different values of MAGMOM you can get variations on the total energy and the optimal magnetization can only
+be obtained by covering all possible directions.
+
+The population 'NonCollinearMagMoms' defined the procedures to create a pool of candidates with random directions
+for Magnetic Moments and modify their directions in several ways suitable for being used by the global search algorithms
+implemented on PyChemia.
+
+On this tutorial we will explore step by step how the methods on 'NonCollinearMagMoms' where implemented and how use
+them for efficiently

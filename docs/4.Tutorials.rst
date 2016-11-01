@@ -9,5 +9,6 @@ a given objective.
     tutorial.cookbook
     tutorial.ljclusters
     tutorial.structural_search
-    tutorial.magnetic_moments
     tutorial.euler_angles
+    tutorial.magnetic_moments
+    tutorial.orbitaldftu
