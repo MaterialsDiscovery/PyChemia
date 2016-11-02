@@ -95,6 +95,10 @@ class FireballCollector:
                     try:
                         cell=pychemia.code.fireball.read_lvs(path + os.sep + i)
                         periodic=True
+                        lat=pychemia.crystral.Lattice(cell)
+                        if lat.volume > 1E7:
+                            periodic = False
+                    
                     except:
                         print('Bad %s' % i)
 
