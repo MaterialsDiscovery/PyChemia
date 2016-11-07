@@ -12,95 +12,126 @@ if HAS_PYMONGO:
 
 class FireballCollector:
 
-    def __init__(self, db_settings, dbname, source_dir='/fireball-archive/data-mining', nconcurrent=10, sleeping_time=2):
+    def __init__(self, dbname, source_dir=None, source_file=None, output_names=None, output_file=None, db_settings=None, nconcurrent=1):
         """
-        FireballCollector is a class to manage the execution of a function 'worker' for entries on a list of PyChemiaDB
-         databases.
-        The execution of each worker occurs directly on the machine executing the code, and the class controls the
-        number of concurrent execution using the variable 'nconcurrent'
+        FireballCollector is a class collect Fireball executions into one PyChemia Database.
+      
+        The name of the database will be 'dbname' and executions will be processed from a give 'source_dir', a path
+        to search for Fireball calculations or 'source_file', one file with one directory per line where Fireball
+        executions are stored.
+        The variable 'output_names' sets possible output files for Fireball. Typically Fireball output is the standard
+        output and the user has to redirect the output to a file with an arbitrary name.
 
-        :param db_settings: Common database settings for all the databases that will be processed by this evaluator.
-                            All databases should share common settings like server name, user and password, ssl and
-                            replicaset settings.
-        :param dbname: List of database names, the common settings are stored in db_settings
-        :param nconcurrent: Number of concurrent executions allowed. Their number usually should be the number of cores
-                            available on the machine. (default: 1)
-        :param sleeping_time: Time in seconds before try to search for new candidates to evaluate (default: 120 seconds)
+        The processing of directories happens in parallel using 'nconcurrent' python processes.
+        By default the database is created on the local machine assuming no authorization or authentication, otherwise
+        use the dictionary 'db_settings' to get more control on the database location and access.
+
+        :param dbname:      (str) Name of the database that will contain the Fireball executions
+        :param source_dir:  (str) Path for a directory that will be explored recursevely for suitable Fireball executions
+        :param source_file: (str) Path to a file describing directories with Fireball executions, one per line
+        :param output_names: (list) List of possible output filenames
+        :param output_file: (str) Path to a file with possible output names, one per line
+        :param db_settings: (dict) Extra parameters for locating and accessing the mongo server.
+        :param nconcurrent: Number of concurrent python executions to fill the database (default: 1)
         """
         self.db_settings = db_settings
         self.dbname = dbname
         self.source_dir = source_dir
+        self.source_file = source_file
+        self.output_names = output_names
+        self.output_file = output_file
         self.nconcurrent = nconcurrent
-        self.sleeping_time = sleeping_time
+        self.sleeping_time = 2
 
-        rf = open(self.source_dir+os.sep+'outputs.txt')
-        self.outputs = [x.strip() for x in rf.readlines()]
+        if self.output_file is not None and os.path.exists(self.output_file):
+            rf = open(self.output_file)
+            self.output_names = [x.strip() for x in rf.readlines()]
+            
+        if self.source_dir is None and self.source_file is None:
+            raise ValueError("One of the variables source_dir or source_file need to be defined")
+
+        if self.db_settings is None:
+            self.db_settings = {'name': self.dbname}
+        else:
+            self.db_settings['name': self.dbname]
+
+    def worker(self, path):
+        """
+        From a given 'path', the worker will collect information from several files
+        such as:
+
+        fireball.in
+        eigen.dat
+        param.dat
+        answer.bas
+        output collected from the standard output of fireball.x
 
 
-    def worker(self, db_settings, path):
+        After collecting data into dictionaries, the data is stored in a PyChemia database
+        """
 
-        pcdb = get_database(db_settings)
+        pcdb = get_database(self.db_settings)
         files = os.listdir(path)
         properties = {}
         geo = None
 
-        if 'fireball.in' in files:
+        if os.path.lexists(path+os.sep+'fireball.in'):
             score = 'input'
             try:
                 invars = pychemia.code.fireball.read_fireball_in(path + os.sep + 'fireball.in')
                 properties['input'] = invars
                 properties['path'] = path
             except:
-                print('Bad fireball.in')
-                geo=None
+                print('Bad fireball.in on %s' % path)
 
-            if 'param.dat' in files:
+            if os.path.exists(path+os.sep+'param.dat'):
                 try:
                     score += '+param'
                     param = pychemia.code.fireball.read_param(path + os.sep + 'param.dat')
                     properties['param_dat'] = param
                 except:
                     print('Bad param.dat')
-                    geo=none
 
-            if 'eigen.dat' in files:
+            if os.path.lexists(path+os.sep+'eigen.dat'):
                 try:
                     score += '+eigen'
                     eigen = pychemia.code.fireball.read_eigen(path + os.sep + 'eigen.dat')
                     properties['eigen_dat'] = eigen
                 except:
                     print('bad eigen.dat')
-                    geo=None
 
-            if 'answer.bas' in files:
+            if os.path.lexists(path+os.sep+'answer.bas'):
                 try:
                     score += '+answer'
                     geo = pychemia.code.fireball.read_geometry_bas(path + os.sep + 'answer.bas')
                     periodic = False
                 except:
                     print('Bad answer.bas')
-                    geo=None
 
-            for i in files:
-                if i in self.outputs and os.path.isfile(path + os.sep + i):
-                    rf = open(path + os.sep + i)
-                    if "Welcome to FIREBALL" in rf.readline():
-                        try:
-                            output = pychemia.code.fireball.read_final_fireball_relax(path + os.sep + i)
-                            properties['output']=output
-                        except:
-                            print('Bad %s' % i)
+            for ioutput in self.output_names:
+                if os.path.isfile(path + os.sep + ioutput):
+                    rf = open(path + os.sep + ioutput)
+                    line = rf.readline()
                     rf.close()
-                if i[-3:]=='lvs':
+                    if "Welcome to FIREBALL" in line:
+                        try:
+                            output = pychemia.code.fireball.read_final_fireball_relax(path + os.sep + ioutput)
+                            properties['output']=output
+                            break
+                        except:
+                            print('Bad output %s on' % (ioutput,path))
+                            
+            for ifile in files:
+                if ifile[-3:]=='lvs':
                     try:
-                        cell=pychemia.code.fireball.read_lvs(path + os.sep + i)
+                        cell=pychemia.code.fireball.read_lvs(path + os.sep + ifile)
                         periodic=True
                         lat=pychemia.crystral.Lattice(cell)
                         if lat.volume > 1E7:
+                            print('Lattice too big, assuming non-periodic structure')
                             periodic = False
-                    
                     except:
-                        print('Bad %s' % i)
+                        print('Bad %s' % ifile)
 
         if geo is not None:
             print('DB: %d entries, Path: %s' % (pcdb.entries.count(), path))
@@ -113,14 +144,19 @@ class FireballCollector:
         return properties
 
 
-    def process_directory(self, path, ret):
-
+    def process_directory(self, path, fireball_dirs):
+        """
+        Search for directories with fireball.in and answer.bas and add them to the
+        current list of 'fireball_dirs'
+        
+        The search is recursive to subdirectories.
+        """
         files = os.listdir(path)
         score = False
-        if os.path.exists(path+os.sep+'fireball.in') and os.path.exists(path+os.sep+'answer.bas'):
-            for i in files:
-                if i in self.outputs and os.path.isfile(path + os.sep + i):
-                    rf = open(path + os.sep + i)
+        if os.path.lexists(path+os.sep+'fireball.in') and os.path.exists(path+os.sep+'answer.bas'):
+            for ioutput in self.output_names:
+                if os.path.isfile(path + os.sep + ioutput):
+                    rf = open(path + os.sep + ioutput)
                     if "Welcome to FIREBALL" in rf.readline():
                         score = True
                     rf.close()
@@ -129,11 +165,11 @@ class FireballCollector:
             print(path)
             ret.append(path)
 
-        for i in files:
-            if os.path.isdir(path + os.sep + i):
-                self.process_directory(path + os.sep + i, ret)
+        for ifile in files:
+            if os.path.isdir(path + os.sep + ifile):
+                self.process_directory(path + os.sep + ifile, fireball_dirs)
 
-    def get_list_candidates(self):
+    def save_list_candidates(self, filename):
         """
         Scan all databases looking for candidates for evaluation
 
@@ -142,14 +178,14 @@ class FireballCollector:
         """
 
         ret = []
-        if not os.path.isfile('fireball_directories.txt'):
+        if not os.path.isfile(filename):
             self.process_directory(self.source_dir, ret)
             wf=open('fireball_directories.txt', 'w')
             for i in ret:
                 wf.write("%s\n" % i)
             wf.close()
         else:
-            rf=open('fireball_directories.txt')
+            rf=open(filename)
             ret = [ x[:-1] for x in rf.readlines()]
             rf.close()
 
@@ -163,7 +199,8 @@ class FireballCollector:
 
     def run(self):
         """
-        Continuously search for suitable candidates to evaluation among a list of databases.
+        Process the list of directories from 'source_dir' or 'source_file'
+        Using 'nconcurrent' python processes.
 
         :return:
         """
