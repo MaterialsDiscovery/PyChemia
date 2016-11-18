@@ -42,7 +42,8 @@ class FireballCollector:
         self.output_file = output_file
         self.nconcurrent = nconcurrent
         self.sleeping_time = 2
-
+        self.database = None
+        
         if self.output_file is not None and os.path.exists(self.output_file):
             rf = open(self.output_file)
             self.output_names = [x.strip() for x in rf.readlines()]
@@ -55,6 +56,12 @@ class FireballCollector:
         else:
             self.db_settings['name': self.dbname]
 
+        self.db_settings = dict(self.db_settings)
+        # The first component of each pair in to_evaluate is the name of the database
+        self.db_settings['name'] = self.dbname
+
+        self.database = get_database(self.db_settings)
+            
     def worker(self, path):
         """
         From a given 'path', the worker will collect information from several files
@@ -76,11 +83,11 @@ class FireballCollector:
         geo = None
 
         if os.path.lexists(path+os.sep+'fireball.in'):
+            properties['path'] = path
             score = 'input'
             try:
                 invars = pychemia.code.fireball.read_fireball_in(path + os.sep + 'fireball.in')
                 properties['input'] = invars
-                properties['path'] = path
             except:
                 print('Bad fireball.in on %s' % path)
 
@@ -212,9 +219,15 @@ class FireballCollector:
         for i in range(self.nconcurrent):
             procs.append(None)
             ids_running.append(None)
+
+        to_evaluate = []
+        if self.source_file is None:
+            self.process_directory(self.source_dir, to_evaluate)
+        else:
+            rf=open(self.source_file)
+            to_evaluate=[ x.strip() for x in rf.readlines()]
             
-        to_evaluate = self.get_list_candidates()
-        
+            
         # Main loop looking permanently for candidates for evaluation
         while True:
 
@@ -225,13 +238,9 @@ class FireballCollector:
                     currently_evaluating += 1
             print('Candidates to evaluate: %d  Candidates in evaluation: %d' % (len(to_evaluate), currently_evaluating))
 
-            db_settings = dict(self.db_settings)
-            # The first component of each pair in to_evaluate is the name of the database
-            db_settings['name'] = self.dbname
-
             while index < len(to_evaluate):
 
-                pcdb = get_database(db_settings)
+                pcdb = self.database
 
                 slot = None
                 while True:
@@ -251,10 +260,12 @@ class FireballCollector:
                     # This is the actual call to the worker, it must be a function with 4 arguments:
                     # The database settings, the entry identifier, the working directory and arguments for the worker
                     print('[Slot: %d] Evaluating: %s' % (slot,to_evaluate[index]))
-                    procs[slot] = Process(target=self.worker, args=(db_settings, to_evaluate[index]))
+                    procs[slot] = Process(target=self.worker, args=(to_evaluate[index],))
                     procs[slot].start()
                     time.sleep(0.5)
                 else:
                     print('[Slot: %d] Evaluated: %s' % (slot, to_evaluate[index]))
+                    pass
+                    
                 index += 1
             time.sleep(self.sleeping_time)

@@ -194,7 +194,7 @@ def get_onion_layers(structure):
 
         st = pychemia.Structure(positions=pos, symbols=len(pos)*['H'], periodicity=False)
         st.canonical_form()
-        print('The current volume is %7.3f' % st.volume)
+        # print('The current volume is %7.3f' % st.volume)
         if st.volume < 0.1:
             core = range(cur_st.natom)
             layers.append(core)
