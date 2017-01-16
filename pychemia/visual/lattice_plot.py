@@ -11,9 +11,9 @@ class LatticePlot:
 
     def plot(self, points=None):
 
-        tube_rad = max(self.lengths) / 100.0
+        tube_rad = max(self.lattice.lengths) / 100.0
 
-        frame, line1, line2, line3 = self.get_path()
+        frame, line1, line2, line3 = self.lattice.get_path()
         for i, j, k in [[frame[:, 0], frame[:, 1], frame[:, 2]],
                         [line1[:, 0], line1[:, 1], line1[:, 2]],
                         [line2[:, 0], line2[:, 1], line2[:, 2]],
@@ -28,7 +28,7 @@ class LatticePlot:
 
     def plot_wigner_seitz(self, scale=1):
 
-        ws = np.array(self.get_wigner_seitz())
+        ws = np.array(self.lattice.get_wigner_seitz())
         points = np.array([])
         for i in ws:
             for j in i:

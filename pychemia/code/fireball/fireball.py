@@ -227,12 +227,21 @@ def read_fireball_stdout(filename):
                 ienergy[tmp[0].strip()] = float(tmp[1])
         energy.append(ienergy)
 
+    gt_data = re.findall(r'Grand Total = nuclear kinetic \+ potential = [\s\-\d\.]*', data)
+    gt = [float(i.split()[-1]) for i in gt_data]
+
+    gtpa_data = re.findall(r'grand total energy per atom = [\s\-\d\.]*', data)
+    gtpa = [float(i.split()[-1]) for i in gtpa_data]
+
     ret = {'symbols': symbols,
            'initial_positions': initial_positions,
            'forces': generic_serializer(forces),
            'energetics': energy,
            'max_force': max_force,
-           'rms_force': rms}
+           'rms_force': rms,
+           'grand_total': gt,
+           'grand_total_energy_per_atom': gtpa
+           }
     return ret
 
 
@@ -332,7 +341,10 @@ def read_final_fireball_relax(fpath):
     ret = {'energetics': output['energetics'][-1],
            'forces': output['forces'][-1],
            'rms_force': output['rms_force'][-1],
-           'max_force': output['max_force'][-1]}
+           'max_force': output['max_force'][-1],
+           'grand_total': output['grand_total'][-1],
+           'grand_total_energy_per_atom': output['grand_total_energy_per_atom'][-1]}
+
     return ret
 
 
