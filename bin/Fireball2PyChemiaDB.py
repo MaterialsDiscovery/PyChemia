@@ -12,7 +12,7 @@ if HAS_PYMONGO:
 
 class FireballCollector:
 
-    def __init__(self, db_settings, dbname, source_dir, nconcurrent=1, sleeping_time=120):
+    def __init__(self, db_settings, dbname, source_dir='/fireball-archive/data-mining', nconcurrent=1, sleeping_time=120):
         """
         FireballCollector is a class to manage the execution of a function 'worker' for entries on a list of PyChemiaDB
          databases.
@@ -33,7 +33,7 @@ class FireballCollector:
         self.nconcurrent = nconcurrent
         self.sleeping_time = sleeping_time
 
-        rf = open('outputs.txt')
+        rf = open(self.source_dir+os.sep+'outputs.txt')
         self.outputs = [x.strip() for x in rf.readlines()]
 
 
@@ -69,7 +69,7 @@ class FireballCollector:
         if geo is not None:
             pcdb.insert(geo, properties)
 
-    def process_directory(self, path, ret, outputs):
+    def process_directory(self, path, ret):
 
         files = os.listdir(path)
         score = True
@@ -87,7 +87,7 @@ class FireballCollector:
 
         for i in files:
             if os.path.isdir(path + os.sep + i):
-                self.process_directory(path + os.sep + i, ret, outputs)
+                self.process_directory(path + os.sep + i, ret)
 
     def get_list_candidates(self):
         """
@@ -98,7 +98,7 @@ class FireballCollector:
         """
 
         ret = []
-        self.process_directory('/fireball-archive/data-mining', ret)
+        self.process_directory(self.source_dir, ret)
         return ret
 
     def is_evaluated(self, pcdb, path):

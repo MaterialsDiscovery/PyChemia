@@ -382,3 +382,12 @@ def read_param(fpath='param.dat'):
             if '=' not in line and len(line.strip())>0:
                 curkey=line.strip()
     return ret
+
+def read_lvs(fpath='input.lvs'):
+    cell = np.zeros((3,3))
+    rf=open(fpath)
+    data = rf.readlines()
+    for i in range(len(data)):
+        if len(data[i].split())>2:
+            cell[i]=[ float(x) for x in data[i].split()[:3]]
+    return list(cell.flatten())

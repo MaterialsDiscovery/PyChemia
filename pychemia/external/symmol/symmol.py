@@ -6,14 +6,14 @@ import numpy as np
 __author__ = 'Guillermo Avendano Franco'
 
 
-def get_point_group(st, executable='symmol'):
+def get_point_group(st, executable='symmol', dcm=0.2, dcme=0.2):
 
     if not cmd_exists(executable):
         return 'no symmol'
 
     wf = open('symmol.in', 'w')
     wf.write(' %9.5f %9.5f %9.5f %9.5f %9.5f %9.5f\n' % (1, 1, 1, 90, 90, 90))
-    wf.write(' %d %d %9.6f %9.6f\n' % (1, 1, 0.2, 0.2))
+    wf.write(' %d %d %9.6f %9.6f\n' % (1, 1, dcm, dcme))
     for i in st:
         name = i.symbols[0]
         wf.write('%6s%2d%9.5f%9.5f%9.5f\n' % tuple([name.ljust(6), 1] + list(i.position)))
