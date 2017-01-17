@@ -64,6 +64,7 @@ class FireballCollector:
                     rf = open(path + os.sep + i)
                     if "Welcome to FIREBALL" in rf.readline():
                         outputs = pychemia.code.fireball.read_fireball_stdout(path + os.sep + i)
+                        properties['output'] = outputs
                     rf.close()
 
         if geo is not None:
@@ -74,9 +75,8 @@ class FireballCollector:
         files = os.listdir(path)
         score = True
         if 'fireball.in' in files and 'answer.bas' in files:
-
             for i in files:
-                if i in outputs and os.path.isfile(path + os.sep + i):
+                if os.path.isfile(path + os.sep + i):
                     rf = open(path + os.sep + i)
                     if "Welcome to FIREBALL" in rf.readline():
                         score = True
