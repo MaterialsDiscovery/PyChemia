@@ -58,6 +58,7 @@ def spcgrp_props(space_group):
         cst_color = '#ff0000'
     return cst_marker, cst_color, cst_label, cst_marker_size, cst_zorder, cst_fillstyle
 
+
 def formation_energy(energy, x, energy_left, energy_right):
     return energy - (1 - x) * energy_left - x * energy_right
 
@@ -80,7 +81,6 @@ def create_convex(bottom, top, energy_left, energy_right, input, output):
             if energy_right is None or energy_right > idata['energy_pa']:
                 energy_right = idata['energy_pa']
                 print('Energy per atom for %2s: %9.3f' % (idata['formula'], energy_right))
-
 
     if energy_left is None or energy_right is None:
         print('Pure elements not found, formation energy cannot be computed')
@@ -127,7 +127,6 @@ def create_convex(bottom, top, energy_left, energy_right, input, output):
     plt.ylabel(r'Formation Energy [eV]')
     plt.savefig(output)
     return plt.gcf()
-
 
 
 if __name__ == "__main__":

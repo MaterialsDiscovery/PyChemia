@@ -8,6 +8,7 @@ from .cluster_fireball import cluster_fb_evaluator, cluster_fb_launcher, cluster
 from .direct_evaluator import DirectEvaluator
 from .Fireball2PyChemiaDB import FireballCollector
 
+
 def execute(basedir, command, script):
     """
     Utility that copy a given script and execute the given

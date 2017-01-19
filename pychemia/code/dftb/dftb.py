@@ -494,17 +494,17 @@ def read_detailed_out(filename='detailed.out'):
     data = rf.read()
 
     # Extracting the data from 'detailed.out'
-    forces = re.findall(r'Total\s*Forces\s*([\.\-\+E\d\s]+)\n', data)
-    stress = re.findall(r'Total\s*stress\s*tensor\s*([\.\-\+E\d\s]+)\n', data)
-    total_energy = re.findall(r'Total\s*energy:\s*[\.\-\+E\d\s]*\s*H\s*([\.\-\d\sE]+)\s*eV', data)
+    forces = re.findall(r'Total\s*Forces\s*([.\-+E\d\s]+)\n', data)
+    stress = re.findall(r'Total\s*stress\s*tensor\s*([.\-+E\d\s]+)\n', data)
+    total_energy = re.findall(r'Total\s*energy:\s*[.\-+E\d\s]*\s*H\s*([.\-\d\sE]+)\s*eV', data)
 
-    max_force = re.findall(r'Max force for moved atoms::\s*([\.\-\+E\d\s]+)\s*au', data)
+    max_force = re.findall(r'Max force for moved atoms::\s*([.\-+E\d\s]+)\s*au', data)
     if len(max_force) > 0:
         max_force = float(max_force[-1])
     else:
         max_force = None
 
-    max_deriv = re.findall(r'Maximal derivative component:\s*([\.\-\+E\d\s]+)\s*au', data)
+    max_deriv = re.findall(r'Maximal derivative component:\s*([.\-+E\d\s]+)\s*au', data)
     if len(max_deriv) > 0:
         max_deriv = float(max_deriv[-1])
     else:
@@ -562,7 +562,7 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
 
     ret = {}
 
-    start_ini = re.findall(r'Starting initialization...[\s-]+([.\s\d\w\-:\(\),+]+)---', data)
+    start_ini = re.findall(r'Starting initialization...[\s-]+([.\s\d\w\-:(),+]+)---', data)
     if len(start_ini) == 1:
         start_ini = start_ini[0].replace('\n  ', '  ').split('\n')
         ret['Starting_Initialization'] = {}
@@ -580,7 +580,7 @@ def read_dftb_stdout(filename='dftb_stdout.log'):
                 ret['Starting_Initialization'][left.strip()] = {'kpoints': generic_serializer(right[:, 1:-1]),
                                                                 'weights': generic_serializer(right[:, -1])}
 
-    geom_blocks = re.findall(r'Geometry step:([\^*.\s\d\w\-:\(\),+]+)Pa', data)
+    geom_blocks = re.findall(r'Geometry step:([\^*.\s\d\w\-:(),+]+)Pa', data)
 
     ret['Geometry_Steps'] = []
     for iblock in geom_blocks:

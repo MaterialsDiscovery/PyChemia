@@ -154,7 +154,7 @@ class VaspOutput:
         self.iterations()
 
     def free_energy(self):
-        subdata = re.findall('FREE ENERGIE OF THE ION-ELECTRON SYSTEM [\w\d\s\(\)\n-=>]*\n \n\n\n-', self.data)
+        subdata = re.findall('FREE ENERGIE OF THE ION-ELECTRON SYSTEM [\w\d\s()\n-=>]*\n \n\n\n-', self.data)
         if len(subdata) == 1:
             data_split = subdata[0].split()
             try:
@@ -175,7 +175,7 @@ class VaspOutput:
     def iterations(self):
         # Capture the data for each iteration. The symbol '>' is not included on purpose to close
         # the capture close to "energy(sigma->0)..."
-        subdata = re.findall(r'-+ Iteration\s*(\d+)\(\s*(\d+)\)\s*-+\s*([\s\d\w:.,\-=()/+\*]*)energy', self.data)
+        subdata = re.findall(r'-+ Iteration\s*(\d+)\(\s*(\d+)\)\s*-+\s*([\s\d\w:.,\-=()/+*]*)energy', self.data)
         for i in subdata:
             io_iter = int(i[0]) - 1
             scf_iter = int(i[1]) - 1
@@ -200,7 +200,7 @@ class VaspOutput:
 
             self.iteration_data[io_iter][scf_iter]['Free_Energy'] = {}
             for j in ['PSCENC', 'TEWEN', 'DENC', 'EXHF', 'XCENC', 'EENTRO', 'EBANDS', 'EATOM', 'TOTEN']:
-                iter_block = re.findall(j + r'\s*=\s*([\d\.-]*)[\s\w\d]*\n', i[2])
+                iter_block = re.findall(j + r'\s*=\s*([\d.-]*)[\s\w\d]*\n', i[2])
                 if len(iter_block) > 0:
                     self.iteration_data[io_iter][scf_iter]['Free_Energy'][j] = float(iter_block[0])
 
@@ -271,7 +271,7 @@ class VaspOutput:
     def get_memory_used(self):
 
         ret = {}
-        datablock = re.findall(r"total amount of memory used by VASP on root node([\w\s\d\.=:-]*)\n \n  ", self.data)
+        datablock = re.findall(r"total amount of memory used by VASP on root node([\w\s\d.=:-]*)\n \n  ", self.data)
         if len(datablock) != 1:
             return None
         else:

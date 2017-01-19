@@ -404,6 +404,7 @@ class StructureAnalysis:
         :param verbose: (bool) To print some debug info
         :param initial_cutoff_radius: (float)
         :param use_laplacian: (bool) If True, the Laplacian method is used
+        :param tol: (float) Tolerance for considering two atoms bonded
 
         :rtype : (float)
         """

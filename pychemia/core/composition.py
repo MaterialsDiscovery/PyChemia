@@ -397,9 +397,9 @@ class Composition(Mapping):
         [8, 29, 39, 56]
 
         """
-        num = int(arg,16)
+        num = int(arg, 16)
         ret = []
-        while num>0:
+        while num > 0:
             ret.append(num % 256)
             num = (num-ret[-1])//256
         return ret

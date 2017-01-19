@@ -179,7 +179,7 @@ def read_fireball_stdout(filename):
     rf = open(filename, 'r')
     data = rf.read()
 
-    atom_data = re.findall(r'Atom Coordinates from Basis File:([\d\w\s=\-\.#]+)===\n', data)[0]
+    atom_data = re.findall(r'Atom Coordinates from Basis File:([\d\w\s=\-.#]+)===\n', data)[0]
 
     symbols = []
     positions = []
@@ -195,7 +195,7 @@ def read_fireball_stdout(filename):
     # print symbols
     # print initial_positions
 
-    forces_data = re.findall(r'The grand total force \(eV/A\):([\w\d\s\.\-=\+]*)Cartesian', data)
+    forces_data = re.findall(r'The grand total force \(eV/A\):([\w\d\s.\-=+]*)Cartesian', data)
     # print len(forces_data)
 
     forces = np.zeros((len(forces_data), natom, 3))
@@ -214,7 +214,7 @@ def read_fireball_stdout(filename):
     max_force = [x[0] for x in ret]
     rms = [x[1] for x in ret]
 
-    energy_data = re.findall(r'---------- T H E  T O T A L  E N E R G Y -----------([\s\w\d\.\-=/]+)--- \n', data)
+    energy_data = re.findall(r'---------- T H E  T O T A L  E N E R G Y -----------([\s\w\d.\-=/]+)--- \n', data)
 
     energy = []
     for idata in energy_data:
@@ -227,10 +227,10 @@ def read_fireball_stdout(filename):
                 ienergy[tmp[0].strip()] = float(tmp[1])
         energy.append(ienergy)
 
-    gt_data = re.findall(r'Grand Total = nuclear kinetic \+ potential = [\s\-\d\.]*', data)
+    gt_data = re.findall(r'Grand Total = nuclear kinetic \+ potential = [\s\-\d.]*', data)
     gt = [float(i.split()[-1]) for i in gt_data]
 
-    gtpa_data = re.findall(r'grand total energy per atom = [\s\-\d\.]*', data)
+    gtpa_data = re.findall(r'grand total energy per atom = [\s\-\d.]*', data)
     gtpa = [float(i.split()[-1]) for i in gtpa_data]
 
     ret = {'symbols': symbols,
@@ -279,7 +279,7 @@ def write_geometry_bas(structure, filename):
 def get_fdata_info(fdata_path='Fdata'):
     rf = open(fdata_path + os.sep + 'info.dat')
     data = rf.read()
-    ret = re.findall('([-. \d\w]*) \- ([ \d\w;]*) \n', data)
+    ret = re.findall('([-. \d\w]*) - ([ \d\w;]*) \n', data)
     res = {}
     for i in ret:
         key = i[1]

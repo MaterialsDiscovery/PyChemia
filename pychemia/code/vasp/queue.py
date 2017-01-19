@@ -21,7 +21,7 @@ def write_from_queue(queue, entry_id, destination=None):
 
     vi = InputVariables()
     for i in inpvars:
-        vi[i]=inpvars[i]
+        vi[i] = inpvars[i]
 
     write_poscar(st, dest + os.sep + 'POSCAR')
     vi.write(dest + os.sep + 'INCAR')

@@ -19,7 +19,7 @@ def load(filename):
 
 def save(structure, filename):
 
-    if isinstance(structure,Structure):
+    if isinstance(structure, Structure):
         sts = [structure]
     else:
         sts = structure

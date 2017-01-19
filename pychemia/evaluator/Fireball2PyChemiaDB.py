@@ -54,7 +54,7 @@ class FireballCollector:
         if self.db_settings is None:
             self.db_settings = {'name': self.dbname}
         else:
-            self.db_settings['name': self.dbname]
+            self.db_settings['name'] = self.dbname
 
         self.db_settings = dict(self.db_settings)
         # The first component of each pair in to_evaluate is the name of the database
@@ -126,7 +126,7 @@ class FireballCollector:
                             properties['output']=output
                             break
                         except:
-                            print('Bad output %s on' % (ioutput,path))
+                            print('Bad output %s on %s' % (ioutput, path))
                             
             for ifile in files:
                 if ifile[-3:]=='lvs':
@@ -149,7 +149,6 @@ class FireballCollector:
 
             pcdb.insert(st, properties)
         return properties
-
 
     def process_directory(self, path, fireball_dirs):
         """
@@ -193,7 +192,7 @@ class FireballCollector:
             wf.close()
         else:
             rf=open(filename)
-            ret = [ x[:-1] for x in rf.readlines()]
+            ret = [x[:-1] for x in rf.readlines()]
             rf.close()
 
         return ret
@@ -224,10 +223,9 @@ class FireballCollector:
         if self.source_file is None:
             self.process_directory(self.source_dir, to_evaluate)
         else:
-            rf=open(self.source_file)
-            to_evaluate=[ x.strip() for x in rf.readlines()]
-            
-            
+            rf = open(self.source_file)
+            to_evaluate = [x.strip() for x in rf.readlines()]
+
         # Main loop looking permanently for candidates for evaluation
         while True:
 
@@ -259,7 +257,7 @@ class FireballCollector:
                     ids_running[slot] = to_evaluate[index]
                     # This is the actual call to the worker, it must be a function with 4 arguments:
                     # The database settings, the entry identifier, the working directory and arguments for the worker
-                    print('[Slot: %d] Evaluating: %s' % (slot,to_evaluate[index]))
+                    print('[Slot: %d] Evaluating: %s' % (slot, to_evaluate[index]))
                     procs[slot] = Process(target=self.worker, args=(to_evaluate[index],))
                     procs[slot].start()
                     time.sleep(0.5)

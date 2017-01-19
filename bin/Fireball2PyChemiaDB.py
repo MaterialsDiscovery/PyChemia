@@ -12,7 +12,8 @@ if HAS_PYMONGO:
 
 class FireballCollector:
 
-    def __init__(self, db_settings, dbname, source_dir='/fireball-archive/data-mining', nconcurrent=1, sleeping_time=120):
+    def __init__(self, db_settings, dbname, source_dir='/fireball-archive/data-mining', nconcurrent=1,
+                 sleeping_time=120):
         """
         FireballCollector is a class to manage the execution of a function 'worker' for entries on a list of PyChemiaDB
          databases.
@@ -35,7 +36,6 @@ class FireballCollector:
 
         rf = open(self.source_dir+os.sep+'outputs.txt')
         self.outputs = [x.strip() for x in rf.readlines()]
-
 
     def worker(self, pcdb, path):
 

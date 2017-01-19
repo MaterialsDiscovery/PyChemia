@@ -1,10 +1,11 @@
 import re
 
+
 def read_log(filename):
 
     rf = open(filename)
     data = rf.read()
-    energy_data = re.findall('Total Energy\s[\-]+\s([\s\d\w\/\-\.=]*)Forces', data)
+    energy_data = re.findall('Total Energy\s[\-]+\s([\s\d\w/\-.=]*)Forces', data)
 
     energetics={}
     if len(energy_data)>0:
@@ -12,7 +13,7 @@ def read_log(filename):
             if '=' in iline:
                 energetics[iline.split('=')[0].strip()] = float(iline.split('=')[1])
 
-    forces_data = re.findall('Total Forces:\s+\s([\s\d\w\/\-+\.=:()]*)\n \n', data)
+    forces_data = re.findall('Total Forces:\s+\s([\s\d\w/\-+.=:()]*)\n \n', data)
 
     forces = []
     if len(forces)>0:

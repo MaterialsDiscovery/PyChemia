@@ -423,7 +423,7 @@ def get_pattern(params, ndim):
 def get_final_correlation_matrices_from_output(filename):
     rf = open(filename)
     data = rf.read()
-    mainblock = re.findall('LDA\+U DATA[\s\w\d\-\.=,>:]*\n\n\n', data)
+    mainblock = re.findall('LDA\+U DATA[\s\w\d\-.=,>:]*\n\n\n', data)
     assert len(mainblock) == 1
 
     pattern = """For Atom\s*(\d+), occupations for correlated orbitals. lpawu =\s*([\d]+)\s*Atom\s*[\d]+\s*. Occ. for lpawu and for spin\s*\d+\s*=\s*([\d\.]+)\s*Atom\s*[\d]+\s*. Occ. for lpawu and for spin\s*\d+\s*=\s*([\d\.]+)\s*=> On atom\s*\d+\s*,  local Mag. for lpawu is[\s\d\w\.\-]*== Occupation matrix for correlated orbitals:\s*Occupation matrix for spin  1\s*([\d\.\-\s]*)Occupation matrix for spin  2\s*([\d\.\-\s]*)"""

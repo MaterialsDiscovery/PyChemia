@@ -10,6 +10,7 @@ of angles::
 
 >>> angles_list = pychemia.utils.mathematics.gea_all_angles(ortho_matrix)
 
+
 >>> ortho_matrix = gea_orthogonal_from_angles(angles_list)
 
 Remember that the list of angles matters. The SO(k) group is non-abelian.

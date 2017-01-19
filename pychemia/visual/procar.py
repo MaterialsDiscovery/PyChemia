@@ -1664,7 +1664,7 @@ class ProcarSymmetry:
         # Make sure newOrigin is a numpy array
         newOrigin = np.array(newOrigin)
         self.log.debug("newOrigin: " + str(newOrigin))
-        self.kpoints = self.kpoints - newOrigin
+        self.kpoints -= newOrigin
         self.log.debug("new Kpoints:\n" + str(self.kpoints))
         self.log.debug("Translate(): ...Done")
         return

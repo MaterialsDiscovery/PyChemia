@@ -122,8 +122,7 @@ class IonRelaxation(Relaxator, Task):
                 vj.input_variables['EDIFFG'] = np.min(round_small(-0.01 * max(max_force, max_stress)),
                                                                 -self.target_forces)
             else:
-                vj.input_variables['EDIFFG'] = np.min(round_small(-0.01 * max_force),
-                                                                -self.target_forces)
+                vj.input_variables['EDIFFG'] = np.min(round_small(-0.01 * max_force), -self.target_forces)
 
         pcm_log.debug('Current Values: ISIF: %2d   IBRION: %2d   EDIFF: %7.1E \tEDIFFG: %7.1E' %
                       (vj.input_variables['ISIF'],

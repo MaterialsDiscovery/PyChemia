@@ -17,7 +17,7 @@ def ext_gcd(a, b):
     while v1[2] > 0:
         q = v2[2] / v1[2]
         for i in range(0, len(v1)):
-            v2[i] = v2[i] - q * v1[i]
+            v2[i] -= q * v1[i]
         v1, v2 = v2, v1
     return v2
 

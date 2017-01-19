@@ -583,7 +583,7 @@ def xyz2input(filename):
             ntypat += 1
             znucl.append(atomnumber)
         typat.append(znucl.index(atomnumber) + 1)
-        xangst = xangst + [float(atom[1]), float(atom[2]), float(atom[3])]
+        xangst += [float(atom[1]), float(atom[2]), float(atom[3])]
 
     abiinput.variables['natom'] = np.array([natom])
     abiinput.variables['znucl'] = np.array(znucl)

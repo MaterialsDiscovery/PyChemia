@@ -49,23 +49,23 @@ def worker_maise(db_settings, entry_id, workdir, relaxator_params):
 
     if 'ncalls' in status and status['ncalls'] > 0:
         ncalls = status['ncalls'] + 1 
-	print('ncalls = ', status['ncalls'])
+        print('ncalls = ', status['ncalls'])
     else:
         ncalls = 1 
-	print('Verifing initial structure...')
-	while np.min(structure.distance_matrix()+(np.eye(structure.natom)*5)) < 1.9:
-   		print('ERROR: Bad initial guess, two atoms are to close. Creating new random structure for id: %s' % str(entry_id))
-		write_poscar(structure, workdir + os.sep + 'Fail_initial_POSCAR') #WIH
-		structure=Structure.random_cell(structure.composition)
+    print('Verifing initial structure...')
+    while np.min(structure.distance_matrix()+(np.eye(structure.natom)*5)) < 1.9:
+        print('ERROR: Bad initial guess, two atoms are to close. Creating new random structure for id: %s' % str(entry_id))
+        write_poscar(structure, workdir + os.sep + 'Fail_initial_POSCAR') #WIH
+        structure=Structure.random_cell(structure.composition)
 
     write_poscar(structure, workdir + os.sep + 'POSCAR')
     if not os.path.exists(workdir + os.sep + 'setup') and ncalls == 1:     #WIH
-	print('First run.') #WIH
-	print('Verifying that everything runs smoothly') #WIH
-	print(workdir + os.sep + 'setup')
+        print('First run.') #WIH
+        #   print('Verifying that everything runs smoothly') #WIH
+	    print(workdir + os.sep + 'setup')
         shutil.copy2(source_dir + os.sep + 'setup_1', workdir + os.sep + 'setup')   #WIH
     elif ncalls > 1:   #WIH
-	shutil.copy2(source_dir + os.sep + 'setup_2', workdir + os.sep + 'setup')   #WIH
+        shutil.copy2(source_dir + os.sep + 'setup_2', workdir + os.sep + 'setup')   #WIH
     if not os.path.exists(workdir + os.sep + 'INI'):
         os.symlink(source_dir + os.sep + 'INI', workdir + os.sep + 'INI')
     if not os.path.exists(workdir + os.sep + 'maise'):
@@ -104,10 +104,10 @@ def worker_maise(db_settings, entry_id, workdir, relaxator_params):
             print('Forces and Positions could not be parsed : ', pos_forces.shape)
             print('pos_forces =\n%s ' % pos_forces)
             
-        str_stress = re.findall('Total([\.\d\s-]*)in', data)
+        str_stress = re.findall('Total([.\d\s-]*)in', data)
         if len(str_stress) == 2:
             stress = np.array([[float(y) for y in x.split()] for x in str_stress])
-        str_stress = re.findall('in kB([\.\d\s-]*)energy', data)
+        str_stress = re.findall('in kB([.\d\s-]*)energy', data)
         if len(str_stress) == 2:
             stress_kb = np.array([[float(y) for y in x.split()] for x in str_stress])
 
@@ -115,7 +115,7 @@ def worker_maise(db_settings, entry_id, workdir, relaxator_params):
     if not os.path.isfile('CONTCAR') or os.path.getsize("CONTCAR")==0:
         create_new=True
         print('CONTCAR not found in entry: %s' % str(entry_id))
-        i=001
+        i = 1
         while True:
             if not os.path.isfile('POSCAR-failed-%03s' % str(i)):
                 os.rename('POSCAR', 'POSCAR-failed-%03s' % str(i))
@@ -126,16 +126,16 @@ def worker_maise(db_settings, entry_id, workdir, relaxator_params):
         new_structure = read_poscar('CONTCAR')
         #min_dist = np.min(new_structure.distance_matrix+np.ones((new_structure.natom,new_structure.natom)))
 	min_dist = np.min(new_structure.distance_matrix()+(np.eye(new_structure.natom)*5))   #WIH
-	print('Minimal distance= %8.7f' % min_dist)   #WIH
+    print('Minimal distance= %8.7f' % min_dist)   #WIH
 
-	if min_dist < 2.0:
-		print('ERROR: MAISE finished with and structure with distances too close:', entry_id)  #WIH
-		write_poscar(new_structure, workdir + os.sep + 'Collapsed_CONTCAR') #WIH
-		create_new=True   #WIH
+    if min_dist < 2.0:
+        print('ERROR: MAISE finished with and structure with distances too close:', entry_id)  #WIH
+        write_poscar(new_structure, workdir + os.sep + 'Collapsed_CONTCAR') #WIH
+        create_new=True   #WIH
 
     if create_new:
         new_structure = Structure.random_cell(structure.composition)
-	ncalls = 0    #WIH
+        ncalls = 0    #WIH
 
     if ncalls > max_ncalls:
         print('WARNING: Too many calls to MAISE and no relaxation succeeded, replacing structure: ', entry_id)    # WIH

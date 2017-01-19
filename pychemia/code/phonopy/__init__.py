@@ -13,5 +13,6 @@ class PhonopyJob:
     def create_poscars(self):
 
         write_poscar(self.structure)
-        subprocess.call(['phonopy', '-d', r'--dim="%d' % self.dim[0], '%d' % self.dim[1],  r'%d"' % self.dim[2], '-c', 'POSCAR'])
+        subprocess.call(['phonopy', '-d', r'--dim="%d' % self.dim[0], '%d' % self.dim[1],  r'%d"' % self.dim[2], '-c',
+                         'POSCAR'])
 

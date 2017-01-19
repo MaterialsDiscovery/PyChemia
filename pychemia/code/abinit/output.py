@@ -17,7 +17,7 @@ class AbinitOutput:
 
     def get_energetics(self):
 
-        ret = re.findall('ETOT\s*([\d]+)\s*([\.E\d\-\+]+)\s*([\.E\d\-\+]+)\s*([\.E\d\-\+]+)\s*([\.E\d\-\+]+)\n',
+        ret = re.findall('ETOT\s*([\d]+)\s*([.E\d\-+]+)\s*([.E\d\-+]+)\s*([.E\d\-+]+)\s*([.E\d\-+]+)\n',
                          self.data)
         if not ret:
             return None
@@ -33,10 +33,10 @@ class AbinitOutput:
 
     def get_occupation_matrix(self):
 
-        occ_block = re.findall(r"=== For Atom[\s\w\d\-\.,=>:]*\n \n \n", self.data)
+        occ_block = re.findall(r"=== For Atom[\s\w\d\-.,=>:]*\n \n \n", self.data)
         if not occ_block:
             return None
-        occs = re.findall('Occupation matrix for spin[\s\d\w]*([\s\d\-\.]*)', occ_block[0])
+        occs = re.findall('Occupation matrix for spin[\s\d\w]*([\s\d\-.]*)', occ_block[0])
         atoms = [int(x) for x in re.findall('For Atom([\s\w\d]*)', occ_block[0])]
         spins = [int(x) for x in re.findall('Occupation matrix for spin([\s\w\d]*\n)', occ_block[0])]
 

@@ -61,10 +61,10 @@ if __name__ == '__main__':
         helper()
         sys.exit(1)
     elif len(doslist) == 1:
-        fig, ax = pychemia.visual.plot_one_dos(doslist[0], ax=None, horizontal=True,
-                                                 figwidth=figwidth, figheight=figheight)
+        fig, ax = pychemia.visual.plot_one_dos(doslist[0], ax=None, horizontal=True, figwidth=figwidth,
+                                               figheight=figheight)
         # fig.savefig(figname)
     else:
-        fig, ax = pychemia.visual.plot_many_dos(doslist, minenergy=minenergy, maxenergy=maxenergy,
-                                                  figwidth=figwidth, figheight=figheight)
+        fig, ax = pychemia.visual.plot_many_dos(doslist, minenergy=minenergy, maxenergy=maxenergy, figwidth=figwidth,
+                                                figheight=figheight)
         # fig.savefig(figname)

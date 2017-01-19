@@ -204,11 +204,11 @@ def elastic_moduli(filename='OUTCAR'):
     rf = open(filename)
     data = rf.read()
 
-    subblock = re.findall('ELASTIC MODULI CONTR FROM IONIC RELAXATION \(kBar\)[\s\d\w]*-*([\s\d\w\.-]*)\n\n\n',
+    subblock = re.findall('ELASTIC MODULI CONTR FROM IONIC RELAXATION \(kBar\)[\s\d\w]*-*([\s\d\w.-]*)\n\n\n',
                           data)
     ret['elastic_moduli_contr'] = np.array(np.array(subblock[0].split()[:42]).reshape(6, -1)[:, 1:], dtype=float)
 
-    subblock = re.findall('TOTAL ELASTIC MODULI \(kBar\)[\s\d\w]*-*([\s\d\w\.-]*)\n\n\n', data)
+    subblock = re.findall('TOTAL ELASTIC MODULI \(kBar\)[\s\d\w]*-*([\s\d\w.-]*)\n\n\n', data)
     ret['total_elastic_moduli'] = np.array(np.array(subblock[0].split()[:42]).reshape(6, -1)[:, 1:], dtype=float)
 
     return generic_serializer(ret)

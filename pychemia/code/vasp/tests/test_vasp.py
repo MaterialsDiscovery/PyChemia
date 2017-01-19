@@ -69,4 +69,4 @@ class MyTestCase(unittest.TestCase):
         """
         Tests (pychemia.code.vasp) [VaspJob]                         :
         """
-        st=pychemia.code.vasp.read_poscar('pychemia/test/data/vasp_06')
+        st = pychemia.code.vasp.read_poscar('pychemia/test/data/vasp_06')

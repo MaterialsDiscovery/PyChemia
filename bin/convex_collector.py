@@ -94,7 +94,7 @@ if __name__ == '__main__':
                             'natom': st.natom,
                             'density': st.density})
             else:
-                print 'ERROR: DB=%s ENTRY=%s No value of energy' % (idb, entry_id)
+                print('ERROR: DB=%s ENTRY=%s No value of energy' % (idb, entry_id))
 
     sorter = []
     for i in ret:
