@@ -343,7 +343,7 @@ class StructureAnalysis:
     def hardness_XX(self, initial_cutoff_radius=0.8, use_laplacian=True):
 
         bonds, coordination, cutoff_radius = self.bonds_coordination(initial_cutoff_radius=initial_cutoff_radius,
-                                                                     use_laplacian=use_laplacian, verbose=True)
+                                                                     use_laplacian=use_laplacian)
 
         sigma = 3.0
         c_hard = 1300.0
