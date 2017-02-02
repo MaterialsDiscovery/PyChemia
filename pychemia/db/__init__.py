@@ -34,7 +34,7 @@ The PyChemiaQueue is used to fill the role of a meta-queue for structures and jo
 from pychemia import HAS_PYMONGO, HAS_GRIDFS
 
 if HAS_PYMONGO:
-    from .db import PyChemiaDB, get_database, object_id, create_user, create_database
+    from .db import PyChemiaDB, get_database, object_id, create_user, create_database, has_connection
 
     if HAS_GRIDFS:
         from .queue import PyChemiaQueue

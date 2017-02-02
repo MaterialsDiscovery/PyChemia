@@ -5,15 +5,13 @@ import pychemia
 import tempfile
 import shutil
 from pychemia.utils.computing import hashfile
-from pychemia import HAS_PYMONGO, HAS_GRIDFS
-
+from pychemia.db import has_connection
 
 def test_queue():
     """
     Tests (pychemia.db.PyChemiaQueue)                            :
     """
-    if not HAS_PYMONGO or not HAS_GRIDFS:
-        print('PyChemiaQueue was disabled')
+    if not has_connection():
         return
 
     print("Testing PyChemiaQueue")

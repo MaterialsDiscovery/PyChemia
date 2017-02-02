@@ -7,7 +7,7 @@ import numpy as np
 import pymongo
 from bson.objectid import ObjectId
 
-from pychemia import Structure
+from pychemia import Structure, HAS_PYMONGO
 from pychemia.utils.periodic import atomic_symbols
 
 
@@ -349,3 +349,19 @@ def create_user(name, admin_name, admin_passwd, user_name, user_passwd, host='lo
 def create_database(name, admin_name, admin_passwd, user_name, user_passwd, host='localhost', port=27017, ssl=False,
                     replicaset=None):
     return create_user(name, admin_name, admin_passwd, user_name, user_passwd, host, port, ssl, replicaset)
+
+def has_connection():
+    if not HAS_PYMONGO:
+        return False
+    import pymongo
+    try:
+        maxSevSelDelay = 1
+        client = pymongo.MongoClient("localhost", serverSelectionTimeoutMS=maxSevSelDelay)
+        client.server_info()  # force connection on a request as the
+        # connect=True parameter of MongoClient seems
+        # to be useless here
+        return True
+    except pymongo.errors.ServerSelectionTimeoutError as err:
+        # do whatever you need
+        print(err)
+        return False

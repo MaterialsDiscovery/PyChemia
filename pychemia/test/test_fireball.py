@@ -8,9 +8,9 @@ def test_fireball():
     """
     Reading a Fireball output                                    :
     """
-    tmpdir=tempfile.mkdtemp()
-    zf=zipfile.ZipFile('pychemia/test/data/1280.zip')
-    zf.extract('1280/output.log')
+    tmpdir = tempfile.mkdtemp()
+    path = os.path.abspath('pychemia/test/data/1280.zip')
+    zf = zipfile.ZipFile(path)
     oldpwd = os.getcwd()
     os.chdir(tmpdir)
     zf.extract('1280/output.log')

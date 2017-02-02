@@ -1,7 +1,8 @@
 import unittest
 import time
 import multiprocessing
-from pychemia import pcm_log, HAS_PYMONGO, HAS_GRIDFS
+from pychemia.db import has_connection
+from pychemia import pcm_log
 from pychemia.searcher import HarmonySearch, FireFly, GeneticAlgorithm, ParticleSwarm
 from pychemia.population import LJCluster
 
@@ -23,8 +24,7 @@ def notest_searcher():
     """
     Testing HarmonySearch               :
     """
-    if not HAS_PYMONGO or not HAS_GRIDFS:
-        print('PyChemiaQueue was disabled')
+    if not has_connection():
         return
 
     p1 = multiprocessing.Process(target=searcher)
@@ -41,7 +41,8 @@ class SearcherTest(unittest.TestCase):
         """
         Tests (pychemia.searcher.firefly) with LJ Clusters           :
         """
-
+        if not has_connection():
+            return
         pcm_log.debug('FireFly')
         popu = LJCluster('test', composition='Xe13', refine=True, direct_evaluation=True)
         popu.pcdb.clean()
@@ -58,7 +59,8 @@ class SearcherTest(unittest.TestCase):
 
         Tests (pychemia.searcher.genetic) with LJ Clusters           :
         """
-
+        if not has_connection():
+            return
         pcm_log.debug('GeneticAlgorithm')
         popu = LJCluster('test', composition='Xe13', refine=False, direct_evaluation=True)
         popu.pcdb.clean()
@@ -70,7 +72,8 @@ class SearcherTest(unittest.TestCase):
         """
         Tests (pychemia.searcher.harmony) with LJ Clusters           :
         """
-
+        if not has_connection():
+            return
         pcm_log.debug('HarmonySearch')
         popu = LJCluster('test', composition='Xe13', refine=False, direct_evaluation=True)
         popu.pcdb.clean()
@@ -82,7 +85,8 @@ class SearcherTest(unittest.TestCase):
         """
         Tests (pychemia.searcher.swarm) with LJ Clusters             :
         """
-
+        if not has_connection():
+            return
         pcm_log.debug('ParticleSwarm')
         popu = LJCluster('test', composition='Xe13', refine=False, direct_evaluation=True)
         popu.pcdb.clean()
