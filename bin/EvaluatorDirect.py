@@ -62,7 +62,7 @@ def worker_maise(db_settings, entry_id, workdir, relaxator_params):
     if not os.path.exists(workdir + os.sep + 'setup') and ncalls == 1:     #WIH
         print('First run.') #WIH
         #   print('Verifying that everything runs smoothly') #WIH
-	    print(workdir + os.sep + 'setup')
+        print(workdir + os.sep + 'setup')
         shutil.copy2(source_dir + os.sep + 'setup_1', workdir + os.sep + 'setup')   #WIH
     elif ncalls > 1:   #WIH
         shutil.copy2(source_dir + os.sep + 'setup_2', workdir + os.sep + 'setup')   #WIH
@@ -125,7 +125,7 @@ def worker_maise(db_settings, entry_id, workdir, relaxator_params):
     else:
         new_structure = read_poscar('CONTCAR')
         #min_dist = np.min(new_structure.distance_matrix+np.ones((new_structure.natom,new_structure.natom)))
-	min_dist = np.min(new_structure.distance_matrix()+(np.eye(new_structure.natom)*5))   #WIH
+    min_dist = np.min(new_structure.distance_matrix()+(np.eye(new_structure.natom)*5))   #WIH
     print('Minimal distance= %8.7f' % min_dist)   #WIH
 
     if min_dist < 2.0:

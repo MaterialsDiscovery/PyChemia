@@ -886,19 +886,21 @@ def gea_angles(uvector):
         if tmp[0] > 1.0:
             tmp[0] = 1.0
         theta = np.arcsin(tmp[0])
-        print('Sin: %f Angle: %f'% (tmp[0], theta))
+        # print('Sin: %f Angle: %f'% (tmp[0], theta))
         if len(tmp) == 2 and tmp[1] < 0.0:
             if theta > 0:
                 theta = np.pi - theta
             elif theta < 0:
                 theta = - np.pi - theta
-        print('Sin: %f Angle: %f %s'% (tmp[0], theta, tmp))
+        # print('Sin: %f Angle: %f %s'% (tmp[0], theta, tmp))
         angles.append(theta)
         if np.abs(np.cos(theta)) < 1E-8:
-            print('ALERT: Zero denominator with numerator: %s' % tmp[1:])
+            pass
+            # print('ALERT: Zero denominator with numerator: %s' % tmp[1:])
         tmp = tmp[1:]/np.cos(theta)
         if np.abs(np.cos(theta)) < 1E-8:
-            print('ALERT: Zero denominator with numerator: %s %f' % (tmp, max(tmp)))
+            pass
+            # print('ALERT: Zero denominator with numerator: %s %f' % (tmp, max(tmp)))
     angles.append(np.pi/2.0)
     return angles
 
@@ -994,23 +996,23 @@ def gea_orthogonal_from_angles(angles_list):
 
     b = np.eye(2)
     n = int(np.sqrt(len(angles_list)*8+1)/2+0.5)
-    tmp = angles_list
+    tmp = np.array(angles_list)
 
     # For SO(k) there are k*(k-1)/2 angles that are grouped in k-1 sets
     # { (k-1 angles), (k-2 angles), ... , (1 angle)}
     for i in range(1, n):
-        print('Counter: %d' % i)
-        angles = tmp[-i:]+[np.pi/2]
+        #print('Counter: %d' % i)
+        angles = np.concatenate((tmp[-i:],[np.pi/2]))
         tmp = tmp[:-i]
-        print(tmp)
-        print('Angles: \n%s' % angles)
+        #print(tmp)
+        #print('Angles: \n%s' % angles)
         ma = gea_matrix_a(angles)  # matrix i+1 x i+1
-        print('Matrix a: \n%s' % ma)
+        #print('Matrix a: \n%s' % ma)
         b = np.dot(b, ma.T).T
         # We skip doing making a larger matrix for the last iteration
         if i < n-1:
             c = np.eye(i+2, i+2)
             c[:-1, :-1] = b
             b = c
-        print('New matrix b: \n%s' % b)
+        #print('New matrix b: \n%s' % b)
     return b

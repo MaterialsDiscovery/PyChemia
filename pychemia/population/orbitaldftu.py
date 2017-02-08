@@ -6,12 +6,13 @@ import numpy as np
 from ._population import Population
 from pychemia import pcm_log
 from pychemia.code.abinit import InputVariables
+from pychemia.code.abinit import AbinitOutput
 from pychemia.utils.mathematics import gram_smith_qr, gea_all_angles, gea_orthogonal_from_angles
 
 
 class OrbitalDFTU(Population):
-
-    def __init__(self, name, abinit_input='abinit.in', num_electrons_dftu=None, num_indep_matrices=None, connections=None):
+    def __init__(self, name, abinit_input='abinit.in', num_electrons_dftu=None, num_indep_matrices=None,
+                 connections=None):
 
         """
         This population is created with the purpose of global optimization of correlated orbitals 'd'
@@ -35,9 +36,7 @@ class OrbitalDFTU(Population):
         :param abinit_input: The abinit input file, all the variables will be preserve for all new candidates, except
                         for 'dmatpawu' the only variable that changes.
 
-        :param num_electrons_dftu: Number of electrons for each matrix. For example if you have 4 Co atoms you could set
-                        the value to [2, 5, 5, 2] meaning that 2 electrons are in the first 'd' atom 5 in the second one
-                        and so on.
+        :param num_electrons_dftu: Example [5, 1, 5, 1]
 
         """
         # Call the parent class initializer to link the PychemiaDB that will be used
@@ -60,7 +59,7 @@ class OrbitalDFTU(Population):
                 print("%3s : False" % self.input['znucl'][i])
             else:
                 print("%3s : True (l=%d)" % (self.input['znucl'][i], self.input['lpawu'][i]))
-                self.natpawu += sum([1 for x in self.input['typat'] if x == i+1])
+                self.natpawu += sum([1 for x in self.input['typat'] if x == i + 1])
         print('Number of atoms where DFT+U is applied: %d' % self.natpawu)
 
         # Computing the orbital that will be corrected
@@ -99,7 +98,7 @@ class OrbitalDFTU(Population):
             # Ferromagnetic spin-polarized (collinear) system (nsppol=2, nspinor=1, nspden=2):
             # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
             # They contain the "spin-up" and "spin-down" occupations.
-            self.nmatrices = 2*self.natpawu
+            self.nmatrices = 2 * self.natpawu
         elif self.nsppol == 1 and self.nspinor == 1 and self.nspden == 2:
             # Anti-ferromagnetic spin-polarized(collinear) system(nsppol=1, nspinor=1, nspden=2):
             # One(2lpawu + 1)x(2lpawu + 1) dmatpawu matrix is given for each atom on which +U is applied.
@@ -110,20 +109,27 @@ class OrbitalDFTU(Population):
             # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
             # They contains the "spin-up" and "spin-down" occupations (defined as n_up=(n+|m|)/2 and n_dn=(n-|m|)/2),
             #    where m is the integrated magnetization vector).
-            self.nmatrices = 2*self.natpawu
+            self.nmatrices = 2 * self.natpawu
         elif self.nsppol == 1 and self.nspinor == 2 and self.nspden == 1:
             # Non-collinear magnetic system with zero magnetization (nsppol=1, nspinor=2, nspden=1):
             # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
             # They contain the "spin-up" and "spin-down" occupations;
-            self.nmatrices = 2*self.natpawu
+            self.nmatrices = 2 * self.natpawu
 
         print('Variables controling the total number of matrices')
         print('nsppol : %d' % self.nsppol)
         print('nspinor: %d' % self.nspinor)
         print('nspden : %d' % self.nspden)
-        print('Total number of matrices expected on dmatpawu: %d' % self.nmatrices )
+        print('Total number of matrices expected on dmatpawu: %d' % self.nmatrices)
 
-        self.num_electrons_dftu = list(num_electrons_dftu)
+        if num_electrons_dftu is None:
+            abiinput = InputVariables(abinit_input)
+            dmatpawu = np.array(abiinput['dmatpawu']).reshape(-1, self.ndim, self.ndim)
+            params = dmatpawu2params(dmatpawu, 5)
+            self.num_electrons_dftu = np.apply_along_axis(sum,1,params['occupations'])
+        else:
+            self.num_electrons_dftu = np.array(num_electrons_dftu)
+        print('Number of electrons for each correlation matrix: %s' % self.num_electrons_dftu)
 
         if num_indep_matrices is not None:
             self.num_indep_matrices = num_indep_matrices
@@ -135,10 +141,10 @@ class OrbitalDFTU(Population):
             self.connections = list(connections)
             if len(self.connections) != self.nmatrices:
                 raise ValueError('Number of connections between matrices is not consistent with the number of matrices '
-                             'defined on dmatpawu')
+                                 'defined on dmatpawu')
             print('Connections: %s' % self.connections)
         else:
-            self.connections = range(self.nmatrices)
+            self.connections = list(range(self.nmatrices))
 
     def __str__(self):
         ret = ' Population LDA+U\n\n'
@@ -178,12 +184,11 @@ class OrbitalDFTU(Population):
         """
         matrices_defined = []
 
-        matrix_i = self.num_indep_matrices*[None]
-        matrix_d = self.num_indep_matrices*[None]
-        euler = self.num_indep_matrices*[None]
+        matrix_i = self.num_indep_matrices * [None]
+        matrix_d = self.num_indep_matrices * [None]
+        euler = self.num_indep_matrices * [None]
 
         for i in range(self.num_indep_matrices):
-
             nelect = self.num_electrons_dftu[i]
             val = [x for x in list(itertools.product(range(2), repeat=self.ndim)) if sum(x) == nelect]
             ii = val[np.random.randint(len(val))]
@@ -194,7 +199,8 @@ class OrbitalDFTU(Population):
             p = gram_smith_qr(self.ndim)
             euler[i] = gea_all_angles(p)
 
-        data = {'E': euler, 'O': matrix_i, 'D': matrix_d}
+        data = {'euler_angles': euler, 'occupations': matrix_i, 'deltas': matrix_d,
+                'num_matrices': self.num_indep_matrices}
 
         return self.new_entry(data), None
 
@@ -220,7 +226,7 @@ class OrbitalDFTU(Population):
     def from_dict(self, population_dict):
         pass
 
-    def new_entry(self, data, active=True):
+    def new_entry(self, properties, active=True):
         """
         Creates a new entry on the population database from given data.
 
@@ -230,10 +236,6 @@ class OrbitalDFTU(Population):
         :return:
 
         """
-
-        properties = {'E': list(data['E']),
-                      'D': list(data['D']),
-                      'O': list(data['O'])}
         status = {self.tag: active}
         entry = {'structure': self.structure.to_dict, 'properties': properties, 'status': status}
         entry_id = self.insert_entry(entry)
@@ -241,7 +243,18 @@ class OrbitalDFTU(Population):
         return entry_id
 
     def is_evaluated(self, entry_id):
-        pass
+
+        """
+        One candidate is considered evaluated if it contains any finite value of energy on the properties.energy field
+
+        :param entry_id:
+        :return:
+        """
+        entry = self.get_entry(entry_id, {'_id': 0, 'properties': 1})
+        if entry['properties']['energy'] is not None:
+            return True
+        else:
+            return False
 
     def check_duplicates(self, ids):
         """
@@ -321,14 +334,40 @@ class OrbitalDFTU(Population):
         pass
 
     def value(self, entry_id):
-        pass
+        """
+        Return the energy value associated to the candidate with identifier 'entry_id'
+
+        :param entry_id:
+        :return:
+        """
+        entry = self.get_entry(entry_id, {'properties.energy': 1})
+        if 'energy' in entry['properties']:
+            return entry['properties']['energy']
+        else:
+            return None
 
     def str_entry(self, entry_id):
         entry = self.get_entry(entry_id)
-        print(entry['properties']['P'], entry['properties']['d'])
+        print(entry['properties']['O'], entry['properties']['D'])
 
     def get_duplicates(self, ids):
         return None
+
+    def prepare_folder(self, entry_id, workdir, binary='abinit', source_dir='.'):
+
+        if not os.path.isdir(workdir):
+            os.mkdir(workdir)
+
+        for i in ['abinit.files', 'batch.pbs']:
+            if os.path.exists(workdir + os.sep + i):
+                os.remove(workdir + os.sep + i)
+            os.symlink(os.path.abspath(source_dir + os.sep + i), workdir + os.sep + i)
+
+        input = InputVariables('abinit.in')
+        params = self.pcdb.get_entry(entry_id)['properties']
+        dmatpawu = params2dmatpawu(params, 2 * self.maxlpawu + 1)
+        input['dmatpawu'] = list(dmatpawu.flatten())
+        input.write(workdir + os.sep + 'abinit.in')
 
     def collect_data(self, entry_id, workdir):
         if os.path.isfile(workdir + '/abinit.out'):
@@ -343,7 +382,8 @@ class OrbitalDFTU(Population):
         else:
             return False
 
-def params2dmatpawu(params, ndim):
+
+def params2dmatpawu(params):
     """
     Build the variable dmatpawu from the components stored in params
 
@@ -352,18 +392,27 @@ def params2dmatpawu(params, ndim):
                 5 for 'd' orbitals, 7 for 'f' orbitals
     :return:
     """
-    num_matrices = params['num_matrices']
+    ndim = params['ndim']
+
+    if 'num_matrices' in params:
+        num_matrices = params['num_matrices']
+    else:
+        num_matrices = len(params['deltas'])
+
     ret = np.zeros((num_matrices, ndim, ndim))
 
     for i in range(num_matrices):
-        eigval = np.diag(params['occupations'][i])
+        eigval = np.diag(params['occupations'][i]).astype(float)
         for j in range(ndim):
-                if eigval[j, j] == 0:
-                    eigval[j, j] += params['deltas'][i, j]
-                else:
-                    eigval[j, j] -= params['deltas'][i, j]
+            if eigval[j, j] == 0:
+                eigval[j, j] += params['deltas'][i][j]
+            else:
+                eigval[j, j] -= params['deltas'][i][j]
         rotation = gea_orthogonal_from_angles(params['euler_angles'][i])
-        correlation = np.dot(rotation, np.dot(np.diag(eigval), rotation.T))
+        #print('i=%d' % i)
+        #print(rotation)
+        #print(eigval)
+        correlation = np.dot(np.dot(rotation, eigval), rotation.T)
         ret[i] = correlation
     return ret
 
@@ -397,7 +446,8 @@ def dmatpawu2params(dmatpawu, ndim):
 
     euler_angles = np.array([list(gea_all_angles(p)) for p in rotations])
 
-    return {'occupations': occupations, 'deltas': deltas, 'euler_angles': euler_angles, 'num_matrices': num_matrices}
+    return {'occupations': occupations, 'deltas': deltas, 'euler_angles': euler_angles, 'num_matrices': num_matrices,
+            'ndim': ndim}
 
 
 def get_pattern(params, ndim):
