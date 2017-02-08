@@ -6,15 +6,16 @@ The variable dmatpawu
 
 The objective of this global search is finding the optimal values for the correlation matrices in DFT+U.
 For this tutorial consider the abinit input file stored on 'pychemia/test/data/abinit_dmatpaw/abinit.in'.
-First, we can read the abinit input and access the contents of the variable 'dmatpawu'
+First, we can read the abinit input and access the contents of the variable 'dmatpawu'::
 
     import pychemia
     import numpy as np
-    abiinput = pychemia.code.abinit.InputVariables(pychemia.__path__[0] + '/test/data/abinit_dmatpawu/abinit.in')
+    pychemia_path = pychemia.__path__[0]
+    abiinput = pychemia.code.abinit.InputVariables(pychemia_path + '/test/data/abinit_dmatpawu/abinit.in')
     dmatpawu = np.array(abiinput['dmatpawu']).reshape(-1,5,5)
 
 The variable 'dmatpawu' stores the contents of 4 5x5 matrices, the correlation matrices for the corresponding 4 Co atoms
-in the crystal. The matrices can be converted into a numpy array with shape (4, 5, 5) and they look like this:
+in the crystal. The matrices can be converted into a numpy array with shape (4, 5, 5) and they look like this::
 
     array([[[ 0.06256,  0.     ,  0.01218,  0.     ,  0.     ],
             [ 0.     ,  0.481  ,  0.     ,  0.45877,  0.     ],
@@ -44,7 +45,7 @@ The objective is to find the set of correlation matrices that minimize the energ
 if we have 100 numbers, any set of numbers is a valid set of correlation matrices. We will now convert this set of
 matrices into a reduced set of variables that can be treated independently.
 
-A correlation matrix can be express as the following product:
+A correlation matrix can be express as the following product::
 
     R*O*R^{-1}
 
@@ -56,11 +57,11 @@ into 10 independent variables. We should also be aware that the occupations on t
 exactly integers, we will account for the small differences into a separate set of values. With those premises a 5x5
 correlation matrix is converted into a set with 10 euler angles, 5 occupations and 5 deltas. This is done by the
 routines 'dmatpawu2params' and 'params2dmatpawu' that allow us to go back and forward from the set of correlation
-matrices into the set of 'euler_angles', intger 'occupations' and the small 'deltas'.
+matrices into the set of 'euler_angles', intger 'occupations' and the small 'deltas'::
 
     params = pychemia.population.orbitaldftu.dmatpawu2params(dmatpawu, 5)
 
-The variable 'params' is a dictionary with values for 'occupations', 'deltas' and 'euler_angles'
+The variable 'params' is a dictionary with values for 'occupations', 'deltas' and 'euler_angles'::
 
     {'deltas': array([[ 0.02223 ,  0.054049,  0.079991,  0.06023 ,  0.05962 ],
             [ 0.04956 ,  0.04832 ,  0.04058 ,  0.023486,  0.016844],
@@ -83,11 +84,11 @@ The variable 'params' is a dictionary with values for 'occupations', 'deltas' an
 
 This is in fact the set of independent variables that we can use to optimize the correlation using a global searcher.
 We can also go back and recover the correlation matrices using the inverse procedure, ie, from the dictionary params
-recover the correlation matrices
+recover the correlation matrices::
 
     dmatpawu_new = pychemia.population.orbitaldftu.params2dmatpawu(params)
 
-The dmatpawu is recovered from the values stored in 'params'
+The dmatpawu is recovered from the values stored in 'params'::
 
     array([[[ 0.06256, -0.     , -0.01218, -0.     ,  0.     ],
             [-0.     ,  0.481  , -0.     ,  0.45877,  0.     ],
@@ -122,9 +123,9 @@ The population
 ~~~~~~~~~~~~~~
 
 The most simple way of creating the population requires just the name of the mongo database to be created and one abinit
-input file. The relevant information to setup the search will be infered from the contents of the abinit input file.
+input file. The relevant information to setup the search will be infered from the contents of the abinit input file::
 
-    popu=pychemia.population.orbitaldftu.OrbitalDFTU('test', abinit_input='pychemia.__path__[0] +
+    popu=pychemia.population.orbitaldftu.OrbitalDFTU('test', abinit_input=pychemia_path +
                                                         '/test/data/abinit_dmatpawu/abinit.in')
 
     Orbital population:
