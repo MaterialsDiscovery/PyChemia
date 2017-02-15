@@ -2,16 +2,18 @@ from __future__ import print_function
 import os
 import re
 import itertools
+import random
 import numpy as np
 from ._population import Population
 from pychemia import pcm_log
 from pychemia.code.abinit import InputVariables
 from pychemia.code.abinit import AbinitOutput
-from pychemia.utils.mathematics import gram_smith_qr, gea_all_angles, gea_orthogonal_from_angles
+from pychemia.utils.mathematics import gram_smith_qr, gea_all_angles, gea_orthogonal_from_angles, unit_vector
+from pychemia.utils.serializer import generic_serializer
 
 
 class OrbitalDFTU(Population):
-    def __init__(self, name, abinit_input='abinit.in', num_electrons_dftu=None, num_indep_matrices=None,
+    def __init__(self, name, input_path='abinit.in', num_electrons_dftu=None, num_indep_matrices=None,
                  connections=None):
 
         """
@@ -43,10 +45,12 @@ class OrbitalDFTU(Population):
         Population.__init__(self, name, 'global')
         # Checking for existence of 'abinit.in'
         if not os.path.isfile(abinit_input):
-            print("Abinit input not found")
-            raise ValueError
+            raise ValueError("Abinit input not found")
         # Reading the input variables and getting the structure
+        self.input_path = abinit_input
         self.input = InputVariables(abinit_input)
+        if 'dmatpawu' not in self.input.keys():
+            raise ValueError("Abinit input file does not contain 'dmatpawu' variable")
         self.structure = self.input.get_structure()
 
         print('Orbital population:')
@@ -126,7 +130,7 @@ class OrbitalDFTU(Population):
             abiinput = InputVariables(abinit_input)
             dmatpawu = np.array(abiinput['dmatpawu']).reshape(-1, self.ndim, self.ndim)
             params = dmatpawu2params(dmatpawu, 5)
-            self.num_electrons_dftu = np.apply_along_axis(sum,1,params['occupations'])
+            self.num_electrons_dftu = np.apply_along_axis(sum, 1, params['occupations'])
         else:
             self.num_electrons_dftu = np.array(num_electrons_dftu)
         print('Number of electrons for each correlation matrix: %s' % self.num_electrons_dftu)
@@ -207,12 +211,56 @@ class OrbitalDFTU(Population):
     def cross(self, ids):
         """
         Crossing algorithm used notably by GA to mix the information from several candidates
-        Not implemented
+        This crossing algorithm is mixing the angles of two correlation matrices preserving the
+        ordering of the atoms where the angles are applied. The occupations and deltas are also
+        mixed independently of the euler angles.
 
         :param ids:
         :return:
         """
-        pass
+        assert len(ids) == 2
+
+        properties1 = self.get_correlation_params(ids[0])
+        properties2 = self.get_correlation_params(ids[1])
+
+        euler_angles1 = properties1['euler_angles']
+        euler_angles2 = properties2['euler_angles']
+
+        occupations1 = properties1['occupations']
+        occupations2 = properties2['occupations']
+
+        deltas1 = properties1['deltas']
+        deltas2 = properties2['deltas']
+
+        newdata1 = {'euler_angles': [], 'occupations': [], 'deltas': [], 'num_matrices': self.num_indep_matrices}
+        newdata2 = {'euler_angles': [], 'occupations': [], 'deltas': [], 'num_matrices': self.num_indep_matrices}
+
+        for i in range(self.num_indep_matrices):
+            rnd = random.randint(0, 1)
+            if rnd == 0:
+                newdata1['euler_angles'].append(euler_angles1[i])
+                newdata2['euler_angles'].append(euler_angles2[i])
+            else:
+                newdata1['euler_angles'].append(euler_angles2[i])
+                newdata2['euler_angles'].append(euler_angles1[i])
+            rnd = random.randint(0, 1)
+            if rnd == 0:
+                newdata1['occupations'].append(occupations1[i])
+                newdata2['occupations'].append(occupations2[i])
+                newdata1['deltas'].append(deltas1[i])
+                newdata2['deltas'].append(deltas2[i])
+            else:
+                newdata1['occupations'].append(occupations2[i])
+                newdata2['occupations'].append(occupations1[i])
+                newdata1['deltas'].append(deltas2[i])
+                newdata2['deltas'].append(deltas1[i])
+
+        entry_id = self.new_entry(newdata1)
+        entry_jd = self.new_entry(newdata2)
+        return entry_id, entry_jd
+
+    def get_correlation_params(self, entry_id):
+        return self.get_entry(entry_id, {'properties': 1}, with_id=False)['properties']
 
     def evaluate_entry(self, entry_id):
         """
@@ -224,19 +272,30 @@ class OrbitalDFTU(Population):
         pass
 
     def from_dict(self, population_dict):
-        pass
+        return self.__init__(input_path=population_dict['input_path'],
+                             num_electrons_dftu=population_dict['num_electrons_dftu'],
+                             connections=population_dict['connections'],
+                             num_indep_matrices=population_dict['num_indep_matrices'])
+
+    def to_dict(self):
+        ret = super(self).to_dict
+        ret['input_path'] = self.input_path
+        ret['num_electrons_dftu'] = self.num_electrons_dftu
+        ret['num_indep_matrices'] = self.num_indep_matrices
+        ret['connections'] = self.connections
 
     def new_entry(self, properties, active=True):
         """
         Creates a new entry on the population database from given data.
 
-        :param data: dictionary with 3 keys 'D' for deltas, 'I' for the integers
+        :param properties: dictionary with 3 keys 'D' for deltas, 'I' for the integers
                         and eigen for the rotation matrix applied to the orbitals
         :param active: if True, the entry is enabled on the DB to be evaluated.
         :return:
 
         """
         status = {self.tag: active}
+        properties['energy'] = None
         entry = {'structure': self.structure.to_dict, 'properties': properties, 'status': status}
         entry_id = self.insert_entry(entry)
         pcm_log.debug('Added new entry: %s with tag=%s: %s' % (str(entry_id), self.tag, str(active)))
@@ -266,35 +325,37 @@ class OrbitalDFTU(Population):
         :return:
         """
         ret = {}
+        print('Checking %d candidates' % len(ids))
         for i in range(len(ids)):
-            entry_i = self.get_entry(ids[i])
             for j in range(i + 1, len(ids)):
-                entry_j = self.get_entry(ids[j])
                 if self.distance(ids[i], ids[j]) < 1E-3:
-                    if entry_i in ret:
-                        ret[entry_i].append(entry_j)
+                    if ids[i] in ret:
+                        ret[ids[i]].append(ids[j])
                     else:
-                        ret[entry_i] = [entry_j]
+                        ret[ids[i]] = [ids[j]]
+        return ret
 
     def distance(self, entry_id, entry_jd):
         """
         Measure of distance for two entries with identifiers 'entry_id' and 'entry_jd'
-        TODO: The definition must be changed and compare the resulting dmatpawu instead of
-        individual components
 
         :param entry_id: Identifier of first entry
         :param entry_jd: Identifier of second entry
         :return:
         """
-        entry_i = self.get_entry(entry_id)
-        entry_j = self.get_entry(entry_jd)
-        dmat_i = entry_i['properties']['P']
-        dmat_j = entry_j['properties']['P']
-        dist_p = np.linalg.norm(dmat_j - dmat_i)
-        dmat_i = entry_i['properties']['d']
-        dmat_j = entry_j['properties']['d']
-        dist_d = np.linalg.norm(dmat_j - dmat_i)
-        return dist_d + dist_p
+
+        properties1 = self.get_correlation_params(entry_id)
+        properties2 = self.get_correlation_params(entry_jd)
+
+        euler_angles1 = properties1['euler_angles']
+        euler_angles2 = properties2['euler_angles']
+
+        uvect1 = unit_vector(np.array(euler_angles1).flatten())
+        uvect2 = unit_vector(np.array(euler_angles2).flatten())
+
+        dist_euler = 1 - np.dot(uvect1, uvect2)
+
+        return dist_euler
 
     def move_random(self, entry_id, factor=0.2, in_place=False, kind='move'):
         """
@@ -307,11 +368,19 @@ class OrbitalDFTU(Population):
         :param kind: Use when several algorithms are used for movement. One implemented here
         :return:
         """
-        pass
-        # entry_i = self.get_entry(entry_id)
-        # dmat_i = entry_i['properties']['dmatpawu']
-        # dmat_i += factor*np.random.random_sample(len(dmat_i))
-        # self.pcdb.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'properties.dmatpawu': list(dmat_i)}})
+        properties = self.get_correlation_params(entry_id)
+
+        newdata = dict(properties)
+        for i in range(self.num_indep_matrices):
+            for j in range(self.ndim):
+                perturbation = properties['euler_angles'][i][j] + 2*np.random.rand()*factor - factor
+                if np.pi/2.0 > perturbation > -np.pi/2.0:
+                    newdata['euler_angles'][i][j] = perturbation
+
+        if in_place:
+            return self.pcdb.db.pychemia_entries.update({'_id': entry_id},  {'$set': {'properties': newdata}})
+        else:
+            return self.new_entry(newdata, active=False)
 
     def move(self, entry_id, entry_jd, factor=0.2, in_place=False):
         """
@@ -324,11 +393,47 @@ class OrbitalDFTU(Population):
         :param in_place: If True the candidate is changed keeping the identifier unchanged
         :return:
         """
-        entry_i = self.get_entry(entry_id)
-        dmat_i = np.array(entry_i['properties']['P'])
-        entry_j = self.get_entry(entry_jd)
-        dmat_j = np.array(entry_j['properties']['P'])
-        dmat_i += factor * (dmat_j - dmat_i)
+
+        properties1 = self.get_correlation_params(entry_id)
+        properties2 = self.get_correlation_params(entry_jd)
+
+        euler_angles1 = properties1['euler_angles']
+        euler_angles2 = properties2['euler_angles']
+
+        euler_angles_new = np.zeros((self.num_indep_matrices, self.ndim))
+
+        for i in range(self.num_indep_matrices):
+            for j in range(self.ndim):
+                angle1 = euler_angles1[i][j]
+                angle2 = euler_angles2[i][j]
+                if angle1 < angle2:
+                    if angle2 - angle1 < angle1 - angle2 + 2*np.pi:
+                        direction = 1  # Forward
+                        angle = angle2 - angle1
+                    else:
+                        direction = -1  # Backward
+                        angle = angle1 - angle2 + 2*np.pi
+                else:
+                    if angle1 - angle2 < angle2 - angle1 + 2*np.pi:
+                        direction = -1  # Backward
+                        angle = angle1 - angle2
+                    else:
+                        direction = 1
+                        angle = angle2 - angle1 + 2*np.pi
+
+                euler_angles_new[i, j] = angle1 + direction*factor*angle
+                if euler_angles_new[i, j] > np.pi:
+                    euler_angles_new[i, j] -= -2*np.pi
+                if euler_angles_new[i, j] < -np.pi:
+                    euler_angles_new[i, j] += -2*np.pi
+
+        newdata = dict(properties1)
+        newdata['euler_angles'] = generic_serializer(euler_angles_new)
+
+        if in_place:
+            return self.pcdb.db.pychemia_entries.update({'_id': entry_id},  {'$set': {'properties': newdata}})
+        else:
+            return self.new_entry(newdata, active=False)
 
     def recover(self):
         pass
@@ -341,10 +446,7 @@ class OrbitalDFTU(Population):
         :return:
         """
         entry = self.get_entry(entry_id, {'properties.energy': 1})
-        if 'energy' in entry['properties']:
-            return entry['properties']['energy']
-        else:
-            return None
+        return entry['properties']['energy']
 
     def str_entry(self, entry_id):
         entry = self.get_entry(entry_id)
@@ -353,7 +455,7 @@ class OrbitalDFTU(Population):
     def get_duplicates(self, ids):
         return None
 
-    def prepare_folder(self, entry_id, workdir, binary='abinit', source_dir='.'):
+    def prepare_folder(self, entry_id, workdir, source_dir='.'):
 
         if not os.path.isdir(workdir):
             os.mkdir(workdir)
@@ -363,19 +465,29 @@ class OrbitalDFTU(Population):
                 os.remove(workdir + os.sep + i)
             os.symlink(os.path.abspath(source_dir + os.sep + i), workdir + os.sep + i)
 
-        input = InputVariables('abinit.in')
+        abiinput = InputVariables('abinit.in')
         params = self.pcdb.get_entry(entry_id)['properties']
-        dmatpawu = params2dmatpawu(params, 2 * self.maxlpawu + 1)
-        input['dmatpawu'] = list(dmatpawu.flatten())
-        input.write(workdir + os.sep + 'abinit.in')
+        dmatpawu = params2dmatpawu(params)
+        abiinput['dmatpawu'] = list(dmatpawu.flatten())
+        abiinput.write(workdir + os.sep + 'abinit.in')
 
     def collect_data(self, entry_id, workdir):
+
+        old_properties = self.get_entry(entry_id, {'properties': 1}, with_id=False )['properties']
+
         if os.path.isfile(workdir + '/abinit.out'):
             ao = AbinitOutput(workdir + '/abinit.out')
+
+            dmatpawu = get_final_dmatpawu(workdir + '/abinit.out')
+            params = dmatpawu2params(dmatpawu, self.ndim)
+            properties = dict(params)
+            properties['original_params'] = old_properties
+
             if 'etot' in ao.get_energetics():
                 energy = ao.get_energetics()['etot'][-1]
                 print('Uploading energy data for %s' % entry_id)
-                self.set_in_properties(entry_id, 'energy', energy)
+                properties['energy'] = energy
+                self.pcdb.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'properties': properties}})
                 return True
             else:
                 return False
@@ -388,8 +500,6 @@ def params2dmatpawu(params):
     Build the variable dmatpawu from the components stored in params
 
     :param params: dictionary with keys 'I', 'D' and 'eigen'
-    :param ndim: dimension of the correlation matrix
-                5 for 'd' orbitals, 7 for 'f' orbitals
     :return:
     """
     ndim = params['ndim']
@@ -399,19 +509,20 @@ def params2dmatpawu(params):
     else:
         num_matrices = len(params['deltas'])
 
+    occupations = np.array(params['occupations'])
+    deltas = np.array(params['deltas'])
+    euler_angles = np.array(params['euler_angles'])
+
     ret = np.zeros((num_matrices, ndim, ndim))
 
     for i in range(num_matrices):
-        eigval = np.diag(params['occupations'][i]).astype(float)
+        eigval = np.diag(occupations[i]).astype(float)
         for j in range(ndim):
             if eigval[j, j] == 0:
-                eigval[j, j] += params['deltas'][i][j]
+                eigval[j, j] += deltas[i, j]
             else:
-                eigval[j, j] -= params['deltas'][i][j]
-        rotation = gea_orthogonal_from_angles(params['euler_angles'][i])
-        #print('i=%d' % i)
-        #print(rotation)
-        #print(eigval)
+                eigval[j, j] -= deltas[i, j]
+        rotation = gea_orthogonal_from_angles(euler_angles[i])
         correlation = np.dot(np.dot(rotation, eigval), rotation.T)
         ret[i] = correlation
     return ret
@@ -462,7 +573,7 @@ def get_pattern(params, ndim):
     natpawu = len(eigvec)
     connection = np.zeros((natpawu, natpawu, ndim, ndim))
 
-    bb = np.dot(eigvec[0], np.linalg.inv(eigvec[3]))
+    # bb = np.dot(eigvec[0], np.linalg.inv(eigvec[3]))
     # connection = np.array(np.round(np.diagonal(bb)), dtype=int)
 
     iii = np.array(params['I'], dtype=int).reshape((-1, ndim))
@@ -491,7 +602,11 @@ def get_final_correlation_matrices_from_output(filename):
     mainblock = re.findall('LDA\+U DATA[\s\w\d\-.=,>:]*\n\n\n', data)
     assert len(mainblock) == 1
 
-    pattern = """For Atom\s*(\d+), occupations for correlated orbitals. lpawu =\s*([\d]+)\s*Atom\s*[\d]+\s*. Occ. for lpawu and for spin\s*\d+\s*=\s*([\d\.]+)\s*Atom\s*[\d]+\s*. Occ. for lpawu and for spin\s*\d+\s*=\s*([\d\.]+)\s*=> On atom\s*\d+\s*,  local Mag. for lpawu is[\s\d\w\.\-]*== Occupation matrix for correlated orbitals:\s*Occupation matrix for spin  1\s*([\d\.\-\s]*)Occupation matrix for spin  2\s*([\d\.\-\s]*)"""
+    pattern = "For Atom\s*(\d+), occupations for correlated orbitals. lpawu =\s*([\d]+)\s*Atom\s*[\d]+\s*. Occ. " \
+              "for lpawu and for spin\s*\d+\s*=\s*([\d\.]+)\s*Atom\s*[\d]+\s*. Occ. for lpawu and for " \
+              "spin\s*\d+\s*=\s*([\d\.]+)\s*=> On atom\s*\d+\s*,  local Mag. for lpawu is[\s\d\w\.\-]*== Occupation " \
+              "matrix for correlated orbitals:\s*Occupation matrix for spin  1\s*([\d\.\-\s]*)Occupation matrix " \
+              "for spin  2\s*([\d\.\-\s]*)"
     ans = re.findall(pattern, mainblock[0])
     print(ans)
 

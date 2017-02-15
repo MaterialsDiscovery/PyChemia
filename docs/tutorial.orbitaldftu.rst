@@ -144,3 +144,18 @@ input file. The relevant information to setup the search will be infered from th
     Number of electrons for each correlation matrix: [2 5 5 2]
     Number of independent matrices: 4
 
+
+Create random correlation matrices can be done with::
+
+    popu.add_random()
+
+The return is the Indentifier of the new entry on the database.
+Also a set of new random correlation matrices can be created with::
+
+    popu.random_population(16)
+
+We have the basic ingredients for creating the first population for the global searcher.
+How the correlation matrices are evaluated is out of scope of the population and depends on the particularities of the
+machines where Abinit is used to evaluate them. We will move our focus to the methods needed to produced new correlation
+matrices based on the results of a given set of correlation matrices.
+
