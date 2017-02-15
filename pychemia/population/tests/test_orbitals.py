@@ -67,6 +67,6 @@ class PopulationTest(unittest.TestCase):
 
         for i in popu.members:
             popu.prepare_folder(i, workdir='/tmp/orbitals',
-                                source_dir=pychemia_path + '/test/data/abinit_dmatpawu/abinit.in')
+                                source_dir=pychemia_path + '/test/data/abinit_dmatpawu')
 
         popu.pcdb.clean()

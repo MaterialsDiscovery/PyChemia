@@ -460,21 +460,21 @@ class OrbitalDFTU(Population):
     def get_duplicates(self, ids):
         return None
 
-    def prepare_folder(self, entry_id, workdir, source_dir='.'):
+    def prepare_folder(self, entry_id, workdir='.', source_dir='.'):
 
-        if not os.path.isdir(workdir):
-            os.mkdir(workdir)
+        if not os.path.isdir(workdir+os.sep+str(entry_id)):
+            os.mkdir(workdir+os.sep+str(entry_id))
 
         for i in ['abinit.files', 'batch.pbs']:
             if os.path.lexists(workdir + os.sep + i):
                 os.remove(workdir + os.sep + i)
-            os.symlink(os.path.abspath(source_dir + os.sep + i), workdir + os.sep + i)
+            os.symlink(os.path.abspath(source_dir + os.sep + i), workdir + os.sep+str(entry_id) + os.sep + i)
 
         abiinput = InputVariables('abinit.in')
         params = self.get_correlation_params(entry_id)
         dmatpawu = params2dmatpawu(params)
         abiinput['dmatpawu'] = list(dmatpawu.flatten())
-        abiinput.write(workdir + os.sep + 'abinit.in')
+        abiinput.write(workdir + os.sep+str(entry_id) + os.sep + 'abinit.in')
 
     def collect_data(self, entry_id, workdir):
 
