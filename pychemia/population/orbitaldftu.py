@@ -44,12 +44,12 @@ class OrbitalDFTU(Population):
         # Call the parent class initializer to link the PychemiaDB that will be used
         Population.__init__(self, name, 'global')
         # Checking for existence of 'abinit.in'
-        if not os.path.isfile(abinit_input):
+        if not os.path.isfile(input_path):
             raise ValueError("Abinit input not found")
         # Reading the input variables and getting the structure
-        self.input_path = abinit_input
-        self.input = InputVariables(abinit_input)
-        if 'dmatpawu' not in self.input.keys():
+        self.input_path = input_path
+        self.input = InputVariables(input_path)
+        if 'dmatpawu' not in self.input.variables:
             raise ValueError("Abinit input file does not contain 'dmatpawu' variable")
         self.structure = self.input.get_structure()
 
@@ -127,7 +127,7 @@ class OrbitalDFTU(Population):
         print('Total number of matrices expected on dmatpawu: %d' % self.nmatrices)
 
         if num_electrons_dftu is None:
-            abiinput = InputVariables(abinit_input)
+            abiinput = InputVariables(input_path)
             dmatpawu = np.array(abiinput['dmatpawu']).reshape(-1, self.ndim, self.ndim)
             params = dmatpawu2params(dmatpawu, 5)
             self.num_electrons_dftu = np.apply_along_axis(sum, 1, params['occupations'])
@@ -277,12 +277,13 @@ class OrbitalDFTU(Population):
                              connections=population_dict['connections'],
                              num_indep_matrices=population_dict['num_indep_matrices'])
 
+    @property
     def to_dict(self):
         ret = super(self).to_dict
         ret['input_path'] = self.input_path
-        ret['num_electrons_dftu'] = self.num_electrons_dftu
+        ret['num_electrons_dftu'] = list(self.num_electrons_dftu)
         ret['num_indep_matrices'] = self.num_indep_matrices
-        ret['connections'] = self.connections
+        ret['connections'] = list(self.connections)
 
     def new_entry(self, properties, active=True):
         """
@@ -466,14 +467,14 @@ class OrbitalDFTU(Population):
             os.symlink(os.path.abspath(source_dir + os.sep + i), workdir + os.sep + i)
 
         abiinput = InputVariables('abinit.in')
-        params = self.pcdb.get_entry(entry_id)['properties']
+        params = self.get_correlation_params(entry_id)
         dmatpawu = params2dmatpawu(params)
         abiinput['dmatpawu'] = list(dmatpawu.flatten())
         abiinput.write(workdir + os.sep + 'abinit.in')
 
     def collect_data(self, entry_id, workdir):
 
-        old_properties = self.get_entry(entry_id, {'properties': 1}, with_id=False )['properties']
+        old_properties = self.get_correlation_params(entry_id)
 
         if os.path.isfile(workdir + '/abinit.out'):
             ao = AbinitOutput(workdir + '/abinit.out')
