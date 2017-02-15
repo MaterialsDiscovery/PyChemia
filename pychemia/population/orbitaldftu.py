@@ -204,7 +204,7 @@ class OrbitalDFTU(Population):
             euler[i] = gea_all_angles(p)
 
         data = {'euler_angles': euler, 'occupations': matrix_i, 'deltas': matrix_d,
-                'num_matrices': self.num_indep_matrices}
+                'num_matrices': self.num_indep_matrices, 'ndim': self.ndim}
 
         return self.new_entry(data), None
 
@@ -232,8 +232,10 @@ class OrbitalDFTU(Population):
         deltas1 = properties1['deltas']
         deltas2 = properties2['deltas']
 
-        newdata1 = {'euler_angles': [], 'occupations': [], 'deltas': [], 'num_matrices': self.num_indep_matrices}
-        newdata2 = {'euler_angles': [], 'occupations': [], 'deltas': [], 'num_matrices': self.num_indep_matrices}
+        newdata1 = {'euler_angles': [], 'occupations': [], 'deltas': [], 'num_matrices': self.num_indep_matrices,
+                    'ndim': self.ndim}
+        newdata2 = {'euler_angles': [], 'occupations': [], 'deltas': [], 'num_matrices': self.num_indep_matrices,
+                    'ndim': self.ndim}
 
         for i in range(self.num_indep_matrices):
             rnd = random.randint(0, 1)
@@ -378,6 +380,8 @@ class OrbitalDFTU(Population):
                 if np.pi/2.0 > perturbation > -np.pi/2.0:
                     newdata['euler_angles'][i][j] = perturbation
 
+        print(newdata)
+
         if in_place:
             return self.pcdb.db.pychemia_entries.update({'_id': entry_id},  {'$set': {'properties': newdata}})
         else:
@@ -401,10 +405,10 @@ class OrbitalDFTU(Population):
         euler_angles1 = properties1['euler_angles']
         euler_angles2 = properties2['euler_angles']
 
-        euler_angles_new = np.zeros((self.num_indep_matrices, self.ndim))
+        euler_angles_new = np.zeros((self.num_indep_matrices, int(self.ndim*(self.ndim-1)/2)))
 
         for i in range(self.num_indep_matrices):
-            for j in range(self.ndim):
+            for j in range(int(self.ndim*(self.ndim-1)/2)):
                 angle1 = euler_angles1[i][j]
                 angle2 = euler_angles2[i][j]
                 if angle1 < angle2:
@@ -462,7 +466,7 @@ class OrbitalDFTU(Population):
             os.mkdir(workdir)
 
         for i in ['abinit.files', 'batch.pbs']:
-            if os.path.exists(workdir + os.sep + i):
+            if os.path.lexists(workdir + os.sep + i):
                 os.remove(workdir + os.sep + i)
             os.symlink(os.path.abspath(source_dir + os.sep + i), workdir + os.sep + i)
 
@@ -503,6 +507,8 @@ def params2dmatpawu(params):
     :param params: dictionary with keys 'I', 'D' and 'eigen'
     :return:
     """
+    print(list(params.keys()))
+
     ndim = params['ndim']
 
     if 'num_matrices' in params:
@@ -513,6 +519,10 @@ def params2dmatpawu(params):
     occupations = np.array(params['occupations'])
     deltas = np.array(params['deltas'])
     euler_angles = np.array(params['euler_angles'])
+
+    print(euler_angles.shape)
+    print(deltas.shape)
+    print(occupations.shape)
 
     ret = np.zeros((num_matrices, ndim, ndim))
 

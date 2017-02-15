@@ -224,7 +224,7 @@ class InputVariables(collections.MutableMapping):
         if varname in known_variables:
             for i in known_variables[varname]:
                 if len(varlist) % i == 0:
-                    for j in range(len(varlist) / i):
+                    for j in range(int(len(varlist) / i)):
                         if j == 0:
                             ret += (i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
                         else:

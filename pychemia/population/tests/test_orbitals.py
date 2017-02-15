@@ -29,6 +29,7 @@ class PopulationTest(unittest.TestCase):
 
         popu = pychemia.population.orbitaldftu.OrbitalDFTU('test', input_path=pychemia_path +
                                                            '/test/data/abinit_dmatpawu/abinit.in')
+        popu.pcdb.clean()
 
         ea = [[-0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0],
               [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
@@ -64,3 +65,8 @@ class PopulationTest(unittest.TestCase):
         #pd = popu.to_dict
         #popu.from_dict(pd)
 
+        for i in popu.members:
+            popu.prepare_folder(i, workdir='/tmp/orbitals',
+                                source_dir=pychemia_path + '/test/data/abinit_dmatpawu/abinit.in')
+
+        popu.pcdb.clean()
