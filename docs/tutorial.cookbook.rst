@@ -47,7 +47,7 @@ This is how pychemia can convert it into a POSCAR file:
     >>> st = pychemia.io.ascii.load('test.ascii')
     >>> pychemia.code.vasp.write_poscar(st, 'POSCAR.test')
 
-The final archive calle ``POSCAR.test`` will looks like this:
+The final archive called ``POSCAR.test`` will looks like this:
 
 .. code-block:: none
 
@@ -65,3 +65,24 @@ The final archive calle ``POSCAR.test`` will looks like this:
        0.0000000000000000   0.2700535286675975   0.3810021400026761
        0.0660256684506364   0.7272193856947440   0.7358414360955946
        0.6287217253130448   0.6500025977119140   0.0000000000000000
+
+Compute the hardness of a given structure
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Compute the ideal strength
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Read and Write structures between several atomistic codes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Search for structures from the PyChemia database
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Generate and manipulate VASP input files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Convergence studies for VASP
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
