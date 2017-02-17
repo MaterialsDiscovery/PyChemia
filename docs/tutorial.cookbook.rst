@@ -28,6 +28,8 @@ Converting a ascii file into a POSCAR
 
 Consider the following ascii file stored on test.ascii:
 
+.. code-block:: none
+
     None
     11.47012476778924 0.79937702290141 9.51246277071292
     -2.99939838492446 -0.12947182393907 7.79142604544631
@@ -46,6 +48,8 @@ This is how pychemia can convert it into a POSCAR file:
     >>> pychemia.code.vasp.write_poscar(st, 'POSCAR.test')
 
 The final POSCAR looks like this:
+
+.. code-block:: none
 
      Mg Ca
     1.0
