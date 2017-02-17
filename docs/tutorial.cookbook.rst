@@ -23,10 +23,10 @@ non present on a given composition:
     >>> comp['Au']
     0
 
-Converting a ascii file into a POSCAR
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Converting an ascii file into a POSCAR
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Consider the following ascii file stored on test.ascii:
+Consider the following ascii file stored on ``test.ascii``:
 
 .. code-block:: none
 
@@ -47,7 +47,7 @@ This is how pychemia can convert it into a POSCAR file:
     >>> st = pychemia.io.ascii.load('test.ascii')
     >>> pychemia.code.vasp.write_poscar(st, 'POSCAR.test')
 
-The final POSCAR looks like this:
+The final archive calle ``POSCAR.test`` will looks like this:
 
 .. code-block:: none
 
