@@ -84,5 +84,26 @@ Generate and manipulate VASP input files
 Convergence studies for VASP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Read and write the input from an atomistic code
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Read the output from an atomistic code
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Build an manipulate the lattice
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Rotate the cell along a Miller index
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Get the primitive cell
+~~~~~~~~~~~~~~~~~~~~~~
+
+Get the conventional cell
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Get the spatial group
+~~~~~~~~~~~~~~~~~~~~~
+
 
 
