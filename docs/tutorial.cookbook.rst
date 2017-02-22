@@ -96,13 +96,42 @@ Build an manipulate the lattice
 Rotate the cell along a Miller index
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Very often for creating surfaces we need to rotate the structure along specific Miller indices.
+We can achieve this with a routine for that, see this example::
+
+    import pychemia
+    pychemia_path = pychemia.__path__[0]
+    st=pychemia.code.vasp.read_poscar(pychemia_path + '/test/data/vasp_06/POSCAR')
+    st2=pychemia.analysis.surface.rotate_along_indices(st, 1,1,1, 2)
+
+Both structures represent the same crystal, the second structure has the 'c' axis parallel to the 111 Miller direction.
+Additionally we ask for having 2 layers of the cristal along the 'c' axis. We can check that the symmetry of the crystal
+remains the same::
+
+    sym=pychemia.crystal.CrystalSymmetry(st)
+    sym.number()
+    139
+
+    sym=pychemia.crystal.CrystalSymmetry(st2)
+    sym.number()
+    139
+
+Here you see the result of the two structures, the original and the rotated along the 111 axis.
+
+.. image:: images/conventional.jpg
+    :width: 300 px
+
+.. image:: images/rotated.jpg
+    :width: 300 px
+
 Get the spatial group
 ~~~~~~~~~~~~~~~~~~~~~
 
 Lets start reading a POSCAR for a Carbon diamond structure::
 
     import pychemia
-    st=pychemia.code.vasp.read_poscar('pychemia/test/data/vasp_08/POSCAR_old')
+    pychemia_path = pychemia.__path__[0]
+    st=pychemia.code.vasp.read_poscar(pychemia_path + '/test/data/vasp_08/POSCAR_old')
     print(st)
 
 You should get::
@@ -141,7 +170,7 @@ structures produced by DFT calculations with crude relaxations.
 
 To exemplify this situation consider this structure (Zn2V2O7) whit positions truncated to 4 decimals::
 
-    st = pychemia.code.vasp.read_poscar('pychemia/test/data/vasp_07/POSCAR_trunc')
+    st = pychemia.code.vasp.read_poscar(pychemia_path + '/test/data/vasp_07/POSCAR_trunc')
     sym = pychemia.crystal.CrystalSymmetry(st)
     sym.number()
 
@@ -162,7 +191,8 @@ The primitive cell is obtained from the ``CrystalSymmetry`` object again using t
 library::
 
     import pychemia
-    st = pychemia.code.vasp.read_poscar('pychemia/test/data/vasp_06/POSCAR')
+    pychemia_path = pychemia.__path__[0]
+    st = pychemia.code.vasp.read_poscar(pychemia_path + '/test/data/vasp_06/POSCAR')
     sym = pychemia.crystal.CrystalSymmetry(st)
     print(st)
 
@@ -235,7 +265,7 @@ You should get::
 Now lets refine the structure with positions truncated and reconstruct a cell with positions precisely in place to the
 symmetry found::
 
-    st = pychemia.code.vasp.read_poscar('pychemia/test/data/vasp_07/POSCAR_trunc')
+    st = pychemia.code.vasp.read_poscar(pychemia_path + '/test/data/vasp_07/POSCAR_trunc')
     sym = pychemia.crystal.CrystalSymmetry(st)
     st2 = sym.refine_cell(1E-2)
     sym = pychemia.crystal.CrystalSymmetry(st2)

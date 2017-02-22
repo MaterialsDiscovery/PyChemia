@@ -29,7 +29,7 @@ def print_vector(v):
     print("\n")
 
 
-def create_surface(structure, h, k, l, layers, tol=1.e-5):
+def rotate_along_indices(structure, h, k, l, layers, tol=1.e-5):
     cell = structure.cell
     a1 = np.array(cell[0])
     a2 = np.array(cell[1])
@@ -44,17 +44,17 @@ def create_surface(structure, h, k, l, layers, tol=1.e-5):
     v = ext_gcd(k, l)
     p = v[0]
     q = v[1]
-    print('p = ', p)
-    print('q = ', q)
+    #print('p = ', p)
+    #print('q = ', q)
 
     k1 = np.dot(p * (k * a1 - h * a2) + q * (l * a1 - h * a3), l * a2 - k * a3)
     k2 = np.dot(l * (k * a1 - h * a2) - k * (l * a1 - h * a3), l * a2 - k * a3)
-    print("\n\nk1 = ", k1)
-    print("k2 = ", k2)
+    #print("\n\nk1 = ", k1)
+    #print("k2 = ", k2)
 
     if abs(k2) > tol:
         c = -int(round(k1 / k2))
-        print("c = -int(round(k1/k2)) = ", c)
+        #print("c = -int(round(k1/k2)) = ", c)
         p, q = p + c * l, q - c * k
 
     # Calculate lattice vectors {v1, v2, v3} defining basis of the new cell

@@ -45,7 +45,7 @@ if __name__ == "__main__":
     l = int(miller[2])
 
     structure = pychemia.code.vasp.read_poscar(inputfile)
-    surf = pychemia.analysis.create_surface(structure, h, k, l, layers)
+    surf = pychemia.analysis.rotate_along_indices(structure, h, k, l, layers)
 
     print(surf)
 
