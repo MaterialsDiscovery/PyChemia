@@ -1,0 +1,10 @@
+cubic diamond    comment line
+ 3.7             universal scaling factor
+ 0.5 0.5 0.0     first  Bravais lattice vector
+ 0.0 0.5 0.5     second Bravais lattice vector
+ 0.5 0.0 0.5     third  Bravais lattice vector
+ C               species new format
+ 2               number of atoms per species
+direct           direct or cart (only first letter is significant)
+ 0.0 0.0 0.0     positions
+ 0.25 0.25 0.25

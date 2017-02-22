@@ -375,9 +375,3 @@ class InputVariables(MutableMapping):
                                              self.__class__.__name__,
                                              self.__dict__)
 
-
-def get_potcar_info(filename='POTCAR'):
-    rf = open(filename)
-    data = rf.read()
-    ret = re.findall('([\w ]*)=([.\d ]*)', data)
-    return ret

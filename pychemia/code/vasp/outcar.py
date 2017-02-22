@@ -212,21 +212,13 @@ class VaspOutput:
         index = 0
         for iforce in self.forces[-1]:
             index += 1
-            ret += "%3d %9.6f %9.6f %9.6f\n" % (index, iforce[0], iforce[1], iforce[2])
+            ret += "%3d %12.6f %12.6f %12.6f\n" % (index, iforce[0], iforce[1], iforce[2])
         ret += '\nStress:\n'
-        for istress in sorted(self.stress):
-            if istress != 'Total':
-                ret += '%8s ' % istress
-                for i in self.stress[istress]:
-                    ret += ' %12.6f' % i
-                ret += '\n'
-        ret += '%8s ' % 'Total'
-        for i in self.stress['Total']:
-            ret += ' %12.6f' % i
+        for j in range(3):
+            ret += '    %12.6f %12.6f %12.6f\n' % tuple(self.stress[-1][j])
         ret += '\n'
 
-        ret += '\nFree Energy:\n'
-        ret += str(self.free_energy)
+        ret += 'Free Energy: %12.6f\n' % self.energy
         return ret
 
     def relaxation_info(self):

@@ -1,0 +1,62 @@
+  PAW_PBE C 08Apr2002                    
+   4.00000000000000     
+ parameters from PSCTR are:
+   VRHFIN =C: s2p2
+   LEXCH  = PE
+   EATOM  =   147.1560 eV,   10.8157 Ry
+
+   TITEL  = PAW_PBE C 08Apr2002
+   LULTRA =        F    use ultrasoft PP ?
+   IUNSCR =        1    unscreen: 0-lin 1-nonlin 2-no
+   RPACOR =    1.200    partial core radius
+   POMASS =   12.011; ZVAL   =    4.000    mass and valenz
+   RCORE  =    1.500    outmost cutoff radius
+   RWIGS  =    1.630; RWIGS  =    0.863    wigner-seitz radius (au A)
+   ENMAX  =  400.000; ENMIN  =  300.000 eV
+   ICORE  =        2    local potential
+   LCOR   =        T    correct aug charges
+   LPAW   =        T    paw PP
+   EAUG   =  644.873
+   DEXC   =    0.000
+   RMAX   =    1.529    core radius for proj-oper
+   RAUG   =    1.300    factor for augmentation sphere
+   RDEP   =    1.501    radius for radial grids
+   RDEPT  =    1.300    core radius for aug-charge
+ 
+   Atomic configuration
+    4 entries
+     n  l   j            E        occ.
+     1  0  0.50      -273.3789   2.0000
+     2  0  0.50       -13.7508   2.0000
+     2  1  0.50        -5.2854   2.0000
+     3  2  1.50        -5.4423   0.0000
+   Description
+     l       E           TYP  RCUT    TYP  RCUT
+     0    -13.7508458     23  1.200
+     0     -8.2022199     23  1.200
+     1     -5.2854383     23  1.500
+     1     34.0145650     23  1.500
+     2     -5.4423304      7  1.500
+   Error from kinetic energy argument (eV)
+   NDATA  =      100
+   STEP   =   20.000   1.050
+  51.3      49.5      48.6      46.8      45.9      44.1      42.4      41.6
+  39.9      38.2      37.4      35.8      34.3      32.8      31.4      30.0
+  28.6      27.3      26.1      24.3      23.2      22.1      20.5      19.6
+  18.6      17.3      16.0      15.2      14.1      13.1      12.1      11.1
+  10.3      9.47      8.72      8.02      7.15      6.55      5.82      5.31
+  4.69      4.13      3.63      3.17      2.76      2.40      2.07      1.72
+  1.47      1.20     0.971     0.815     0.650     0.512     0.380     0.292
+ 0.222     0.158     0.110     0.748E-01 0.504E-01 0.337E-01 0.227E-01 0.149E-01
+ 0.111E-01 0.869E-02 0.756E-02 0.700E-02 0.657E-02 0.614E-02 0.551E-02 0.474E-02
+ 0.392E-02 0.314E-02 0.237E-02 0.184E-02 0.143E-02 0.118E-02 0.104E-02 0.993E-03
+ 0.959E-03 0.910E-03 0.829E-03 0.707E-03 0.570E-03 0.442E-03 0.343E-03 0.275E-03
+ 0.245E-03 0.238E-03 0.236E-03 0.227E-03 0.202E-03 0.169E-03 0.131E-03 0.102E-03
+ 0.851E-04 0.796E-04 0.787E-04 0.761E-04
+END of PSCTR-controll parameters
+ local part
+   124.721915246209     
+
+# LINES REMOVED HERE
+
+ End of Dataset

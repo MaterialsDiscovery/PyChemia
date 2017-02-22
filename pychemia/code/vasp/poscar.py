@@ -1,20 +1,34 @@
+# coding: utf-8
+# Copyright (c) Guillermo Avendano-Franco
+# Distributed under the terms of the MIT License.
+
+from __future__ import division, unicode_literals
+import os
+from re import findall
+from numpy import zeros, array, sum
+from pychemia import Structure
+from pychemia.utils.periodic import atomic_symbols
+
 """
 Routines to read and write POSCAR file
 """
 
-import os
-import numpy as _np
-import pychemia
+__author__ = "Guillermo Avendano-Franco"
+__copyright__ = "Copyright 2017, PyChemia Project"
+__version__ = "0.2"
+__maintainer__ = "Guillermo Avendano-Franco"
+__email__ = "gufranco@mail.wvu.edu"
+__date__ = "Feb 20, 2017"
 
 
 def read_poscar(path='POSCAR'):
     """
     Load a POSCAR file and return a pychemia structure object
 
-    :param path: (str) Filename of the POSCAR to read
+    :param path: (str) Path to a POSCAR file or a directory where a file named 'POSCAR' is located
     :return:
     """
-
+    # The argument 'path' could refer to a POSCAR file or the directory where the file 'POSCAR' exists
     if os.path.isfile(path):
         poscarfile = path
         if os.path.dirname(path) != '':
@@ -25,52 +39,49 @@ def read_poscar(path='POSCAR'):
         poscarfile = path + os.sep + 'POSCAR'
         potcarfile = path + os.sep + 'POTCAR'
     else:
-        print("POSCAR path not found")
-        return
+        raise ValueError("ERROR: No POSCAR file found on %s" % path)
 
     # Reading the POSCAR file
     rf = open(poscarfile, 'r')
     comment = rf.readline().strip()
-    latconst = float(rf.readline())
-    newcell = _np.zeros((3, 3))
+    latconst = float(rf.readline().split()[0])
+    newcell = zeros((3, 3))
 
-    newcell[0, :] = latconst * _np.array([float(x) for x in rf.readline().split()])
-    newcell[1, :] = latconst * _np.array([float(x) for x in rf.readline().split()])
-    newcell[2, :] = latconst * _np.array([float(x) for x in rf.readline().split()])
+    newcell[0, :] = latconst * array([float(x) for x in rf.readline().split()[:3]])
+    newcell[1, :] = latconst * array([float(x) for x in rf.readline().split()[:3]])
+    newcell[2, :] = latconst * array([float(x) for x in rf.readline().split()[:3]])
 
     line = rf.readline()
     species = None
 
-    try:
-        natom_per_species = _np.array([int(x) for x in line.split()])
-        # print 'Old Format'
-    except ValueError:
-        # print 'New format'
-        species = [x for x in line.split()]
-        line = rf.readline()
-        natom_per_species = _np.array([int(x) for x in line.split()])
+    # This is the old format, the only way of knowing which species are refering is by
+    # reading the POTCAR file
+    natom_per_species = array([int(x) for x in line.split() if x.isdigit()])
 
-    natom = _np.sum(natom_per_species)
+    # Check if the file is the new format, in such case this line contains the
+    # atomic symbols of the atoms and the next line the number of atoms of each
+    # species. The new format makes a POSCAR self-contained to create a structure
+    if len(natom_per_species) == 0:
+        species = [x for x in line.split() if x in atomic_symbols]
+        line = rf.readline()
+        natom_per_species = array([int(x) for x in line.split() if x.isdigit()])
+
+    natom = sum(natom_per_species)
 
     if species is None:
+        comment_species = [x for x in comment.split() if x in atomic_symbols]
         if os.path.isfile(potcarfile):
             species = get_species(potcarfile)
-        elif len(comment.split()) == len(natom_per_species):
-            species = comment.split()
+        elif len(comment_species) == len(natom_per_species):
+            species = comment_species
         else:
-            print(""" ERROR: The POSCAR does not contain information about the species present on the structure
-            You can set a consistent POTCAR along the POSCAR or
-            modify your POSCAR by adding the atomic symbol on the sixth line of the file""")
-            return None
-
-    if not species:
-        print('No information about species')
-        raise ValueError()
+            raise ValueError("ERROR: The POSCAR does not have information about the species present on the structure\n"
+                             + "You can set a consistent POTCAR along the POSCAR or modify your POSCAR to the\n"
+                             + "new format by adding the atomic symbol(s) on the sixth line of the file")
 
     symbols = []
     for i in range(len(natom_per_species)):
-        numspe = natom_per_species[i]
-        for j in range(numspe):
+        for j in range(natom_per_species[i]):
             symbols.append(species[i])
 
     mode = rf.readline()
@@ -82,15 +93,15 @@ def read_poscar(path='POSCAR'):
     pos = []
     for i in range(natom):
         pos += [float(x) for x in rf.readline().split()[:3]]
-    pos = _np.array(pos).reshape((-1, 3))
+    pos = array(pos).reshape((-1, 3))
 
     if kmode == 'Cartesian':
-        return pychemia.Structure(cell=newcell, symbols=symbols, reduced=pos, comment=comment)
+        return Structure(cell=newcell, symbols=symbols, positions=pos, comment=comment)
     else:
-        return pychemia.Structure(cell=newcell, symbols=symbols, reduced=pos, comment=comment)
+        return Structure(cell=newcell, symbols=symbols, reduced=pos, comment=comment)
 
 
-def write_poscar(structure, filepath='POSCAR', newformat=True):
+def write_poscar(structure, filepath='POSCAR', newformat=True, direct=True):
     """
     Takes an structure from pychemia and save the file
     POSCAR for VASP.
@@ -117,9 +128,15 @@ def write_poscar(structure, filepath='POSCAR', newformat=True):
     for i in species:
         ret += ' ' + str(comp.composition[i])
     ret += '\n'
-    ret += 'Direct\n'
-    for i in range(structure.natom):
-        ret += ' %20.16f %20.16f %20.16f\n' % tuple(structure.reduced[i])
+    if direct:
+        ret += 'Direct\n'
+        for i in range(structure.natom):
+            ret += ' %20.16f %20.16f %20.16f\n' % tuple(structure.reduced[i])
+    else:
+        ret += 'Cartesian\n'
+        for i in range(structure.natom):
+            ret += ' %20.16f %20.16f %20.16f\n' % tuple(structure.positions[i])
+
     wf = open(filepath, 'w')
     wf.write(ret)
     wf.close()
@@ -155,7 +172,7 @@ def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None
     species = get_species_list(structure)
     ret = ''
     if basepsp is not None:
-        psppath = basepsp + os.sep + pspdir
+        psppath = os.path.abspath(basepsp) + os.sep + pspdir
     else:
         psppath = os.getenv('HOME') + '/.vasp/PP-VASP/' + pspdir
     if not os.path.exists(psppath):
@@ -178,9 +195,6 @@ def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None
                     pspfile = psppath + os.sep + i + j + '/POTCAR'
                     if os.path.isfile(pspfile):
                         break
-                    else:
-                        pass
-                        # print pspfile, 'is not present...'
             if not os.path.isfile(pspfile):
                 raise ValueError("File not found : " + pspfile)
             pspfiles.append(pspfile)
@@ -193,3 +207,22 @@ def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None
     wf.write(ret)
     wf.close()
     return pspfiles
+
+
+def get_potcar_info(filename='POTCAR'):
+    rf = open(filename)
+    data = rf.read()
+    pairs = findall('([\w ]*)=([.\d ]*)', data)
+    ret = {}
+    for i in pairs:
+        print(i)
+        if i[1].strip() == '':
+            pass
+        elif i[1].strip().isdigit():
+            ret[i[0].strip()] = int(i[1])
+        elif len(i[1].split()) > 1:
+            ret[i[0].strip()] = [float(x) for x in i[1].split()]
+        else:
+            ret[i[0].strip()] = float(i[1])
+
+    return ret
