@@ -16,7 +16,6 @@ Subpackages
     pychemia.core
     pychemia.crystal
     pychemia.db
-    pychemia.dm
     pychemia.evaluator
     pychemia.external
     pychemia.io
@@ -26,6 +25,5 @@ Subpackages
     pychemia.searcher
     pychemia.test
     pychemia.utils
-    pychemia.visual
     pychemia.web
 

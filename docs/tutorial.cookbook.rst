@@ -96,14 +96,157 @@ Build an manipulate the lattice
 Rotate the cell along a Miller index
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Get the spatial group
+~~~~~~~~~~~~~~~~~~~~~
+
+Lets start reading a POSCAR for a Carbon diamond structure::
+
+    import pychemia
+    st=pychemia.code.vasp.read_poscar('pychemia/test/data/vasp_08/POSCAR_old')
+    print(st)
+
+You should get::
+
+    2
+
+     Symb  (             Positions            ) [     Cell-reduced coordinates     ]
+        C  (     0.0000     0.0000     0.0000 ) [     0.0000     0.0000     0.0000 ]
+        C  (     0.9250     0.9250     0.9250 ) [     0.2500     0.2500     0.2500 ]
+
+    Periodicity:  X Y Z
+
+    Lattice vectors:
+         1.8500     1.8500     0.0000
+         0.0000     1.8500     1.8500
+         1.8500     0.0000     1.8500
+
+PyChemia uses spglib to get the space-group and use some other routines to get the primitive and convectional cells and
+to reposition the atoms to precise positions for a given symmetry. All this functionality is provided by creating
+``CrystalSymmetry`` object::
+
+    sym=pychemia.crystal.CrystalSymmetry(st)
+
+We can get space groups using the number::
+
+    sym.number()
+    227
+
+Or as internation symbol::
+
+    sym.symbol()
+    'Fd-3m'
+
+In both cases, there is a tolerance that can be adjusted, the default value is 1e-5 that could be too strong for
+structures produced by DFT calculations with crude relaxations.
+
+To exemplify this situation consider this structure (Zn2V2O7) whit positions truncated to 4 decimals::
+
+    st = pychemia.code.vasp.read_poscar('pychemia/test/data/vasp_07/POSCAR_trunc')
+    sym = pychemia.crystal.CrystalSymmetry(st)
+    sym.number()
+
+You will get space group equal to 9, however adjusting the tolerance you will get the value from the precise structure::
+
+    sym.number(1E-2)
+    15
+
+And the same works for the symbol::
+
+    sym.symbol(1E-2)
+    'C2/c'
+
 Get the primitive cell
 ~~~~~~~~~~~~~~~~~~~~~~
+
+The primitive cell is obtained from the ``CrystalSymmetry`` object again using the functionality of the spglib
+library::
+
+    import pychemia
+    st = pychemia.code.vasp.read_poscar('pychemia/test/data/vasp_06/POSCAR')
+    sym = pychemia.crystal.CrystalSymmetry(st)
+    print(st)
+
+The structure looks like this::
+
+        4
+
+     Symb  (             Positions            ) [     Cell-reduced coordinates     ]
+        P  (     0.0000     0.0000     3.7190 ) [     0.0000     0.0000     0.7078 ]
+        P  (     0.0000     0.0000     1.5350 ) [     0.0000     0.0000     0.2922 ]
+        P  (     2.0308     2.0308     1.0920 ) [     0.5000     0.5000     0.2078 ]
+        P  (     2.0308     2.0308     4.1620 ) [     0.5000     0.5000     0.7922 ]
+
+    Periodicity:  X Y Z
+
+    Lattice vectors:
+         4.0616     0.0000     0.0000
+         0.0000     4.0616     0.0000
+         0.0000     0.0000     5.2540
+
+
+We can get the primitive like this (eventually using a tolerance as an argument)::
+
+    stp = sym.find_primitive()
+    print(stp)
+
+And the structure is reduced to a cell with just 2 atoms::
+
+    2
+
+     Symb  (             Positions            ) [     Cell-reduced coordinates     ]
+        P  (     0.0000     0.0000     1.5350 ) [     0.2922     0.2922     0.0000 ]
+        P  (     0.0000     0.0000     3.7190 ) [     0.7078     0.7078     0.0000 ]
+
+    Periodicity:  X Y Z
+
+    Lattice vectors:
+        -2.0308     2.0308     2.6270
+         2.0308    -2.0308     2.6270
+         2.0308     2.0308    -2.6270
+
 
 Get the conventional cell
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Get the spatial group
-~~~~~~~~~~~~~~~~~~~~~
+The conventional cell is obtained as a result of the refinement of the cell, ie adjusting the positions precisely to
+satisfy a given tolerance. From the previous section, lets reconstruct a convectional cell from the primitive::
 
+    sym = pychemia.crystal.CrystalSymmetry(stp)
+    stc = sym.refine_cell()
+    print(stc)
 
+You should get::
+
+    4
+
+     Symb  (             Positions            ) [     Cell-reduced coordinates     ]
+        P  (     0.0000     0.0000     1.5350 ) [     0.0000     0.0000     0.2922 ]
+        P  (     0.0000     0.0000     3.7190 ) [     0.0000     0.0000     0.7078 ]
+        P  (     2.0308     2.0308     4.1620 ) [     0.5000     0.5000     0.7922 ]
+        P  (     2.0308     2.0308     1.0920 ) [     0.5000     0.5000     0.2078 ]
+
+    Periodicity:  X Y Z
+
+    Lattice vectors:
+         4.0616     0.0000     0.0000
+         0.0000     4.0616     0.0000
+         0.0000     0.0000     5.2540
+
+Now lets refine the structure with positions truncated and reconstruct a cell with positions precisely in place to the
+symmetry found::
+
+    st = pychemia.code.vasp.read_poscar('pychemia/test/data/vasp_07/POSCAR_trunc')
+    sym = pychemia.crystal.CrystalSymmetry(st)
+    st2 = sym.refine_cell(1E-2)
+    sym = pychemia.crystal.CrystalSymmetry(st2)
+
+Here we took the structure with positions truncated, and refined the cell using a tolerance that return the an space
+group 15, after that we create a new ``CrystalSymmetry`` object from the new structure and we can verify that the space
+group is preserved up to very strict tolerances::
+
+    sym.number()
+    15
+
+    sym.number(1E-14)
+    15
 

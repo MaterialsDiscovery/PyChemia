@@ -257,6 +257,7 @@ def wrap2_pmhalf(x):
     :param x: (float) The number to be wrapped in the interval (-1/2, 1/2]
 
     Examples:
+
     >>> wrap2_pmhalf(-0.5)
     0.5
     >>> wrap2_pmhalf(0.0)
@@ -265,7 +266,7 @@ def wrap2_pmhalf(x):
     array([ 0.25,  0.5 , -0.25,  0.  ,  0.25,  0.5 , -0.25])
     >>> wrap2_pmhalf([[-0.75, -0.5, -0.25], [0.25, 0.5, 0.75]])
     array([[ 0.25,  0.5 , -0.25],
-           [ 0.25,  0.5 , -0.25]])
+    [ 0.25,  0.5 , -0.25]])
 
     """
 
