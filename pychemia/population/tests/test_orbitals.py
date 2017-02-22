@@ -2,7 +2,8 @@ import unittest
 import pychemia
 from pychemia.utils.serializer import generic_serializer
 import numpy as np
-
+import tempfile
+import shutil
 
 class PopulationTest(unittest.TestCase):
     def test_orbital(self):
@@ -65,8 +66,10 @@ class PopulationTest(unittest.TestCase):
         #pd = popu.to_dict
         #popu.from_dict(pd)
 
+        tmpdir = tempfile.mkdtemp()
+
         for i in popu.members:
-            popu.prepare_folder(i, workdir='/tmp/orbitals',
-                                source_dir=pychemia_path + '/test/data/abinit_dmatpawu')
+            popu.prepare_folder(i, workdir=tmpdir, source_dir=pychemia_path + '/test/data/abinit_dmatpawu')
 
         popu.pcdb.clean()
+        shutil.rmtree(tmpdir)

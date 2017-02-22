@@ -129,7 +129,6 @@ class MyTestCase(unittest.TestCase):
         sym = pychemia.crystal.CrystalSymmetry(st)
         self.assertEqual(sym.symbol(), 'C2/c')
         pychemia.code.vasp.write_potcar(st, filepath=tmpdir + os.sep + 'POTCAR', basepsp='pychemia/test/data')
-
         pychemia.code.vasp.get_potcar_info(tmpdir + os.sep + 'POTCAR')
 
         shutil.rmtree(tmpdir)
