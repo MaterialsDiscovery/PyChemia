@@ -234,7 +234,7 @@ class NonCollinearMagMoms(Population):
         :param in_place: (bool) if true the new magnetic moments replace those in entry_id
         :return:
         """
-        magmom_new_xyz = np.zeros((self.structure.natom, 3)) 
+        magmom_new_xyz = np.zeros((self.structure.natom, 3))
         entry = self.get_entry(entry_id, {'properties.magmom': 1})
         magmom_i = np.array(entry['properties']['magmom']).reshape((-1, 3))
         magmom_ixyz = spherical_to_cartesian(magmom_i)
@@ -244,7 +244,7 @@ class NonCollinearMagMoms(Population):
 
         for i in self.mag_atoms:
             #print('Atom %d' % i)
-            if magmom_i[i][0] > 0 and magmom_j[i][0] > 0:         
+            if magmom_i[i][0] > 0 and magmom_j[i][0] > 0:
                 magmom_new_xyz[i] = rotate_towards_axis(magmom_ixyz[i], magmom_jxyz[i],
                                                                                    fraction=factor)
                 #print('Final magmom Cartesian : %d     %s' % (i,magmom_new_xyz[i]))

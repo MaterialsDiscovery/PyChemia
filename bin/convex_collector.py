@@ -57,13 +57,13 @@ if __name__ == '__main__':
     convex_params = {'left': args.left, 'right': args.right}
     specie_right=args.right
     specie_left=args.left
-    
+
     ret=[]
 
     for idb in args.dbname:
         db_settings['name'] = idb
         pcdb = pychemia.db.get_database(db_settings)
-        
+
         for entry in pcdb.entries.find():
             entry_id = entry['_id']
             st= pcdb.get_structure(entry_id)
@@ -78,15 +78,15 @@ if __name__ == '__main__':
             else:
                 ratio = float(st.composition[specie_right]) / st.natom
                 print("ratio: %f - right=%d natom=%d %s" %(ratio,
-                                                           float(st.composition[specie_right]), 
-                                                           st.natom, 
+                                                           float(st.composition[specie_right]),
+                                                           st.natom,
                                                            st.formula))
 
             if 'energy_pa' in entry['properties']:
 
                 energy_pa=entry['properties']['energy_pa']
-            
-            
+
+
                 ret.append({'formula': formula,
                             'spcgrp': space_group,
                             'energy_pa': energy_pa,

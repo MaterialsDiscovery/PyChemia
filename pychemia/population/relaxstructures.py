@@ -146,7 +146,7 @@ class RelaxStructures(Population):
             else:
                new_comp.symbols[i]="Mg"
         print(new_comp.symbols)
-        
+
         print("###############################################################")
         print("New comp symbols= ", new_comp.symbols)
         print("###############################################################")

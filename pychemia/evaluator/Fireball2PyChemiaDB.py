@@ -15,7 +15,7 @@ class FireballCollector:
     def __init__(self, dbname, source_dir=None, source_file=None, output_names=None, output_file=None, db_settings=None, nconcurrent=1):
         """
         FireballCollector is a class collect Fireball executions into one PyChemia Database.
-      
+
         The name of the database will be 'dbname' and executions will be processed from a give 'source_dir', a path
         to search for Fireball calculations or 'source_file', one file with one directory per line where Fireball
         executions are stored.
@@ -43,11 +43,11 @@ class FireballCollector:
         self.nconcurrent = nconcurrent
         self.sleeping_time = 2
         self.database = None
-        
+
         if self.output_file is not None and os.path.exists(self.output_file):
             rf = open(self.output_file)
             self.output_names = [x.strip() for x in rf.readlines()]
-            
+
         if self.source_dir is None and self.source_file is None:
             raise ValueError("One of the variables source_dir or source_file need to be defined")
 
@@ -61,7 +61,7 @@ class FireballCollector:
         self.db_settings['name'] = self.dbname
 
         self.database = get_database(self.db_settings)
-            
+
     def worker(self, path):
         """
         From a given 'path', the worker will collect information from several files
@@ -127,7 +127,7 @@ class FireballCollector:
                             break
                         except:
                             print('Bad output %s on %s' % (ioutput, path))
-                            
+
             for ifile in files:
                 if ifile[-3:]=='lvs':
                     try:
@@ -154,7 +154,7 @@ class FireballCollector:
         """
         Search for directories with fireball.in and answer.bas and add them to the
         current list of 'fireball_dirs'
-        
+
         The search is recursive to subdirectories.
         """
         files = os.listdir(path)
@@ -264,6 +264,6 @@ class FireballCollector:
                 else:
                     print('[Slot: %d] Evaluated: %s' % (slot, to_evaluate[index]))
                     pass
-                    
+
                 index += 1
             time.sleep(self.sleeping_time)

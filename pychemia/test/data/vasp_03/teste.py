@@ -204,14 +204,14 @@ def Frequencies(bands, src):
 def MakeGlyphs(src, reverseNormals):
     """
     Glyph the normals on the surface.
- 
+
     You may need to adjust the parameters for maskPts, arrow and glyph for a
     nice appearance.
- 
+
     :param: src - the surface to glyph.
     :param: reverseNormals - if True the normals on the surface are reversed.
     :return: The glyph object.
- 
+
     """
     # Sometimes the contouring algorithm can create a volume whose gradient
     # vector and ordering of polygon (using the right hand rule) are

@@ -48,10 +48,10 @@ def worker_maise(db_settings, entry_id, workdir, relaxator_params):
     status = pcdb.get_dicts(entry_id)[2]
 
     if 'ncalls' in status and status['ncalls'] > 0:
-        ncalls = status['ncalls'] + 1 
+        ncalls = status['ncalls'] + 1
         print('ncalls = ', status['ncalls'])
     else:
-        ncalls = 1 
+        ncalls = 1
     print('Verifing initial structure...')
     while np.min(structure.distance_matrix()+(np.eye(structure.natom)*5)) < 1.9:
         print('ERROR: Bad initial guess, two atoms are to close. Creating new random structure for id: %s' % str(entry_id))
@@ -92,7 +92,7 @@ def worker_maise(db_settings, entry_id, workdir, relaxator_params):
     if os.path.isfile('OUTCAR'):
         rf = open('OUTCAR', 'r')
         data = rf.read()
-        
+
         pos_forces = re.findall(r'TOTAL-FORCE \(eV/Angst\)\s*-*\s*([-.\d\s]+)\s+-{2}', data)
         pos_forces = np.array([x.split() for x in pos_forces], dtype=float)
 
@@ -103,7 +103,7 @@ def worker_maise(db_settings, entry_id, workdir, relaxator_params):
         else:
             print('Forces and Positions could not be parsed : ', pos_forces.shape)
             print('pos_forces =\n%s ' % pos_forces)
-            
+
         str_stress = re.findall('Total([.\d\s-]*)in', data)
         if len(str_stress) == 2:
             stress = np.array([[float(y) for y in x.split()] for x in str_stress])
