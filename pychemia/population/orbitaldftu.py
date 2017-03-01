@@ -461,20 +461,34 @@ class OrbitalDFTU(Population):
         return None
 
     def prepare_folder(self, entry_id, workdir='.', source_dir='.'):
+        """
+        Prepare directories for abinit execution
 
-        if not os.path.isdir(workdir+os.sep+str(entry_id)):
-            os.mkdir(workdir+os.sep+str(entry_id))
+        :param source_dir: (str) is the directory where 'abinit.files' and 'batch.pbs' should be present
+                           those directories will be symbolically linked inside the individual work directories
+        :param workdir: (str) Base work directory for abinit executions. Inside this directory, a set of subdirectories
+                              will be created using the mongo ID as name.
 
-        for i in ['abinit.files', 'batch.pbs']:
-            if os.path.lexists(workdir + os.sep + i):
-                os.remove(workdir + os.sep + i)
-            os.symlink(os.path.abspath(source_dir + os.sep + i), workdir + os.sep+str(entry_id) + os.sep + i)
+        """
+        # Individual workdir
+        iworkdir=workdir+os.sep+str(entry_id)
 
-        abiinput = InputVariables('abinit.in')
+        if not os.path.isdir(iworkdir):
+            os.mkdir(iworkdir)
+
+        for ifile in ['abinit.files', 'batch.pbs']:
+            if os.path.lexists(iworkdir + os.sep + ifile):
+                os.remove(iworkdir + os.sep + ifile)
+            if not os.path.isfile(source_dir + os.sep + ifile):
+                print('WARNIG: The file %s should be present on %s, symbolic links will be created pointing '
+                      'to that location' % (ifile, source_dir))
+            os.symlink(os.path.abspath(source_dir + os.sep + ifile), iworkdir + os.sep + ifile)
+
+        abiinput = InputVariables(self.input_path)
         params = self.get_correlation_params(entry_id)
         dmatpawu = params2dmatpawu(params)
         abiinput['dmatpawu'] = list(dmatpawu.flatten())
-        abiinput.write(workdir + os.sep+str(entry_id) + os.sep + 'abinit.in')
+        abiinput.write(iworkdir + os.sep + 'abinit.in')
 
     def collect_data(self, entry_id, workdir):
 
@@ -507,7 +521,7 @@ def params2dmatpawu(params):
     :param params: dictionary with keys 'I', 'D' and 'eigen'
     :return:
     """
-    print(list(params.keys()))
+    # print(list(params.keys()))
 
     ndim = params['ndim']
 
@@ -516,10 +530,11 @@ def params2dmatpawu(params):
     else:
         num_matrices = len(params['deltas'])
 
-    occupations = np.array(params['occupations'])
-    deltas = np.array(params['deltas'])
-    euler_angles = np.array(params['euler_angles'])
+    occupations = np.array(params['occupations']).reshape(num_matrices, -1)
+    deltas = np.array(params['deltas']).reshape(num_matrices, -1)
+    euler_angles = np.array(params['euler_angles']).reshape(num_matrices, -1)
 
+    print(num_matrices)
     print(euler_angles.shape)
     print(deltas.shape)
     print(occupations.shape)
@@ -527,13 +542,16 @@ def params2dmatpawu(params):
     ret = np.zeros((num_matrices, ndim, ndim))
 
     for i in range(num_matrices):
+        print(i)
         eigval = np.diag(occupations[i]).astype(float)
         for j in range(ndim):
             if eigval[j, j] == 0:
                 eigval[j, j] += deltas[i, j]
             else:
                 eigval[j, j] -= deltas[i, j]
+        print(eigval)
         rotation = gea_orthogonal_from_angles(euler_angles[i])
+        print(rotation)
         correlation = np.dot(np.dot(rotation, eigval), rotation.T)
         ret[i] = correlation
     return ret
@@ -610,7 +628,7 @@ def get_pattern(params, ndim):
 def get_final_correlation_matrices_from_output(filename):
     rf = open(filename)
     data = rf.read()
-    mainblock = re.findall('LDA\+U DATA[\s\w\d\-.=,>:]*\n\n\n', data)
+    mainblock = re.findall('LDA\+U DATA[\s\w\d\-.=,>:]*\n \n', data)
     assert len(mainblock) == 1
 
     pattern = "For Atom\s*(\d+), occupations for correlated orbitals. lpawu =\s*([\d]+)\s*Atom\s*[\d]+\s*. Occ. " \
@@ -619,7 +637,7 @@ def get_final_correlation_matrices_from_output(filename):
               "matrix for correlated orbitals:\s*Occupation matrix for spin  1\s*([\d\.\-\s]*)Occupation matrix " \
               "for spin  2\s*([\d\.\-\s]*)"
     ans = re.findall(pattern, mainblock[0])
-    print(ans)
+    #print(ans)
 
     ret = []
     for i in ans:

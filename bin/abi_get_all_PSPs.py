@@ -75,7 +75,7 @@ def get_all_psps(basedir, exchange, kind):
             u = urlopen(rpath)
             f = open(directory + os.sep + filename, 'wb')
             meta = u.info()
-            file_size = int(meta.getheaders("Content-Length")[0])
+            file_size = int(meta.get("Content-Length")[0])
             print("Downloading: %s Bytes: %s" % (filename, file_size))
             file_size_dl = 0
             block_sz = 8192

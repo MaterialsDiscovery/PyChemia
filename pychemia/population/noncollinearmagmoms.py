@@ -61,7 +61,6 @@ class NonCollinearMagMoms(Population):
         if incar_extra is None:
             self.incar_extra = {'IBRION': -1,
                                 'LWAVE': True,
-                                'EDIFF': 1E-5,
                                 'LAMBDA': 10,
                                 'NSW': 0,
                                 'I_CONSTRAINED_M': 1}
