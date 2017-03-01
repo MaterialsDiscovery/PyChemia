@@ -31,6 +31,10 @@ class AbinitOutput:
                           'nres2': list(ret[:, 4])}
             return energetics
 
+    @property
+    def is_finished(self):
+        return "Calculation completed." in self.data
+
     def get_occupation_matrix(self):
 
         occ_block = re.findall(r"=== For Atom[\s\w\d\-.,=>:]*\n \n \n", self.data)
