@@ -112,9 +112,9 @@ class VaspOutput:
             if len(bands) != self.array_sizes['NBANDS'] * self.array_sizes['ISPIN'] * self.array_sizes['NKPTS'] \
                     * self.array_sizes['NIONSTEPS']:
                 pcm_log.debug('NBANDS: %s != ISPIN: %s x NKPTS: %s x NIONSTEPS: %s' % (self.array_sizes['NBANDS'],
-                                                                                      self.array_sizes['ISPIN'],
-                                                                                      self.array_sizes['NKPTS'],
-                                                                                      self.array_sizes['NIONSTEPS']))
+                                                                                       self.array_sizes['ISPIN'],
+                                                                                       self.array_sizes['NKPTS'],
+                                                                                       self.array_sizes['NIONSTEPS']))
         # pcm_log.info('Bands : ' + str(bands))
 
         stress = re.findall(r'in\s+kB ([-*.\s\d]+)external', self.data)

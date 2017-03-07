@@ -55,10 +55,10 @@ if __name__ == '__main__':
         db_settings['passwd'] = args.passwd
 
     convex_params = {'left': args.left, 'right': args.right}
-    specie_right=args.right
-    specie_left=args.left
+    specie_right = args.right
+    specie_left = args.left
 
-    ret=[]
+    ret = []
 
     for idb in args.dbname:
         db_settings['name'] = idb
@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
         for entry in pcdb.entries.find():
             entry_id = entry['_id']
-            st= pcdb.get_structure(entry_id)
+            st = pcdb.get_structure(entry_id)
             formula = st.formula
             symmetry = pychemia.crystal.CrystalSymmetry(st)
             space_group = symmetry.number(symprec=1e-1)
@@ -77,15 +77,14 @@ if __name__ == '__main__':
                 ratio = 0.0
             else:
                 ratio = float(st.composition[specie_right]) / st.natom
-                print("ratio: %f - right=%d natom=%d %s" %(ratio,
-                                                           float(st.composition[specie_right]),
-                                                           st.natom,
-                                                           st.formula))
+                print("ratio: %f - right=%d natom=%d %s" % (ratio,
+                                                            float(st.composition[specie_right]),
+                                                            st.natom,
+                                                            st.formula))
 
             if 'energy_pa' in entry['properties']:
 
-                energy_pa=entry['properties']['energy_pa']
-
+                energy_pa = entry['properties']['energy_pa']
 
                 ret.append({'formula': formula,
                             'spcgrp': space_group,

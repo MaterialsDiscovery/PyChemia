@@ -125,12 +125,11 @@ class DirectEvaluator:
 
                 for j in range(self.nconcurrent):
                     if procs[j] is None or not procs[j].is_alive():
-                        #print('This jobs is not running anymore: %s' % ids_running[j]) #WIH
                         ids_running[j] = None
 
                 if entry_id in ids_running:
                     print('Already executing: %s' % entry_id)
-                    index+=1
+                    index += 1
                     continue
                 else:
                     print('DB: %10s Entry: %s' % (dbname, entry_id))
@@ -153,9 +152,9 @@ class DirectEvaluator:
                 # must return a boolean to decide if the candidate should be evaluated.
                 if not self.is_evaluated(pcdb, entry_id, self.worker_args) or self.evaluate_all:
                     pcm_log.debug('Evaluable: %s:%s. Relaxing entry %d of %d Slot: %d' % (dbname,
-                                                                                 str(entry_id),
-                                                                                 index,
-                                                                                 len(to_evaluate), slot))
+                                                                                          str(entry_id),
+                                                                                          index,
+                                                                                          len(to_evaluate), slot))
                     ids_running[slot] = entry_id
                     workdir = self.source_dir + os.sep + dbname + os.sep + str(entry_id)
                     if not os.path.exists(workdir):

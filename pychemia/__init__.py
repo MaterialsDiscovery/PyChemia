@@ -6,20 +6,21 @@ interact with several atomistic simulation codes and visualize atomistic-related
 """
 
 from __future__ import print_function
+import sys
+import logging
 
 __author__ = "Guillermo Avendano-Franco"
-__copyright__ = "Copyright 2016"
-__version__ = "0.1.2"
-__email__ = "gtux.gaf@gmail.com"
+__copyright__ = "Copyright 2017"
+__version__ = "0.17.3"
+__email__ = "gufranco@mail.wvu.edu"
 __status__ = "Development"
-__date__ = "May 13, 2016"
+__date__ = "March 7, 2017"
 
 try:
     import scipy
 
     HAS_SCIPY = True
 except ImportError:
-    # print("Library 'scipy' could not be found, several places of the code will be disabled")
     HAS_SCIPY = False
 
 try:
@@ -31,8 +32,6 @@ try:
 except ImportError:
     HAS_SPGLIB = False
 
-import sys
-
 
 try:
     import matplotlib
@@ -41,7 +40,6 @@ try:
         matplotlib.use('agg')
 
 except ImportError:
-    # print("Library 'matplotlib' could not be found, disabling visual functionality")
     HAS_MATPLOTLIB = False
 
 try:
@@ -49,7 +47,6 @@ try:
 
     HAS_MAYAVI = True
 except ImportError:
-    #print("Library 'pyhull' could not be found")
     HAS_MAYAVI = False
 
 try:
@@ -57,7 +54,6 @@ try:
 
     HAS_PYHULL = True
 except ImportError:
-    #print("Library 'pyhull' could not be found")
     HAS_PYHULL = False
 
 try:
@@ -65,27 +61,23 @@ try:
 
     HAS_NETWORKX = True
 except ImportError:
-    #print("Library 'networkx' could not be found, disabling pychemia.dm.NetworkAnalysis")
     HAS_NETWORKX = False
 
 try:
     import Scientific
     HAS_SCIENTIFIC = True
 except ImportError:
-    #print("Library 'Scientific' could not be found")
     HAS_SCIENTIFIC = False
 
 try:
     import pymongo
 
     if pymongo.version_tuple[0] < 3:
-        #print("Library 'pymongo' its too old, disabling pychemia.db.PyChemiaDB")
         HAS_PYMONGO = False
     else:
         HAS_PYMONGO = True
 except ImportError:
     pymongo = None
-    #print("Library 'pymongo' could not be found, disabling pychemia.db.PyChemiaDB")
     HAS_PYMONGO = False
 
 try:
@@ -94,7 +86,6 @@ try:
     HAS_GRIDFS = True
 except ImportError:
     gridfs = None
-    #print("Library 'gridfs' could not be found, disabling pychemia.db.PyChemiaQueue")
     HAS_GRIDFS = False
 
 
@@ -102,17 +93,14 @@ try:
     import ase
     HAS_ASE = True
 except ImportError:
-    #print("Library 'ase' could not be found, disabling pychemia.external.ase")
     HAS_ASE = False
 
 try:
     import pymatgen
     HAS_PYMATGEN = True
 except ImportError:
-    #print("Library 'pymatgen' could not be found, disabling pychemia.external.pymatgen")
     HAS_PYMATGEN = False
 
-import logging
 
 pcm_log = logging.getLogger(__name__)
 pcm_log.addHandler(logging.NullHandler())

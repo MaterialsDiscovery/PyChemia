@@ -311,22 +311,22 @@ def read_fireball_in(fpath='fireball.in'):
     for iline in data:
         if iline.startswith('&'):
             if iline.startswith('&END'):
-                curkey=None
+                curkey = None
             else:
-                curkey=iline[1:].strip()
+                curkey = iline[1:].strip()
         elif '=' in iline:
             varname = iline.split('=')[0].strip()
             value = iline.split('=')[1].strip()
             if curkey is not None and curkey not in ret:
-                ret[curkey]={}
+                ret[curkey] = {}
             ret[curkey][varname] = convert_value(value)
     return ret
 
 
 def read_eigen(fpath='eigen.dat'):
 
-    rf =open(fpath)
-    data=rf.read()
+    rf = open(fpath)
+    data = rf.read()
     # Number of Eigenvalues
     nval = int(data.split()[1])
     # The eigenvalues
@@ -350,44 +350,45 @@ def read_final_fireball_relax(fpath):
 
 def convert_value(value):
 
-    ret=None
+    ret = None
     try:
-        ret=int(value)
+        ret = int(value)
     except ValueError:
         try:
-            ret=float(value)
+            ret = float(value)
         except ValueError:
             try:
-                ret=[int(x) for x in value.split()]
+                ret = [int(x) for x in value.split()]
             except ValueError:
-                ret=value
+                ret = value
     return ret
 
 
 def read_param(fpath='param.dat'):
-    rf=open(fpath)
-    data=rf.readlines()
-    ret={}
+    rf = open(fpath)
+    data = rf.readlines()
+    ret = {}
     for line in data:
         if ':' in line:
             key = line.split(':')[0].strip()
             value = line.split(':')[1].strip()
-            if value=='':
-                curkey=key
+            if value == '':
+                curkey = key
             else:
                 if curkey not in ret:
-                    ret[curkey]={}
-                ret[curkey][key]=convert_value(value)
+                    ret[curkey] = {}
+                ret[curkey][key] = convert_value(value)
         else:
-            if '=' not in line and len(line.strip())>0:
-                curkey=line.strip()
+            if '=' not in line and len(line.strip()) > 0:
+                curkey = line.strip()
     return ret
 
+
 def read_lvs(fpath='input.lvs'):
-    cell = np.zeros((3,3))
-    rf=open(fpath)
+    cell = np.zeros((3, 3))
+    rf = open(fpath)
     data = rf.readlines()
     for i in range(len(data)):
-        if len(data[i].split())>2:
-            cell[i]=[ float(x) for x in data[i].split()[:3]]
+        if len(data[i].split()) > 2:
+            cell[i] = [float(x) for x in data[i].split()[:3]]
     return list(cell.flatten())

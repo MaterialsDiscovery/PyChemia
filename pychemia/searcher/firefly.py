@@ -69,9 +69,9 @@ class FireFly(Searcher):
         pcm_log.info(' Size of selection : %d' % len(selection))
 
         # For statistical purposes
-        distances=[]
-        intensities=[]
-        atractiveness=[]
+        distances = []
+        intensities = []
+        atractiveness = []
 
         # Minus sign because we are searching for minima
         intensity = self.population.get_values(selection)
@@ -110,14 +110,11 @@ class FireFly(Searcher):
                     atractiveness.append(beta)
 
                     if new_selection[entry_id] is None:
-#                        print('FIRST MOVE:\n %s' % new_selection)
                         new_selection[entry_id] = self.population.move(entry_id, entry_jd, factor=beta, in_place=False)
                         if self.alpha0 > 0:
                             factor = self.alpha0 * (self.delta ** self.current_generation)
                             self.population.move_random(new_selection[entry_id], factor=factor, in_place=True)
                     else:
-#                        print('CONTINUING MOVE')
-#                        print('entry_id: %s new_selection: %s' % (entry_id, new_selection[entry_id]))
                         self.population.move(new_selection[entry_id], entry_jd, factor=beta, in_place=True)
                         if self.alpha0 > 0:
                             factor = self.alpha0 * (self.delta ** self.current_generation)
@@ -140,7 +137,7 @@ class FireFly(Searcher):
                 self.population.move_random(new_selection[entry_id], factor=factor, in_place=True)
                 moves[entry_id] += 1
 
-        if len(distances)>0:
+        if len(distances) > 0:
             pcm_log.info('+----------------+--------------+-------------+-------------+')
             pcm_log.info('+                |    Minimum   |   Maximum   |   Average   |')
             pcm_log.info('+----------------+--------------+-------------+-------------+')
@@ -157,11 +154,8 @@ class FireFly(Searcher):
 
         for entry_id in selection:
             if new_selection[entry_id] is not None:
-#                pcm_log.debug('[%s] Moved to: %s (%d moves)' %
-#                              (str(entry_id), new_selection[entry_id], moves[entry_id]))
                 self.replace_by_other(entry_id, new_selection[entry_id],
                                       reason='Moved %d times' % moves[entry_id])
                 self.population.enable(new_selection[entry_id])
             else:
-#                pcm_log.debug('[%s] Promoted to new generation' % str(entry_id))
                 self.pass_to_new_generation(entry_id, reason='The best')

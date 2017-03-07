@@ -64,8 +64,8 @@ class PopulationTest(unittest.TestCase):
         entry_imj = popu.move(entry_id, entry_jd)
         popu.get_entry(entry_imj, {'properties': 1})
 
-        #pd = popu.to_dict
-        #popu.from_dict(pd)
+        # pd = popu.to_dict
+        # popu.from_dict(pd)
 
         tmpdir = tempfile.mkdtemp()
 

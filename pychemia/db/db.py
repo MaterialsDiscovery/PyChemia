@@ -350,6 +350,7 @@ def create_database(name, admin_name, admin_passwd, user_name, user_passwd, host
                     replicaset=None):
     return create_user(name, admin_name, admin_passwd, user_name, user_passwd, host, port, ssl, replicaset)
 
+
 def has_connection():
     if not HAS_PYMONGO:
         return False

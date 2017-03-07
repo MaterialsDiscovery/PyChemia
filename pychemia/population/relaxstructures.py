@@ -63,13 +63,13 @@ class RelaxStructures(Population):
         Population.__init__(self, name, tag)
 
         if self.pcdb_source is not None:
-            self.sources={}
+            self.sources = {}
             for i in range(min_comp_mult, max_comp_mult+1):
                 self.sources[i] = []
                 for entry in self.pcdb_source.entries.find({'structure.natom': i*self.composition.natom,
-                                                        'structure.nspecies': self.composition.nspecies},{'_id':1}):
+                                                            'structure.nspecies': self.composition.nspecies},
+                                                           {'_id': 1}):
                     self.sources[i].append(entry['_id'])
-
 
     def recover(self):
         data = self.get_population_info()
@@ -141,10 +141,10 @@ class RelaxStructures(Population):
             comp[i] *= factor
         new_comp = Composition(comp)
         for i in range(len(new_comp.symbols)):
-            if new_comp.symbols[i]=="Mg":
-               new_comp.symbols[i]="Ca"
+            if new_comp.symbols[i] == "Mg":
+                new_comp.symbols[i] = "Ca"
             else:
-               new_comp.symbols[i]="Mg"
+                new_comp.symbols[i] = "Mg"
         print(new_comp.symbols)
 
         print("###############################################################")
@@ -157,7 +157,7 @@ class RelaxStructures(Population):
                          'structure.natom': new_comp.natom}
             if self.pcdb_source is None:
                 rnd = 0
-            if len(self.sources[factor])==0:
+            if len(self.sources[factor]) == 0:
                 rnd = 0
             if self.pcdb_source is None or rnd < random_probability:
                 pcm_log.debug('Random Structure')
@@ -168,21 +168,19 @@ class RelaxStructures(Population):
                 pcm_log.debug('From source')
                 entry_id = self.sources[factor][np.random.randint(0, len(self.sources[factor]))]
                 structure = self.pcdb_source.get_structure(entry_id)
-                print("chosen structure from database =",structure)
+                print("chosen structure from database =", structure)
                 sym = CrystalSymmetry(structure)
 
                 scale_factor = float(np.max(covalent_radius(new_comp.species)) /
-                                         np.max(covalent_radius(structure.species)))
-                reduce_scale = scale_factor ** (1. / 3)    #WIH
-                print('Mult: %d natom: %d From source: %s Spacegroup: %d Scaling: %7.3f' % (factor, structure.natom,
-                                                                            structure.formula,
-                                                                             sym.number(),
-                                                                             scale_factor))
-                #structure.set_cell(np.dot(scale_factor * np.eye(3), structure.cell)) #WIH
-                structure.set_cell(np.dot(reduce_scale * np.eye(3), structure.cell))  #WIH
-                print("symbols before change = ",structure.symbols)
+                                     np.max(covalent_radius(structure.species)))
+                reduce_scale = scale_factor ** (1. / 3)    # WIH
+                msg = 'Mult: %d natom: %d From source: %s Spacegroup: %d Scaling: %7.3f'
+                print(msg % (factor, structure.natom, structure.formula, sym.number(), scale_factor))
+                # structure.set_cell(np.dot(scale_factor * np.eye(3), structure.cell)) # WIH
+                structure.set_cell(np.dot(reduce_scale * np.eye(3), structure.cell))  # WIH
+                print("symbols before change = ", structure.symbols)
                 structure.symbols = new_comp.symbols
-                print("symbols after change = ",structure.symbols)
+                print("symbols after change = ", structure.symbols)
                 self.sources[factor].remove(entry_id)
                 break
 

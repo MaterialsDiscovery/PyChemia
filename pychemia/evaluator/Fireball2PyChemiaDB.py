@@ -12,7 +12,8 @@ if HAS_PYMONGO:
 
 class FireballCollector:
 
-    def __init__(self, dbname, source_dir=None, source_file=None, output_names=None, output_file=None, db_settings=None, nconcurrent=1):
+    def __init__(self, dbname, source_dir=None, source_file=None, output_names=None, output_file=None,
+                 db_settings=None, nconcurrent=1):
         """
         FireballCollector is a class collect Fireball executions into one PyChemia Database.
 
@@ -27,7 +28,8 @@ class FireballCollector:
         use the dictionary 'db_settings' to get more control on the database location and access.
 
         :param dbname:      (str) Name of the database that will contain the Fireball executions
-        :param source_dir:  (str) Path for a directory that will be explored recursevely for suitable Fireball executions
+        :param source_dir:  (str) Path for a directory that will be explored recursevely for suitable Fireball
+                                  executions
         :param source_file: (str) Path to a file describing directories with Fireball executions, one per line
         :param output_names: (list) List of possible output filenames
         :param output_file: (str) Path to a file with possible output names, one per line
@@ -123,17 +125,17 @@ class FireballCollector:
                     if "Welcome to FIREBALL" in line:
                         try:
                             output = pychemia.code.fireball.read_final_fireball_relax(path + os.sep + ioutput)
-                            properties['output']=output
+                            properties['output'] = output
                             break
                         except:
                             print('Bad output %s on %s' % (ioutput, path))
 
             for ifile in files:
-                if ifile[-3:]=='lvs':
+                if ifile[-3:] == 'lvs':
                     try:
-                        cell=pychemia.code.fireball.read_lvs(path + os.sep + ifile)
-                        periodic=True
-                        lat=pychemia.crystral.Lattice(cell)
+                        cell = pychemia.code.fireball.read_lvs(path + os.sep + ifile)
+                        periodic = True
+                        lat = pychemia.crystral.Lattice(cell)
                         if lat.volume > 1E7:
                             print('Lattice too big, assuming non-periodic structure')
                             periodic = False
@@ -186,12 +188,12 @@ class FireballCollector:
         ret = []
         if not os.path.isfile(filename):
             self.process_directory(self.source_dir, ret)
-            wf=open('fireball_directories.txt', 'w')
+            wf = open('fireball_directories.txt', 'w')
             for i in ret:
                 wf.write("%s\n" % i)
             wf.close()
         else:
-            rf=open(filename)
+            rf = open(filename)
             ret = [x[:-1] for x in rf.readlines()]
             rf.close()
 

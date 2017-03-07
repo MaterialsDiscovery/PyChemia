@@ -84,7 +84,7 @@ class IonRelaxation2(Relaxator, Task):
             vj.input_variables.variables['PREC'] = 'NORMAL'
             vj.input_variables.variables['EDIFF'] = 1e-3
             vj.input_variables.variables['EDIFFG'] = 1e-2
-            vj.input_variables.set_encut(1.2, POTCAR=self.workdir + os.sep + 'POTCAR') # Originally     ENCUT=520.0
+            vj.input_variables.set_encut(1.2, POTCAR=self.workdir + os.sep + 'POTCAR')  # Originally     ENCUT=520.0
             vj.input_variables.variables['NSW'] = 65
             vj.input_variables.variables['ISIF'] = 3
             vj.input_variables.variables['IBRION'] = 2
@@ -119,7 +119,7 @@ class IonRelaxation2(Relaxator, Task):
         elif self.stage == 6:
             vj.input_variables.variables['PREC'] = 'NORMAL'
             vj.input_variables.variables['EDIFF'] = 0.1 * self.target_forces
-            vj.input_variables.variables['EDIFFG'] = 0.5* self.target_forces
+            vj.input_variables.variables['EDIFFG'] = 0.5 * self.target_forces
             vj.input_variables.set_encut(1.5, POTCAR=self.workdir + os.sep + 'POTCAR')  # Originally     ENCUT=600.0
             vj.input_variables.variables['NSW'] = 0
             vj.input_variables.variables['ISIF'] = 2
@@ -219,8 +219,8 @@ class IonRelaxation2(Relaxator, Task):
                                                                             info['avg_stress_diag'],
                                                                             info['avg_stress_non_diag']))
                     if self.stage == 7 and info['avg_force'] < self.target_forces and \
-                        info['avg_stress_diag'] < self.target_forces and \
-                        info['avg_stress_non_diag'] < self.target_forces:
+                                           info['avg_stress_diag'] < self.target_forces and \
+                                           info['avg_stress_non_diag'] < self.target_forces:
                         break
 
                 else:
@@ -266,7 +266,7 @@ class IonRelaxation2(Relaxator, Task):
 
         filename = self.workdir + os.sep + 'OUTCAR'
         if os.path.isfile(filename):
-            vo=VaspOutput(filename)
+            vo = VaspOutput(filename)
             if vo.has_forces_stress_energy():
                 forces = vo.forces[-1]
                 stress = vo.stress[-1]

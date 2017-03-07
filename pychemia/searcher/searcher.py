@@ -120,7 +120,7 @@ class Searcher:
             candidates_per_generation = [len(self.get_generation(i)) for i in range(self.current_generation + 1)]
             pcm_log.debug('Candidates per generation: %s' % candidates_per_generation)
             pcm_log.debug('Current generation: %d Candidates: %d' % (self.current_generation,
-                                                                      len(self.get_generation())))
+                                                                     len(self.get_generation())))
             assert len(self.get_generation()) == self.generation_size
             assert min(candidates_per_generation) == max(candidates_per_generation)
 
@@ -251,7 +251,7 @@ class Searcher:
         self.set_generation(son, self.current_generation + 1)
 
     def pass_to_new_generation(self, entry_id, reason=None):
-        #pcm_log.debug('Moving to new generation : %s' % str(entry_id))
+        # pcm_log.debug('Moving to new generation : %s' % str(entry_id))
         change = {'change': 'promoted', 'reason': reason}
         self.advance(entry_id, entry_id, change)
 
@@ -265,7 +265,7 @@ class Searcher:
 
     def replace_by_other(self, entry_id_old, entry_id_new, reason=None):
         change = {'change': 'replace_by_other', 'to': entry_id_new, 'reason': reason}
-        #pcm_log.debug('Changed  %s -> %s' % (str(entry_id_old), str(entry_id_new)))
+        # pcm_log.debug('Changed  %s -> %s' % (str(entry_id_old), str(entry_id_new)))
         self.population.disable(entry_id_old)
         self.advance(entry_id_old, entry_id_new, change)
 
@@ -389,8 +389,8 @@ class Searcher:
             number_evaluated = len(self.population.actives_evaluated)
             while self.population.fraction_evaluated < 1.0:
                 if len(self.population.actives_evaluated) != number_evaluated:
-                    pcm_log.debug("Population '%s' still not evaluated. %4.0f %%" % (self.population.name,
-                                                                                     100 * self.population.fraction_evaluated))
+                    msg = "Population '%s' still not evaluated. %4.0f %%"
+                    pcm_log.debug(msg % (self.population.name, 100 * self.population.fraction_evaluated))
                     self.print_status(level='DEBUG')
                     number_evaluated = len(self.population.actives_evaluated)
                 self.population.replace_failed()
@@ -409,11 +409,11 @@ class Searcher:
                     break
             else:
                 pcm_log.debug('Best candidate %s is not in the current generation' % best_member)
-                #pcm_log.debug('Slot: %s' % self.lineage_inv[best_member])
-                #pcm_log.debug('Lineage: %s' % self.lineage[self.lineage_inv[best_member]])
+                # pcm_log.debug('Slot: %s' % self.lineage_inv[best_member])
+                # pcm_log.debug('Lineage: %s' % self.lineage[self.lineage_inv[best_member]])
                 if best_member != best_recorded:
                     survival_for_best = 0
-                    best_recorded=best_member
+                    best_recorded = best_member
                 else:
                     survival_for_best += 1
 

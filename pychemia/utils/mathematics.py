@@ -964,7 +964,7 @@ def gea_all_angles(ortho_matrix):
     n = b.shape[0]
     ret = []
 
-    #print('Original matrix\n%s' % b)
+    # print('Original matrix\n%s' % b)
     for i in range(1, n):
         # Lets take vectors starting from the last column on ortho_matrix
         an = b[:, -1]
@@ -1002,18 +1002,13 @@ def gea_orthogonal_from_angles(angles_list):
     # For SO(k) there are k*(k-1)/2 angles that are grouped in k-1 sets
     # { (k-1 angles), (k-2 angles), ... , (1 angle)}
     for i in range(1, n):
-        #print('Counter: %d' % i)
-        angles = np.concatenate((tmp[-i:],[np.pi/2]))
+        angles = np.concatenate((tmp[-i:], [np.pi/2]))
         tmp = tmp[:-i]
-        #print(tmp)
-        #print('Angles: \n%s' % angles)
         ma = gea_matrix_a(angles)  # matrix i+1 x i+1
-        #print('Matrix a: \n%s' % ma)
         b = np.dot(b, ma.T).T
         # We skip doing making a larger matrix for the last iteration
         if i < n-1:
             c = np.eye(i+2, i+2)
             c[:-1, :-1] = b
             b = c
-        #print('New matrix b: \n%s' % b)
     return b

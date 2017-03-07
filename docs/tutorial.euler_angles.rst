@@ -8,10 +8,10 @@ You can use the following routines to obtain the :math:`k(k-1)/2` Generalized Eu
 from a orhogonal matrix of dimension k and for building the orthogonal matrix from a set
 of angles::
 
->>> angles_list = pychemia.utils.mathematics.gea_all_angles(ortho_matrix)
+    >>> angles_list = pychemia.utils.mathematics.gea_all_angles(ortho_matrix)
 
 
->>> ortho_matrix = gea_orthogonal_from_angles(angles_list)
+    >>> ortho_matrix = gea_orthogonal_from_angles(angles_list)
 
 Remember that the list of angles matters. The SO(k) group is non-abelian.
 

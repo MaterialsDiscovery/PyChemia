@@ -109,6 +109,7 @@ def write_poscar(structure, filepath='POSCAR', newformat=True, direct=True):
     :param structure: (pychemia.Structure) Structure to write POSCAR
     :param filepath: (str) Filename of POSCAR file to create
     :param newformat: (bool) If the new VASP format is used to create the POSCAR
+    :param direct: (bool) If True, use reduced coordinates. If False, use cartesian coordinates (default: True)
     """
     comp = structure.get_composition()
     species = get_species_list(structure)

@@ -11,6 +11,7 @@ from pychemia.utils.mathematics import integral_gaussian
 from pychemia.utils.periodic import atomic_number, covalent_radius, valence, atomic_symbol
 from collections import OrderedDict
 
+
 class StructureAnalysis:
     """
     The set of analysis provided by this class uses only structural information of one
@@ -118,7 +119,7 @@ class StructureAnalysis:
                                                                            self.structure.reduced[j],
                                                                            radius=self.radius)
                 else:
-                    ret[pair] = dist_matrix[i,j]
+                    ret[pair] = dist_matrix[i, j]
 
             self._all_distances = ret
 
@@ -131,7 +132,7 @@ class StructureAnalysis:
 
         atom_numbers = atomic_number(self.structure.species)
         a = list(itertools.combinations_with_replacement(atom_numbers, 2))
-        keys=sorted([tuple(sorted(list(x))) for x in a])
+        keys = sorted([tuple(sorted(list(x))) for x in a])
         for key in keys:
             ret[key] = []
 

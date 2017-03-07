@@ -7,6 +7,7 @@ import shutil
 from pychemia.utils.computing import hashfile
 from pychemia.db import has_connection
 
+
 def test_queue():
     """
     Tests (pychemia.db.PyChemiaQueue)                            :

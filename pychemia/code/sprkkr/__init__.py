@@ -18,7 +18,8 @@ class CodeSPRKKR:
         wf.write('3D\n')
         sym = pychemia.crystal.CrystalSymmetry(self.structure)
         wf.write("Bravais lattice \n")
-        wf.write('12 %s primitive %s %s\n' % (sym.crystal_system().lower(), sym.symbol(), sym.get_symmetry_dataset()['pointgroup']))
+        wf.write('12 %s primitive %s %s\n' % (sym.crystal_system().lower(), sym.symbol(),
+                                              sym.get_symmetry_dataset()['pointgroup']))
         wf.write('space group number (ITXC and AP)\n')
         wf.write(' %4d %4d\n' % (0, 0))
         wf.write('structure type\n')
@@ -135,7 +136,7 @@ BASSCALE      1.0000000000    1.0000000000    1.0000000000
 """
         reduced = self.structure.reduced
         for i in range(natom):
-             ret += "%d  %15.10f %15.10f %15.10f\n" % (i+1, reduced[i, 0], reduced[i, 1], reduced[i, 2])
+            ret += "%d  %15.10f %15.10f %15.10f\n" % (i+1, reduced[i, 0], reduced[i, 1], reduced[i, 2])
 
         ret += """*******************************************************************************
 OCCUPATION
@@ -171,7 +172,7 @@ MESH-TYPE EXPONENTIAL
 
         for i in range(natom):
             ret += " %5d %15.10f %15.10f %d %15.10f %d %15.10f\n" % (i+1, 0.0000010000, 0.0205501520,    0,
-                                                                   2.2661445689, 721, 2.6660524340)
+                                                                     2.2661445689, 721, 2.6660524340)
 
         ret += """*******************************************************************************
 TYPES

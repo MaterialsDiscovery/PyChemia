@@ -274,7 +274,8 @@ class OrbitalDFTU(Population):
         pass
 
     def from_dict(self, population_dict):
-        return self.__init__(input_path=population_dict['input_path'],
+        return self.__init__(name=self.name,
+                             input_path=population_dict['input_path'],
                              num_electrons_dftu=population_dict['num_electrons_dftu'],
                              connections=population_dict['connections'],
                              num_indep_matrices=population_dict['num_indep_matrices'])
@@ -286,6 +287,7 @@ class OrbitalDFTU(Population):
         ret['num_electrons_dftu'] = list(self.num_electrons_dftu)
         ret['num_indep_matrices'] = self.num_indep_matrices
         ret['connections'] = list(self.connections)
+        return ret
 
     def new_entry(self, properties, active=True):
         """
@@ -464,6 +466,7 @@ class OrbitalDFTU(Population):
         """
         Prepare directories for abinit execution
 
+        :param entry_id:    bson.ObjectID of the entry that will be used for preparing the folder
         :param source_dir: (str) is the directory where 'abinit.files' and 'batch.pbs' should be present
                            those directories will be symbolically linked inside the individual work directories
         :param workdir: (str) Base work directory for abinit executions. Inside this directory, a set of subdirectories
@@ -471,7 +474,7 @@ class OrbitalDFTU(Population):
 
         """
         # Individual workdir
-        iworkdir=workdir+os.sep+str(entry_id)
+        iworkdir = workdir+os.sep+str(entry_id)
 
         if not os.path.isdir(iworkdir):
             os.mkdir(iworkdir)
@@ -637,7 +640,7 @@ def get_final_correlation_matrices_from_output(filename):
               "matrix for correlated orbitals:\s*Occupation matrix for spin  1\s*([\d\.\-\s]*)Occupation matrix " \
               "for spin  2\s*([\d\.\-\s]*)"
     ans = re.findall(pattern, mainblock[0])
-    #print(ans)
+    # print(ans)
 
     ret = []
     for i in ans:

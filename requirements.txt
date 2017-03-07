@@ -1,3 +1,5 @@
 scipy
 numpy
 future
+spglib
+pymongo

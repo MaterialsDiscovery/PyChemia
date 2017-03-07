@@ -96,12 +96,12 @@ class NonCollinearMagMoms(Population):
 
     @staticmethod
     def from_dict(self, population_dict):
-        return NonCollinearMagMoms( name=population_dict['name'],
-                                    source_dir=population_dict['source_dir'],
-                                    mag_atoms=population_dict['mag_atoms'],
-                                    incar_extra=population_dict['incar_extra'],
-                                    magmom_magnitude=population_dict['magmom_magnitude'],
-                                    distance_tolerance=population_dict['distance_tolerance'])
+        return NonCollinearMagMoms(name=population_dict['name'],
+                                   source_dir=population_dict['source_dir'],
+                                   mag_atoms=population_dict['mag_atoms'],
+                                   incar_extra=population_dict['incar_extra'],
+                                   magmom_magnitude=population_dict['magmom_magnitude'],
+                                   distance_tolerance=population_dict['distance_tolerance'])
 
     def debug_evaluation(self, magmom_sph):
         """
@@ -113,7 +113,7 @@ class NonCollinearMagMoms(Population):
         :return:
         """
         if self.debug:
-            magmom_car=spherical_to_cartesian(magmom_sph)
+            magmom_car = spherical_to_cartesian(magmom_sph)
             good_magmom = np.zeros((self.structure.natom, 3))
             for i in self.mag_atoms:
                 good_magmom[i] = (-1**i) * 1.15470054 * np.ones(3)
@@ -137,7 +137,7 @@ class NonCollinearMagMoms(Population):
         cartesian_magmoms = np.array(cartesian_magmoms)
         properties = {'magmom': list(cartesian_magmoms.flatten()), 'energy': self.debug_evaluation(cartesian_magmoms)}
         status = {self.tag: active}
-        entry={'structure': self.structure.to_dict, 'properties': properties, 'status': status}
+        entry = {'structure': self.structure.to_dict, 'properties': properties, 'status': status}
         entry_id = self.insert_entry(entry)
         return entry_id
 
@@ -166,7 +166,7 @@ class NonCollinearMagMoms(Population):
         ret = {}
         for i in range(len(ids) - 1):
             for j in range(i+1, len(ids)):
-                distance=self.distance(selection[i], selection[j])
+                distance = self.distance(selection[i], selection[j])
                 if distance < self.distance_tolerance:
                     ret[selection[j]] = selection[i]
         return ret
@@ -242,11 +242,10 @@ class NonCollinearMagMoms(Population):
         magmom_jxyz = spherical_to_cartesian(magmom_j)
 
         for i in self.mag_atoms:
-            #print('Atom %d' % i)
+            # print('Atom %d' % i)
             if magmom_i[i][0] > 0 and magmom_j[i][0] > 0:
-                magmom_new_xyz[i] = rotate_towards_axis(magmom_ixyz[i], magmom_jxyz[i],
-                                                                                   fraction=factor)
-                #print('Final magmom Cartesian : %d     %s' % (i,magmom_new_xyz[i]))
+                magmom_new_xyz[i] = rotate_towards_axis(magmom_ixyz[i], magmom_jxyz[i], fraction=factor)
+                # print('Final magmom Cartesian : %d     %s' % (i,magmom_new_xyz[i]))
 
         magmom_new = cartesian_to_spherical(magmom_new_xyz)
 

@@ -82,10 +82,10 @@ class LJCluster(Population):
         new_pos1 = np.concatenate((pos1[:cut], pos0[cut:]))
 
         new_structure = Structure(positions=new_pos0, symbols=entry0['structure']['symbols'],
-                                           periodicity=False)
+                                  periodicity=False)
         entry_id = self.new_entry(structure=new_structure)
         new_structure = Structure(positions=new_pos1, symbols=entry0['structure']['symbols'],
-                                           periodicity=False)
+                                  periodicity=False)
         entry_jd = self.new_entry(structure=new_structure)
 
         return entry_id, entry_jd
@@ -337,17 +337,13 @@ class LJCluster(Population):
         uv = unit_vectors(2 * np.random.rand(*pos.shape) - 1)
         new_pos = generic_serializer(pos + factor * uv)
 
-        structure = Structure(positions=new_pos,
-                                       symbols=entry['structure']['symbols'],
-                                       periodicity=False)
+        structure = Structure(positions=new_pos, symbols=entry['structure']['symbols'], periodicity=False)
 
         if in_place:
             self.update_properties(entry_id=entry_id, new_properties={})
             return self.set_structure(entry_id, structure)
         else:
-            structure = Structure(positions=new_pos,
-                                           symbols=entry['structure']['symbols'],
-                                           periodicity=False)
+            structure = Structure(positions=new_pos, symbols=entry['structure']['symbols'], periodicity=False)
             return self.new_entry(structure, active=False)
 
     def get_structure(self, entry_id):
@@ -366,10 +362,9 @@ class LJCluster(Population):
     def str_entry(self, entry_id):
         structure = self.get_structure(entry_id)
         entry = self.get_entry(entry_id, projection={'properties': 1})
-        return 'Cluster: LJ%d  Point group: %s  Energy: %7.3f Forces: %7.1E' % (structure.natom,
-                                                                              entry['properties']['point_group'],
-                                                                              entry['properties']['energy'],
-                                                                              self.maxforce(entry_id))
+        msg = 'Cluster: LJ%d  Point group: %s  Energy: %7.3f Forces: %7.1E'
+        pg = entry['properties']['point_group']
+        return msg % (structure.natom, pg, entry['properties']['energy'], self.maxforce(entry_id))
 
     def new_entry(self, structure, active=True):
 
@@ -410,7 +405,7 @@ class LJCluster(Population):
 def rotation_move(pos_orig, pos_dest, fraction):
     new_positions = np.zeros(pos_orig.shape)
     for i in range(len(pos_orig)):
-        if length_vector(pos_orig[i])< 1E-5 or length_vector(pos_dest[i])< 1E-5:
+        if length_vector(pos_orig[i]) < 1E-5 or length_vector(pos_dest[i]) < 1E-5:
             new_positions[i] = pos_dest[i]
         else:
             new_positions[i] = rotate_towards_axis(pos_orig[i], pos_dest[i], fraction=fraction)

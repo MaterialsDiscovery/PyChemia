@@ -243,10 +243,11 @@ class CrystalSymmetry(object):
         #     Computes the space group for the structure with a given
         #     precision in distances (symprec) and angle tolerance in degrees (angle_tolerance)
         #
-        #     :param symprec: (float) Tolerance of distance between atomic positions and between lengths of lattice vectors
+        #     :param symprec: (float) Tolerance of distance between atomic positions and between lengths of
+        #                             lattice vectors
         #     to be tolerated in the symmetry finding.
-        #     :param angle_tolerance: (float) Tolerance of angle between lattice vectors in degrees to be tolerated in the
-        #     symmetry finding.
+        #     :param angle_tolerance: (float) Tolerance of angle between lattice vectors in degrees to be
+        #                                     tolerated in the symmetry finding.
         #
         #     :return: The space group with the symbol and number as a string
         #     :rtype : (str)
@@ -259,10 +260,10 @@ class CrystalSymmetry(object):
         #     Computes the space group symbol for the structure with a given
         #     precision in distances (symprec) and angle tolerance in degrees (angle_tolerance)
         #
-        #     :param symprec: (float) Tolerance of distance between atomic positions and between lengths of lattice vectors
-        #     to be tolerated in the symmetry finding.
-        #     :param angle_tolerance: (float) Tolerance of angle between lattice vectors in degrees to be tolerated in the
-        #     symmetry finding.
+        #     :param symprec: (float) Tolerance of distance between atomic positions and between lengths of
+        #                             lattice vectors to be tolerated in the symmetry finding.
+        #     :param angle_tolerance: (float) Tolerance of angle between lattice vectors in degrees to be
+        #                                     tolerated in the symmetry finding.
         #
         #     :return: The space group symbol as a string
         #     :rtype : (str)
@@ -274,10 +275,10 @@ class CrystalSymmetry(object):
         #     Computes the space group number for the structure with a given
         #     precision in distances (symprec) and angle tolerance in degrees (angle_tolerance)
         #
-        #     :param symprec: (float) Tolerance of distance between atomic positions and between lengths of lattice vectors
-        #     to be tolerated in the symmetry finding.
-        #     :param angle_tolerance: (float) Tolerance of angle between lattice vectors in degrees to be tolerated in the
-        #     symmetry finding.
+        #     :param symprec: (float) Tolerance of distance between atomic positions and between lengths
+        #                             of lattice vectors to be tolerated in the symmetry finding.
+        #     :param angle_tolerance: (float) Tolerance of angle between lattice vectors in degrees to be
+        #                             tolerated in the symmetry finding.
         #
         #     :return: The space group number
         #     :rtype : (int)
@@ -310,10 +311,10 @@ class CrystalSymmetry(object):
         #     Search the primitive pychemia Structure using the tolerances.
         #     If no primitive cell is found a copy of the original structure is returned
         #
-        #     :param symprec: (float) Tolerance of distance between atomic positions and between lengths of lattice vectors
-        #     to be tolerated in the symmetry finding.
-        #     :param angle_tolerance: (float) Tolerance of angle between lattice vectors in degrees to be tolerated in the
-        #     symmetry finding.
+        #     :param symprec: (float) Tolerance of distance between atomic positions and between lengths of
+        #                             lattice vectors to be tolerated in the symmetry finding.
+        #     :param angle_tolerance: (float) Tolerance of angle between lattice vectors in degrees to
+        #                                     be tolerated in the symmetry finding.
         #
         #     :return: A new pychemia Structure in a Bravais lattice
         #     :rtype : (pychemia.Structure)

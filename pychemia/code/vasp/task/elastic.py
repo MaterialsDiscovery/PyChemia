@@ -223,9 +223,9 @@ def mechanical_properties(elastic_moduli):
     elastic_moduli_inv = np.linalg.inv(elastic_moduli)
 
     # Voigt
-    Kv = np.trace(elastic_moduli[:3, :3]) / 90.0 + 2 * np.sum(np.triu(elastic_moduli[:3, :3], 1)) / 90.0
-    Gv = np.trace(elastic_moduli[:3, :3]) - np.sum(np.triu(elastic_moduli[:3, :3], 1)) + \
-                  3 * np.trace(elastic_moduli[3:6, 3:6])
+    em = elastic_moduli[:3, :3]
+    Kv = np.trace(em) / 90.0 + 2 * np.sum(np.triu(em, 1)) / 90.0
+    Gv = np.trace(em) - np.sum(np.triu(em, 1)) + 3 * np.trace(elastic_moduli[3:6, 3:6])
     Gv /= 150
 
     Ev = 1.0 / 3.0 / Gv + 1.0 / 9.0 / Kv
@@ -239,8 +239,8 @@ def mechanical_properties(elastic_moduli):
     Kr = np.trace(elastic_moduli_inv[:3, :3]) + 2 * np.sum(np.triu(elastic_moduli_inv[:3, :3], 1))
     Kr = 0.1 / Kr
 
-    Gr = 4 * np.trace(elastic_moduli_inv[:3, :3]) - 4 * np.sum(np.triu(elastic_moduli_inv[:3, :3], 1)) + \
-         3 * np.trace(elastic_moduli_inv[3:6, 3:6])
+    eminv = elastic_moduli_inv[:3, :3]
+    Gr = 4 * np.trace(eminv) - 4 * np.sum(np.triu(eminv, 1)) + 3 * np.trace(elastic_moduli_inv[3:6, 3:6])
     Gr = 1.5 / Gr
 
     Er = 1.0 / 3.0 / Gr + 1.0 / 9.0 / Kr

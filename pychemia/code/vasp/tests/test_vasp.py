@@ -65,7 +65,6 @@ class MyTestCase(unittest.TestCase):
         vj.write_incar()
         shutil.rmtree(td)
 
-
     def test_outcar(self):
         """
         Tests (pychemia.code.vasp) [outcar]                          :
@@ -75,7 +74,6 @@ class MyTestCase(unittest.TestCase):
         self.assertAlmostEqual(vo.to_dict['energy'], -19.67192646)
         print(vo)
         self.assertTrue(vo.has_forces_stress_energy())
-
 
     def test_poscar(self):
         """

@@ -44,7 +44,7 @@ class GeneticAlgorithm(Searcher):
             self.crossing_sets = params['crossing_sets']
 
         self.nelite = int(self.generation_size - 2 * sum(self.crossing_sets))
-        if self.nelite<=0:
+        if self.nelite <= 0:
             raise ValueError('Enter explicit crossing_sets for your generation size')
 
     def get_params(self):
@@ -76,9 +76,8 @@ class GeneticAlgorithm(Searcher):
                 if self.nelite + j + jump < len(selection):
                     entry_jd = selection[self.nelite + j + jump]
                     new_entry_id, new_entry_jd = self.population.cross([entry_id, entry_jd])
-                    pcm_log.info('Replace candidates %d and %d by crossing %d with %d' % (self.nelite + j + jump,
-                                                                                   discarded_index,
-                                                                                   self.nelite + j + jump, i))
+                    msg = 'Replace candidates %d and %d by crossing %d with %d'
+                    pcm_log.info(msg % (self.nelite + j + jump, discarded_index, self.nelite + j + jump, i))
 
                     pcm_log.debug('[%s] Moved to: %s' % (entry_id, new_entry_id))
                     self.replace_by_other(entry_jd, new_entry_id,

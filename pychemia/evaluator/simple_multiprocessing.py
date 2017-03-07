@@ -9,15 +9,15 @@ from multiprocessing import Process    # Multiprocessing python (Concurrency)
 
 
 def maise_worker(case, worker_args):
-    #os.chdir(workdir)
-    #subprocess.call(['maise'])
+    # os.chdir(workdir)
+    # subprocess.call(['maise'])
     random.seed()
     workdir = "MAISE_%03d" % case
     if not os.path.isdir(workdir):
         os.mkdir(workdir)
     wf = open(workdir+'/EXECTUING MAISE', 'w')
     wf.write('Put results here')
-    ttl = random.randint(10,40)
+    ttl = random.randint(10, 40)
     print('Evaluating case: %d this calculation will take %d seconds' % (case, ttl))
     time.sleep(ttl)
     wf.close()
@@ -80,11 +80,11 @@ def run(to_evaluate, worker, nconcurrent=1, sleeping_time=120):
         if index >= len(to_evaluate):
             break
 
-if __name__=='__main__':
+if __name__ == '__main__':
 
     to_evaluate = range(100)  # Creating 100 cases to evaluate
     nconcurrent = 16          # Number of concurrent executions
 
-    run(to_evaluate=to_evaluate, nconcurrent=nconcurrent, worker=maise_worker,sleeping_time=5)
+    run(to_evaluate=to_evaluate, nconcurrent=nconcurrent, worker=maise_worker, sleeping_time=5)
 
 
