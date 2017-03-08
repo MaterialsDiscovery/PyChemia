@@ -261,8 +261,19 @@ class OrbitalDFTU(Population):
         entry_jd = self.new_entry(newdata2)
         return entry_id, entry_jd
 
-    def get_correlation_params(self, entry_id):
-        return self.get_entry(entry_id, {'properties': 1}, with_id=False)['properties']
+    def get_correlation_params(self, entry_id, final=True):
+
+        if final:
+            key = 'final_dmat'
+        else:
+            key = 'initial_dmat'
+
+        entry = self.get_entry(entry_id, {'properties.' + key: 1}, with_id=False)
+        if entry is not None:
+            ret = entry['properties'][key]
+        else:
+            ret = None
+        return ret
 
     def evaluate_entry(self, entry_id):
         """
@@ -289,7 +300,7 @@ class OrbitalDFTU(Population):
         ret['connections'] = list(self.connections)
         return ret
 
-    def new_entry(self, properties, active=True):
+    def new_entry(self, dmat, active=True):
         """
         Creates a new entry on the population database from given data.
 
@@ -299,8 +310,14 @@ class OrbitalDFTU(Population):
         :return:
 
         """
+        assert 'euler_angles' in dmat
+        assert 'occupations' in dmat
+        assert 'deltas' in dmat
+        assert 'ndim' in dmat
+        assert 'num_matrices' in dmat
         status = {self.tag: active}
-        properties['energy'] = None
+        properties = {'etot':  None, 'initial_dmat': dmat, 'nres2': None, 'final_dmat': None}
+
         entry = {'structure': self.structure.to_dict, 'properties': properties, 'status': status}
         entry_id = self.insert_entry(entry)
         pcm_log.debug('Added new entry: %s with tag=%s: %s' % (str(entry_id), self.tag, str(active)))
@@ -315,7 +332,7 @@ class OrbitalDFTU(Population):
         :return:
         """
         entry = self.get_entry(entry_id, {'_id': 0, 'properties': 1})
-        if entry['properties']['energy'] is not None:
+        if entry['properties']['etot'] is not None:
             return True
         else:
             return False
@@ -349,11 +366,11 @@ class OrbitalDFTU(Population):
         :return:
         """
 
-        properties1 = self.get_correlation_params(entry_id)
-        properties2 = self.get_correlation_params(entry_jd)
+        dmat1 = self.get_correlation_params(entry_id)
+        dmat2 = self.get_correlation_params(entry_jd)
 
-        euler_angles1 = properties1['euler_angles']
-        euler_angles2 = properties2['euler_angles']
+        euler_angles1 = dmat1['euler_angles']
+        euler_angles2 = dmat2['euler_angles']
 
         uvect1 = unit_vector(np.array(euler_angles1).flatten())
         uvect2 = unit_vector(np.array(euler_angles2).flatten())
@@ -373,19 +390,17 @@ class OrbitalDFTU(Population):
         :param kind: Use when several algorithms are used for movement. One implemented here
         :return:
         """
-        properties = self.get_correlation_params(entry_id)
+        dmat = self.get_correlation_params(entry_id)
 
-        newdata = dict(properties)
+        newdata = dict(dmat)
         for i in range(self.num_indep_matrices):
             for j in range(self.ndim):
-                perturbation = properties['euler_angles'][i][j] + 2*np.random.rand()*factor - factor
+                perturbation = dmat['euler_angles'][i][j] + 2*np.random.rand()*factor - factor
                 if np.pi/2.0 > perturbation > -np.pi/2.0:
                     newdata['euler_angles'][i][j] = perturbation
 
-        print(newdata)
-
         if in_place:
-            return self.pcdb.db.pychemia_entries.update({'_id': entry_id},  {'$set': {'properties': newdata}})
+            return self.update_dmat_inplace(entry_id, newdata)
         else:
             return self.new_entry(newdata, active=False)
 
@@ -401,11 +416,11 @@ class OrbitalDFTU(Population):
         :return:
         """
 
-        properties1 = self.get_correlation_params(entry_id)
-        properties2 = self.get_correlation_params(entry_jd)
+        dmat1 = self.get_correlation_params(entry_id)
+        dmat2 = self.get_correlation_params(entry_jd)
 
-        euler_angles1 = properties1['euler_angles']
-        euler_angles2 = properties2['euler_angles']
+        euler_angles1 = dmat1['euler_angles']
+        euler_angles2 = dmat2['euler_angles']
 
         euler_angles_new = np.zeros((self.num_indep_matrices, int(self.ndim*(self.ndim-1)/2)))
 
@@ -434,13 +449,20 @@ class OrbitalDFTU(Population):
                 if euler_angles_new[i, j] < -np.pi:
                     euler_angles_new[i, j] += -2*np.pi
 
-        newdata = dict(properties1)
+        newdata = dict(dmat1)
         newdata['euler_angles'] = generic_serializer(euler_angles_new)
 
         if in_place:
-            return self.pcdb.db.pychemia_entries.update({'_id': entry_id},  {'$set': {'properties': newdata}})
+            return self.update_dmat_inplace(entry_id, newdata)
         else:
             return self.new_entry(newdata, active=False)
+
+    def update_dmat_inplace(self, entry_id, dmat):
+        return self.pcdb.db.pychemia_entries.update({'_id': entry_id},
+                                                    {'$set': {'properties.initial_dmat': dmat,
+                                                              'properties.etot': None,
+                                                              'properties.nres2': None,
+                                                              'properties.final_dmat': dmat}})
 
     def recover(self):
         pass
@@ -452,12 +474,12 @@ class OrbitalDFTU(Population):
         :param entry_id:
         :return:
         """
-        entry = self.get_entry(entry_id, {'properties.energy': 1})
-        return entry['properties']['energy']
+        entry = self.get_entry(entry_id, {'properties.etot': 1})
+        return entry['properties']['etot']
 
     def str_entry(self, entry_id):
         entry = self.get_entry(entry_id)
-        print(entry['properties']['O'], entry['properties']['D'])
+        print(entry['properties']['initial_dmat'], entry['properties']['final_dmat'])
 
     def get_duplicates(self, ids):
         return None
@@ -493,23 +515,21 @@ class OrbitalDFTU(Population):
         abiinput['dmatpawu'] = list(dmatpawu.flatten())
         abiinput.write(iworkdir + os.sep + 'abinit.in')
 
-    def collect_data(self, entry_id, workdir):
+    def collect_data(self, entry_id, workdir, filename='abinit.out'):
 
-        old_properties = self.get_correlation_params(entry_id)
+        if os.path.isfile(workdir + os.sep + filename):
+            ao = AbinitOutput(workdir + os.sep + filename)
 
-        if os.path.isfile(workdir + '/abinit.out'):
-            ao = AbinitOutput(workdir + '/abinit.out')
-
-            dmatpawu = get_final_dmatpawu(workdir + '/abinit.out')
+            dmatpawu = get_final_dmatpawu(workdir + os.sep + filename)
             params = dmatpawu2params(dmatpawu, self.ndim)
-            properties = dict(params)
-            properties['original_params'] = old_properties
 
             if 'etot' in ao.get_energetics():
-                energy = ao.get_energetics()['etot'][-1]
+                etot = ao.get_energetics()['etot'][-1]
+                nres2 = ao.get_energetics()['nres2'][-1]
                 print('Uploading energy data for %s' % entry_id)
-                properties['energy'] = energy
-                self.pcdb.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'properties': properties}})
+                self.pcdb.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'properties.final_dmat': params,
+                                                                                  'properties.etot': etot,
+                                                                                  'properties.nres2': nres2}})
                 return True
             else:
                 return False
