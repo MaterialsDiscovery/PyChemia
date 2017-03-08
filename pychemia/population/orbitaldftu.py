@@ -510,7 +510,7 @@ class OrbitalDFTU(Population):
             os.symlink(os.path.abspath(source_dir + os.sep + ifile), iworkdir + os.sep + ifile)
 
         abiinput = InputVariables(self.input_path)
-        params = self.get_correlation_params(entry_id)
+        params = self.get_correlation_params(entry_id, final=False)
         dmatpawu = params2dmatpawu(params)
         abiinput['dmatpawu'] = list(dmatpawu.flatten())
         abiinput.write(iworkdir + os.sep + 'abinit.in')
@@ -557,24 +557,24 @@ def params2dmatpawu(params):
     deltas = np.array(params['deltas']).reshape(num_matrices, -1)
     euler_angles = np.array(params['euler_angles']).reshape(num_matrices, -1)
 
-    print(num_matrices)
-    print(euler_angles.shape)
-    print(deltas.shape)
-    print(occupations.shape)
+    # print(num_matrices)
+    # print(euler_angles.shape)
+    # print(deltas.shape)
+    # print(occupations.shape)
 
     ret = np.zeros((num_matrices, ndim, ndim))
 
     for i in range(num_matrices):
-        print(i)
+        # print(i)
         eigval = np.diag(occupations[i]).astype(float)
         for j in range(ndim):
             if eigval[j, j] == 0:
                 eigval[j, j] += deltas[i, j]
             else:
                 eigval[j, j] -= deltas[i, j]
-        print(eigval)
+        # print(eigval)
         rotation = gea_orthogonal_from_angles(euler_angles[i])
-        print(rotation)
+        # print(rotation)
         correlation = np.dot(np.dot(rotation, eigval), rotation.T)
         ret[i] = correlation
     return ret
