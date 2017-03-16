@@ -145,6 +145,16 @@ class Population:
         for i in self.members:
             self.pcdb.unlock(i, name=name)
 
+    def distance_matrix(self, ids):
+
+        ret = np.zeros((len(ids), len(ids)))
+
+        for i in range(len(ids) - 1):
+            for j in range(i, len(ids)):
+                ret[i, j] = self.distance(ids[i], ids[j])
+                ret[j, i] = ret[i, j]
+        return ret
+
     @abstractmethod
     def add_random(self):
         pass

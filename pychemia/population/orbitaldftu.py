@@ -323,6 +323,26 @@ class OrbitalDFTU(Population):
         pcm_log.debug('Added new entry: %s with tag=%s: %s' % (str(entry_id), self.tag, str(active)))
         return entry_id
 
+    def set_final_dmat(self, entry_id, abinitout):
+        abo = AbinitOutput(abinitout)
+        if not abo.is_finished:
+            return None
+        try:
+            dmatpawu = get_final_dmatpawu(abinitout)
+            odmatpawu = np.array(dmatpawu).reshape(-1, self.ndim, self.ndim)
+            oparams = dmatpawu2params(odmatpawu, self.ndim)
+            nres2 = abo.get_energetics()['nres2'][-1]
+            etot = abo.get_energetics()['etot'][-1]
+        except:
+            return None
+
+        return self.pcdb.db.pychemia_entries.update({'_id': entry_id},
+                                                    {'$set': {'properties.etot': etot,
+                                                              'properties.nres2': nres2,
+                                                              'properties.final_dmat': generic_serializer(oparams)}})
+
+
+
     def is_evaluated(self, entry_id):
 
         """

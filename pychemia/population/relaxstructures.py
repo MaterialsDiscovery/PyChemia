@@ -251,16 +251,6 @@ class RelaxStructures(Population):
         duplicates_dict = self.check_duplicates(selection)
         return [x for x in selection if x not in duplicates_dict.keys()]
 
-    def distance_matrix(self, ids):
-
-        ret = np.zeros((len(ids), len(ids)))
-
-        for i in range(len(ids) - 1):
-            for j in range(i, len(ids)):
-                ret[i, j] = self.distance(ids[i], ids[j])
-                ret[j, i] = ret[i, j]
-        return ret
-
     def diff_values_matrix(self):
 
         members = self.members
