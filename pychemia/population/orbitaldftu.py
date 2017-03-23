@@ -141,6 +141,8 @@ class OrbitalDFTU(Population):
             self.num_indep_matrices = num_indep_matrices
         else:
             self.num_indep_matrices = self.nmatrices
+
+        self.num_electrons_dftu = [int(x) for x in self.num_electrons_dftu]
         print('Number of independent matrices: %d' % self.num_indep_matrices)
 
         if connections is not None:
