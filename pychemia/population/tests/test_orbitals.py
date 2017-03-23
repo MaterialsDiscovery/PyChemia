@@ -56,7 +56,7 @@ class PopulationTest(unittest.TestCase):
 
         self.assertFalse(popu.is_evaluated(entry_id))
 
-        popu.check_duplicates(popu.members)
+        popu.get_duplicates(popu.members)
 
         entry_idm = popu.move_random(entry_id)
         popu.get_entry(entry_idm, {'properties': 1})

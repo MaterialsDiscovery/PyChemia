@@ -438,7 +438,7 @@ class Searcher:
                 self.replace_by_random(entry_id, reason='no evaluated')
             self.print_status()
 
-            duplicates = self.population.check_duplicates(self.population.ids_sorted(self.population.actives_evaluated))
+            duplicates = self.population.get_duplicates(self.population.ids_sorted(self.population.actives_evaluated))
             for entry_id in duplicates:
                 change = {'change': 'duplicate', 'to': duplicates[entry_id], 'reason': None}
                 self.write_change(entry_id, change)

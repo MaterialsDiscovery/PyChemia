@@ -50,7 +50,7 @@ class NetworkAnalysis:
                   separators=(',', ': '))
 
         if not os.path.isfile('NetworkBasins_%s.json' % self.population.name):
-            dupes_dict, dupes_list = self.population.get_duplicates(self.population.evaluated, fast=True)
+            dupes_dict, dupes_list = self.population.dict_duplicates(self.population.evaluated, fast=True)
             new_dupes_dict = {}
             for i in dupes_dict:
                 new_dupes_dict[str(i)] = []

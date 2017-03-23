@@ -163,7 +163,7 @@ def plot_generation_chart(searcher, gen_size):
     for j in range(inigen, fingen):
         sys.stdout.write(' %d' % j)
         thegen = get_generation(population, j)[:gen_size]
-        dups = population.check_duplicates(thegen)
+        dups = population.get_duplicates(thegen)
         for i in dups:
             x = [list(thegen).index(i), list(thegen).index(dups[i])]
             y = [-2 * j + 0.5, -2 * j + 0.5]

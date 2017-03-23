@@ -1,15 +1,17 @@
 from __future__ import print_function
 import os
 import re
+import time
 import itertools
+import subprocess
 import random
 import numpy as np
 from ._population import Population
 from pychemia import pcm_log
-from pychemia.code.abinit import InputVariables
-from pychemia.code.abinit import AbinitOutput
+from pychemia.code.abinit import InputVariables, AbinitOutput
 from pychemia.utils.mathematics import gram_smith_qr, gea_all_angles, gea_orthogonal_from_angles, unit_vector
-from pychemia.utils.serializer import generic_serializer
+from pychemia.utils.serializer import generic_serializer as gs
+from pychemia.runner.pbs import get_jobs, PBSRunner
 
 
 class OrbitalDFTU(Population):
@@ -35,13 +37,13 @@ class OrbitalDFTU(Population):
                         should be created independently and the database object must be use
                         as the 'name' argument
 
-        :param abinit_input: The abinit input file, all the variables will be preserve for all new candidates, except
+        :param input_path: The abinit input file, all the variables will be preserve for all new candidates, except
                         for 'dmatpawu' the only variable that changes.
 
         :param num_electrons_dftu: Example [5, 1, 5, 1]
 
         """
-        # Call the parent class initializer to link the PychemiaDB that will be used
+        # Call the parent class initializer to link the PyChemiaDB that will be used
         Population.__init__(self, name, 'global')
         # Checking for existence of 'abinit.in'
         if not os.path.isfile(input_path):
@@ -175,6 +177,15 @@ class OrbitalDFTU(Population):
         """
         return 2 * self.maxlpawu + 1
 
+    @property
+    def to_dict(self):
+        ret = super(self.__class__, self).to_dict
+        ret['input_path'] = self.input_path
+        ret['num_electrons_dftu'] = list(self.num_electrons_dftu)
+        ret['num_indep_matrices'] = self.num_indep_matrices
+        ret['connections'] = list(self.connections)
+        return ret
+
     def add_random(self):
         """
         Creates a new set of variables to reconstruct the dmatpawu
@@ -261,121 +272,41 @@ class OrbitalDFTU(Population):
         entry_jd = self.new_entry(newdata2)
         return entry_id, entry_jd
 
-    def get_correlation_params(self, entry_id, final=True):
-
-        if final:
-            key = 'final_dmat'
-        else:
-            key = 'initial_dmat'
-
-        entry = self.get_entry(entry_id, {'properties.' + key: 1}, with_id=False)
-        if entry is not None:
-            ret = entry['properties'][key]
-        else:
-            ret = None
-        return ret
-
-    def evaluate_entry(self, entry_id):
-        """
-        Evaluation externalized, no implemented
-
-        :param entry_id:
-        :return:
-        """
+    def check_duplicates(self, ids):
         pass
 
-    def from_dict(self, population_dict):
-        return self.__init__(name=self.name,
-                             input_path=population_dict['input_path'],
-                             num_electrons_dftu=population_dict['num_electrons_dftu'],
-                             connections=population_dict['connections'],
-                             num_indep_matrices=population_dict['num_indep_matrices'])
+    def collect_data(self, entry_id, workdir, filename='abinit.out'):
 
-    @property
-    def to_dict(self):
-        ret = super(self).to_dict
-        ret['input_path'] = self.input_path
-        ret['num_electrons_dftu'] = list(self.num_electrons_dftu)
-        ret['num_indep_matrices'] = self.num_indep_matrices
-        ret['connections'] = list(self.connections)
-        return ret
+        if os.path.isfile(workdir + os.sep + filename):
+            ao = AbinitOutput(workdir + os.sep + filename)
 
-    def new_entry(self, dmat, active=True):
-        """
-        Creates a new entry on the population database from given data.
+            dmatpawu = get_final_dmatpawu(workdir + os.sep + filename)
+            params = dmatpawu2params(dmatpawu, self.ndim)
 
-        :param properties: dictionary with 3 keys 'D' for deltas, 'I' for the integers
-                        and eigen for the rotation matrix applied to the orbitals
-        :param active: if True, the entry is enabled on the DB to be evaluated.
-        :return:
-
-        """
-        assert 'euler_angles' in dmat
-        assert 'occupations' in dmat
-        assert 'deltas' in dmat
-        assert 'ndim' in dmat
-        assert 'num_matrices' in dmat
-        status = {self.tag: active}
-        properties = {'etot':  None, 'initial_dmat': dmat, 'nres2': None, 'final_dmat': None}
-
-        entry = {'structure': self.structure.to_dict, 'properties': properties, 'status': status}
-        entry_id = self.insert_entry(entry)
-        pcm_log.debug('Added new entry: %s with tag=%s: %s' % (str(entry_id), self.tag, str(active)))
-        return entry_id
-
-    def set_final_dmat(self, entry_id, abinitout):
-        abo = AbinitOutput(abinitout)
-        if not abo.is_finished:
-            return None
-        try:
-            dmatpawu = get_final_dmatpawu(abinitout)
-            odmatpawu = np.array(dmatpawu).reshape(-1, self.ndim, self.ndim)
-            oparams = dmatpawu2params(odmatpawu, self.ndim)
-            nres2 = abo.get_energetics()['nres2'][-1]
-            etot = abo.get_energetics()['etot'][-1]
-        except:
-            return None
-
-        return self.pcdb.db.pychemia_entries.update({'_id': entry_id},
-                                                    {'$set': {'properties.etot': etot,
-                                                              'properties.nres2': nres2,
-                                                              'properties.final_dmat': generic_serializer(oparams)}})
-
-
-
-    def is_evaluated(self, entry_id):
-
-        """
-        One candidate is considered evaluated if it contains any finite value of energy on the properties.energy field
-
-        :param entry_id:
-        :return:
-        """
-        entry = self.get_entry(entry_id, {'_id': 0, 'properties': 1})
-        if entry['properties']['etot'] is not None:
-            return True
+            if 'etot' in ao.get_energetics():
+                etot = ao.get_energetics()['etot'][-1]
+                nres2 = ao.get_energetics()['nres2'][-1]
+                print('Uploading energy data for %s' % entry_id)
+                self.pcdb.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'properties.final_dmat': params,
+                                                                                  'properties.etot': etot,
+                                                                                  'properties.nres2': nres2}})
+                return True
+            else:
+                return False
         else:
             return False
 
-    def check_duplicates(self, ids):
-        """
-        For a given list of identifiers 'ids' checks the values for the function 'distance' and return a dictionary
-          where each key is the identifier of a unique candidate and the value is a list of identifiers considered
-          equivalents to it.
+    def collect(self, entry_id, workdir='.'):
+        idir = workdir+os.sep+str(entry_id)
+        abinitout = self.get_final_abinit_out(idir)
 
-        :param ids:  List of identifiers for wich the check will be performed
-        :return:
-        """
-        ret = {}
-        print('Checking %d candidates' % len(ids))
-        for i in range(len(ids)):
-            for j in range(i + 1, len(ids)):
-                if self.distance(ids[i], ids[j]) < 1E-3:
-                    if ids[i] in ret:
-                        ret[ids[i]].append(ids[j])
-                    else:
-                        ret[ids[i]] = [ids[j]]
-        return ret
+        if self.get_entry(entry_id) is not None and not self.is_evaluated(entry_id):
+            print("%s Setting final dmat" % entry_id)
+            self.set_final_dmat(entry_id, abinitout)
+        elif self.get_entry(entry_id) is None:
+            print("%s Is not in database" % entry_id)
+        elif self.is_evaluated(entry_id):
+            print("%s Is already evaluated" % entry_id)
 
     def distance(self, entry_id, entry_jd):
         """
@@ -399,6 +330,158 @@ class OrbitalDFTU(Population):
 
         return dist_euler
 
+    def evaluate_entry(self, entry_id):
+        """
+        Evaluation externalized, no implemented
+
+        :param entry_id:
+        :return:
+        """
+        pass
+
+    def evaluator(self, username, basedir, queue, walltime, ppn, features=None):
+        while True:
+            # 1. Get actives no evaluated
+            ane = self.actives_no_evaluated
+            if len(ane) > 0:
+                print("Candidates no evaluate: %d" % len(ane))
+            else:
+                print("No candidates to evaluate")
+            # 2. Get jobs in queue
+            jobs = get_jobs(username)
+            jobnames = [jobs[x]['Job_Name'] for x in jobs]
+            #print(jobnames)
+            check = False
+            for entry_id in ane:
+                if str(entry_id) not in jobnames:
+                    check = True
+                else:
+                    jobids = [jobs[x]['Job_Id'] for x in jobs if jobs[x]['Job_Name'] == str(entry_id)]
+                    print("Jobs with Job_Name: %s" % entry_id)
+                    print(jobids)
+                    for jobid in jobids:
+                        # print("%s %s %s" % (jobid, jobs[jobid]['job_state'], jobs[jobid]['job_state'] != 'C'))
+                        check = True
+                        if jobs[jobid]['job_state'] != 'C':
+                            check = False
+                            break
+
+                to_submit = False
+                if check:
+                    to_submit = True
+                    if not os.path.isdir(basedir+os.sep+str(entry_id)):
+                        self.prepare_folder(entry_id, workdir=basedir, source_dir=basedir)
+                    elif os.path.isfile(basedir+os.sep+str(entry_id)+os.sep+'COMPLETE'):
+                        abinitout = self.get_final_abinit_out(basedir+os.sep+str(entry_id))
+                        if abinitout is not None:
+                            abo = AbinitOutput(abinitout)
+                            # check if finished
+                            if abo.is_finished:
+                                # Collect results
+                                self.collect(entry_id, basedir)
+                                to_submit = False
+
+                if to_submit:
+                    self.submit(entry_id, basedir, queue, walltime, ppn, features)
+
+            print('Sleeping for 10 minutes')
+            time.sleep(600)
+
+    def from_dict(self, population_dict):
+        return self.__init__(name=self.name,
+                             input_path=population_dict['input_path'],
+                             num_electrons_dftu=population_dict['num_electrons_dftu'],
+                             connections=population_dict['connections'],
+                             num_indep_matrices=population_dict['num_indep_matrices'])
+
+    def get_duplicates(self, ids):
+        """
+        For a given list of identifiers 'ids' checks the values for the function 'distance' and return a dictionary
+          where each key is the identifier of a duplicate candidate and the value is a list of identifiers considered
+          equivalents to it.
+
+        :param ids:  List of identifiers for wich the check will be performed
+        :return:
+        """
+        ids = self.ids_sorted(ids)
+        ret = {}
+        for i in range(len(ids)-1):
+            if ids[i] in ret:
+                continue
+            for j in range(i+1, len(ids)):
+                if self.distance(ids[i], ids[j]) < 0.1:
+                    ret[ids[j]] = ids[i]
+        return ret
+
+    def get_correlation_params(self, entry_id, final=True):
+
+        if final:
+            key = 'final_dmat'
+        else:
+            key = 'initial_dmat'
+
+        entry = self.get_entry(entry_id, {'properties.' + key: 1}, with_id=False)
+        if entry is not None:
+            ret = entry['properties'][key]
+        else:
+            ret = None
+        return ret
+
+    @staticmethod
+    def get_final_abinit_out(path):
+        outputfile = None
+
+        if not os.path.isfile(path+os.sep+'abinit.in'):
+            raise ValueError('ERROR: No abinit.in at %s' % path)
+        for i in np.arange(10, -1, -1):
+            filename = path+os.sep+'abinit_%d.out' % i
+            if os.path.isfile(filename):
+                outputfile = filename
+                break
+        return outputfile
+
+    def get_final_properties(self, path):
+
+        outputfile = self.get_final_abinit_out(path)
+        if outputfile is None:
+            raise ValueError("Not such dir: %s" % path)
+
+        # Reading the OUTPUT
+        dmatpawu = get_final_dmatpawu(outputfile)
+        odmatpawu = np.array(dmatpawu).reshape(-1, self.ndim, self.ndim)
+        oparams = dmatpawu2params(odmatpawu, self.ndim)
+
+        abo = AbinitOutput(outputfile)
+        if not abo.is_finished:
+            print('This output is not finished')
+            return None, None
+
+        data = abo.get_energetics()
+        nres2 = data['nres2'][-1]
+        etot = data['etot'][-1]
+
+        final_properties = None
+        if etot is not None and oparams is not None:
+            final_properties = {'etot': etot,
+                                'nres2': nres2,
+                                'final_dmat': gs(oparams)}
+
+        return final_properties, etot
+
+    def is_evaluated(self, entry_id):
+
+        """
+        One candidate is considered evaluated if it contains any finite value of energy on the properties.energy field
+
+        :param entry_id:
+        :return:
+        """
+        entry = self.get_entry(entry_id, {'_id': 0, 'properties': 1})
+        if entry['properties']['etot'] is not None:
+            return True
+        else:
+            return False
+
     def move_random(self, entry_id, factor=0.2, in_place=False, kind='move'):
         """
         Move one candidate with identifier 'entry_id' randomly with a factor
@@ -410,7 +493,10 @@ class OrbitalDFTU(Population):
         :param kind: Use when several algorithms are used for movement. One implemented here
         :return:
         """
-        dmat = self.get_correlation_params(entry_id)
+        if self.is_evaluated(entry_id):
+            dmat = self.get_correlation_params(entry_id)
+        else:
+            dmat = self.get_correlation_params(entry_id, final=False)
 
         newdata = dict(dmat)
         for i in range(self.num_indep_matrices):
@@ -436,8 +522,15 @@ class OrbitalDFTU(Population):
         :return:
         """
 
-        dmat1 = self.get_correlation_params(entry_id)
-        dmat2 = self.get_correlation_params(entry_jd)
+        if self.is_evaluated(entry_id):
+            dmat1 = self.get_correlation_params(entry_id)
+        else:
+            dmat1 = self.get_correlation_params(entry_id, final=False)
+
+        if self.is_evaluated(entry_id):
+            dmat2 = self.get_correlation_params(entry_jd)
+        else:
+            dmat2 = self.get_correlation_params(entry_jd, final=False)
 
         euler_angles1 = dmat1['euler_angles']
         euler_angles2 = dmat2['euler_angles']
@@ -470,39 +563,54 @@ class OrbitalDFTU(Population):
                     euler_angles_new[i, j] += -2*np.pi
 
         newdata = dict(dmat1)
-        newdata['euler_angles'] = generic_serializer(euler_angles_new)
+        newdata['euler_angles'] = gs(euler_angles_new)
 
         if in_place:
             return self.update_dmat_inplace(entry_id, newdata)
         else:
             return self.new_entry(newdata, active=False)
 
-    def update_dmat_inplace(self, entry_id, dmat):
-        return self.pcdb.db.pychemia_entries.update({'_id': entry_id},
-                                                    {'$set': {'properties.initial_dmat': dmat,
-                                                              'properties.etot': None,
-                                                              'properties.nres2': None,
-                                                              'properties.final_dmat': dmat}})
-
-    def recover(self):
-        pass
-
-    def value(self, entry_id):
+    def new_entry(self, dmat, active=True):
         """
-        Return the energy value associated to the candidate with identifier 'entry_id'
+        Creates a new entry on the population database from given data.
 
-        :param entry_id:
+        :param dmat: density matrix params, a dictionrary with 'deltas' for deltas, 'occupations' for the integers
+                        and 'euler_angles' for angles needed to recreate the rotation matrix applied to the orbitals
+        :param active: if True, the entry is enabled on the DB to be evaluated.
         :return:
+
         """
-        entry = self.get_entry(entry_id, {'properties.etot': 1})
-        return entry['properties']['etot']
+        assert 'euler_angles' in dmat
+        assert 'occupations' in dmat
+        assert 'deltas' in dmat
+        assert 'ndim' in dmat
+        assert 'num_matrices' in dmat
+        status = {self.tag: active}
+        properties = {'etot':  None, 'initial_dmat': dmat, 'nres2': None, 'final_dmat': None}
 
-    def str_entry(self, entry_id):
-        entry = self.get_entry(entry_id)
-        print(entry['properties']['initial_dmat'], entry['properties']['final_dmat'])
+        entry = {'structure': self.structure.to_dict, 'properties': properties, 'status': status}
+        entry_id = self.insert_entry(entry)
+        pcm_log.debug('Added new entry: %s with tag=%s: %s' % (str(entry_id), self.tag, str(active)))
+        return entry_id
 
-    def get_duplicates(self, ids):
-        return None
+    def plot_distance_matrix(self, filename=None, ids=None):
+
+        import matplotlib.pyplot as plt
+        if ids is None:
+            ids = self.members
+        if filename is None:
+            filename = self.name+'.pdf'
+        else:
+            if filename[-3:] not in ['pdf', 'png', 'jpg']:
+                raise ValueError("Filename should have extension such as pdf, png or jpg")
+
+        m = self.distance_matrix(self.ids_sorted(ids))
+        fig = plt.figure()
+        ax = fig.add_axes()
+        ax.imshow(m)
+        ax.colorbar()
+        fig.savefig(filename)
+        fig.clf()
 
     def prepare_folder(self, entry_id, workdir='.', source_dir='.'):
         """
@@ -535,26 +643,73 @@ class OrbitalDFTU(Population):
         abiinput['dmatpawu'] = list(dmatpawu.flatten())
         abiinput.write(iworkdir + os.sep + 'abinit.in')
 
-    def collect_data(self, entry_id, workdir, filename='abinit.out'):
+    def recover(self):
+        pass
 
-        if os.path.isfile(workdir + os.sep + filename):
-            ao = AbinitOutput(workdir + os.sep + filename)
+    def set_final_dmat(self, entry_id, abinitout):
+        abo = AbinitOutput(abinitout)
+        if not abo.is_finished:
+            return None
 
-            dmatpawu = get_final_dmatpawu(workdir + os.sep + filename)
-            params = dmatpawu2params(dmatpawu, self.ndim)
+        dmatpawu = get_final_dmatpawu(abinitout)
+        if dmatpawu is None:
+            return None
 
-            if 'etot' in ao.get_energetics():
-                etot = ao.get_energetics()['etot'][-1]
-                nres2 = ao.get_energetics()['nres2'][-1]
-                print('Uploading energy data for %s' % entry_id)
-                self.pcdb.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'properties.final_dmat': params,
-                                                                                  'properties.etot': etot,
-                                                                                  'properties.nres2': nres2}})
-                return True
-            else:
-                return False
-        else:
-            return False
+        odmatpawu = np.array(dmatpawu).reshape(-1, self.ndim, self.ndim)
+        oparams = dmatpawu2params(odmatpawu, self.ndim)
+        data = abo.get_energetics()
+        if data is None:
+            return None
+        nres2 = data['nres2'][-1]
+        etot = data['etot'][-1]
+
+        return self.pcdb.db.pychemia_entries.update({'_id': entry_id},
+                                                    {'$set': {'properties.etot': etot,
+                                                              'properties.nres2': nres2,
+                                                              'properties.final_dmat': gs(oparams)}})
+
+    def str_entry(self, entry_id):
+        entry = self.get_entry(entry_id, projection={'properties': 1})
+        ret = "%s etot: %7.3f nres2: %9.3e" % (entry_id, entry['properties']['etot'], entry['properties']['nres2'])
+        return ret
+
+    @staticmethod
+    def submit(entry_id, workdir, queue, walltime, ppn, features):
+        print("Submit: %s" % entry_id)
+        idir = str(entry_id)
+        workdir = os.path.abspath(workdir)
+        path = workdir+os.sep + idir
+        outputs = [x for x in os.listdir(path) if x[-4:] == '.out']
+        for ifile in outputs:
+            os.remove(path+os.sep+ifile)
+        cwd = os.getcwd()
+        os.chdir(path)
+        if os.path.lexists('batch.pbs'):
+            os.remove('batch.pbs')
+
+        pbs = PBSRunner(path)
+        pbs.initialize(nodes=1, ppn=ppn, walltime=walltime, message='ae', queue=queue, features=features)
+        pbs.set_template('../template')
+        pbs.write_pbs()
+        subprocess.call('qsub batch.pbs', shell=True)
+        os.chdir(cwd)
+
+    def update_dmat_inplace(self, entry_id, dmat):
+        return self.pcdb.db.pychemia_entries.update({'_id': entry_id},
+                                                    {'$set': {'properties.initial_dmat': dmat,
+                                                              'properties.etot': None,
+                                                              'properties.nres2': None,
+                                                              'properties.final_dmat': dmat}})
+
+    def value(self, entry_id):
+        """
+        Return the energy value associated to the candidate with identifier 'entry_id'
+
+        :param entry_id:
+        :return:
+        """
+        entry = self.get_entry(entry_id, {'properties.etot': 1})
+        return entry['properties']['etot']
 
 
 def params2dmatpawu(params):

@@ -17,13 +17,14 @@ class PBSRunner:
         self.walltime = None
         self.ppn = None
         self.nodes = None
+        self.features = None
         self.workdir = workdir
         self.filename = filename
         if self.workdir[-1] == os.sep:
             self.workdir = self.workdir[:-1]
         self.name = os.path.basename(self.workdir)
 
-    def initialize(self, nodes=1, ppn=2, walltime=None, message='ae', mail=None, queue=None):
+    def initialize(self, nodes=1, ppn=2, walltime=None, message='ae', mail=None, queue=None, features=None):
 
         if walltime is None:
             walltime = [12, 0, 0]
@@ -33,6 +34,7 @@ class PBSRunner:
         self.message = message
         self.mail = mail
         self.queue = queue
+        self.features = features
 
     def set_walltime(self, walltime):
 
@@ -55,14 +57,18 @@ class PBSRunner:
 
         wf = open(self.workdir + os.sep + self.filename, 'w')
         wt = self.walltime
+        if self.features is None:
+            feat = ':'
+        else:
+            feat = ':'+self.features+':'
         wf.write("""#!/bin/sh
 
 #PBS -N %s
-#PBS -l nodes=%d:ppn=%d
+#PBS -l nodes=%d%sppn=%d
 #PBS -l walltime=%d:%02d:%02d
 #PBS -m %s
 #PBS -k n
-""" % (self.name, self.nodes, self.ppn, wt[0] * 24 + wt[1], wt[2], wt[3], self.message))
+""" % (self.name, self.nodes, feat, self.ppn, wt[0] * 24 + wt[1], wt[2], wt[3], self.message))
 
         if self.mail is not None:
             wf.write("#PBS -M %s\n" % self.mail)
@@ -86,8 +92,15 @@ class PBSRunner:
 def get_jobs(user):
     data = subprocess.check_output(['qstat', '-x', '-f', '-u', user])
     xmldata = ElementTree.fromstring(data)
-    jobs = [i.find('Job_Name').text for i in xmldata.findall('Job')]
-    return jobs
+    jobs = xmldata.findall('Job')
+    ret = {}
+    for ijob in jobs:
+        children = ijob.getchildren()
+        jobid = ijob.findall('Job_Id')[0].text
+        ret[jobid] = {}
+        for child in children:
+            ret[jobid][child.tag] = child.text
+    return ret
 
 
 def report_cover():

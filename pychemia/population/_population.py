@@ -160,10 +160,6 @@ class Population:
         pass
 
     @abstractmethod
-    def check_duplicates(self, ids):
-        pass
-
-    @abstractmethod
     def cross(self, ids):
         pass
 
