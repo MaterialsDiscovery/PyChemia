@@ -130,9 +130,9 @@ class Population:
         if data is None:
             data = self.to_dict
             data['_id'] = self.tag
-            self.pcdb.db.population_info.insert(data)
+            self.pcdb.db.population_info.insert_one(data)
         else:
-            self.pcdb.db.population_info.update({'_id': self.tag}, self.to_dict)
+            self.pcdb.db.population_info.update_one({'_id': self.tag}, self.to_dict)
 
     def save_json(self, filename):
         ret = []
