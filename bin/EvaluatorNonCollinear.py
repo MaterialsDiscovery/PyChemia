@@ -102,11 +102,12 @@ if __name__ == '__main__':
             print('Candidates to compute:')
             for ijob in to_compute:
                 print(ijob)
-            current_jobs = get_jobs(args.pbs_user)
+            jobs = get_jobs(args.pbs_user)
+            jobnames = [jobs[x]['Job_Name'] for x in jobs]
             source_dir = args.source_dir[idb]
 
             for ijob in to_compute:
-                if str(ijob) not in current_jobs:
+                if str(ijob) not in jobnames:
                     data_collected = popu.collect_data(ijob, workdir=source_dir + os.sep + str(ijob))
                     if not data_collected:
                         print('Preparing and submitting job: %s' % str(ijob))

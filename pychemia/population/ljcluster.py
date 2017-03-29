@@ -18,16 +18,16 @@ from ._distances import FingerPrints, StructureDistances
 class LJCluster(Population):
 
     def __init__(self, name, composition=None, tag='global', target_forces=1E-3, value_tol=1E-2,
-                 distance_tol=0.1, minimal_density=70.0, refine=True, direct_evaluation=False):
+                 distance_tolerance=0.1, minimal_density=70.0, refine=True, direct_evaluation=False):
         if composition is not None:
             self.composition = Composition(composition)
         else:
             self.composition = None
-        Population.__init__(self, name=name, tag=tag, direct_evaluation=direct_evaluation)
+        Population.__init__(self, name=name, tag=tag, direct_evaluation=direct_evaluation,
+                            distance_tolerance=distance_tolerance)
         self.tag = tag
         self.target_forces = target_forces
         self.value_tol = value_tol
-        self.distance_tol = distance_tol
         self.minimal_density = minimal_density
         self.refine = refine
         self.fingerprinter = FingerPrints(self.pcdb)
@@ -44,7 +44,7 @@ class LJCluster(Population):
 
         return self.new_entry(structure), None
 
-    def check_duplicates(self, ids):
+    def get_duplicates(self, ids):
         ret = {}
         selection = self.ids_sorted(ids)
         values = np.array([self.value(i) for i in selection])
@@ -59,8 +59,8 @@ class LJCluster(Population):
                 ident2 = selection[i + 1]
                 pcm_log.debug('Testing distances between %s and %s' % (str(ident1), str(ident2)))
                 distance = self.distance(ident1, ident2)
-                if distance < self.distance_tol:
-                    pcm_log.debug('Distance %7.3f < %7.3f' % (distance, self.distance_tol))
+                if distance < self.distance_tolerance:
+                    pcm_log.debug('Distance %7.3f < %7.3f' % (distance, self.distance_tolerance))
                     ret[ident2] = ident1
         if len(ret) > 0:
             pcm_log.debug('Number of duplicates %d' % len(ret))
@@ -157,10 +157,10 @@ class LJCluster(Population):
                 'tag': self.tag,
                 'target_forces': self.target_forces,
                 'value_tol': self.value_tol,
-                'distance_tol': self.distance_tol,
+                'distance_tolerance': self.distance_tolerance,
                 'minimal_density': self.minimal_density}
 
-    def get_duplicates(self, ids, fast=False):
+    def get2_duplicates(self, ids, fast=True):
         dupes_dict = {}
         dupes_list = []
         selection = self.ids_sorted(ids)
@@ -180,11 +180,14 @@ class LJCluster(Population):
                 if abs(value_i - value_j) < self.value_tol:
                     ncomps += 1
                     distance = self.distance(entry_id, entry_jd)
-                    if distance < self.distance_tol:
+                    if distance < self.distance_tolerance:
                         if entry_id in dupes_dict:
                             dupes_dict[entry_id].append(entry_jd)
                         else:
-                            dupes_dict[entry_id] = [entry_jd]
+                            if fast:
+                                dupes_dict[entry_id] = [entry_jd]
+                            else:
+                                dupes_dict[entry_id] = entry_jd
                         dupes_list.append(entry_jd)
             sys.stdout.write(' comparisons: %d\n' % ncomps)
         return dupes_dict, [x for x in selection if x in dupes_list]
@@ -216,7 +219,7 @@ class LJCluster(Population):
                          tag=population_dict['tag'],
                          target_forces=population_dict['target_forces'],
                          value_tol=population_dict['value_tol'],
-                         distance_tol=population_dict['distance_tol'],
+                         distance_tolerance=population_dict['distance_tolerance'],
                          minimal_density=population_dict['minimal_density'])
 
     def move(self, entry_id, entry_jd, factor=0.2, in_place=False):
@@ -381,7 +384,7 @@ class LJCluster(Population):
     def recover(self):
         data = self.get_population_info()
         if data is not None:
-            self.distance_tol = data['distance_tol']
+            self.distance_tolerance = data['distance_tolerance']
             self.value_tol = data['value_tol']
             self.name = data['name']
             self.target_forces = data['target_forces']

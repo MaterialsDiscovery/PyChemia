@@ -34,7 +34,7 @@ class NonCollinearMagMoms(Population):
                             'source_dir'
         :param debug: If True produce a verbose output during the different calls to the methods.
         """
-        Population.__init__(self, name, 'global')
+        Population.__init__(self, name, 'global', distance_tolerance=distance_tolerance)
         if not os.path.isfile(source_dir + os.sep + 'INCAR'):
             raise ValueError("INCAR not found")
         if not os.path.isfile(source_dir + os.sep + 'POSCAR'):
@@ -57,7 +57,6 @@ class NonCollinearMagMoms(Population):
         else:
             self.mag_atoms = mag_atoms
         self.magmom_magnitude = magmom_magnitude
-        self.distance_tolerance = distance_tolerance
         if incar_extra is None:
             self.incar_extra = {'IBRION': -1,
                                 'LWAVE': True,
@@ -153,23 +152,6 @@ class NonCollinearMagMoms(Population):
             return True
         else:
             return False
-
-    def check_duplicates(self, ids):
-        """
-        Returns a dictionary of non-equivalent candidates as keys and associated to each key
-        the list of candidates whose distance is less that the 'distance_tolerance' argument.
-
-        :param ids:
-        :return:
-        """
-        selection = self.ids_sorted(ids)
-        ret = {}
-        for i in range(len(ids) - 1):
-            for j in range(i+1, len(ids)):
-                distance = self.distance(selection[i], selection[j])
-                if distance < self.distance_tolerance:
-                    ret[selection[j]] = selection[i]
-        return ret
 
     def distance(self, entry_id, entry_jd):
         """
@@ -283,9 +265,6 @@ class NonCollinearMagMoms(Population):
         ret += '] '
         ret += 'Energy= %f' % entry['properties']['energy']
         return ret
-
-    def get_duplicates(self, ids):
-        return None
 
     def add_random(self):
         """

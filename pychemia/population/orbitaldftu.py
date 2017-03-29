@@ -44,7 +44,7 @@ class OrbitalDFTU(Population):
 
         """
         # Call the parent class initializer to link the PyChemiaDB that will be used
-        Population.__init__(self, name, 'global')
+        Population.__init__(self, name, 'global', distance_tolerance=0.1)
         # Checking for existence of 'abinit.in'
         if not os.path.isfile(input_path):
             raise ValueError("Abinit input not found")
@@ -274,29 +274,30 @@ class OrbitalDFTU(Population):
         entry_jd = self.new_entry(newdata2)
         return entry_id, entry_jd
 
-    def check_duplicates(self, ids):
-        pass
-
     def collect_data(self, entry_id, workdir, filename='abinit.out'):
 
         if os.path.isfile(workdir + os.sep + filename):
             ao = AbinitOutput(workdir + os.sep + filename)
 
             dmatpawu = get_final_dmatpawu(workdir + os.sep + filename)
-            params = dmatpawu2params(dmatpawu, self.ndim)
+            dmat = dmatpawu2params(dmatpawu, self.ndim)
 
             if 'etot' in ao.get_energetics():
                 etot = ao.get_energetics()['etot'][-1]
                 nres2 = ao.get_energetics()['nres2'][-1]
                 print('Uploading energy data for %s' % entry_id)
-                self.pcdb.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'properties.final_dmat': params,
-                                                                                  'properties.etot': etot,
-                                                                                  'properties.nres2': nres2}})
+                self.set_final_results(entry_id, dmat, etot, nres2)
+
                 return True
             else:
                 return False
         else:
             return False
+
+    def set_final_results(self, entry_id, dmat, etot, nres2):
+        self.pcdb.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'properties.final_dmat': dmat,
+                                                                          'properties.etot': etot,
+                                                                          'properties.nres2': nres2}})
 
     def collect(self, entry_id, workdir='.'):
         idir = workdir+os.sep+str(entry_id)
@@ -395,25 +396,6 @@ class OrbitalDFTU(Population):
                              num_electrons_dftu=population_dict['num_electrons_dftu'],
                              connections=population_dict['connections'],
                              num_indep_matrices=population_dict['num_indep_matrices'])
-
-    def get_duplicates(self, ids):
-        """
-        For a given list of identifiers 'ids' checks the values for the function 'distance' and return a dictionary
-          where each key is the identifier of a duplicate candidate and the value is a list of identifiers considered
-          equivalents to it.
-
-        :param ids:  List of identifiers for wich the check will be performed
-        :return:
-        """
-        ids = self.ids_sorted(ids)
-        ret = {}
-        for i in range(len(ids)-1):
-            if ids[i] in ret:
-                continue
-            for j in range(i+1, len(ids)):
-                if self.distance(ids[i], ids[j]) < 0.1:
-                    ret[ids[j]] = ids[i]
-        return ret
 
     def get_correlation_params(self, entry_id, final=True):
 

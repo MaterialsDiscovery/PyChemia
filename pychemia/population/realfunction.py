@@ -19,7 +19,7 @@ class RealFunction(Population):
         :param limits: (numpy.ndarray)
         :return:
         """
-        Population.__init__(self, 'Euclidean', 'global', use_mongo=False)
+        Population.__init__(self, 'Euclidean', 'global', use_mongo=False, distance_tolerance=1E-3)
         self.tag = 'global'
         self.name = 'Real Function'
         self.function = function
@@ -63,20 +63,6 @@ class RealFunction(Population):
         x = np.random.random_sample(self.ndim)
         x = x * (self.limits[:, 1] - self.limits[:, 0]) + self.limits[:, 0]
         return self.new_entry(x), None
-
-    def check_duplicates(self, ids):
-        selection = self.ids_sorted(ids)
-        ret = {}
-        if len(ids) == 0:
-            return ret
-        for i in range(len(ids)):
-            ident1 = selection[i]
-            for j in range(i + 1, len(ids)):
-                ident2 = selection[j]
-                distance = self.distance(ident1, ident2)
-                if distance < 1E-2:
-                    ret[ident2] = ident1
-        return ret
 
     def coordinate(self, i):
         return self.db[i]['x']
@@ -304,6 +290,3 @@ class RealFunction(Population):
     @property
     def members(self):
         return self._members
-
-    def get_duplicates(self, ids):
-        pass

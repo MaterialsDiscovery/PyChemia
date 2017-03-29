@@ -54,6 +54,40 @@ subpackage or doing global searches with the 'pychemia.searcher' subpackage. Mat
 for 2D plots on python. Many of the functionalities on 'pychemia.visual' subpackage depends on it. Nose is a python
 package for executing automatize tests for PyChemia. If you want to use it more information is below.
 
+Installing PyChemia on a virtual environment
+--------------------------------------------
+
+PyChemia requieres a relative recent version of Python (Python 2.7 appeared on July 3, 2010). However, it is common for
+some HPC infraestructures to use Linux installations such as RHEL 6 that only provides python 2.6 dating back to 2008.
+You can contour this situation by using Software Collections::
+
+   https://www.softwarecollections.org/en/
+
+Install a more recent version of python and virtualenv. After that you can install PyChemia and its dependencies
+contained on a virtual environment following this commands:
+
+1. Create a new virtual environment, lets call it "ve27"
+
+virtualenv ve27
+
+2. Activate the environment by sourcing the activate script
+
+source ve27/bin/activate
+
+3. You will notive that the prompt changes and you get your path pointing to a containerized python environment where
+you can install PyChemia and its dependencies
+
+pip install pychemia
+
+4. After a couple of minutes, you will get all the dependencies installed and the software ready for use without
+touching the libraries and modules installed by your Linux distribution. You can leave the virtual environment with the
+command:
+
+deactivate
+
+To re-enable the environment all you have to do is execute step 2 and you get the environment ready to work.
+
+
 Installing PyChemia from github
 -------------------------------
 

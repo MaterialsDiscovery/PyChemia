@@ -257,12 +257,12 @@ def plot_evolution_circular(searcher, target_function='energy_pa', tag='spacegro
             counter += 1
 
         ids = [i for i in entries]
-        X = np.array([entries[i]['x'] for i in ids])
-        Y = np.array([entries[i]['y'] for i in ids])
-        A = np.array([4E3 for i in ids])
-        C = np.array([entries[i][target_function] for i in ids])
-        best_candidate = entries[ids[C.argsort()[0]]]
-        plt.scatter(radius * X, radius * Y, s=radius ** 2 * A, c=C, alpha=0.5 * radius, edgecolors='none')
+        x = np.array([entries[i]['x'] for i in ids])
+        y = np.array([entries[i]['y'] for i in ids])
+        a = np.array(len(ids)*[4E3])
+        c = np.array([entries[i][target_function] for i in ids])
+        best_candidate = entries[ids[c.argsort()[0]]]
+        plt.scatter(radius * x, radius * y, s=radius ** 2 * a, c=c, alpha=0.5 * radius, edgecolors='none')
         if tag is not None:
             for i in entries:
                 if i == best_candidate:

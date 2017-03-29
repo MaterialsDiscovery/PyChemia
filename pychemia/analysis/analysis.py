@@ -70,39 +70,52 @@ class StructureAnalysis:
         :return: (tuple) Return a bond's dictionary and distance's list
         """
         if self._pairs is None or self._distances is None:
-            pcm_log.debug('Computing distances from scratch...')
-            pairs_dict = {}
-            distances_list = []
-            index = 0
-            for i, j in itertools.combinations(range(self.structure.natom), 2):
-                if index % 100 == 0:
-                    pcm_log.debug('Computing distance between atoms %d and %d' % (i, j))
-                ret = self.structure.lattice.distance2(self.structure.reduced[i], self.structure.reduced[j],
-                                                       radius=self.radius)
-                for k in ret:
-                    if str(i) not in pairs_dict:
-                        pairs_dict[str(i)] = [index]
-                    else:
-                        pairs_dict[str(i)].append(index)
-                    if str(j) not in pairs_dict:
-                        pairs_dict[str(j)] = [index]
-                    else:
-                        pairs_dict[str(j)].append(index)
-                    ret[k]['pair'] = (i, j)
-                    distances_list.append(ret[k])
-                    index += 1
-            for i in range(self.structure.natom):
-                ret = self.structure.lattice.distance2(self.structure.reduced[i], self.structure.reduced[i])
-                for k in ret:
-                    if str(i) not in pairs_dict:
-                        pairs_dict[str(i)] = [index]
-                    else:
-                        pairs_dict[str(i)].append(index)
-                    ret[k]['pair'] = (i, i)
-                    distances_list.append(ret[k])
-                    index += 1
-            self._pairs = pairs_dict
-            self._distances = distances_list
+
+            if self.structure.is_periodic:
+                pcm_log.debug('Computing distances from scratch...')
+                pairs_dict = {}
+                distances_list = []
+                index = 0
+                for i, j in itertools.combinations(range(self.structure.natom), 2):
+                    if index % 100 == 0:
+                        pcm_log.debug('Computing distance between atoms %d and %d' % (i, j))
+                    ret = self.structure.lattice.distance2(self.structure.reduced[i], self.structure.reduced[j],
+                                                           radius=self.radius)
+                    for k in ret:
+                        if str(i) not in pairs_dict:
+                            pairs_dict[str(i)] = [index]
+                        else:
+                            pairs_dict[str(i)].append(index)
+                        if str(j) not in pairs_dict:
+                            pairs_dict[str(j)] = [index]
+                        else:
+                            pairs_dict[str(j)].append(index)
+                        ret[k]['pair'] = (i, j)
+                        distances_list.append(ret[k])
+                        index += 1
+                for i in range(self.structure.natom):
+                    ret = self.structure.lattice.distance2(self.structure.reduced[i], self.structure.reduced[i])
+                    for k in ret:
+                        if str(i) not in pairs_dict:
+                            pairs_dict[str(i)] = [index]
+                        else:
+                            pairs_dict[str(i)].append(index)
+                        ret[k]['pair'] = (i, i)
+                        distances_list.append(ret[k])
+                        index += 1
+                self._pairs = pairs_dict
+                self._distances = distances_list
+            else:
+                dm = self.structure.distance_matrix()
+                dm += np.eye(len(dm)) * max(dm.flatten())
+                pairs_dict = {}
+                distances_list = []
+                for i in range(self.structure.natom):
+                    index = dm[:, i].argmin()
+                    pairs_dict[str(i)] = [index]
+                    distances_list.append(dm[index, i])
+                self._pairs = pairs_dict
+                self._distances = distances_list
 
         return self._pairs, self._distances
 

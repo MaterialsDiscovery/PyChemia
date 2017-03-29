@@ -19,7 +19,7 @@ class RelaxStructures(Population):
         pass
 
     def __init__(self, name, composition=None, tag='global', target_forces=1E-3, value_tol=1E-2,
-                 distance_tol=0.3, min_comp_mult=2, max_comp_mult=8, pcdb_source=None, pressure=0.0,
+                 distance_tolerance=0.3, min_comp_mult=2, max_comp_mult=8, pcdb_source=None, pressure=0.0,
                  target_stress=None, target_diag_stress=None, target_nondiag_stress=None):
         """
         Defines a population of PyChemia Structures,
@@ -42,7 +42,6 @@ class RelaxStructures(Population):
         self.tag = tag
         self.target_forces = target_forces
         self.value_tol = value_tol
-        self.distance_tol = distance_tol
         self.min_comp_mult = min_comp_mult
         self.max_comp_mult = max_comp_mult
         self.pcdb_source = pcdb_source
@@ -60,7 +59,7 @@ class RelaxStructures(Population):
         else:
             self.target_nondiag_stress = target_nondiag_stress
         self.name = name
-        Population.__init__(self, name, tag)
+        Population.__init__(self, name, tag, distance_tolerance=distance_tolerance)
 
         if self.pcdb_source is not None:
             self.sources = {}
@@ -74,7 +73,7 @@ class RelaxStructures(Population):
     def recover(self):
         data = self.get_population_info()
         if data is not None:
-            self.distance_tol = data['distance_tol']
+            self.distance_tolerance = data['distance_tol']
             self.value_tol = data['value_tol']
             self.name = data['name']
             self.target_forces = data['target_forces']
@@ -213,14 +212,14 @@ class RelaxStructures(Population):
                 pcm_log.debug('Testing distances between %s and %s' % (str(ident1), str(ident2)))
                 distance = self.distance(ident1, ident2)
                 # print 'Distance = ', distance
-                if distance < self.distance_tol:
-                    pcm_log.debug('Distance %7.3f < %7.3f' % (distance, self.distance_tol))
+                if distance < self.distance_tolerance:
+                    pcm_log.debug('Distance %7.3f < %7.3f' % (distance, self.distance_tolerance))
                     ret[ident2] = ident1
         if len(ret) > 0:
             pcm_log.debug('Number of duplicates %d' % len(ret))
         return ret
 
-    def get_duplicates(self, ids, fast=False):
+    def get_duplicates(self, ids, tolerance, fast=False):
         dupes_dict = {}
         dupes_list = []
         values = {}
@@ -238,7 +237,7 @@ class RelaxStructures(Population):
                 value_j = values[entry_jd]
                 if abs(value_i - value_j) < self.value_tol:
                     distance = self.distance(entry_id, entry_jd)
-                    if distance < self.distance_tol:
+                    if distance < tolerance:
                         if entry_id in dupes_dict:
                             dupes_dict[entry_id].append(entry_jd)
                         else:
@@ -389,7 +388,7 @@ class RelaxStructures(Population):
         ret += ' Tag:                %s\n' % self.tag
         ret += ' Target-Forces:      %7.2E\n' % self.target_forces
         ret += ' Value tolerance:    %7.2E\n' % self.value_tol
-        ret += ' Distance tolerance: %7.2E\n\n' % self.distance_tol
+        ret += ' Distance tolerance: %7.2E\n\n' % self.distance_tolerance
         if self.composition is not None:
             ret += ' Composition:                  %s\n' % self.composition.formula
             ret += ' Minimal composition multiplier: %d\n' % self.min_comp_mult
@@ -421,14 +420,14 @@ class RelaxStructures(Population):
                 'tag': self.tag,
                 'target_forces': self.target_forces,
                 'value_tol': self.value_tol,
-                'distance_tol': self.distance_tol}
+                'distance_tolerance': self.distance_tolerance}
 
     def from_dict(self, population_dict):
         return RelaxStructures(name=population_dict['name'],
                                tag=population_dict['tag'],
                                target_forces=population_dict['target_forces'],
                                value_tol=population_dict['value_tol'],
-                               distance_tol=population_dict['distance_tol'])
+                               distance_tolerance=population_dict['distance_tolerance'])
 
     def cross(self, ids):
 

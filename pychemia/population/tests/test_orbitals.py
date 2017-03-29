@@ -51,12 +51,19 @@ class PopulationTest(unittest.TestCase):
 
         popu.add_random()
         popu.random_population(16)
-        popu.cross([entry_id, entry_jd])
         print(popu)
 
         self.assertFalse(popu.is_evaluated(entry_id))
 
-        popu.get_duplicates(popu.members)
+        for entry_id in popu.members:
+            params = popu.get_correlation_params(entry_id, final=False)
+            popu.set_final_results(entry_id, params, 0.0, 1E-13)
+
+        self.assertTrue(popu.is_evaluated(entry_id))
+
+        popu.get_duplicates(popu.members, tolerance=0.1)
+
+        popu.cross([entry_id, entry_jd])
 
         entry_idm = popu.move_random(entry_id)
         popu.get_entry(entry_idm, {'properties': 1})

@@ -17,12 +17,13 @@ class Population:
     Generations
     """
 
-    def __init__(self, name, tag, use_mongo=True, direct_evaluation=False):
+    def __init__(self, name, tag, use_mongo=True, direct_evaluation=False, distance_tolerance=0.1):
 
         name = deep_unicode(name)
         self.tag = tag
         self.pcdb = None
         self.direct_evaluation = direct_evaluation
+        self.distance_tolerance = distance_tolerance
         if isinstance(name, str):
             self.name = name
             if use_mongo:
@@ -155,6 +156,43 @@ class Population:
                 ret[j, i] = ret[i, j]
         return ret
 
+    def get_duplicates(self, ids, tolerance=None, fast=True):
+        """
+        For a given list of identifiers 'ids' checks the values for the function 'distance' and return a dictionary
+          where each key is the identifier of a duplicate candidate and the value is a list of identifiers considered
+          equivalents to it.
+
+
+        :param tolerance: When the value of "distance" is lower than the tolerance the candidates are considered
+                            equivalent
+        :param fast: (bool) Once one structure is considered duplicated do not perform a search for more equivalent
+                            candidates, it means that the values of the dictionary are lists with one one member.
+                            Otherwise a extended search is done resulting on a complete N^2 search for all candidates
+                            versus each other.
+        :return:
+        :param ids:  List of identifiers for wich the check will be performed
+        :return:
+        """
+        if tolerance is None:
+            tolerance = self.distance_tolerance
+        ids = self.ids_sorted(ids)
+        ret = {}
+        for i in range(len(ids)-1):
+            if fast and ids[i] in ret:
+                continue
+            for j in range(i+1, len(ids)):
+                if self.distance(ids[i], ids[j]) < tolerance:
+                    if fast:
+                        ret[ids[j]] = ids[i]
+                    else:
+                        if ids[j] in ret:
+                            ret[ids[j]].append(ids[i])
+                        else:
+                            ret[ids[j]] = [ids[i]]
+        return ret
+
+
+
     @abstractmethod
     def add_random(self):
         pass
@@ -169,10 +207,6 @@ class Population:
 
     @abstractmethod
     def evaluate_entry(self, entry_id):
-        pass
-
-    @abstractmethod
-    def get_duplicates(self, ids):
         pass
 
     @abstractmethod
