@@ -8,9 +8,7 @@ PyChemia
 
 Python Materials Discovery Framework
 
-<center>
 ![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/images/PyChemia_Small.png)
-</center>
 
 PyChemia is an open-source Python Library for materials structural search. The purpose of the initiative is to create
 a method agnostic framework for materials discovery and design using a variety of methods from Minima Hoping to
