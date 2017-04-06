@@ -541,7 +541,7 @@ class OrbitalDFTU(Population):
                         angle = angle2 - angle1 + 2*np.pi
 
                 euler_angles_new[i, j] = angle1 + direction*factor*angle
-                if euler_angles_new[i, j] > np.pi:
+               if euler_angles_new[i, j] > np.pi:
                     euler_angles_new[i, j] -= -2*np.pi
                 if euler_angles_new[i, j] < -np.pi:
                     euler_angles_new[i, j] += -2*np.pi
@@ -626,6 +626,11 @@ class OrbitalDFTU(Population):
         dmatpawu = params2dmatpawu(params)
         abiinput['dmatpawu'] = list(dmatpawu.flatten())
         abiinput.write(iworkdir + os.sep + 'abinit.in')
+
+        d_abiinput = InputVariables(iworkdir + os.sep + 'abinit.in')
+        d_dmatpawu = d_abiinput['dmatpawu']
+        d_params = dmatpawu2params(d_dmatpawu)
+        assert(np.all(np.sum(d_params['occupations'], axis=1) == np.array(self.num_electrons_dftu)))
 
     def recover(self):
         pass
