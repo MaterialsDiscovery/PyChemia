@@ -541,7 +541,7 @@ class OrbitalDFTU(Population):
                         angle = angle2 - angle1 + 2*np.pi
 
                 euler_angles_new[i, j] = angle1 + direction*factor*angle
-               if euler_angles_new[i, j] > np.pi:
+                if euler_angles_new[i, j] > np.pi:
                     euler_angles_new[i, j] -= -2*np.pi
                 if euler_angles_new[i, j] < -np.pi:
                     euler_angles_new[i, j] += -2*np.pi
