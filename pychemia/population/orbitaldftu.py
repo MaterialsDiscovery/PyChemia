@@ -629,7 +629,7 @@ class OrbitalDFTU(Population):
 
         d_abiinput = InputVariables(iworkdir + os.sep + 'abinit.in')
         d_dmatpawu = d_abiinput['dmatpawu']
-        d_params = dmatpawu2params(d_dmatpawu)
+        d_params = dmatpawu2params(d_dmatpawu, self.ndim)
         assert(np.all(np.sum(d_params['occupations'], axis=1) == np.array(self.num_electrons_dftu)))
 
     def recover(self):
