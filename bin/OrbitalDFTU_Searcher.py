@@ -19,6 +19,7 @@ if __name__ == "__main__":
     parser.add_argument('-abinit_input', type=str, help='Path to Abinit input file', metavar='path', default='abinit.in')
     parser.add_argument('-new', help='Create new database (default: False)', action='store_true')
     parser.add_argument('-debug', help='Activate debug mode (default: False)', action='store_true')
+    parser.add_argument('-clean', help='Clean database before start (default: False)', action='store_true')
 
     args = parser.parse_args()
 
@@ -70,6 +71,9 @@ if __name__ == "__main__":
     else:
         dbsettings = {'host': host, 'name': args.dbname, 'user': user, 'passwd': passwd}
         pcdb = pychemia.db.get_database(dbsettings)
+
+    if args.clean:
+        pcdb.clean()
 
     popu = pychemia.population.orbitaldftu.OrbitalDFTU(pcdb, input_path=args.abinit_input)
     searcher = pychemia.searcher.FireFly(popu, generation_size=args.generation_size)
