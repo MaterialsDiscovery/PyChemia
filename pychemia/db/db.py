@@ -5,6 +5,7 @@ from multiprocessing import Pool
 
 import numpy as np
 import pymongo
+from pymongo.errors import ServerSelectionTimeoutError
 from bson.objectid import ObjectId
 
 from pychemia import Structure, HAS_PYMONGO
@@ -33,6 +34,7 @@ class PyChemiaDB:
                             'ssl': ssl,
                             'replicaset': replicaset}
         self.name = name
+        maxSevSelDelay = 2
         uri = 'mongodb://'
         if user is not None:
             uri += user
@@ -42,14 +44,22 @@ class PyChemiaDB:
         uri += host + ':' + str(port)
         if user is not None:
             uri += '/' + name
-        if pymongo.version_tuple[0] == 2:
-            self._client = pymongo.MongoClient(uri, ssl=ssl, replicaSet=replicaset)
-        elif pymongo.version_tuple[0] == 3:
-            self._client = pymongo.MongoClient(uri, ssl=ssl,
-                                               ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE,
-                                               replicaSet=replicaset)
-        else:
-            raise ValueError('Wrong version of pymongo')
+        try:
+            if pymongo.version_tuple[0] == 2:
+                self._client = pymongo.MongoClient(uri, ssl=ssl, replicaSet=replicaset,
+                                                   serverSelectionTimeoutMS=maxSevSelDelay)
+            elif pymongo.version_tuple[0] == 3:
+                self._client = pymongo.MongoClient(uri, ssl=ssl,
+                                                   ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE,
+
+                                                   replicaSet=replicaset, serverSelectionTimeoutMS=maxSevSelDelay)
+            else:
+                raise ValueError('Wrong version of pymongo')
+            self._client.server_info()
+        except ServerSelectionTimeoutError:
+            print("ERROR: No connexion could be established to server: %s" % uri)
+            exit(1)
+
         self.db = self._client[name]
         self.entries = self.db.pychemia_entries
         self.set_minimal_schema()
@@ -338,8 +348,9 @@ def create_user(name, admin_name, admin_passwd, user_name, user_passwd, host='lo
     :param replicaset: (str, None) Identifier of a Replica Set
 
     """
+    maxSevSelDelay = 2
     mc = pymongo.MongoClient(host=host, port=port, ssl=ssl, ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE,
-                             replicaset=replicaset)
+                             replicaset=replicaset, serverSelectionTimeoutMS=maxSevSelDelay)
     mc.admin.authenticate(admin_name, admin_passwd)
     mc[name].add_user(user_name, user_passwd)
     return PyChemiaDB(name=name, user=user_name, passwd=user_passwd, host=host, port=port, ssl=ssl,
@@ -351,13 +362,13 @@ def create_database(name, admin_name, admin_passwd, user_name, user_passwd, host
     return create_user(name, admin_name, admin_passwd, user_name, user_passwd, host, port, ssl, replicaset)
 
 
-def has_connection():
+def has_connection(host='localhost'):
     if not HAS_PYMONGO:
         return False
     import pymongo
     try:
-        maxSevSelDelay = 1
-        client = pymongo.MongoClient("localhost", serverSelectionTimeoutMS=maxSevSelDelay)
+        maxSevSelDelay = 2
+        client = pymongo.MongoClient(host, serverSelectionTimeoutMS=maxSevSelDelay)
         client.server_info()  # force connection on a request as the
         # connect=True parameter of MongoClient seems
         # to be useless here

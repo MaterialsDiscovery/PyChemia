@@ -133,7 +133,7 @@ class Population:
             data['_id'] = self.tag
             self.pcdb.db.population_info.insert_one(data)
         else:
-            self.pcdb.db.population_info.update_one({'_id': self.tag}, self.to_dict)
+            self.pcdb.db.population_info.replace_one({'_id': self.tag}, self.to_dict)
 
     def save_json(self, filename):
         ret = []

@@ -1,15 +1,15 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+
+from builtins import input
 
 import os
 import sys
-import bson
 import argparse
 import numpy as np
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import pychemia
-from pychemia.utils.serializer import generic_serializer as gs
 
 def compare_params(path):
 
@@ -235,10 +235,10 @@ if __name__=="__main__":
     parser.add_argument('-features', type=str, help='Features for queue', required=False, default=None)
     parser.add_argument('-basepath', type=str, help='Path where calculations are performed', required=False, default='.')
 
-    args=parser.parse_args()    
+    args = parser.parse_args()
     basepath = args.basepath    
 
-    passwd = raw_input('Password:')
+    passwd = input('Password:')
 
     if not os.path.isdir(args.basepath) or not os.path.isfile(basepath+'/abinit.in'):
         print('ERROR: Wrong basepath %s' % basepath)

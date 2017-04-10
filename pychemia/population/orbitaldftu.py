@@ -347,9 +347,9 @@ class OrbitalDFTU(Population):
             # 1. Get actives no evaluated
             ane = self.actives_no_evaluated
             if len(ane) > 0:
-                print("Candidates no evaluate: %d" % len(ane))
+                print("Candidates to be evaluated: %d" % len(ane))
             else:
-                print("No candidates to evaluate")
+                print("No candidates to be evaluated")
             # 2. Get jobs in queue
             jobs = get_jobs(username)
             jobnames = [jobs[x]['Job_Name'] for x in jobs]
@@ -360,8 +360,8 @@ class OrbitalDFTU(Population):
                     check = True
                 else:
                     jobids = [jobs[x]['Job_Id'] for x in jobs if jobs[x]['Job_Name'] == str(entry_id)]
-                    print("Jobs with Job_Name: %s" % entry_id)
-                    print(jobids)
+                    #print("Jobs with Job_Name: %s" % entry_id)
+                    #print(jobids)
                     for jobid in jobids:
                         # print("%s %s %s" % (jobid, jobs[jobid]['job_state'], jobs[jobid]['job_state'] != 'C'))
                         check = True
@@ -613,13 +613,12 @@ class OrbitalDFTU(Population):
         if not os.path.isdir(iworkdir):
             os.mkdir(iworkdir)
 
-        for ifile in ['abinit.files', 'batch.pbs']:
-            if os.path.lexists(iworkdir + os.sep + ifile):
-                os.remove(iworkdir + os.sep + ifile)
-            if not os.path.isfile(source_dir + os.sep + ifile):
-                print('WARNIG: The file %s should be present on %s, symbolic links will be created pointing '
-                      'to that location' % (ifile, source_dir))
-            os.symlink(os.path.abspath(source_dir + os.sep + ifile), iworkdir + os.sep + ifile)
+        if os.path.lexists(iworkdir + os.sep + 'abinit.files'):
+            os.remove(iworkdir + os.sep + 'abinit.files')
+        if not os.path.isfile(source_dir + os.sep + 'abinit.files'):
+            print('WARNIG: The file %s should be present on %s, symbolic links will be created pointing '
+                  'to that location' % ('abinit.files', source_dir))
+        os.symlink(os.path.abspath(source_dir + os.sep + 'abinit.files'), iworkdir + os.sep + 'abinit.files')
 
         abiinput = InputVariables(self.input_path)
         params = self.get_correlation_params(entry_id, final=False)
@@ -629,6 +628,7 @@ class OrbitalDFTU(Population):
 
         d_abiinput = InputVariables(iworkdir + os.sep + 'abinit.in')
         d_dmatpawu = d_abiinput['dmatpawu']
+        assert(d_dmatpawu is not None)
         d_params = dmatpawu2params(d_dmatpawu, self.ndim)
         assert(np.all(np.sum(d_params['occupations'], axis=1) == np.array(self.num_electrons_dftu)))
 
@@ -664,7 +664,6 @@ class OrbitalDFTU(Population):
 
     @staticmethod
     def submit(entry_id, workdir, queue, walltime, ppn, features):
-        print("Submit: %s" % entry_id)
         idir = str(entry_id)
         workdir = os.path.abspath(workdir)
         path = workdir+os.sep + idir
@@ -680,7 +679,8 @@ class OrbitalDFTU(Population):
         pbs.initialize(nodes=1, ppn=ppn, walltime=walltime, message='ae', queue=queue, features=features)
         pbs.set_template('../template')
         pbs.write_pbs()
-        subprocess.call('qsub batch.pbs', shell=True)
+        output = subprocess.check_output('qsub batch.pbs', shell=True).strip()
+        print("Entry: %s Job: %s" % (entry_id, output))
         os.chdir(cwd)
 
     def update_dmat_inplace(self, entry_id, dmat):

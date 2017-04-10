@@ -10,6 +10,7 @@
 from __future__ import print_function
 import os
 import ftplib
+from concurrent.futures import ThreadPoolExecutor
 
 try:
     from urllib2 import urlopen
@@ -24,6 +25,38 @@ if HAS_SCIPY:
     from pychemia.code.abinit import psp_name
 else:
     raise ImportError('scipy could not be found')
+
+
+def worker(filename, directory, filepath):
+    ftp = ftplib.FTP('ftp.abinit.org')  # connect to host, default port
+    ftp.login()  # user anonymous, passwd anonymous@
+    print('Getting ftp://ftp.abinit.org/%s/%s' % (filepath, filename))
+    nofile = True
+    while nofile:
+        try:
+            ftp.retrbinary('RETR ' + filepath + filename, open(directory + '/' + filename, 'wb').write)
+            nofile = False
+            if os.path.getsize(directory + '/' + filename) == 0:
+                os.remove(directory + '/' + filename)
+        except ftplib.error_perm:
+            print('Retrying download of %s' % (filepath))
+            ftp.close()
+            time.sleep(1)
+            if os.path.isfile(directory + '/' + filename):
+                os.remove(directory + '/' + filename)
+            ftp = ftplib.FTP('ftp.abinit.org')  # connect to host, default port
+            ftp.login()  # user anonymous, passwd anonymous@
+            nofile = False
+        except EOFError:
+            print('Retrying download of %s' % (filepath))
+            ftp.close()
+            time.sleep(1)
+            if os.path.isfile(directory + '/' + filename):
+                os.remove(directory + '/' + filename)
+            ftp = ftplib.FTP('ftp.abinit.org')  # connect to host, default port
+            ftp.login()  # user anonymous, passwd anonymous@
+            nofile = False
+    ftp.close()
 
 
 def get_rpath_psp(kind, exchange, atomicnumber=None):
@@ -91,6 +124,9 @@ def get_all_psps(basedir, exchange, kind):
                 print(status, end='')
             f.close()
             print('\n')
+        else:
+            print('All files are downloaded')
+
         try:
             tar = tarfile.open(directory + '/' + filename, 'r:gz')
             for item in tar:
@@ -116,11 +152,10 @@ def get_all_psps(basedir, exchange, kind):
                         succeed = False
             ftp.close()
             if succeed:
+                print('All files are downloaded')
                 break
     else:
-        ftp = ftplib.FTP('ftp.abinit.org')  # connect to host, default port
-        ftp.login()  # user anonymous, passwd anonymous@
-        missing_psps = []
+        files = []
         for i in range(1, 113):
             if kind == 'GTH' and i > 17:
                 continue
@@ -139,33 +174,37 @@ def get_all_psps(basedir, exchange, kind):
             if kind == 'FC' and exchange == 'DEN' and i in [63, 65, 66, 67, 110, 111, 112]:
                 continue
             filename = psp_name(i, exchange, kind)
+            filepath = get_rpath_psp(kind, exchange, i)
             if not os.path.isfile(directory + '/' + filename) or os.path.getsize(directory + '/' + filename) == 0:
-                print('Getting...' + filename)
-                nofile = True
-                while nofile:
-                    retr = 'RETR ' + get_rpath_psp(kind, exchange, i) + filename
-                    try:
-                        ftp.retrbinary(retr, open(directory + '/' + filename, 'wb').write)
-                        nofile = False
-                        if os.path.getsize(directory + '/' + filename) == 0:
-                            os.remove(directory + '/' + filename)
-                    except ftplib.error_perm:
-                        print('Could not download ' + retr)
-                        missing_psps.append(i)
-                        ftp.close()
-                        time.sleep(5)
-                        print('Reconnecting...')
-                        if os.path.isfile(directory + '/' + filename):
-                            os.remove(directory + '/' + filename)
-                        ftp = ftplib.FTP('ftp.abinit.org')  # connect to host, default port
-                        ftp.login()  # user anonymous, passwd anonymous@
-                        nofile = False
-        ftp.close()
-        if len(missing_psps) > 0:
-            print("kind == '%s' and exchange == '%s' and i in %s" % (kind, exchange, missing_psps))
+                files.append((filename, directory, filepath))
+
+        if len(files) == 0:
+            print("All files are downloaded")
+        else:
+            print("Downloading %d PSP files" % len(files))
+        nth = 12
+        pool = ThreadPoolExecutor(nth)
+        index = 0
+        p = nth * [None]
+        while index < len(files):
+            for i in range(nth):
+                if index < len(files):
+                    p[i] = pool.submit(worker, *(files[index]))
+                    index += 1
+            for i in range(nth):
+                try:
+                    p[i].result()
+                except AttributeError:
+                    print("Complete")
+
+        if len(files) > 0:
+            print("kind == '%s' and exchange == '%s' and i in %s" % (kind, exchange, files))
 
 
 if __name__ == '__main__':
+
+    print("Script to download PSP files from ftp.abinit.org")
+    print("Files will be downloaded to: $HOME/.abinit")
 
     home = os.environ['HOME']
     basedir = home + "/.abinit"
@@ -174,7 +213,7 @@ if __name__ == '__main__':
         os.mkdir(basedir)
 
     for exchange in ['LDA', 'GGA', 'DEN']:
-        print('=> ' + exchange)
+        print('\n=> ' + exchange, end='\n')
         lista = []
         if exchange == 'LDA':
             lista = ['FHI', 'TM', 'GTH', 'PAW', 'CORE', 'HGH']
@@ -184,5 +223,5 @@ if __name__ == '__main__':
             lista = ['AE', 'FC']
 
         for kind in lista:
-            print('--> ' + kind)
+            print('--> %5s ' % kind, end=' ')
             get_all_psps(basedir, exchange, kind)

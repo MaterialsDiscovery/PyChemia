@@ -118,8 +118,8 @@ class Searcher:
                     print('Enabling', entry_id)
                     self.population.enable(entry_id)
             candidates_per_generation = [len(self.get_generation(i)) for i in range(self.current_generation + 1)]
-            pcm_log.debug('Candidates per generation: %s' % candidates_per_generation)
-            pcm_log.debug('Current generation: %d Candidates: %d' % (self.current_generation,
+            pcm_log.info('Candidates per generation: %s' % candidates_per_generation)
+            pcm_log.info('Current generation: %d Candidates: %d' % (self.current_generation,
                                                                      len(self.get_generation())))
             assert len(self.get_generation()) == self.generation_size
             assert min(candidates_per_generation) == max(candidates_per_generation)
@@ -199,27 +199,16 @@ class Searcher:
             generation_number = self.current_generation
         return [x for x in self.generation if generation_number in self.generation[x]]
 
-    def print_status(self, level='DEBUG'):
-        if level == 'DEBUG':
-            pcm_log.debug(' %s (tag: %s)' % (self.population.name, self.population.tag))
-            pcm_log.debug(' Current Generation             : %4d' % self.current_generation)
-            pcm_log.debug(' Population (evaluated/total)   : %4d /%4d' % (len(self.population.evaluated),
-                                                                          len(self.population.members)))
-            pcm_log.debug(' Actives (evaluated/total)      : %4d /%4d' % (len(self.population.actives_evaluated),
-                                                                          len(self.population.actives)))
-            pcm_log.debug(' Size of Generation (this/next) : %4d /%4d' % (len(self.get_generation()),
-                                                                          len(self.get_generation(
-                                                                              self.current_generation + 1))))
-        else:
-            pcm_log.info(' %s (tag: %s)' % (self.population.name, self.population.tag))
-            pcm_log.info(' Current Generation             : %4d' % self.current_generation)
-            pcm_log.info(' Population (evaluated/total)   : %4d /%4d' % (len(self.population.evaluated),
-                                                                         len(self.population.members)))
-            pcm_log.info(' Actives (evaluated/total)      : %4d /%4d' % (len(self.population.actives_evaluated),
-                                                                         len(self.population.actives)))
-            pcm_log.info(' Size of Generation (this/next) : %4d /%4d' % (len(self.get_generation()),
-                                                                         len(self.get_generation(
-                                                                             self.current_generation + 1))))
+    def print_status(self):
+        pcm_log.info(' %s (tag: %s)' % (self.population.name, self.population.tag))
+        pcm_log.info(' Current Generation             : %4d' % self.current_generation)
+        pcm_log.info(' Population (evaluated/total)   : %4d /%4d' % (len(self.population.evaluated),
+                                                                     len(self.population.members)))
+        pcm_log.info(' Actives (evaluated/total)      : %4d /%4d' % (len(self.population.actives_evaluated),
+                                                                     len(self.population.actives)))
+        pcm_log.info(' Size of Generation (this/next) : %4d /%4d\n' % (len(self.get_generation()),
+                                                                     len(self.get_generation(
+                                                                         self.current_generation + 1))))
 
         if len(self.get_generation(self.current_generation + 1)) + len(self.population.actives) != self.generation_size:
             pcm_log.debug('Change in generations')
@@ -365,8 +354,13 @@ class Searcher:
 
         :return:
         """
-        print(str(self))
-        print(str(self.population))
+
+        print("Population Information")
+        print("======================")
+        print(self.population)
+        print("Searcher Information")
+        print("====================")
+        print(self)
         self.save_info()
         self.population.save_info()
         best_member = ''
@@ -375,9 +369,10 @@ class Searcher:
 
         while True:
             print('\nGENERATION: %d' % self.current_generation)
-            self.print_status(level='DEBUG')
+            if len(self.population) > 0:
+                self.print_status()
 
-            pcm_log.debug('[%s] Enforcing the size of generation: %d' % (self.searcher_name, self.generation_size))
+            pcm_log.info('[%s] Ensuring the number of active candidates is %d' % (self.searcher_name, self.generation_size))
             self.enforce_generation_size()
             self.update_lineages()
 
@@ -391,17 +386,17 @@ class Searcher:
                 if len(self.population.actives_evaluated) != number_evaluated:
                     msg = "Population '%s' still not evaluated. %4.0f %%"
                     pcm_log.debug(msg % (self.population.name, 100 * self.population.fraction_evaluated))
-                    self.print_status(level='DEBUG')
+                    self.print_status()
                     number_evaluated = len(self.population.actives_evaluated)
                 self.population.replace_failed()
                 time.sleep(self.sleep_time)
-            pcm_log.debug("Population '%s' evaluated. %4.0f %%" % (self.population.name,
+            pcm_log.info("Population '%s' evaluated. %4.0f %%" % (self.population.name,
                                                                    100 * self.population.fraction_evaluated))
 
             best_member = self.population.best_candidate
             self.population.refine_progressive(best_member)
 
-            print('Current best candidate: [%s]:\n%s' % (best_member, self.population.str_entry(best_member)))
+            pcm_log.info('Current best candidate: [%s]:\n%s' % (best_member, self.population.str_entry(best_member)))
             if best_member in self.get_generation():
                 print('This candidate have survived for %d generations' % len(self.generation[best_member]))
                 if len(self.generation[best_member]) >= self.stabilization_limit:
@@ -445,7 +440,7 @@ class Searcher:
                 self.write_change(entry_id, change)
                 self.replace_by_random(entry_id, reason='duplicate')
             pcm_log.info(' Duplicates identified and disabled: %d' % len(duplicates))
-            self.print_status(level='INFO')
+            self.print_status()
 
             pcm_log.info(' Running one cycle for %s with %d candidates' % (self.searcher_name,
                                                                            len(self.actives_in_generation)))
