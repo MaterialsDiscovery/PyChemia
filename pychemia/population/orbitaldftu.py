@@ -630,7 +630,11 @@ class OrbitalDFTU(Population):
         d_dmatpawu = d_abiinput['dmatpawu']
         assert(d_dmatpawu is not None)
         d_params = dmatpawu2params(d_dmatpawu, self.ndim)
-        assert(np.all(np.sum(d_params['occupations'], axis=1) == np.array(self.num_electrons_dftu)))
+        if not np.all(np.sum(d_params['occupations'], axis=1) == np.array(self.num_electrons_dftu)):
+            print('ERROR: Inconsistent number of DFT+U electrons for correlated orbitals: %s' % entry_id)
+            print('From the population: %s ' % self.num_electrons_dftu)
+            print('From "abinit.in":    %s ' % d_params['occupations'])
+
 
     def recover(self):
         pass
@@ -651,6 +655,12 @@ class OrbitalDFTU(Population):
             return None
         nres2 = data['nres2'][-1]
         etot = data['etot'][-1]
+
+        if not np.all(np.sum(oparams['occupations'], axis=1) == np.array(self.num_electrons_dftu)):
+            print('ERROR: Inconsistent number of DFT+U electrons for correlated orbitals: %s' % entry_id)
+            print('From the population      : %s ' % self.num_electrons_dftu)
+            print('From %20s :    %s ' % (abinitout, oparams['occupations']))
+
 
         return self.pcdb.db.pychemia_entries.update({'_id': entry_id},
                                                     {'$set': {'properties.etot': etot,
