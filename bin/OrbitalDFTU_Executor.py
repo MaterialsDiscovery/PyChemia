@@ -35,12 +35,15 @@ if __name__ == "__main__":
         # Calling ABINIT
         subprocess.call("mpirun -np %d abinit < abinit.files > abinit.log 2> abinit.err" % NPARAL, shell=True)
 
+        if os.path.isfile('abinit.in'):
+            shutil.copy2('abinit.in', 'abinit_%d.in' % i)
+
         # If everything works fine with ABINIT we have abinit.out
         if os.path.isfile('abinit.out'):
 
             # The final density matrix is build from the output
             dmatpawu = pychemia.population.orbitaldftu.get_final_dmatpawu('abinit.out')
-            odmatpawu = np.array(dmatpawu).reshape(-1,5,5)
+            odmatpawu = np.array(dmatpawu).reshape(-1, 5, 5)
             
             # Updating dmatpawu from the output back to input
             abiinput['dmatpawu'] = list(odmatpawu.flatten())
@@ -51,8 +54,6 @@ if __name__ == "__main__":
         # Renaming logs and setting WFK back to input
         if os.path.isfile('abinit.log'):
             os.rename('abinit.log', 'abinit_%d.log' % i)
-        if os.path.isfile('abinit.in'):
-            shutil.copy2('abinit.in', 'abinit_%d.in' % i)
         if os.path.isfile('abinit-o_WFK'):
             os.rename('abinit-o_WFK','abinit-i_WFK')
 
