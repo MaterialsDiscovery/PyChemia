@@ -1,7 +1,7 @@
 import os as _os
 import shutil as _shutil
 import subprocess as _subprocess
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
 from .function import FunctionEvaluator, FunctionObjectiveFunction
 from .cluster import cluster_worker, cluster_evaluator, cluster_launcher
 from .cluster_fireball import cluster_fb_evaluator, cluster_fb_launcher, cluster_fb_worker
@@ -45,6 +45,7 @@ class Evaluator:
     def stop(self):
         pass
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def is_running(self):
         pass

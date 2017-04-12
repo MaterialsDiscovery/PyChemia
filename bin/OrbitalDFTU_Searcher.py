@@ -16,7 +16,8 @@ if __name__ == "__main__":
     parser.add_argument('-dbname', type=str, help='Name of Database', required=True, metavar='name')
     parser.add_argument('-ssl', help='Use SSL (default: False)', action='store_true')
     parser.add_argument('-generation_size', type=int, help='Generation Size (default: 32)', metavar='N', default=32)
-    parser.add_argument('-abinit_input', type=str, help='Path to Abinit input file', metavar='path', default='abinit.in')
+    parser.add_argument('-abinit_input', type=str, help='Path to Abinit input file', metavar='path',
+                        default='abinit.in')
     parser.add_argument('-new', help='Create new database (default: False)', action='store_true')
     parser.add_argument('-debug', help='Activate debug mode (default: False)', action='store_true')
     parser.add_argument('-clean', help='Clean database before start (default: False)', action='store_true')
@@ -24,7 +25,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.debug:
-        loglevel=logging.DEBUG
+        loglevel = logging.DEBUG
     else:
         loglevel = logging.INFO
 
@@ -67,7 +68,7 @@ if __name__ == "__main__":
 
     if args.new:
         pcdb = pychemia.db.create_database(name=args.dbname, admin_name=admin_name, admin_passwd=admin_passwd,
-                                       user_name=user, user_passwd=passwd, host=host, ssl=args.ssl)
+                                           user_name=user, user_passwd=passwd, host=host, ssl=args.ssl)
     else:
         dbsettings = {'host': host, 'name': args.dbname, 'user': user, 'passwd': passwd}
         pcdb = pychemia.db.get_database(dbsettings)

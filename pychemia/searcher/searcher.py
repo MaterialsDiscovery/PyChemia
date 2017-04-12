@@ -207,7 +207,7 @@ class Searcher:
         pcm_log.info(' Actives (evaluated/total)      : %4d /%4d' % (len(self.population.actives_evaluated),
                                                                      len(self.population.actives)))
         pcm_log.info(' Size of Generation (this/next) : %4d /%4d\n' % (len(self.get_generation()),
-                                                                     len(self.get_generation(
+                                                                       len(self.get_generation(
                                                                          self.current_generation + 1))))
 
         if len(self.get_generation(self.current_generation + 1)) + len(self.population.actives) != self.generation_size:
@@ -372,7 +372,8 @@ class Searcher:
             if len(self.population) > 0:
                 self.print_status()
 
-            pcm_log.info('[%s] Ensuring the number of active candidates is %d' % (self.searcher_name, self.generation_size))
+            pcm_log.info('[%s] Ensuring the number of active candidates is %d' % (self.searcher_name,
+                                                                                  self.generation_size))
             self.enforce_generation_size()
             self.update_lineages()
 
@@ -391,7 +392,7 @@ class Searcher:
                 self.population.replace_failed()
                 time.sleep(self.sleep_time)
             pcm_log.info("Population '%s' evaluated. %4.0f %%" % (self.population.name,
-                                                                   100 * self.population.fraction_evaluated))
+                                                                  100 * self.population.fraction_evaluated))
 
             best_member = self.population.best_candidate
             self.population.refine_progressive(best_member)

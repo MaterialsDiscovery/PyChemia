@@ -326,8 +326,8 @@ class OrbitalDFTU(Population):
         euler_angles1 = dmat1['euler_angles']
         euler_angles2 = dmat2['euler_angles']
 
-        uvect1 = unit_vector(np.array(euler_angles1).flatten())
-        uvect2 = unit_vector(np.array(euler_angles2).flatten())
+        uvect1 = unit_vector(np.concatenate((np.cos(euler_angles1), np.sin(euler_angles1))).flatten())
+        uvect2 = unit_vector(np.concatenate((np.cos(euler_angles2), np.sin(euler_angles2))).flatten())
 
         dist_euler = 1 - np.dot(uvect1, uvect2)
 
@@ -353,17 +353,13 @@ class OrbitalDFTU(Population):
             # 2. Get jobs in queue
             jobs = get_jobs(username)
             jobnames = [jobs[x]['Job_Name'] for x in jobs]
-            #print(jobnames)
             check = False
             for entry_id in ane:
                 if str(entry_id) not in jobnames:
                     check = True
                 else:
                     jobids = [jobs[x]['Job_Id'] for x in jobs if jobs[x]['Job_Name'] == str(entry_id)]
-                    #print("Jobs with Job_Name: %s" % entry_id)
-                    #print(jobids)
                     for jobid in jobids:
-                        # print("%s %s %s" % (jobid, jobs[jobid]['job_state'], jobs[jobid]['job_state'] != 'C'))
                         check = True
                         if jobs[jobid]['job_state'] != 'C':
                             check = False
@@ -635,7 +631,6 @@ class OrbitalDFTU(Population):
             print('From the population: %s ' % self.num_electrons_dftu)
             print('From "abinit.in":    %s ' % d_params['occupations'])
 
-
     def recover(self):
         pass
 
@@ -660,7 +655,6 @@ class OrbitalDFTU(Population):
             print('ERROR: Inconsistent number of DFT+U electrons for correlated orbitals: %s' % entry_id)
             print('From the population      : %s ' % self.num_electrons_dftu)
             print('From %20s :    %s ' % (abinitout, oparams['occupations']))
-
 
         return self.pcdb.db.pychemia_entries.update({'_id': entry_id},
                                                     {'$set': {'properties.etot': etot,

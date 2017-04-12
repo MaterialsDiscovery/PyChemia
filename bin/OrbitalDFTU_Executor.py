@@ -55,7 +55,7 @@ if __name__ == "__main__":
         if os.path.isfile('abinit.log'):
             os.rename('abinit.log', 'abinit_%d.log' % i)
         if os.path.isfile('abinit-o_WFK'):
-            os.rename('abinit-o_WFK','abinit-i_WFK')
+            os.rename('abinit-o_WFK', 'abinit-i_WFK')
 
         # Checking if you should accept the current residual
         # Renaming abinit.out
@@ -67,6 +67,6 @@ if __name__ == "__main__":
 
         if nres2 < TARGET_NRES2:
             break
-    wf = open('COMPLETE','w')
+    wf = open('COMPLETE', 'w')
     wf.write("%d\n" % i)
     wf.close()
