@@ -2,7 +2,8 @@
 import sys
 import logging
 import itertools
-from multiprocessing import Pool
+import argparse
+from multiprocessing import Pool, cpu_count
 import pychemia
 from pychemia.utils.periodic import atomic_symbol
 
@@ -12,21 +13,6 @@ except ImportError:
     Entry = None
     print("Could not import 'qmpy' as needed to interface with the OQMD database")
     exit(1)
-
-version = 0.1
-jump = 10000
-
-
-def help_info():
-    print(""" Create or Update a PyChemia Database from the OQMD Database (www.oqmd.org)
-
-   Use:
-
-       OQMD2PyChemia.py --dbname 'MongoDB Database name'
-                                [--host localhost ] [--port 27017]
-                                [--user None ] [--passwd None] [--ssl]
-
-   """)
 
 
 def run_one(a):
@@ -39,8 +25,15 @@ def run_one(a):
     """
     print('Entry: %6d  Number of Calculations: %3d  Energies: %s' % (a.id, a.calculation_set.count(),
                                                                      str([c.energy for c in a.calculation_set.all()])))
+
     energy = 1E10
     best_calculation = None
+
+    if 'standard' in a.calculations:
+        best_calculation = a.calculations['standard']
+    else:
+        print('No standard calculation for %3d Calculations available are: %s' % (a.id, a.calculations.keys()))
+
     for c in a.calculation_set.all():
         if c.energy is not None and c.energy < energy:
             best_calculation = c
@@ -83,6 +76,7 @@ def run_one(a):
 
 
 def getter(entry_ids, db_settings, current, start=0):
+    
     pcdb = pychemia.db.get_database(db_settings)
 
     ret = []
@@ -92,7 +86,7 @@ def getter(entry_ids, db_settings, current, start=0):
 
     initial = start * jump
     final = min(start * jump + jump, len(entry_ids))
-    print('Process: %2d Processing from %6d to %6d' % (start, initial, final))
+    print('Process: %2d Processing from %6d to %6d total: %d' % (start, initial, final, len(entry_ids)))
 
     for a_id in entry_ids[initial:final]:
 
@@ -102,7 +96,7 @@ def getter(entry_ids, db_settings, current, start=0):
         else:
             index = current.index(a_id)
             # Removing duplicated entries
-            if index < len(current) and current[index + 1] == a_id:
+            if index + 1 < len(current)  and current[index + 1] == a_id:
                 print('We found at least one duplicate!')
                 duplicate = False
                 for entry in pcdb.db.pychemia_entries.find({'properties.oqmd.entry_id': a_id}):
@@ -118,8 +112,11 @@ def getter(entry_ids, db_settings, current, start=0):
 
 def setter(pcdb, to_insert):
     for entry_id in to_insert:
+        structure = None
+        properties = None
         a = Entry.objects.get(id=entry_id)
-        structure, properties = run_one(a)
+        if a.calculation_set.count() > 0:
+            structure, properties = run_one(a)
         if structure is not None:
             pcdb.insert(structure, properties=properties)
 
@@ -127,63 +124,35 @@ def setter(pcdb, to_insert):
 def getter_star(a_b):
     return getter(*a_b)
 
+version = 0.1
+jump = 10000
+
 
 if __name__ == '__main__':
 
-    logging.basicConfig(level=logging.DEBUG)
+    parser = argparse.ArgumentParser(description='Create or Update a PyChemia Database from the OQMD Database (www.oqmd.org)')
+    parser.add_argument('-dbname', metavar='<DATABASE>', type=str, help='Database Name', default='PyChemiaDB')
+    parser.add_argument('-port', metavar='<PORTNUMBER>', type=int, help='Port (default: 27017)', default=27017)
+    parser.add_argument('-ssl', metavar='<SSL>', type=bool, help='Using SSL (default:no)', default=False)
+    parser.add_argument('-user', metavar='<USERNAME>', type=str, help='Database Username', default=None)
+    parser.add_argument('-host', metavar='<HOSTNAME>', type=str, help='Hostname (default: localhost)', default='localhost')
+    parser.add_argument('-nprocs', metavar='N', type=str, help='Number of concurrent proccess (default: Number of CPUs)', default=None)
+
+    args = parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger('pychemia')
     logger.addHandler(logging.NullHandler())
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
-    # Script starts from here
-    if len(sys.argv) < 2:
-        help_info()
-        sys.exit(1)
-
-    dbname = None
-    host = 'localhost'
-    port = 27017
-    user = None
-    passwd = None
-    path = None
-    ssl = False
-
-    for i in range(1, len(sys.argv)):
-        if sys.argv[i].startswith('--'):
-            option = sys.argv[i][2:]
-            # fetch sys.argv[1] but without the first two characters
-            if option == 'version':
-                print(version)
-                sys.exit()
-            elif option == 'help':
-                help_info()
-                sys.exit()
-            elif option == 'dbname':
-                dbname = sys.argv[i + 1]
-            elif option == 'host':
-                host = sys.argv[i + 1]
-            elif option == 'port':
-                dbname = int(sys.argv[i + 1])
-            elif option == 'user':
-                user = sys.argv[i + 1]
-            elif option == 'passwd':
-                passwd = sys.argv[i + 1]
-            elif option == 'ssl':
-                ssl = True
-            else:
-                print('Unknown option. --' + option)
-
-    if dbname is None:
-        help_info()
-        sys.exit(1)
-
-    db_settings = {'name': dbname, 'host': host, 'port': port, 'ssl': ssl}
-    if user is not None:
-        if passwd is None:
-            raise ValueError('Password is mandatory if user is entered')
-        db_settings['user'] = user
+    db_settings = {'name': args.dbname, 'host': args.host, 'port': args.port, 'ssl': args.ssl}
+    if args.user is not None:
+        passwd = input('Password:')
+        db_settings['user'] = args.user
         db_settings['passwd'] = passwd
 
+    print('Database settings: \n')
+    print(db_settings)
     pcdb = pychemia.db.get_database(db_settings)
 
     nitems = pcdb.entries.count()
@@ -199,20 +168,25 @@ if __name__ == '__main__':
     entry_ids = [entry.id for entry in queryset]
     print('Number of entries in OQMD: %d' % len(entry_ids))
 
-    pool = Pool(processes=6)
+    if args.nprocs is None:
+        nprocs = cpu_count()
+    else:
+        nprocs = args.nprocs
+    print('Creating a pool of %d processes for feeding the database' % nprocs)
+    pool = Pool(processes=nprocs)
 
     argus = []
-    a_args = range(len(entry_ids) / jump)
+    a_args = range((len(entry_ids) / jump) + 1)
 
-    ret = pool.map(getter_star, itertools.izip(itertools.repeat(entry_ids),
-                                               itertools.repeat(db_settings),
-                                               itertools.repeat(current), a_args))
-
-    to_insert = []
-    for i in ret:
-        for j in i:
-            to_insert.append(j)
-
-    pool.close()
-
-    setter(pcdb, to_insert)
+    # ret = pool.map(getter_star, itertools.izip(itertools.repeat(entry_ids),
+    #                                            itertools.repeat(db_settings),
+    #                                            itertools.repeat(current), a_args), chunksize=1)
+    #
+    # to_insert = []
+    # for i in ret:
+    #     for j in i:
+    #         to_insert.append(j)
+    #
+    # pool.close()
+    #
+    # setter(pcdb, to_insert)

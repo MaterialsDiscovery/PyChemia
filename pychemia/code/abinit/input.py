@@ -167,11 +167,16 @@ class InputVariables(collections.MutableMapping):
                 varnames.sort()
                 ret = ret + "#" + 60 * "-" + "\n#" + " DATASET " + str(dtset) + "\n#" + 60 * "-" + "\n\n"
                 for i in varnames:
+                    if i == 'dmatpawu':
+                        if 2 in self['lpawu']:
+                            ret += self.write_key(i, ncolumns=5)
+                        elif 3 in self['lpawu']:
+                            ret += self.write_key(i, ncolumns=7)
                     ret += self.write_key(i)
                 ret += '\n'
         return ret
 
-    def write_key(self, varname):
+    def write_key(self, varname, ncolumns=None):
         """
         Receives an input variable and write their contents
         properly according with their kind and length
@@ -219,7 +224,7 @@ class InputVariables(collections.MutableMapping):
 
         ret = ret + (varname.rjust(15)) + "  "
 
-        known_variables = {'dmatpawu': [5, 7], 'xred': [3], 'acell': [3]}
+        known_variables = {'xred': [3], 'acell': [3]}
 
         if varname in known_variables:
             for i in known_variables[varname]:
@@ -229,8 +234,14 @@ class InputVariables(collections.MutableMapping):
                             ret += (i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
                         else:
                             ret += (17 * ' ' + i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
+        elif ncolumns is not None:
+            for i in ncolumns:
+                for j in range(int(len(varlist) / i)):
+                    if j == 0:
+                        ret += (i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
+                    else:
+                        ret += (17 * ' ' + i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
         else:
-
             for j in range(len(varlist)):
 
                 if real:

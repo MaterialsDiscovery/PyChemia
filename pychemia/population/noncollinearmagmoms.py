@@ -268,7 +268,7 @@ class NonCollinearMagMoms(Population):
 
     def add_random(self):
         """
-        Creates a new candidate with random orientiations for the magnetic moments of all the atoms in 'mag_atoms'
+        Creates a new candidate with random orientations for the magnetic moments of all the atoms in 'mag_atoms'
 
         :return:
         """

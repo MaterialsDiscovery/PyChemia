@@ -58,7 +58,7 @@ class PyChemiaDB:
             self._client.server_info()
         except ServerSelectionTimeoutError:
             print("ERROR: No connexion could be established to server: %s" % uri)
-            exit(1)
+            return
 
         self.db = self._client[name]
         self.entries = self.db.pychemia_entries

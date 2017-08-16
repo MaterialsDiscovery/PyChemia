@@ -13,7 +13,7 @@ import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
 import pychemia
-
+import bson
 
 def label(xy, text, shiftx):
     px = xy[0] - shiftx
@@ -192,7 +192,10 @@ def plot_polar():
     nodupes = [x for x in popu.evaluated if x not in dupes]
     print('Number of not duplicates: %d' % len(nodupes))
 
-    fig = plt.figure(figsize=(10, 1.2*len(nodupes)))
+    if candidates is not None:
+        nodupes = candidates
+    
+    fig = plt.figure(figsize=(20, 2.01*len(nodupes)))
 
     etots = np.array([popu.value(x) for x in nodupes])
     sort_entries = np.array(nodupes)[etots.argsort()]
@@ -200,8 +203,10 @@ def plot_polar():
     N = len(nodupes)
     M = 10
 
-    grid = np.mgrid[0.05:0.9:complex(0, M), 0.05:0.9:complex(0, N)].T
-    print(grid.shape)
+    grid = np.mgrid[0.02:0.87:complex(0, M), 0.02:0.84:complex(0, N)].T
+    print("List of duplicates to plot:")
+    for i in nodupes:
+        print(i)
 
     for i in range(N):
 
@@ -211,35 +216,39 @@ def plot_polar():
         ea = np.array(pm['euler_angles'])
         nres2 = popu.get_entry(entry_id,{'properties.nres2':1})['properties']['nres2']
 
-        fig.text(0.03, grid[i,0][1]+0.05, "%7.2f" % etot, va='center', ha='center', fontsize='12', rotation='vertical',
+        fig.text(0.03, grid[i,0][1]+0.08, "%7.2f" % etot, va='center', ha='center', fontsize='24', rotation='vertical',
                  color='red')
-        fig.text(0.01, grid[i,0][1]+0.05, "%9.2E" % nres2, va='center', ha='center', fontsize='8', rotation='vertical',
+        fig.text(0.01, grid[i,0][1]+0.08, "%9.2E" % nres2, va='center', ha='center', fontsize='16', rotation='vertical',
                  color='blue')
+
+        radii = np.array([1,1,1,1])
+        #colors = np.array([0, 1, 2, 3])
+        colors = ['red', 'blue', 'fuchsia', 'yellow']
+        width = np.array([0.15,0.15,0.1,0.1])
+
         for j in range(M):
-            #print('GRID: (%d,%d) %s' % (i,j,grid[i,j]))
 
             theta = ea[:, j]
-            radii = np.arange(1,5)
-            colors = np.arange(4)
-            width = 0.1*np.ones(4)
 
-            ax = fig.add_axes([grid[i,j][0], grid[i,j][1], 0.09, 0.09], projection='polar')
+            ax = fig.add_axes([grid[i,j][0], grid[i,j][1], 0.146, 0.146], projection='polar')
+            ax.set_axis_bgcolor('mintcream')
             #ax.yaxis.set_tick_params(labelsize=0)
             #ax.xaxis.set_tick_params(labelsize=0)
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
-            #ax.spines['polar'].set_visible(False)
-            bars = ax.bar(theta, radii, width=width, bottom=0.0)
+            ax.spines['polar'].set_visible(True)
+            bars = ax.bar(theta, radii, width=width, bottom=0.0, linewidth=0)
 
             # Use custom colors and opacity
             for r, bar in zip(colors, bars):
-                bar.set_facecolor(plt.cm.viridis(r / 10.))
+                #bar.set_facecolor(plt.cm.Paired(r))
+                bar.set_facecolor(r)
                 bar.set_alpha(0.9)
 
     plt.subplots_adjust(left=0, right=1, bottom=0, top=1)
     #plt.axis('equal')
     #plt.axis('off')
-    plt.savefig(figname+'_polar.pdf')
+    plt.savefig(figname+'_polar.png')
 
 
 def plot_evolution():
@@ -313,6 +322,7 @@ if __name__ == "__main__":
     parser.add_argument('-dbuser', type=str, help='Username on Database', required=True)
     parser.add_argument('-figname', type=str, help='Path to output figure', default=None)
     parser.add_argument('-basepath', type=str, help='Path where calculations are performed', default='.')
+    parser.add_argument('-candidates', type=str, help='IDs for candidates', nargs='+')
 
     args = parser.parse_args()
     basepath = args.basepath
@@ -336,6 +346,16 @@ if __name__ == "__main__":
     ff.recover()
     print(ff)
 
+    if len(args.candidates)>0:
+        candidates=[bson.ObjectId(x) for x in args.candidates]
+    else:
+        candidates=None
+
+    for i in candidates:
+        assert(popu.get_entry(i) is not None)
+        entry=popu.get_entry(i)
+        print("%s %f" % (entry['_id'], entry['properties']['etot']))
+        
     print('Plotting Evolution')
     plot_evolution()
     print('Plotting Euler Angles')

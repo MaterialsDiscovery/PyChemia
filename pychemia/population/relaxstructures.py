@@ -133,22 +133,12 @@ class RelaxStructures(Population):
             raise ValueError('No composition associated to this population')
         factor = np.random.randint(self.min_comp_mult, self.max_comp_mult + 1)
         comp = self.composition.composition.copy()
-        print("Initail composition: %s" % comp)
-        print(Composition(comp))
-        print(Composition(comp).symbols)
+        #print("Initial composition: %s" % comp)
+        #print(Composition(comp))
+        #print(Composition(comp).symbols)
         for i in comp:
             comp[i] *= factor
         new_comp = Composition(comp)
-        for i in range(len(new_comp.symbols)):
-            if new_comp.symbols[i] == "Mg":
-                new_comp.symbols[i] = "Ca"
-            else:
-                new_comp.symbols[i] = "Mg"
-        print(new_comp.symbols)
-
-        print("###############################################################")
-        print("New comp symbols= ", new_comp.symbols)
-        print("###############################################################")
 
         while True:
             rnd = random.random()
@@ -156,7 +146,7 @@ class RelaxStructures(Population):
                          'structure.natom': new_comp.natom}
             if self.pcdb_source is None:
                 rnd = 0
-            if len(self.sources[factor]) == 0:
+            elif len(self.sources[factor]) == 0:
                 rnd = 0
             if self.pcdb_source is None or rnd < random_probability:
                 pcm_log.debug('Random Structure')
