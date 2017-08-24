@@ -77,7 +77,7 @@ class PyChemiaDB:
         json.dump(self.db_settings, wf, sort_keys=True, indent=4, separators=(',', ': '))
         wf.close()
 
-    def insert(self, structure, properties=None, status=None):
+    def insert(self, structure, properties=None, status=None, entry_id=None):
         """
         Insert a pychemia structure instance and properties
         into the database
@@ -91,7 +91,9 @@ class PyChemiaDB:
         if properties is None:
             properties = {}
         entry = {'structure': structure.to_dict, 'properties': properties, 'status': status}
-        entry_id = self.entries.insert(entry)
+        if entry_id is not None:
+            entry['_id']=entry_id
+        entry_id = self.entries.insert_one(entry)
         return entry_id
 
     def clean(self):
