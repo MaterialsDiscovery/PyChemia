@@ -2,11 +2,13 @@ import re
 import os
 import numpy as np
 from scipy.io import netcdf_file
+from ..codes import CodeOutput
 
+class AbinitOutput(CodeOutput):
 
-class AbinitOutput:
     def __init__(self, filename='abinit.out'):
 
+        CodeOutput.__init__(self)
         self.filename = filename
         rf = open(self.filename)
         self.data = rf.read()

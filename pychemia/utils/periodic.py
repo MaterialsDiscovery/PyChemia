@@ -118,7 +118,7 @@ atomic_symbols = ['',
                   'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No',
                   'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Uut', 'Fl', 'Uup', 'Lv', 'Uus', 'Uuo']
 
-valences = [0,
+valences_nominal = [0,
             1, 0,
             1, 2, 3, 4, 5, 2, 1, 0,
             1, 2, 3, 4, 5, 6, 7, 0,
@@ -130,6 +130,19 @@ valences = [0,
             1, 2,
             3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
             4, 5, 6, 7, 8]
+
+valences = [ 0,  
+             1,  0,   
+             1,  2,  3,  4,  5,  2,  1,  0,  
+             1,  2,  3,  4,  5,  6,  7,  0,  
+             1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,  2,  3,  4,  5, 6,  7,  0,  
+             1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,  2,  3,  4,  5, 6,  7,  0,  
+             1,  2,  
+             3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,  3,  
+             8,  5,  6,  7,  8,  9, 10, 11,  2,  3,  4,  5,  6,  7,  0,  
+             1,  2,  
+             3,  4,  5,  6,  7,  8,  9,  9, 11, 12, 13, 14, 15, 16, 17,  
+             4,  5,  6,  7,  8]
 
 periods = [None, 1, 1,
            2, 2, 2, 2, 2, 2, 2, 2,
@@ -315,6 +328,29 @@ def valence(value=None):
     [1, 0]
     """
     return _get_property(valences, value)
+
+def valence_nominal(value=None):
+    """
+    Return the 'valences' as taken from
+    http://www.ptable.com/#Property/Valence
+
+    Args:
+        value: (int,float,str,list) The value/s
+               for which the valence will be evaluated
+               Float values will be cast into integer
+
+    Return:
+        The valence of the element/s
+
+    Examples:
+    >>> valence(1)
+    1
+    >>> valence([1, 2])
+    [1, 0]
+    >>> valence(['H', 'He'])
+    [1, 0]
+    """
+    return _get_property(valences_nominal, value)
 
 
 def period(value=None):

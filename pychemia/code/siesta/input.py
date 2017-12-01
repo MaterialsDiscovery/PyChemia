@@ -1,3 +1,7 @@
 from ..codes import CodeInput
 
-class ELKInput(CodeInput):
+class SiestaInput(CodeInput):
+
+    def __init__(self):
+        CodeInput.__init__(self)
+

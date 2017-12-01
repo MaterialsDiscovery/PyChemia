@@ -1,4 +1,4 @@
-import os as _os
+import os
 import numpy as np
 import collections
 from pychemia.utils.periodic import atomic_symbol, covalent_radius, atomic_number
@@ -8,6 +8,7 @@ from .abifiles import AbiFiles
 from .parser import parser
 from .output import netcdf2dict
 from pychemia.core import Structure
+from ..codes import CodeInput
 
 """
 Definition of the class input to read
@@ -22,6 +23,194 @@ __maintainer__ = "Guillermo Avendano-Franco"
 __email__ = "guillermo.avendano@uclouvain.be"
 __status__ = "Development"
 __date__ = "May 13, 2016"
+
+
+class AbinitInput(CodeInput):
+
+    def __init__(self, input_filename=None):
+        CodeInput.__init__(self)
+        if input_filename is None:
+            self.input_file = 'abinit.in'
+        else:
+            self.input_file = input_filename
+        if os.path.isfile(self.input_file):
+            self.read_inputfile()
+
+    def read_inputfile(self):
+        if not os.path.isfile(self.input_file):
+            raise ValueError("ERROR: Could not read %s" % self.input_file)
+
+        ans = parser(self.input_file)
+        if ans is not None:
+            self.variables = ans
+
+    def check(self):
+        if self.get_number_variables > 0:
+            print("ABINIT input is readable and has %d variables" % self.get_number_variables)
+
+    def write_inputfile(self, filename=None):
+        """
+        Write an input object into a text
+        file that ABINIT can use as an input
+        file
+
+        Args:
+            filename:
+                The 'abinit.in' filename that will be written
+        """
+        if filename is None:
+            filename = self.input_file
+
+        wf = open(filename, 'w')
+        wf.write(self.__str__())
+        wf.close()
+
+    def __str__(self):
+        """
+        String representation of the object
+        """
+        ret = ''
+        thekeys = self.variables.keys()
+        varnames = [x for x in thekeys if not x[-1].isdigit()]
+
+        if 'ndtset' in varnames:
+            ret = ret + "#" + 60 * "-" + "\n#" + " MULTI DATASET\n#" + 60 * "-" + "\n\n"
+            ret += self.write_key('ndtset')
+            varnames.remove('ndtset')
+            if 'jdtset' in varnames:
+                ret += self.write_key('jdtset')
+                varnames.remove('jdtset')
+            if 'udtset' in varnames:
+                ret += self.write_key('udtset')
+                varnames.remove('udtset')
+            ret += '\n'
+
+        seqvarnames = [x for x in varnames if
+                       (x[-1] == ':' or x[-1] == "+" or x[-1] == "?" or x[-2] == ':' or x[-2] == "+" or x[
+                           -2] == "?")]
+        if len(seqvarnames) > 0:
+            ret = ret + "#" + 60 * "-" + "\n#" + " SEQUENCE\n#" + 60 * "-" + "\n\n"
+            seqvarnames.sort()
+            for i in seqvarnames:
+                ret += self.write_key(i)
+                varnames.remove(i)
+            ret += '\n'
+
+        if len(varnames) > 0:
+            varnames.sort()
+            ret = ret + "#" + 60 * "-" + "\n#" + " ALL DATASETS\n#" + 60 * "-" + "\n\n"
+            for i in varnames:
+                if i == 'dmatpawu' and 'lpawu' in self.variables:
+                    if 2 in self.variables['lpawu']:
+                        ret += self.write_key(i, ncolumns=5)
+                    elif 3 in self.variables['lpawu']:
+                        ret += self.write_key(i, ncolumns=7)
+                else:
+                    ret += self.write_key(i)
+            ret += '\n'
+
+        for dtset in range(1, 100):
+            varnames = [x for x in thekeys if
+                        (x[-len(str(dtset)):] == str(dtset) and not x[-len(str(dtset)) - 1:].isdigit())]
+            if len(varnames) > 0:
+                varnames.sort()
+                ret = ret + "#" + 60 * "-" + "\n#" + " DATASET " + str(dtset) + "\n#" + 60 * "-" + "\n\n"
+                for i in varnames:
+                    if i == 'dmatpawu' and 'lpawu' in self.variables:
+                        if 2 in self.variables['lpawu']:
+                            ret += self.write_key(i, ncolumns=5)
+                        elif 3 in self.variables['lpawu']:
+                            ret += self.write_key(i, ncolumns=7)
+                    ret += self.write_key(i)
+                ret += '\n'
+        return ret
+
+    def write_key(self, varname, ncolumns=None):
+        """
+        Receives an input variable and write their contents
+        properly according with their kind and length
+
+        Args:
+            varname:
+                The name of the input variable
+        """
+
+        ret = ''
+        if varname not in self.variables:
+            print("[ERROR] input variable: '%s' is not defined" % varname)
+            return
+
+        # Assume that the variables are integer and test if such assumption
+        # is true
+        integer = True
+        real = False
+        string = False
+        compact = True
+
+        if isinstance(self.variables[varname], (int, float)):
+            varlist = [self.variables[varname]]
+        else:
+            varlist = self.variables[varname]
+
+        # Get the general kind of values for the input variable
+        for j in varlist:
+            try:
+                if not float(j).is_integer():
+                    # This is the case of non integer values
+                    integer = False
+                    real = True
+                    string = False
+                    if len(str(float(j))) > 7:
+                        compact = False
+
+            except ValueError:
+                # This is the case of '*1' that could not
+                # be converted because we don't know the size
+                # of the array
+                integer = False
+                real = False
+                string = True
+
+        ret = ret + (varname.rjust(15)) + "  "
+
+        known_variables = {'xred': [3], 'acell': [3]}
+
+        if varname in known_variables:
+            for i in known_variables[varname]:
+                if len(varlist) % i == 0:
+                    for j in range(int(len(varlist) / i)):
+                        if j == 0:
+                            ret += (i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
+                        else:
+                            ret += (17 * ' ' + i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
+        elif ncolumns is not None:
+            i=ncolumns
+            for j in range(int(len(varlist) / i)):
+                if j == 0:
+                    ret += (i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
+                else:
+                    ret += (17 * ' ' + i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
+        else:
+            for j in range(len(varlist)):
+
+                if real:
+                    if compact:
+                        ret += ("%g" % varlist[j]).rjust(8)
+                    else:
+                        ret += "%17.10e" % varlist[j]
+                elif integer:
+                    ret += "%d" % varlist[j]
+                elif string:
+                    ret += "%s" % varlist[j]
+
+                # Conditions to jump to a new line
+                if ((j + 1) % 3) == 0 and real and j < len(varlist) - 1:
+                    ret += "\n"
+                    ret += 17 * " "
+                elif j < len(varlist) - 1:
+                    ret += " "
+            ret += "\n"
+        return ret
 
 
 class InputVariables(collections.MutableMapping):
@@ -56,13 +245,13 @@ class InputVariables(collections.MutableMapping):
             x = args[0]
             if isinstance(x, AbiFiles):
                 filename = x.basedir + "/" + x.files["in"]
-            elif _os.path.isfile(x):
+            elif os.path.isfile(x):
                 filename = x
 
         if 'filename' in kwargs:
             filename = kwargs['filename']
 
-        if _os.path.isfile(filename):
+        if os.path.isfile(filename):
             if filename[-3:] == '.in':
                 self.__import_input(filename)
             elif filename[-6:] == '.files':

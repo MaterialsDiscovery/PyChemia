@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 import os
 import subprocess
 
@@ -63,3 +63,103 @@ class Codes:
         os.chdir(cwd)
         self.runner = sp
         return sp
+
+
+class CodeInput:
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self):
+        self.input_file = None
+        self.variables = {}
+
+    @abstractmethod
+    def read_inputfile(self):
+        pass
+
+    @abstractmethod
+    def write_inputfile(self):
+        pass
+
+    @abstractmethod
+    def __str__(self):
+        pass
+
+    def has_variable(self, varname, section=None):
+        if self.is_hierarchical:
+            if section is None:
+                raise ValueError('ERROR: Input variables are hierachical and not section was declared')
+            else:
+                if section in self.variables and varname in self.variables[section]:
+                    return True
+                else:
+                    return False
+        else:
+            if varname in self.variables:
+                return True
+            else:
+                return False
+
+    def get_variable(self, varname, section=None):
+
+        if self.is_hierarchical:
+            if section is None:
+                raise ValueError('ERROR: Input variables are hierachical and not section was declared')
+            else:
+                if self.has_variable(varname, section=section):
+                    return self.variables[section][varname]
+                else:
+                    return None
+        else:
+            if self.has_variable(varname):
+                return self.variables[varname]
+            else:
+                return None
+
+    def set_variable(self, varname, value, section=None):
+        if self.is_hierarchical:
+            if section is None:
+                raise ValueError('ERROR: Input variables are hierachical and not section was declared')
+            else:
+                if self.has_variable(varname, section=section):
+                    return self.variables[section][varname]
+                else:
+                    return None
+        else:
+            if self.has_variable(varname):
+                return self.variables[varname]
+            else:
+                return None
+
+    @property
+    def get_number_variables(self):
+        if not self.is_hierarchical:
+            return len(self.variables)
+        else:
+            ret={}
+            for i in self.variables:
+                ret[i] = len(self.variables[i])
+            return ret
+
+    @property
+    def is_hierarchical(self):
+        return False
+
+
+
+class CodeOutput:
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self):
+        self.output_file = None
+        self.output_values = {}
+        self.number_outputs = 0
+
+    @abstractmethod
+    def read_outputfile(self):
+        pass
+
+    @abstractproperty
+    def is_loaded(self):
+        pass

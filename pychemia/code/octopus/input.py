@@ -6,6 +6,12 @@ import os as _os
 import gzip as _gzip
 import numpy as _np
 import pychemia
+from ..codes import CodeInput
+
+
+class OctopusInput(CodeInput):
+    def __init__(self):
+        CodeInput.__init__(self)
 
 
 def execute(basedir, num_threads=1, num_procs=2):

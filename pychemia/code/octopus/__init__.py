@@ -6,7 +6,8 @@ OCTOPUS 'inp' input files
 """
 from pychemia import HAS_SCIPY
 import numpy as np
-from .input import *
+from .input import OctopusInput
+from .output import OctopusOutput
 
 if HAS_SCIPY:
     from .analysis import *

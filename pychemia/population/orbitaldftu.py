@@ -11,7 +11,7 @@ from pychemia import pcm_log
 from pychemia.code.abinit import InputVariables, AbinitOutput
 from pychemia.utils.mathematics import gram_smith_qr, gea_all_angles, gea_orthogonal_from_angles, unit_vector
 from pychemia.utils.serializer import generic_serializer as gs
-from pychemia.runner.pbs import get_jobs, PBSRunner
+from pychemia.runner import get_jobs, PBSRunner
 
 
 class OrbitalDFTU(Population):
@@ -131,7 +131,10 @@ class OrbitalDFTU(Population):
         if num_electrons_dftu is None:
             abiinput = InputVariables(input_path)
             dmatpawu = np.array(abiinput['dmatpawu']).reshape(-1, self.ndim, self.ndim)
-            params = dmatpawu2params(dmatpawu, 5)
+            lpawu = abiinput['lpawu']
+            maxl=max(lpawu)
+            dim=2*maxl+1
+            params = dmatpawu2params(dmatpawu, dim)
             self.num_electrons_dftu = np.apply_along_axis(sum, 1, params['occupations'])
         else:
             self.num_electrons_dftu = np.array(num_electrons_dftu)
