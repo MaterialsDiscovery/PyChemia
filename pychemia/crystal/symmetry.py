@@ -86,7 +86,10 @@ class CrystalSymmetry(object):
         return spg.get_symmetry(cell=self.spglib_cell, symprec=symprec)
 
     def get_symmetry_dataset(self, symprec=1e-5):
-        return spg.get_symmetry_dataset(cell=self.spglib_cell, symprec=symprec)
+        ret = spg.get_symmetry_dataset(cell=self.spglib_cell, symprec=symprec)
+        if ret is None:
+            raise ValueError(self.spglib_cell)
+        return ret
 
     def number(self, symprec=1e-5):
         return int(self.get_symmetry_dataset(symprec)['number'])
