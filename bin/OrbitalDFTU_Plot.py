@@ -33,7 +33,7 @@ def compare_params(path):
     np.set_printoptions(linewidth=200, suppress=True)
 
     # Reading the INPUT
-    abi = pychemia.code.abinit.InputVariables(path+os.sep+'abinit.in')
+    abi = pychemia.code.abinit.AbinitInput(path+os.sep+'abinit.in')
     idmatpawu = np.array(abi['dmatpawu']).reshape(-1, 5, 5)
     iparams = pychemia.population.orbitaldftu.dmatpawu2params(idmatpawu, 5)
 

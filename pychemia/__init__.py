@@ -64,12 +64,6 @@ except ImportError:
     HAS_NETWORKX = False
 
 try:
-    import Scientific
-    HAS_SCIENTIFIC = True
-except ImportError:
-    HAS_SCIENTIFIC = False
-
-try:
     import pymongo
 
     if pymongo.version_tuple[0] < 3:
@@ -141,7 +135,7 @@ def info():
     except ImportError:
         print('pymongo Not Found')
 
-    for modui in ['numpy', 'scipy', 'mayavi', 'Scientific', 'matplotlib',
+    for modui in ['numpy', 'scipy', 'mayavi', 'matplotlib',
                   'future', 'nose', 'coverage', 'spglib', 'pyhull', 'pymatgen', 'qmpy', ]:
         try:
             mm = __import__(modui)

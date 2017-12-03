@@ -4,7 +4,8 @@ import shutil
 import numpy as np
 from ..kpoints import write_kpoints
 from ..poscar import write_poscar
-from ..incar import write_incar, InputVariables
+from ..incar import write_incar
+from ..input import VaspInput
 
 __author__ = 'Guillermo Avendano-Franco'
 
@@ -85,7 +86,7 @@ class Polarization(Task):
                     tk.vaspinput['IBRION'] = -1
                     tk.vaspinput['NSW'] = 0
                     if step == 'SCF':
-                        iv = InputVariables(variables=tk.vaspinput)
+                        iv = VaspInput(variables=tk.vaspinput)
                         write_incar(iv, pathname + os.sep + step + os.sep + 'INCAR')
                         write_poscar(structure=self.structure, filepath=pathname + os.sep + step + os.sep + 'POSCAR')
                         options = {'nproc': 4, 'code_bin': '/home/guilleaf/local/src/vasp.5.3/vasp', 'mpi': True}
@@ -101,7 +102,7 @@ class Polarization(Task):
                         shutil.copy('KPOINTS-path', pathname + os.sep + step + os.sep + 'KPOINTS')
                         shutil.copy2(pathname + os.sep + 'SCF/CHGCAR', pathname + os.sep + step)
                         tk.vaspinput['ICHARG'] = 11
-                        iv = InputVariables(variables=tk.vaspinput)
+                        iv = VaspInput(variables=tk.vaspinput)
                         write_incar(iv, pathname + os.sep + step + os.sep + 'INCAR')
                         write_poscar(structure=self.structure, filepath=pathname + os.sep + step + os.sep + 'POSCAR')
                         options = {'nproc': 4, 'code_bin': 'vasp', 'mpi': True}
@@ -125,7 +126,7 @@ class Polarization(Task):
                         if 'ISIF' in tk.vaspinput:
                             tk.vaspinput.pop('ISIF')
 
-                        iv = InputVariables(variables=tk.vaspinput)
+                        iv = VaspInput(variables=tk.vaspinput)
                         write_incar(iv, pathname + os.sep + step + os.sep + 'INCAR')
                         write_poscar(structure=self.structure, filepath=pathname + os.sep + step + os.sep + 'POSCAR')
                         options = {'nproc': 4, 'code_bin': '/home/guilleaf/local/src/vasp.5.3/vasp', 'mpi': True}

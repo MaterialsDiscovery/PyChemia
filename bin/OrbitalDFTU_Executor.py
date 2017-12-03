@@ -11,13 +11,13 @@ USEDMATPU = 25
 NSTEP = 50
 TOLVRS = 1E-14
 TARGET_NRES2 = 1E-12
-NPARAL = 6
+NPARAL = 8
 
 
 if __name__ == "__main__":
 
     # Editing abinit.in to ensure the OPTIONS
-    abiinput = pychemia.code.abinit.InputVariables('abinit.in')
+    abiinput = pychemia.code.abinit.AbinitInput('abinit.in')
     abiinput['usedmatpu'] = USEDMATPU
     abiinput['nstep'] = NSTEP
     abiinput['tolvrs'] = TOLVRS
@@ -25,7 +25,11 @@ if __name__ == "__main__":
 
     for i in range(10):
 
-        abiinput = pychemia.code.abinit.InputVariables('abinit.in')
+        abiinput = pychemia.code.abinit.AbinitInput('abinit.in')
+        #if 'lpawu' not in abiinput.variables:
+        #    raise ValueError("Variable lpawu not found")
+        #ndim = 2*max(abiinput['lpawu'])+1
+        #print(ndim)
 
         # If possible set the WFK from the output back to input 
         if os.path.isfile('abinit-i_WFK'):
@@ -41,9 +45,12 @@ if __name__ == "__main__":
         # If everything works fine with ABINIT we have abinit.out
         if os.path.isfile('abinit.out'):
 
-            # The final density matrix is build from the output
+            # The final density matrix is build from the outputi
+            if 'lpawu' not in abiinput.variables:
+                raise ValueError("Variable lpawu not found")
+            ndim = 2*max(abiinput['lpawu'])+1
             dmatpawu = pychemia.population.orbitaldftu.get_final_dmatpawu('abinit.out')
-            odmatpawu = np.array(dmatpawu).reshape(-1, 5, 5)
+            odmatpawu = np.array(dmatpawu).reshape(-1, ndim, ndim)
             
             # Updating dmatpawu from the output back to input
             abiinput['dmatpawu'] = list(odmatpawu.flatten())
@@ -55,7 +62,7 @@ if __name__ == "__main__":
         if os.path.isfile('abinit.log'):
             os.rename('abinit.log', 'abinit_%d.log' % i)
         if os.path.isfile('abinit-o_WFK'):
-            os.rename('abinit-o_WFK', 'abinit-i_WFK')
+            os.rename('abinit-o_WFK','abinit-i_WFK')
 
         # Checking if you should accept the current residual
         # Renaming abinit.out
@@ -67,6 +74,6 @@ if __name__ == "__main__":
 
         if nres2 < TARGET_NRES2:
             break
-    wf = open('COMPLETE', 'w')
+    wf = open('COMPLETE','w')
     wf.write("%d\n" % i)
     wf.close()

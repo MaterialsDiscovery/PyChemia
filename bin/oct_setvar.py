@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     # Set the variables
     if os.path.isfile(filename):
-        data = pychemia.code.octopus.InputVariables(filename)
+        data = pychemia.code.octopus.AbinitInput(filename)
         for i in toset.keys():
             data.variables[i] = toset[i]
         for i in todel:

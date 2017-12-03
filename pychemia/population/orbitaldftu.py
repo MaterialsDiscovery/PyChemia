@@ -8,7 +8,7 @@ import random
 import numpy as np
 from ._population import Population
 from pychemia import pcm_log
-from pychemia.code.abinit import InputVariables, AbinitOutput
+from pychemia.code.abinit import AbinitInput, AbinitOutput
 from pychemia.utils.mathematics import gram_smith_qr, gea_all_angles, gea_orthogonal_from_angles, unit_vector
 from pychemia.utils.serializer import generic_serializer as gs
 from pychemia.runner import get_jobs, PBSRunner
@@ -50,7 +50,7 @@ class OrbitalDFTU(Population):
             raise ValueError("Abinit input not found")
         # Reading the input variables and getting the structure
         self.input_path = input_path
-        self.input = InputVariables(input_path)
+        self.input = AbinitInput(input_path)
         if 'dmatpawu' not in self.input.variables:
             raise ValueError("Abinit input file does not contain 'dmatpawu' variable")
         self.structure = self.input.get_structure()
@@ -129,7 +129,7 @@ class OrbitalDFTU(Population):
         print('Total number of matrices expected on dmatpawu: %d' % self.nmatrices)
 
         if num_electrons_dftu is None:
-            abiinput = InputVariables(input_path)
+            abiinput = AbinitInput(input_path)
             dmatpawu = np.array(abiinput['dmatpawu']).reshape(-1, self.ndim, self.ndim)
             lpawu = abiinput['lpawu']
             maxl=max(lpawu)
@@ -619,13 +619,13 @@ class OrbitalDFTU(Population):
                   'to that location' % ('abinit.files', source_dir))
         os.symlink(os.path.abspath(source_dir + os.sep + 'abinit.files'), iworkdir + os.sep + 'abinit.files')
 
-        abiinput = InputVariables(self.input_path)
+        abiinput = AbinitInput(self.input_path)
         params = self.get_correlation_params(entry_id, final=False)
         dmatpawu = params2dmatpawu(params)
         abiinput['dmatpawu'] = list(dmatpawu.flatten())
         abiinput.write(iworkdir + os.sep + 'abinit.in')
 
-        d_abiinput = InputVariables(iworkdir + os.sep + 'abinit.in')
+        d_abiinput = AbinitInput(iworkdir + os.sep + 'abinit.in')
         d_dmatpawu = d_abiinput['dmatpawu']
         assert(d_dmatpawu is not None)
         d_params = dmatpawu2params(d_dmatpawu, self.ndim)
@@ -682,12 +682,12 @@ class OrbitalDFTU(Population):
         if os.path.lexists('batch.pbs'):
             os.remove('batch.pbs')
 
-        pbs = PBSRunner(path)
-        pbs.initialize(nodes=1, ppn=ppn, walltime=walltime, message='ae', queue=queue, features=features)
-        pbs.set_template('../template')
-        pbs.write_pbs()
-        output = subprocess.check_output('qsub batch.pbs', shell=True).strip()
-        print("Entry: %s Job: %s" % (entry_id, output))
+        pbs = PBSRunner(workdir=path, template='../template')
+        pbs.set_pbs_params(nodes=1, ppn=ppn, walltime=walltime, message='ae', queue=queue, features=features)
+        pbs.write()
+        jobid=pbs.submit()
+
+        print("Entry: %s Job: %s" % (entry_id, jobid))
         os.chdir(cwd)
 
     def update_dmat_inplace(self, entry_id, dmat):

@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 import os
 import subprocess
-
+import collections
 
 class Codes:
     __metaclass__ = ABCMeta
@@ -65,7 +65,7 @@ class Codes:
         return sp
 
 
-class CodeInput:
+class CodeInput(collections.MutableMapping):
 
     __metaclass__ = ABCMeta
 
@@ -74,11 +74,11 @@ class CodeInput:
         self.variables = {}
 
     @abstractmethod
-    def read_inputfile(self):
+    def read(self):
         pass
 
     @abstractmethod
-    def write_inputfile(self):
+    def write(self):
         pass
 
     @abstractmethod

@@ -115,7 +115,7 @@ def helper():
 
 
 def get_input_dts(filep, dataset):
-    abivar = pychemia.code.abinit.InputVariables(filep)
+    abivar = pychemia.code.abinit.AbinitInput(filep)
     datasets = None
     if dataset == 0:
         datasets = abivar.get_dtsets_keys()

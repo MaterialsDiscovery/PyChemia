@@ -2,7 +2,8 @@ import os
 import json
 from .poscar import write_poscar, write_potcar, read_poscar
 from .kpoints import write_kpoints, read_kpoints
-from .incar import write_incar, InputVariables, read_incar
+from .incar import write_incar, read_incar
+from .input import VaspInput
 from .outcar import VaspOutput
 from pychemia import Structure, pcm_log
 from pychemia.crystal import KPoints
@@ -73,14 +74,14 @@ class VaspJob(Codes):
     def write_incar(self):
 
         self._check_workdir()
-        assert (isinstance(self.input_variables, InputVariables))
+        assert (isinstance(self.input_variables, VaspInput))
 
         write_incar(self.input_variables, filepath=self.workdir + os.sep + 'INCAR')
 
     def set_input_variables(self, input_variables):
 
         self._check_workdir()
-        assert (isinstance(input_variables, InputVariables))
+        assert (isinstance(input_variables, VaspInput))
         self.input_variables = input_variables
 
     def set_inputs(self):
@@ -112,7 +113,7 @@ class VaspJob(Codes):
         self.potcar_pspfiles = vj_dict['potcar_pspfiles']
         self.potcar_setup = vj_dict['potcar_setup']
         self.workdir = vj_dict['workdir']
-        self.input_variables = InputVariables(variables=vj_dict['variables'])
+        self.input_variables = VaspInput(variables=vj_dict['variables'])
         self.kpoints = vj_dict['kpoints']
         self.poscar_setup = vj_dict['poscar_setup']
         self.potcar_pspdir = vj_dict['potcar_pspdir']
@@ -151,7 +152,7 @@ class VaspJob(Codes):
         pass
 
     def job_static(self):
-        inp = InputVariables()
+        inp = VaspInput()
         inp.set_minimum()
         self._check_workdir()
         self.write_potcar()

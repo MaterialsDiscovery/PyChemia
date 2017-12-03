@@ -16,7 +16,7 @@ import tempfile
 import subprocess
 import pychemia
 
-if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
+if pychemia.HAS_SCIPY:
     import pychemia.code.abinit
 
 
@@ -24,7 +24,7 @@ def test_example2():
     """
     Example of a multiple calc                                   :
     """
-    if not (pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC):
+    if not pychemia.HAS_SCIPY:
         return
 
     path = 'pychemia/test/data'
@@ -39,7 +39,7 @@ def test_example2():
     workdir = tempfile.mkdtemp()
     print("Work directory: %s" % workdir)
     assert (os.path.isfile(path + '/abinit_04/t44.in'))
-    av = pychemia.code.abinit.InputVariables(path + '/abinit_04/t44.in')
+    av = pychemia.code.abinit.AbinitInput(path + '/abinit_04/t44.in')
     print('Original input:\n%s' % av)
     abifiles = pychemia.code.abinit.AbiFiles(workdir)
     abifiles.set_input(av)

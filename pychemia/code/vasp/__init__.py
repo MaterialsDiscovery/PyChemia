@@ -9,11 +9,11 @@ https://www.vasp.at/
 
 from .kpoints import read_kpoints, write_kpoints
 from .poscar import read_poscar, write_poscar, write_potcar, get_potcar_info
-from .incar import read_incar, write_incar, InputVariables
+from .incar import read_incar, write_incar
 from .outcar import VaspOutput, read_vasp_stdout
 from .vasp import VaspJob, VaspAnalyser
 from .doscar import VaspDoscar
 from .queue import write_from_queue
 from . import task
-from .input import VASPInput
-from .output import VASPOutput
+from .input import VaspInput
+from .output import VaspOutput

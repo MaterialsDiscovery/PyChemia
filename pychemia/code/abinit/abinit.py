@@ -1,6 +1,6 @@
 import os
 from .abifiles import AbiFiles
-from .input import InputVariables
+from .input import AbinitInput
 from pychemia.code import Codes
 
 
@@ -13,7 +13,7 @@ class AbinitJob(Codes):
         self.workdir = None
         self.kind = None
         self.exchange = None
-        self.inp = InputVariables()
+        self.inp = AbinitInput()
         self.stdout_filename = 'abinit.log'
         self.stdin_filename = 'abinit.files'
         self.stderr_filename = 'abinit.err'
@@ -50,7 +50,7 @@ class AbinitJob(Codes):
             self.inp.from_structure(self.structure)
         self.binary = binary
         if os.path.isfile(input_file):
-            self.inp = InputVariables(input_file)
+            self.inp = AbinitInput(input_file)
         self.abifile.set_input(self.inp)
         self.kind = psp_kind
         self.exchange = psp_exchange

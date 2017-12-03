@@ -9,7 +9,7 @@ if 'matplotlib' not in sys.modules:
     matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-from pychemia.code.abinit import InputVariables, AbiFiles
+from pychemia.code.abinit import AbinitInput, AbiFiles
 from pychemia.utils.periodic import covalent_radius
 from pychemia.utils.constants import bohr_angstrom
 
@@ -25,6 +25,9 @@ def compute_bonds(typat, xcart, znucl):
     :param znucl: (int, list) Atomic number for atoms in typat
     :return:
     """
+    print(typat)
+    print(xcart)
+    print(znucl)
 
     npxcart = np.array(xcart).reshape((-1, 3))
     if isinstance(typat, int):
@@ -44,6 +47,8 @@ def compute_bonds(typat, xcart, znucl):
             bl = math.sqrt(sum((npxcart[jatom] - npxcart[iatom]) ** 2))
             if 1.35 * (covrad[iatom] + covrad[jatom]) > bl:
                 bonds.append([iatom, jatom, bl, (npxcart[jatom] - npxcart[iatom]) / bl])
+            else:
+                print("small distance: %s" % bl)
 
     return bonds
 
@@ -71,7 +76,9 @@ def get_all_bonds(abinitfile, dtset=''):
             index += 1
         filep = abf.basedir + "/" + abf.files['tmpout'] + "_OUT.nc"
 
-        out = InputVariables(filep)
+        out = AbinitInput(filep)
+        
+        print(out.variables)
 
         xcart = out.get_value('xcart', idtset=idt)
         znucl = out.get_value('znucl', idtset=idt)
@@ -80,12 +87,14 @@ def get_all_bonds(abinitfile, dtset=''):
         bonds = compute_bonds(typat, xcart, znucl)
         allbonds.append(bonds)
 
-    abivar = InputVariables(abinitfile[0].get_input_filename())
+    abivar = AbinitInput(abinitfile[0].get_input_filename())
     save_bonds(allbonds, abivar)
     return allbonds
 
 
 def plot_bonds(listabifile, listidtset):
+#    print(listabifile)
+#    print(listidtset)
     pp = PdfPages("bonds.pdf")
     plt.ioff()
 
@@ -93,11 +102,13 @@ def plot_bonds(listabifile, listidtset):
         allbonds = get_all_bonds(listabifile)
     else:
         allbonds = get_all_bonds(listabifile, listidtset)
+    print(allbonds)
+
     plt.figure(figsize=(32, 20), dpi=100)
     plt.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.95,
                         wspace=None, hspace=None)
 
-    abivar = InputVariables(listabifile[0].get_input_filename())
+    abivar = AbinitInput(listabifile[0].get_input_filename())
 
     nbond = len(allbonds[0])
     n = 0
@@ -114,6 +125,8 @@ def plot_bonds(listabifile, listidtset):
     for ibond in range(nbond):
         plt.subplot(5, 4, iplot)
         y = [bohr_angstrom * seti[ibond][2] for seti in allbonds]
+        print(abivar.atom_name(seti[ibond][0]))
+        print(abivar.atom_name(seti[ibond][1]))
         label = abivar.atom_name(seti[ibond][0]) + ' ' + abivar.atom_name(seti[ibond][1])
         plt.plot(y, label=label)
         plt.plot(y, 'ro')
@@ -156,8 +169,9 @@ if __name__ == '__main__':
 
         abifile = AbiFiles(filename)
         if dtsetall:
-            av = InputVariables(abifile.get_input_filename())
+            av = AbinitInput(abifile.get_input_filename())
             keys = av.get_dtsets_keys()
+#            print(keys)
             for j in keys:
                 list_abifile.append(abifile)
                 list_idtset.append(str(j))

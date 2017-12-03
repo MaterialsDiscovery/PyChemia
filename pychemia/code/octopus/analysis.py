@@ -42,7 +42,7 @@ def hirshfeld(dirname, iteration=None, spin=None):
     if iteration is None:
         iteration = get_last_iteration(dirname)
 
-    inp = pychemia.code.octopus.InputVariables(dirname + '/inp')
+    inp = pychemia.code.octopus.OctopusInput(dirname + '/inp')
     if inp.variables['SpinComponents'] == 'spin_polarized':
         if spin is None:
             it, hirshfeld1 = hirshfeld(dirname, iteration, spin=1)
@@ -168,7 +168,7 @@ def value_in_sphere(dirname, keys, iteration=None, radius=4.5, spin=None):
     natom, iterations, times, positions, velocities, forces = pychemia.code.octopus.coordinates(dirname)
 
     # Is spin polarized?
-    inp = pychemia.code.octopus.InputVariables(dirname + '/inp')
+    inp = pychemia.code.octopus.OctopusInput(dirname + '/inp')
     if inp.variables['SpinComponents'] == 'spin_polarized':
         if spin is None:
             it, cis1 = value_in_sphere(dirname, keys, iteration, radius, spin=1)

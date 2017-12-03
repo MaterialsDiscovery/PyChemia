@@ -1,7 +1,7 @@
 import os as os
 import subprocess as _subprocess
 from .utils import netcdf2dict, psp_name
-#from .input import AbinitInput
+from .input import AbinitInput
 
 class AbiFiles:
     """

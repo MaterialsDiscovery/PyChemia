@@ -18,6 +18,6 @@ if __name__ == '__main__':
     filename = sys.argv[1]
     assert (os.path.isfile(filename))
     iv = pychemia.code.abinit.xyz2input(filename)
-    av = pychemia.code.abinit.InputVariables()
+    av = pychemia.code.abinit.AbinitInput()
     av.variables = iv.variables
     av.write(filename + ".in")

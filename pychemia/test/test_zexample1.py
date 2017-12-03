@@ -15,8 +15,9 @@ import shutil
 import tempfile
 import subprocess
 import pychemia
+from pychemia.utils.netcdf import netcdf2dict
 
-if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
+if pychemia.HAS_SCIPY:
     import pychemia.code.abinit as pa
 
 path = 'pychemia/test/data'
@@ -26,7 +27,7 @@ def test_example1():
     """
     Example of a simple calc                                     :
     """
-    if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
+    if pychemia.HAS_SCIPY:
         workdir = tempfile.mkdtemp()
         print(workdir)
         creation(workdir)
@@ -66,7 +67,7 @@ def creation(filep):
     Create the input file from the original and
     set the proper values for abinit.files
     """
-    var = pa.InputVariables(path + os.sep + 'abinit_04' + os.sep + 't44.in')
+    var = pa.AbinitInput(path + os.sep + 'abinit_04' + os.sep + 't44.in')
     abifile = pa.AbiFiles(filep)
     abifile.set_input(var)
     abifile.set_psps('LDA', 'FHI')
@@ -100,9 +101,9 @@ def datamining(filep):
     """
     print('Extracting ecut and etotal')
     if os.path.isfile(filep + os.sep + 'abinit-o_OUT.nc'):
-        data = pa.netcdf2dict(filep + os.sep + 'abinit-o_OUT.nc')
+        data = netcdf2dict(filep + os.sep + 'abinit-o_OUT.nc')
     else:
-        data = pa.netcdf2dict(path + os.sep + 'abinit_04' + os.sep + 'abinit-o_OUT.nc')
+        data = netcdf2dict(path + os.sep + 'abinit_04' + os.sep + 'abinit-o_OUT.nc')
     print(data)
     print(data['ecut'], data['etotal'])
     return data['ecut'], data['etotal']

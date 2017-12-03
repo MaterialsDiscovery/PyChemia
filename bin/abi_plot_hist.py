@@ -10,7 +10,7 @@ if 'matplotlib' not in sys.modules:
     matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-from pychemia.code.abinit import InputVariables, AbiFiles
+from pychemia.code.abinit import AbinitInput, AbiFiles
 from pychemia.utils.periodic import covalent_radius
 from pychemia.utils.constants import bohr_angstrom, angstrom_bohr
 
@@ -213,7 +213,7 @@ def get_history(abinitfile, dataset=""):
     else:
         filep = abinitfile.basedir + "/" + abinitfile.files['tmpout'] + "_DS" + str(dataset) + "_HIST"
         # print filename
-    # inp = InputVariables(abinitfile.get_input_filename())
+    # inp = AbinitInput(abinitfile.get_input_filename())
 
     ret = _netcdf_file(filep, 'r', mmap=False)
 
@@ -222,7 +222,7 @@ def get_history(abinitfile, dataset=""):
 
 def plot_history(abinitfile, dataset=""):
     history = get_history(abinitfile, dataset)
-    av = InputVariables(abinitfile.get_input_filename())
+    av = AbinitInput(abinitfile.get_input_filename())
 
     if dataset == "":
         filep = abinitfile.basedir + "/" + abinitfile.files['tmpout'] + ".pdf"

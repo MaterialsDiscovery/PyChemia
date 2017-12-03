@@ -5,7 +5,7 @@ def test_abinit_parser():
     """
     Tests (pychemia.code.abinit) [parser]                        :
     """
-    if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
+    if pychemia.HAS_SCIPY:
         from pychemia.code.abinit import parser
         from numpy import array, all, ones
         from math import sqrt
@@ -49,61 +49,58 @@ def test_abinit_utils():
     """
     Tests (pychemia.code.abinit) [utils]                         :
     """
-    if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
-        from pychemia.code.abinit import xyz2input, netcdf2dict, psp_name
+    from pychemia.utils.netcdf import netcdf2dict
+    from pychemia.code.abinit import xyz2input, psp_name
 
-        filename = "pychemia/test/data/abinit_05/abinit-o_OUT.nc"
-        print(len(netcdf2dict(filename)))
-        assert len(netcdf2dict(filename)) == 310
-        assert psp_name(1, 'LDA', 'FHI') == '01-H.LDA.fhi'
-        filename = "pychemia/test/data/abinit_05/abinit_DS11.xyz"
-        assert xyz2input(filename).variables['natom'] == 2
+    filename = "pychemia/test/data/abinit_05/abinit-o_OUT.nc"
+    print(len(netcdf2dict(filename)))
+    assert len(netcdf2dict(filename)) == 45
+    assert psp_name(1, 'LDA', 'FHI') == '01-H.LDA.fhi'
+    filename = "pychemia/test/data/abinit_01/abinit_DS11.xyz"
+    assert xyz2input(filename).variables['natom'] == 2
 
 
 def test_abinit_abifiles():
     """
     Tests (pychemia.code.abinit) [abifiles]                      :
     """
-    if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
-        from pychemia.code.abinit import AbiFiles
 
-        filename = "pychemia/test/data/abinit_01/abinit.files"
-        abf = AbiFiles(filename)
-        assert abf.filename == "abinit.files"
-        assert abf.get_input_filename() == 'pychemia/test/data/abinit_01/abinit.in'
+    from pychemia.code.abinit import AbiFiles
+
+    filename = "pychemia/test/data/abinit_01/abinit.files"
+    abf = AbiFiles(filename)
+    assert abf.filename == "abinit.files"
+    assert abf.get_input_filename() == 'pychemia/test/data/abinit_01/abinit.in'
 
 
 def test_abinit_input():
     """
     Tests (pychemia.code.abinit) [input]                         :
     """
-    if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
-        from pychemia.code.abinit import AbiFiles, InputVariables
+    from pychemia.code.abinit import AbiFiles, AbinitInput
 
-        filename = "pychemia/test/data/abinit_01/abinit.files"
-        abf = AbiFiles(filename)
-        inp = InputVariables(abf)
-        print(inp)
-        print(len(inp))
-        assert len(inp) == 31
-        assert inp.get_value('ecut') == 10
-        assert len(inp.get_dtsets_keys()) == 12
-        assert inp.get_value('ntime', 41) == 10
-        assert inp.get_value('acell', 41)[0] == 14
+    filename = "pychemia/test/data/abinit_01/abinit.files"
+    abf = AbiFiles(filename)
+    inp = AbinitInput(abf.get_input_filename())
+    print(inp)
+    print(len(inp))
+    assert len(inp) == 31
+    assert inp.get_value('ecut') == 10
+    assert len(inp.get_dtsets_keys()) == 12
+    assert inp.get_value('ntime', 41) == 10
+    assert inp.get_value('acell', 41)[0] == 14
 
 
 def test_abinit():
     """
     Tests (pychemia.code.abinit) [general]                       :
     """
-    import pychemia
-    if pychemia.HAS_SCIPY and pychemia.HAS_SCIENTIFIC:
-        import pychemia.code.abinit
+    import pychemia.code.abinit
 
-        af = pychemia.code.abinit.AbiFiles(basedir='pychemia/test/data/abinit_03')
-        iv = pychemia.code.abinit.InputVariables('pychemia/test/data/abinit_03/rnpg.in')
-        af.set_input(iv)
-        af.set_psps('LDA', 'FHI')
-        af.create()
-        iv.write(af.get_input_filename())
-        assert len(open(af.get_input_filename()).readlines()) == 71
+    af = pychemia.code.abinit.AbiFiles(basedir='pychemia/test/data/abinit_03')
+    iv = pychemia.code.abinit.AbinitInput('pychemia/test/data/abinit_03/rnpg.in')
+    af.set_input(iv)
+    af.set_psps('LDA', 'FHI')
+    af.create()
+    iv.write(af.get_input_filename())
+    assert len(open(af.get_input_filename()).readlines()) == 71

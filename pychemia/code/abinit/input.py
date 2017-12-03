@@ -1,12 +1,10 @@
 import os
 import numpy as np
-import collections
 from pychemia.utils.periodic import atomic_symbol, covalent_radius, atomic_number
 from pychemia.utils.constants import bohr_angstrom, angstrom_bohr
 from pychemia.utils.mathematics import unit_vectors
-from .abifiles import AbiFiles
 from .parser import parser
-from .output import netcdf2dict
+from pychemia.utils.netcdf import netcdf2dict
 from pychemia.core import Structure
 from ..codes import CodeInput
 
@@ -34,9 +32,47 @@ class AbinitInput(CodeInput):
         else:
             self.input_file = input_filename
         if os.path.isfile(self.input_file):
-            self.read_inputfile()
+            if self.input_file[-6:] == 'OUT.nc':
+                self.variables = netcdf2dict(self.input_file)
+            else:
+                self.read()
 
-    def read_inputfile(self):
+    def __contains__(self, x):
+        pass
+
+    def __delitem__(self, key):
+        return self.variables.__delitem__(key)
+
+    def __setitem__(self, key, value):
+        return self.variables.__setitem__(key, value)
+
+    def __getitem__(self, key):
+        return self.variables.__getitem__(key)
+
+    def __iter__(self):
+        return self.variables.__iter__()
+
+    def __len__(self):
+        return self.variables.__len__()
+
+    def __import_input(self, filename):
+        """
+        Read an ABINIT input file and return a python dictionary
+        with the input variables readed from that. The keys are
+        the fullname input variables (acell,xcart21,etc). The
+        values are numbers or lists except for
+        the value '*[NUMBER]' that is keeped as string, and
+        the string associated to the variable xyzfile
+
+        Args:
+            filename:
+                ABINIT input filename
+        """
+        ans = parser(filename)
+        if ans is not None:
+            self.variables = ans
+
+    def read(self):
         if not os.path.isfile(self.input_file):
             raise ValueError("ERROR: Could not read %s" % self.input_file)
 
@@ -48,7 +84,7 @@ class AbinitInput(CodeInput):
         if self.get_number_variables > 0:
             print("ABINIT input is readable and has %d variables" % self.get_number_variables)
 
-    def write_inputfile(self, filename=None):
+    def write(self, filename=None):
         """
         Write an input object into a text
         file that ABINIT can use as an input
@@ -212,327 +248,6 @@ class AbinitInput(CodeInput):
             ret += "\n"
         return ret
 
-
-class InputVariables(collections.MutableMapping):
-    """
-    An input object contains:
-
-    data:
-          variables = Dictionary whose keys are ABINIT variable names
-
-    methods:
-            write = Write the input into as a text file that ABINIT
-                    can use as an input file
-
-            get_value = Get the value of a particular variable
-            set_value = Set the value of a particular variable
-
-            get_atomic_structure =
-    """
-
-    def __contains__(self, x):
-        pass
-
-    def __init__(self, *args, **kwargs):
-        """
-        Creates a new input object, the input object
-        contains a dictionary whose keys are the abinit
-        input variables and the values are always serializable
-        """
-        self.variables = {}
-        filename = ''
-        if len(args) == 1:
-            x = args[0]
-            if isinstance(x, AbiFiles):
-                filename = x.basedir + "/" + x.files["in"]
-            elif os.path.isfile(x):
-                filename = x
-
-        if 'filename' in kwargs:
-            filename = kwargs['filename']
-
-        if os.path.isfile(filename):
-            if filename[-3:] == '.in':
-                self.__import_input(filename)
-            elif filename[-6:] == '.files':
-                abifile = AbiFiles(filename)
-                filename = abifile.get_input_filename()
-                self.__import_input(filename)
-            elif filename[-6:] == 'OUT.nc':
-                self.variables = netcdf2dict(filename)
-            else:
-                try:
-                    self.__import_input(filename)
-                except ValueError:
-                    print('File format not identified')
-
-    def __delitem__(self, key):
-        return self.variables.__delitem__(key)
-
-    def __setitem__(self, key, value):
-        return self.variables.__setitem__(key, value)
-
-    def __getitem__(self, key):
-        return self.variables.__getitem__(key)
-
-    def __iter__(self):
-        return self.variables.__iter__()
-
-    def __len__(self):
-        return self.variables.__len__()
-
-    def __import_input(self, filename):
-        """
-        Read an ABINIT input file and return a python dictionary
-        with the input variables readed from that. The keys are
-        the fullname input variables (acell,xcart21,etc). The
-        values are numbers or lists except for
-        the value '*[NUMBER]' that is keeped as string, and
-        the string associated to the variable xyzfile
-
-        Args:
-            filename:
-                ABINIT input filename
-        """
-        ans = parser(filename)
-        if ans is not None:
-            self.variables = ans
-
-    def write(self, filename):
-        """
-        Write an input object into a text
-        file that ABINIT can use as an input
-        file
-
-        Args:
-            filename:
-                The 'abinit.in' filename that will be written
-        """
-        wf = open(filename, 'w')
-        wf.write(self.__str__())
-        wf.close()
-
-    def __str__(self):
-        """
-        String representation of the object
-        """
-        ret = ''
-        thekeys = self.variables.keys()
-        varnames = [x for x in thekeys if not x[-1].isdigit()]
-
-        if 'ndtset' in varnames:
-            ret = ret + "#" + 60 * "-" + "\n#" + " MULTI DATASET\n#" + 60 * "-" + "\n\n"
-            ret += self.write_key('ndtset')
-            varnames.remove('ndtset')
-            if 'jdtset' in varnames:
-                ret += self.write_key('jdtset')
-                varnames.remove('jdtset')
-            if 'udtset' in varnames:
-                ret += self.write_key('udtset')
-                varnames.remove('udtset')
-            ret += '\n'
-
-        seqvarnames = [x for x in varnames if
-                       (x[-1] == ':' or x[-1] == "+" or x[-1] == "?" or x[-2] == ':' or x[-2] == "+" or x[-2] == "?")]
-        if len(seqvarnames) > 0:
-            ret = ret + "#" + 60 * "-" + "\n#" + " SEQUENCE\n#" + 60 * "-" + "\n\n"
-            seqvarnames.sort()
-            for i in seqvarnames:
-                ret += self.write_key(i)
-                varnames.remove(i)
-            ret += '\n'
-
-        if len(varnames) > 0:
-            varnames.sort()
-            ret = ret + "#" + 60 * "-" + "\n#" + " ALL DATASETS\n#" + 60 * "-" + "\n\n"
-            for i in varnames:
-                ret += self.write_key(i)
-            ret += '\n'
-
-        for dtset in range(1, 100):
-            varnames = [x for x in thekeys if
-                        (x[-len(str(dtset)):] == str(dtset) and not x[-len(str(dtset)) - 1:].isdigit())]
-            if len(varnames) > 0:
-                varnames.sort()
-                ret = ret + "#" + 60 * "-" + "\n#" + " DATASET " + str(dtset) + "\n#" + 60 * "-" + "\n\n"
-                for i in varnames:
-                    if i == 'dmatpawu':
-                        if 2 in self['lpawu']:
-                            ret += self.write_key(i, ncolumns=5)
-                        elif 3 in self['lpawu']:
-                            ret += self.write_key(i, ncolumns=7)
-                    ret += self.write_key(i)
-                ret += '\n'
-        return ret
-
-    def write_key(self, varname, ncolumns=None):
-        """
-        Receives an input variable and write their contents
-        properly according with their kind and length
-
-        Args:
-            varname:
-                The name of the input variable
-        """
-
-        ret = ''
-        if varname not in self.variables:
-            print("[ERROR] input variable: '%s' is not defined" % varname)
-            return
-
-        # Assume that the variables are integer and test if such assumption
-        # is true
-        integer = True
-        real = False
-        string = False
-        compact = True
-
-        if isinstance(self.variables[varname], (int, float)):
-            varlist = [self.variables[varname]]
-        else:
-            varlist = self.variables[varname]
-
-        # Get the general kind of values for the input variable
-        for j in varlist:
-            try:
-                if not float(j).is_integer():
-                    # This is the case of non integer values
-                    integer = False
-                    real = True
-                    string = False
-                    if len(str(float(j))) > 7:
-                        compact = False
-
-            except ValueError:
-                # This is the case of '*1' that could not
-                # be converted because we don't know the size
-                # of the array
-                integer = False
-                real = False
-                string = True
-
-        ret = ret + (varname.rjust(15)) + "  "
-
-        known_variables = {'xred': [3], 'acell': [3]}
-
-        if varname in known_variables:
-            for i in known_variables[varname]:
-                if len(varlist) % i == 0:
-                    for j in range(int(len(varlist) / i)):
-                        if j == 0:
-                            ret += (i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
-                        else:
-                            ret += (17 * ' ' + i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
-        elif ncolumns is not None:
-            for i in ncolumns:
-                for j in range(int(len(varlist) / i)):
-                    if j == 0:
-                        ret += (i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
-                    else:
-                        ret += (17 * ' ' + i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
-        else:
-            for j in range(len(varlist)):
-
-                if real:
-                    if compact:
-                        ret += ("%g" % varlist[j]).rjust(8)
-                    else:
-                        ret += "%17.10e" % varlist[j]
-                elif integer:
-                    ret += "%d" % varlist[j]
-                elif string:
-                    ret += "%s" % varlist[j]
-
-                # Conditions to jump to a new line
-                if ((j + 1) % 3) == 0 and real and j < len(varlist) - 1:
-                    ret += "\n"
-                    ret += 17 * " "
-                elif j < len(varlist) - 1:
-                    ret += " "
-            ret += "\n"
-        return ret
-
-    def get_value(self, varname, idtset=None, return_iterable=False):
-        """
-        Get the value of the input variable 'varname'
-        associated with the dataset 'idtset'
-        If 'idtset' is not given will asume that the
-        value is not dataset dependent
-        """
-        name = ''
-        fact = 1
-        delta = 0
-
-        # Get the right key for the abinit variable
-        if idtset is None:
-            if varname in self.variables:
-                name = varname
-        else:
-            if (varname + str(idtset)) in self.variables:
-                name = varname + str(idtset)
-            elif idtset > 10:
-                if (varname + '?' + (str(idtset)[1])) in self.variables:
-                    name = varname + '?' + (str(idtset)[1])
-                elif (varname + (str(idtset)[0]) + '?') in self.variables:
-                    name = varname + (str(idtset)[0]) + '?'
-                elif (varname + '+?') in self.variables and (varname + ':?') in self.variables:
-                    name = varname + ':?'
-                    fact = int(str(idtset)[0]) - 1
-                    delta = self.variables[varname + '+?']
-                elif (varname + '?+') in self.variables and (varname + '?:') in self.variables:
-                    name = varname + '?:'
-                    fact = int(str(idtset)[1]) - 1
-                    delta = self.variables[varname + '?+']
-            if name == '' and varname in self.variables:
-                name = varname
-
-        # print 'varname=',varname,'name=',name
-        #  Get the value of the abinit variable
-        if name != '':
-            if isinstance(self.variables[name], list):
-                npvalue = list(np.array(self.variables[name]) + fact * np.array(delta))
-            else:
-                npvalue = self.variables[name] + fact * delta
-
-        elif (varname + ":") in self.variables and (varname + "+") in self.variables:
-            if isinstance(self.variables[varname + ":"], list):
-                npvalue = list(np.array(self.variables[varname + ":"]) +
-                               (idtset - 1) * np.array(self.variables[varname + "+"]))
-            else:
-                npvalue = self.variables[varname + ":"] + (idtset - 1) * self.variables[varname + "+"]
-        else:
-            npvalue = None
-
-        if isinstance(npvalue, (int, float)) and return_iterable:
-            npvalue = [npvalue]
-
-        return npvalue
-
-    def set_value(self, varname, value, idtset=''):
-        """
-        Set the value 'value' into the dictionary
-        input with key 'varname'+str(idtset)
-        The value could be an integer, real, list
-        or numpy array, the internal representation
-        is always serializable.
-        """
-        if isinstance(value, (int, float)):
-            npvalue = value
-        elif isinstance(value, np.ndarray):
-            if value[0].dtype == np.dtype('>f8'):
-                npvalue = [round(x, 11) for x in value.flatten()]
-            elif value[0].dtype == np.dtype('>i4'):
-                npvalue = [int(x) for x in value.flatten()]
-            else:
-                npvalue = list(value)
-        else:
-            npvalue = list(value)
-
-        if idtset == '':
-            self.variables[varname] = npvalue
-        else:
-            self.variables[varname + str(idtset)] = npvalue
-
     def get_structure(self, idtset=None, units='bohr'):
         """
         Return the atomic structure from the input object
@@ -654,6 +369,8 @@ class InputVariables(collections.MutableMapping):
                     udtset = self.get_value('udtset')
                     for i in range(1, udtset[0] + 1):
                         for j in range(1, udtset[1] + 1):
+                            print(ret)
+                            print(str(i) + str(j))
                             ret.append(str(i) + str(j))
                 else:
                     ret = range(1, ndtset + 1)
@@ -668,6 +385,7 @@ class InputVariables(collections.MutableMapping):
         list of atoms such as H3, N4, etc
         """
         atomnumber = self.get_value('znucl', idtset=idtset)
+        print("atomnumber=%s" % atomnumber)
         if isinstance(atomnumber, list):
             atomnumber = atomnumber[self.get_value('typat', idtset=idtset)[iatom] - 1]
         return atomic_symbol(atomnumber) + str(iatom + 1)
@@ -723,6 +441,327 @@ class InputVariables(collections.MutableMapping):
     def has_variable(self, varname):
         return varname in self.variables
 
+    def get_value(self, varname, idtset=None, return_iterable=False):
+        """
+        Get the value of the input variable 'varname'
+        associated with the dataset 'idtset'
+        If 'idtset' is not given will asume that the
+        value is not dataset dependent
+        """
+        name = ''
+        fact = 1
+        delta = 0
+
+        # Get the right key for the abinit variable
+        if idtset is None:
+            if varname in self.variables:
+                name = varname
+        else:
+            if (varname + str(idtset)) in self.variables:
+                name = varname + str(idtset)
+            elif idtset > 10:
+                if (varname + '?' + (str(idtset)[1])) in self.variables:
+                    name = varname + '?' + (str(idtset)[1])
+                elif (varname + (str(idtset)[0]) + '?') in self.variables:
+                    name = varname + (str(idtset)[0]) + '?'
+                elif (varname + '+?') in self.variables and (varname + ':?') in self.variables:
+                    name = varname + ':?'
+                    fact = int(str(idtset)[0]) - 1
+                    delta = self.variables[varname + '+?']
+                elif (varname + '?+') in self.variables and (varname + '?:') in self.variables:
+                    name = varname + '?:'
+                    fact = int(str(idtset)[1]) - 1
+                    delta = self.variables[varname + '?+']
+            if name == '' and varname in self.variables:
+                name = varname
+
+        # print 'varname=',varname,'name=',name
+        #  Get the value of the abinit variable
+        if name != '':
+            if isinstance(self.variables[name], list):
+                npvalue = list(np.array(self.variables[name]) + fact * np.array(delta))
+            else:
+                npvalue = self.variables[name] + fact * delta
+
+        elif (varname + ":") in self.variables and (varname + "+") in self.variables:
+            if isinstance(self.variables[varname + ":"], list):
+                npvalue = list(np.array(self.variables[varname + ":"]) +
+                               (idtset - 1) * np.array(self.variables[varname + "+"]))
+            else:
+                npvalue = self.variables[varname + ":"] + (idtset - 1) * self.variables[varname + "+"]
+        else:
+            npvalue = None
+
+        if isinstance(npvalue, (int, float)) and return_iterable:
+            npvalue = [npvalue]
+
+        return npvalue
+
+    def set_value(self, varname, value, idtset=''):
+        """
+        Set the value 'value' into the dictionary
+        input with key 'varname'+str(idtset)
+        The value could be an integer, real, list
+        or numpy array, the internal representation
+        is always serializable.
+        """
+        if isinstance(value, (int, float)):
+            npvalue = value
+        elif isinstance(value, np.ndarray):
+            if value[0].dtype == np.dtype('>f8'):
+                npvalue = [round(x, 11) for x in value.flatten()]
+            elif value[0].dtype == np.dtype('>i4'):
+                npvalue = [int(x) for x in value.flatten()]
+            else:
+                npvalue = list(value)
+        else:
+            npvalue = list(value)
+
+        if idtset == '':
+            self.variables[varname] = npvalue
+        else:
+            self.variables[varname + str(idtset)] = npvalue
+
+
+# class InputVariables(collections.MutableMapping):
+#     """
+#     An input object contains:
+
+#     data:
+#           variables = Dictionary whose keys are ABINIT variable names
+
+#     methods:
+#             write = Write the input into as a text file that ABINIT
+#                     can use as an input file
+
+#             get_value = Get the value of a particular variable
+#             set_value = Set the value of a particular variable
+
+#             get_atomic_structure =
+#     """
+
+
+#     def __init__(self, *args, **kwargs):
+#         """
+#         Creates a new input object, the input object
+#         contains a dictionary whose keys are the abinit
+#         input variables and the values are always serializable
+#         """
+#         self.variables = {}
+#         filename = ''
+#         if len(args) == 1:
+#             x = args[0]
+#             if isinstance(x, AbiFiles):
+#                 filename = x.basedir + "/" + x.files["in"]
+#             elif os.path.isfile(x):
+#                 filename = x
+
+#         if 'filename' in kwargs:
+#             filename = kwargs['filename']
+
+#         if os.path.isfile(filename):
+#             if filename[-3:] == '.in':
+#                 self.__import_input(filename)
+#             elif filename[-6:] == '.files':
+#                 abifile = AbiFiles(filename)
+#                 filename = abifile.get_input_filename()
+#                 self.__import_input(filename)
+#             elif filename[-6:] == 'OUT.nc':
+#                 self.variables = netcdf2dict(filename)
+#             else:
+#                 try:
+#                     self.__import_input(filename)
+#                 except ValueError:
+#                     print('File format not identified')
+
+#     def __delitem__(self, key):
+#         return self.variables.__delitem__(key)
+
+#     def __setitem__(self, key, value):
+#         return self.variables.__setitem__(key, value)
+
+#     def __getitem__(self, key):
+#         return self.variables.__getitem__(key)
+
+#     def __iter__(self):
+#         return self.variables.__iter__()
+
+#     def __len__(self):
+#         return self.variables.__len__()
+
+#     def __import_input(self, filename):
+#         """
+#         Read an ABINIT input file and return a python dictionary
+#         with the input variables readed from that. The keys are
+#         the fullname input variables (acell,xcart21,etc). The
+#         values are numbers or lists except for
+#         the value '*[NUMBER]' that is keeped as string, and
+#         the string associated to the variable xyzfile
+
+#         Args:
+#             filename:
+#                 ABINIT input filename
+#         """
+#         ans = parser(filename)
+#         if ans is not None:
+#             self.variables = ans
+
+#     def write(self, filename):
+#         """
+#         Write an input object into a text
+#         file that ABINIT can use as an input
+#         file
+
+#         Args:
+#             filename:
+#                 The 'abinit.in' filename that will be written
+#         """
+#         wf = open(filename, 'w')
+#         wf.write(self.__str__())
+#         wf.close()
+
+#     def __str__(self):
+#         """
+#         String representation of the object
+#         """
+#         ret = ''
+#         thekeys = self.variables.keys()
+#         varnames = [x for x in thekeys if not x[-1].isdigit()]
+
+#         if 'ndtset' in varnames:
+#             ret = ret + "#" + 60 * "-" + "\n#" + " MULTI DATASET\n#" + 60 * "-" + "\n\n"
+#             ret += self.write_key('ndtset')
+#             varnames.remove('ndtset')
+#             if 'jdtset' in varnames:
+#                 ret += self.write_key('jdtset')
+#                 varnames.remove('jdtset')
+#             if 'udtset' in varnames:
+#                 ret += self.write_key('udtset')
+#                 varnames.remove('udtset')
+#             ret += '\n'
+
+#         seqvarnames = [x for x in varnames if
+#                        (x[-1] == ':' or x[-1] == "+" or x[-1] == "?" or x[-2] == ':' or x[-2] == "+" or x[-2] == "?")]
+#         if len(seqvarnames) > 0:
+#             ret = ret + "#" + 60 * "-" + "\n#" + " SEQUENCE\n#" + 60 * "-" + "\n\n"
+#             seqvarnames.sort()
+#             for i in seqvarnames:
+#                 ret += self.write_key(i)
+#                 varnames.remove(i)
+#             ret += '\n'
+
+#         if len(varnames) > 0:
+#             varnames.sort()
+#             ret = ret + "#" + 60 * "-" + "\n#" + " ALL DATASETS\n#" + 60 * "-" + "\n\n"
+#             for i in varnames:
+#                 ret += self.write_key(i)
+#             ret += '\n'
+
+#         for dtset in range(1, 100):
+#             varnames = [x for x in thekeys if
+#                         (x[-len(str(dtset)):] == str(dtset) and not x[-len(str(dtset)) - 1:].isdigit())]
+#             if len(varnames) > 0:
+#                 varnames.sort()
+#                 ret = ret + "#" + 60 * "-" + "\n#" + " DATASET " + str(dtset) + "\n#" + 60 * "-" + "\n\n"
+#                 for i in varnames:
+#                     if i == 'dmatpawu':
+#                         if 2 in self['lpawu']:
+#                             ret += self.write_key(i, ncolumns=5)
+#                         elif 3 in self['lpawu']:
+#                             ret += self.write_key(i, ncolumns=7)
+#                     ret += self.write_key(i)
+#                 ret += '\n'
+#         return ret
+
+#     def write_key(self, varname, ncolumns=None):
+#         """
+#         Receives an input variable and write their contents
+#         properly according with their kind and length
+
+#         Args:
+#             varname:
+#                 The name of the input variable
+#         """
+
+#         ret = ''
+#         if varname not in self.variables:
+#             print("[ERROR] input variable: '%s' is not defined" % varname)
+#             return
+
+#         # Assume that the variables are integer and test if such assumption
+#         # is true
+#         integer = True
+#         real = False
+#         string = False
+#         compact = True
+
+#         if isinstance(self.variables[varname], (int, float)):
+#             varlist = [self.variables[varname]]
+#         else:
+#             varlist = self.variables[varname]
+
+#         # Get the general kind of values for the input variable
+#         for j in varlist:
+#             try:
+#                 if not float(j).is_integer():
+#                     # This is the case of non integer values
+#                     integer = False
+#                     real = True
+#                     string = False
+#                     if len(str(float(j))) > 7:
+#                         compact = False
+
+#             except ValueError:
+#                 # This is the case of '*1' that could not
+#                 # be converted because we don't know the size
+#                 # of the array
+#                 integer = False
+#                 real = False
+#                 string = True
+
+#         ret = ret + (varname.rjust(15)) + "  "
+
+#         known_variables = {'xred': [3], 'acell': [3]}
+
+#         if varname in known_variables:
+#             for i in known_variables[varname]:
+#                 if len(varlist) % i == 0:
+#                     for j in range(int(len(varlist) / i)):
+#                         if j == 0:
+#                             ret += (i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
+#                         else:
+#                             ret += (17 * ' ' + i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
+#         elif ncolumns is not None:
+#             for i in ncolumns:
+#                 for j in range(int(len(varlist) / i)):
+#                     if j == 0:
+#                         ret += (i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
+#                     else:
+#                         ret += (17 * ' ' + i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
+#         else:
+#             for j in range(len(varlist)):
+
+#                 if real:
+#                     if compact:
+#                         ret += ("%g" % varlist[j]).rjust(8)
+#                     else:
+#                         ret += "%17.10e" % varlist[j]
+#                 elif integer:
+#                     ret += "%d" % varlist[j]
+#                 elif string:
+#                     ret += "%s" % varlist[j]
+
+#                 # Conditions to jump to a new line
+#                 if ((j + 1) % 3) == 0 and real and j < len(varlist) - 1:
+#                     ret += "\n"
+#                     ret += 17 * " "
+#                 elif j < len(varlist) - 1:
+#                     ret += " "
+#             ret += "\n"
+#         return ret
+
+
+
 
 def merge(abi_into, abi_from, filename=None):
     """
@@ -745,8 +784,8 @@ def merge(abi_into, abi_from, filename=None):
     :param filename: (str) Storing the final input variables on file
 
     """
-    abinit_into = InputVariables(abi_into)
-    abinit_from = InputVariables(abi_from)
+    abinit_into = AbinitInput(abi_into)
+    abinit_from = AbinitInput(abi_from)
 
     for i in abinit_into.variables.keys():
         if i in abinit_from.variables.keys():
@@ -764,7 +803,7 @@ def xyz2input(filename):
     as a python dictionary
     """
 
-    abiinput = InputVariables()
+    abiinput = AbinitInput()
     atomdict = atomic_symbol()
     rf = open(filename, 'r')
 

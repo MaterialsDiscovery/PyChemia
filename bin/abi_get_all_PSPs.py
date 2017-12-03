@@ -90,9 +90,9 @@ def get_rpath_psp(kind, exchange, atomicnumber=None):
     elif kind == 'FC' and exchange == 'DEN':
         rpath = '/pub/abinitio/Psps/FC_DEN/'
     elif kind == 'PAW' and exchange == 'LDA':
-        rpath = 'http://www.abinit.org/downloads/PAW2/ATOMICDATA/JTH-LDA-atomicdata.tar.gz'
+        rpath =' https://www.abinit.org/ATOMICDATA/JTH-LDA-atomicdata.tar.gz'
     elif kind == 'PAW' and exchange == 'GGA':
-        rpath = 'http://www.abinit.org/downloads/PAW2/ATOMICDATA/JTH-PBE-atomicdata.tar.gz'
+        rpath =' https://www.abinit.org/ATOMICDATA/JTH-PBE-atomicdata.tar.gz'
     else:
         print('Not know kind of PSP')
     return rpath

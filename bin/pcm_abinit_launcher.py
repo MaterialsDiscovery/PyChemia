@@ -96,7 +96,7 @@ def main(argv):
         elif opt in ("-p", "--pseudo"):
             pseudo = arg
 
-    structure = pychemia.code.abinit.InputVariables(inpu_file).get_structure()
+    structure = pychemia.code.abinit.AbinitInput(inpu_file).get_structure()
     if structure is None:
         print(" ERROR: Invalid structure, no structure could be obtained")
         sys.exit(2)

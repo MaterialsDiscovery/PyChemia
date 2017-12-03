@@ -11,9 +11,9 @@ from . import task
 
 if HAS_SCIPY:
     from .abifiles import AbiFiles
-    from .input import InputVariables, xyz2input, AbinitInput
+    from .input import AbinitInput, xyz2input
     from .abinit import AbinitJob
-    from .output import AbinitOutput, netcdf2dict, AbinitOutput
+    from .output import AbinitOutput
     from .utils import psp_name
     from .parser import parser
 

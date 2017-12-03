@@ -15,7 +15,7 @@ class PopulationTest(unittest.TestCase):
             return
 
         pychemia_path = pychemia.__path__[0]
-        abiinput = pychemia.code.abinit.InputVariables(pychemia_path + '/test/data/abinit_dmatpawu/abinit.in')
+        abiinput = pychemia.code.abinit.AbinitInput(pychemia_path + '/test/data/abinit_dmatpawu/abinit.in')
         dmatpawu = np.array(abiinput['dmatpawu']).reshape(-1, 5, 5)
         params = pychemia.population.orbitaldftu.dmatpawu2params(dmatpawu, 5)
         dmatpawu_new = pychemia.population.orbitaldftu.params2dmatpawu(params)

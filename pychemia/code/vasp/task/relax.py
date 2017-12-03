@@ -10,7 +10,7 @@ from pychemia import pcm_log
 from pychemia.crystal import KPoints
 from pychemia.utils.serializer import generic_serializer
 from pychemia.utils.mathematics import round_small
-from ..incar import InputVariables
+from ..input import VaspInput
 from ..outcar import VaspOutput, read_vasp_stdout
 from ..poscar import read_poscar
 from ..vasp import VaspJob, VaspAnalyser
@@ -163,7 +163,7 @@ class IonRelaxation(Relaxator, Task):
 
         vj = self.vaspjob
         vj.clean()
-        inp = InputVariables()
+        inp = VaspInput()
         inp.set_rough_relaxation()
         vj.set_input_variables(inp)
         vj.input_variables['LWAVE'] = False

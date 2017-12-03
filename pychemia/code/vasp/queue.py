@@ -1,5 +1,5 @@
 import os
-from .incar import InputVariables
+from .input import VaspInput
 from .poscar import write_poscar
 
 
@@ -19,7 +19,7 @@ def write_from_queue(queue, entry_id, destination=None):
     st = queue.get_input_structure(entry_id)
     inpvars = queue.get_input_variables(entry_id)
 
-    vi = InputVariables()
+    vi = VaspInput()
     for i in inpvars:
         vi[i] = inpvars[i]
 
