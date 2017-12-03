@@ -5,7 +5,7 @@ import pychemia
 path = 'pychemia/test/data'
 
 
-def test_abinit2xyz():
+def notest_abinit2xyz():
     """
     Test command abinit2xyz                                      :
     """
@@ -25,7 +25,7 @@ def test_abinit2xyz():
     os.remove(path + '/abinit_03/abinit.files')
 
 
-def test_xyz2abinit():
+def notest_xyz2abinit():
     """
     Test command xyz2abinit                                      :
     """
@@ -40,7 +40,7 @@ def test_xyz2abinit():
     return inp
 
 
-def test_plot_bonds():
+def notest_plot_bonds():
     """
     Test command plot_bonds                                      :
     """
@@ -54,7 +54,7 @@ def test_plot_bonds():
     os.remove("bonds.pdf")
 
 
-def test_plot_hist():
+def notest_plot_hist():
     """
     Test command plot_hist                                       :
     """
