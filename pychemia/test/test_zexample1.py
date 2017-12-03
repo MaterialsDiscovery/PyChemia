@@ -16,9 +16,7 @@ import tempfile
 import subprocess
 import pychemia
 from pychemia.utils.netcdf import netcdf2dict
-
-if pychemia.HAS_SCIPY:
-    import pychemia.code.abinit as pa
+import pychemia.code.abinit as pa
 
 path = 'pychemia/test/data'
 
@@ -27,17 +25,16 @@ def test_example1():
     """
     Example of a simple calc                                     :
     """
-    if pychemia.HAS_SCIPY:
-        workdir = tempfile.mkdtemp()
-        print(workdir)
-        creation(workdir)
-        execution(workdir)
-        ecut, etotal = datamining(workdir)
-        print('ecut=', ecut)
-        print('etotal=', etotal)
-        assert ecut == 15.0
-        assert abs(etotal + 4.199348203363531) < 0.001
-        shutil.rmtree(workdir)
+    workdir = tempfile.mkdtemp()
+    print(workdir)
+    creation(workdir)
+    execution(workdir)
+    ecut, etotal = datamining(workdir)
+    print('ecut=', ecut)
+    print('etotal=', etotal)
+    assert ecut == 15.0
+    assert abs(etotal + 4.199348203363531) < 0.001
+    shutil.rmtree(workdir)
 
 
 def which(program):

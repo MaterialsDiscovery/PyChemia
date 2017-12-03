@@ -11,6 +11,7 @@ from __future__ import print_function
 import os
 import ftplib
 from concurrent.futures import ThreadPoolExecutor
+from pychemia.code.abinit import psp_name
 
 try:
     from urllib2 import urlopen
@@ -18,14 +19,6 @@ except ImportError:
     from urllib.request import urlopen
 import tarfile
 import time
-
-from pychemia import HAS_SCIPY
-
-if HAS_SCIPY:
-    from pychemia.code.abinit import psp_name
-else:
-    raise ImportError('scipy could not be found')
-
 
 def worker(filename, directory, filepath):
     ftp = ftplib.FTP('ftp.abinit.org')  # connect to host, default port

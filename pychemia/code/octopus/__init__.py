@@ -4,14 +4,10 @@ Set of classes and functions to manipulate
 OCTOPUS 'inp' input files
 
 """
-from pychemia import HAS_SCIPY
 import numpy as np
 from .input import OctopusInput
 from .output import OctopusOutput
-
-if HAS_SCIPY:
-    from .analysis import *
-
+from .analysis import *
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())
 

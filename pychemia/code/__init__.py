@@ -10,14 +10,11 @@ from . import vasp
 from . import dftb
 from .lennardjones import LennardJones
 from . import fireball
-from pychemia import HAS_SCIPY
 from . import sprkkr
 from . import phonopy
 from . import new_fireball
 from . import siesta
 from . import elk
-
-if HAS_SCIPY:
-    from . import abinit
+from . import abinit
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

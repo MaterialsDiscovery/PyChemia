@@ -15,18 +15,12 @@ import json
 import tempfile
 import subprocess
 import pychemia
-
-if pychemia.HAS_SCIPY:
-    import pychemia.code.abinit
-
+import pychemia.code.abinit
 
 def test_example2():
     """
     Example of a multiple calc                                   :
     """
-    if not pychemia.HAS_SCIPY:
-        return
-
     path = 'pychemia/test/data'
     assert (os.path.isdir(path))
 

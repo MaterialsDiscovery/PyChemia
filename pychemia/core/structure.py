@@ -13,7 +13,6 @@ import os
 import struct
 import sys
 import numpy as np
-from pychemia import HAS_SCIPY
 from collections import MutableSequence
 from itertools import combinations, repeat
 from math import sin, cos
@@ -24,9 +23,7 @@ from pychemia.core.composition import Composition
 from pychemia.core.delaunay import get_reduced_bases
 from pychemia.utils.computing import deep_unicode
 from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence, atomic_symbols
-
-if HAS_SCIPY:
-    import scipy.spatial
+import scipy.spatial
 
 __author__ = "Guillermo Avendano-Franco"
 __copyright__ = "Copyright 2016"
@@ -854,10 +851,7 @@ Empty structure
         if self.is_periodic:
             return self.lattice.distance2(self.reduced[atom1], self.reduced[atom2])
         else:
-            if HAS_SCIPY:
-                dm = scipy.spatial.distance_matrix(self.positions, self.positions)
-            else:
-                raise NotImplementedError
+            dm = scipy.spatial.distance_matrix(self.positions, self.positions)
             return dm[atom1, atom2]
 
     def distance_matrix(self):
@@ -870,10 +864,7 @@ Empty structure
                     dm[i, j] = min([d[x]['distance'] for x in d])
                     dm[j, i] = dm[i, j]
         else:
-            if HAS_SCIPY:
-                dm = scipy.spatial.distance_matrix(self.positions, self.positions)
-            else:
-                raise NotImplementedError
+            dm = scipy.spatial.distance_matrix(self.positions, self.positions)
         return dm
 
     def valence_electrons(self):
@@ -1232,9 +1223,6 @@ def random_structure(method, composition, periodic=True, best_volume=1E10):
 
 def cluster_minimal_distance(pos):
     pos = np.array(pos).reshape((-1, 3))
-    if HAS_SCIPY:
-        dismat = scipy.spatial.distance_matrix(pos, pos)
-        tmp = np.max(dismat.flatten())
-        return np.min((dismat + tmp * np.eye(len(pos))).flatten())
-    else:
-        raise NotImplementedError
+    dismat = scipy.spatial.distance_matrix(pos, pos)
+    tmp = np.max(dismat.flatten())
+    return np.min((dismat + tmp * np.eye(len(pos))).flatten())

@@ -10,7 +10,7 @@ def test_abinit2xyz():
     Test command abinit2xyz                                      :
     """
     pychemia.info()
-    print('Running abinit2xyz', pychemia.HAS_SCIPY)
+    print('Running abinit2xyz')
     script = 'bin/abi_abinit2xyz.py'
     args = path + '/abinit_03/abinit.in'
     command_line="%s %s %s" % ('python', script, args)

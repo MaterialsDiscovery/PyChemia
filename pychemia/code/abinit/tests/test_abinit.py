@@ -5,44 +5,43 @@ def test_abinit_parser():
     """
     Tests (pychemia.code.abinit) [parser]                        :
     """
-    if pychemia.HAS_SCIPY:
-        from pychemia.code.abinit import parser
-        from numpy import array, all, ones
-        from math import sqrt
-        import tempfile
+    from pychemia.code.abinit import parser
+    from numpy import array, all, ones
+    from math import sqrt
+    import tempfile
 
-        wf = tempfile.NamedTemporaryFile(mode='w')
-        wf.write('    # Comentario\n')
-        wf.write('    ! Comentario\n')
-        wf.write('\n')
-        wf.write('inputvar1 1 # integer\n')
-        wf.write('inputvar2 1.2 # float\n')
-        wf.write('inputvar3 3*4 # list of integer\n')
-        wf.write('inputvar4 3*4.5 # list of float\n')
-        wf.write('inputvar5 3*4.5e6 # list of float\n')
-        wf.write('inputvar6 3*4.5d7 # list of float\n')
-        wf.write('inputvar7 3*4.5E6 # list of float\n')
-        wf.write('inputvar8 3*4.5D7 # list of float\n')
-        wf.write('inputvar9 *1\n')
-        wf.write('inputvar10 sqrt(2)\n')
-        wf.write('inputvar11 6*sqrt(3)\n')
-        wf.flush()
+    wf = tempfile.NamedTemporaryFile(mode='w')
+    wf.write('    # Comentario\n')
+    wf.write('    ! Comentario\n')
+    wf.write('\n')
+    wf.write('inputvar1 1 # integer\n')
+    wf.write('inputvar2 1.2 # float\n')
+    wf.write('inputvar3 3*4 # list of integer\n')
+    wf.write('inputvar4 3*4.5 # list of float\n')
+    wf.write('inputvar5 3*4.5e6 # list of float\n')
+    wf.write('inputvar6 3*4.5d7 # list of float\n')
+    wf.write('inputvar7 3*4.5E6 # list of float\n')
+    wf.write('inputvar8 3*4.5D7 # list of float\n')
+    wf.write('inputvar9 *1\n')
+    wf.write('inputvar10 sqrt(2)\n')
+    wf.write('inputvar11 6*sqrt(3)\n')
+    wf.flush()
 
-        inp = parser(wf.name)
-        wf.close()
+    inp = parser(wf.name)
+    wf.close()
 
-        assert len(inp.keys()) == 11
-        assert inp['inputvar1'] == array([1])
-        assert inp['inputvar2'] == array([1.2])
-        assert all(inp['inputvar3'] == 4 * ones(3))
-        assert all(inp['inputvar4'] == 4.5 * ones(3))
-        assert all(inp['inputvar5'] == 4.5e6 * ones(3))
-        assert all(inp['inputvar6'] == 4.5e7 * ones(3))
-        assert all(inp['inputvar7'] == 4.5e6 * ones(3))
-        assert all(inp['inputvar8'] == 4.5e7 * ones(3))
-        assert inp['inputvar9'] == '*1'
-        assert inp['inputvar10'] == sqrt(2)
-        assert all(inp['inputvar11'] == sqrt(3) * ones(6))
+    assert len(inp.keys()) == 11
+    assert inp['inputvar1'] == array([1])
+    assert inp['inputvar2'] == array([1.2])
+    assert all(inp['inputvar3'] == 4 * ones(3))
+    assert all(inp['inputvar4'] == 4.5 * ones(3))
+    assert all(inp['inputvar5'] == 4.5e6 * ones(3))
+    assert all(inp['inputvar6'] == 4.5e7 * ones(3))
+    assert all(inp['inputvar7'] == 4.5e6 * ones(3))
+    assert all(inp['inputvar8'] == 4.5e7 * ones(3))
+    assert inp['inputvar9'] == '*1'
+    assert inp['inputvar10'] == sqrt(2)
+    assert all(inp['inputvar11'] == sqrt(3) * ones(6))
 
 
 def test_abinit_utils():
