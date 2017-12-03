@@ -32,6 +32,17 @@ class VaspOutput(CodeOutput):
         self.iteration_data = []
         self.outcar_parser()
 
+    def is_loaded(self):
+        if self.data is None:
+            return False
+        else:
+            return True
+
+    def read_outputfile(self, filename):
+        rf = open(self.filename, 'r')
+        self.data = rf.read()
+        rf.close()        
+
     def reload(self):
         rf = open(self.filename, 'r')
         self.data = rf.read()
