@@ -10,6 +10,7 @@ from ._population import Population
 from pychemia import pcm_log
 from pychemia.code.abinit import AbinitInput, AbinitOutput
 from pychemia.utils.mathematics import gram_smith_qr, gea_all_angles, gea_orthogonal_from_angles, unit_vector
+from pychemia.utils.netcdf import netcdf2dict
 from pychemia.utils.serializer import generic_serializer as gs
 from pychemia.runner import get_jobs, PBSRunner
 
@@ -52,7 +53,7 @@ class OrbitalDFTU(Population):
         self.input_path = input_path
         self.input = AbinitInput(input_path)
         if 'dmatpawu' not in self.input.variables:
-            raise ValueError("Abinit input file does not contain 'dmatpawu' variable")
+            raise ValueError("Abinit input file: %s does not contain 'dmatpawu' variable" % self.input_path)
         self.structure = self.input.get_structure()
 
         print('Orbital population:')
@@ -87,40 +88,17 @@ class OrbitalDFTU(Population):
         if self.input.has_variable('nspinor'):
             self.nspinor = self.input.get_value('nspinor')
         else:
+            # Default from ABINIT
             self.nspinor = 1
 
         # nspden is the number of spin-density components
         if self.input.has_variable('nspden'):
             self.nspden = self.input.get_value('nspden')
         else:
+            # Default from ABINIT
             self.nspden = self.nsppol
 
-        if self.nsppol == 1 and self.nspinor == 1 and self.nspden == 1:
-            # Non-magnetic system (nsppol=1, nspinor=1, nspden=1):
-            # One (2lpawu+1)x(2lpawu+1) dmatpawu matrix is given for each atom on which +U is applied.
-            # It contains the "spin-up" occupations.
-            self.nmatrices = self.natpawu
-        elif self.nsppol == 2 and self.nspinor == 1 and self.nspden == 2:
-            # Ferromagnetic spin-polarized (collinear) system (nsppol=2, nspinor=1, nspden=2):
-            # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
-            # They contain the "spin-up" and "spin-down" occupations.
-            self.nmatrices = 2 * self.natpawu
-        elif self.nsppol == 1 and self.nspinor == 1 and self.nspden == 2:
-            # Anti-ferromagnetic spin-polarized(collinear) system(nsppol=1, nspinor=1, nspden=2):
-            # One(2lpawu + 1)x(2lpawu + 1) dmatpawu matrix is given for each atom on which +U is applied.
-            # It contains the "spin-up" occupations.
-            self.nmatrices = self.natpawu
-        elif self.nsppol == 1 and self.nspinor == 2 and self.nspden == 4:
-            # Non-collinear magnetic system (nsppol=1, nspinor=2, nspden=4):
-            # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
-            # They contains the "spin-up" and "spin-down" occupations (defined as n_up=(n+|m|)/2 and n_dn=(n-|m|)/2),
-            #    where m is the integrated magnetization vector).
-            self.nmatrices = 2 * self.natpawu
-        elif self.nsppol == 1 and self.nspinor == 2 and self.nspden == 1:
-            # Non-collinear magnetic system with zero magnetization (nsppol=1, nspinor=2, nspden=1):
-            # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
-            # They contain the "spin-up" and "spin-down" occupations;
-            self.nmatrices = 2 * self.natpawu
+        self.nmatrices = get_num_matrices_per_atom(self.nsppol, self.nspden, self.nspinor) * self.natpawu
 
         print('Variables controling the total number of matrices')
         print('nsppol : %d' % self.nsppol)
@@ -345,7 +323,8 @@ class OrbitalDFTU(Population):
         """
         pass
 
-    def evaluator(self, username, basedir, queue, walltime, ppn, features=None):
+    def evaluator(self, pbs_settings, basedir):
+        print("Population size: %d" % len(self))
         while True:
             # 1. Get actives no evaluated
             ane = self.actives_no_evaluated
@@ -354,8 +333,13 @@ class OrbitalDFTU(Population):
             else:
                 print("No candidates to be evaluated")
             # 2. Get jobs in queue
+            if 'user' not in pbs_settings:
+                raise ValueError("PBS settings must contain a keys 'user', 'ppn' and 'walltime'")
+            username=pbs_settings['user']
+
             jobs = get_jobs(username)
             jobnames = [jobs[x]['Job_Name'] for x in jobs]
+            print("There are %d jobs in the system for user %s " % (len(jobnames), username))
             check = False
             for entry_id in ane:
                 if str(entry_id) not in jobnames:
@@ -384,10 +368,10 @@ class OrbitalDFTU(Population):
                                 to_submit = False
 
                 if to_submit:
-                    self.submit(entry_id, basedir, queue, walltime, ppn, features)
+                    self.submit(entry_id, basedir, pbs_settings)
 
-            print('Sleeping for 10 minutes')
-            time.sleep(600)
+            print('Sleeping for 20 minutes')
+            time.sleep(1200)
 
     def from_dict(self, population_dict):
         return self.__init__(name=self.name,
@@ -670,25 +654,43 @@ class OrbitalDFTU(Population):
         return ret
 
     @staticmethod
-    def submit(entry_id, workdir, queue, walltime, ppn, features):
+    def submit(entry_id, workdir, pbs_settings):
+        
+        if 'walltime' not in pbs_settings:
+            raise ValueError('walltime is mandatory on pbs_settings')
+        if 'ppn' not in pbs_settings:
+            raise ValueError('ppn is mandatory on pbs_settings')
+        if 'queue' not in pbs_settings:
+            raise ValueError('queue is mandatory on pbs_settings')
+        if 'template' not in pbs_settings:
+            raise ValueError('template is mandatory on pbs_settings')
+        walltime=pbs_settings['walltime']
+        ppn=pbs_settings['ppn']
+        queue=pbs_settings['queue']
+        template=pbs_settings['template']
+        if 'features' not in pbs_settings:
+            features = None
+        else:
+            features = pbs_settings['features']
+        if not os.path.isfile(template):
+            raise ValueError("The file: %s must exist" % template)
+
         idir = str(entry_id)
         workdir = os.path.abspath(workdir)
         path = workdir+os.sep + idir
+        print('Creating a new job at: %s' % path)
         outputs = [x for x in os.listdir(path) if x[-4:] == '.out']
         for ifile in outputs:
             os.remove(path+os.sep+ifile)
-        cwd = os.getcwd()
-        os.chdir(path)
-        if os.path.lexists('batch.pbs'):
-            os.remove('batch.pbs')
+        if os.path.lexists(workdir+os.sep+'batch.pbs'):
+            os.remove(workdir+os.sep+'batch.pbs')
 
-        pbs = PBSRunner(workdir=path, template='../template')
+        pbs = PBSRunner(workdir=path, template=template)
         pbs.set_pbs_params(nodes=1, ppn=ppn, walltime=walltime, message='ae', queue=queue, features=features)
         pbs.write()
-        jobid=pbs.submit()
 
+        jobid=pbs.submit()
         print("Entry: %s Job: %s" % (entry_id, jobid))
-        os.chdir(cwd)
 
     def update_dmat_inplace(self, entry_id, dmat):
         return self.pcdb.db.pychemia_entries.update({'_id': entry_id},
@@ -822,8 +824,12 @@ def get_pattern(params, ndim):
 def get_final_correlation_matrices_from_output(filename):
     rf = open(filename)
     data = rf.read()
-    mainblock = re.findall('LDA\+U DATA[\s\w\d\-.=,>:]*\n \n', data)
-    assert len(mainblock) == 1
+    mainblock = re.findall('LDA\+U DATA[\s\w\d\-.=,>:]*\n', data)
+    if len(mainblock) != 1:
+        for isection in mainblock:
+            print(isection)
+        raise ValueError("Occupations for correlated orbitals could not be detected right")
+
 
     pattern = "For Atom\s*(\d+), occupations for correlated orbitals. lpawu =\s*([\d]+)\s*Atom\s*[\d]+\s*. Occ. " \
               "for lpawu and for spin\s*\d+\s*=\s*([\d\.]+)\s*Atom\s*[\d]+\s*. Occ. for lpawu and for " \
@@ -849,7 +855,62 @@ def get_final_correlation_matrices_from_output(filename):
 
 def get_final_dmatpawu(filename):
     ret = get_final_correlation_matrices_from_output(filename)
+    # Looking for input file
+    dirname = os.path.dirname(os.path.abspath(filename))
+    outnc = [ x for x in os.listdir(dirname) if x[-6:]=='OUT.nc']
+    if len(outnc) < 1:
+        raise ValueError("ERROR: Could not find *.OUT.nc needed to determine nspol, nspden and nspinor")
+    variables = netcdf2dict(dirname + os.sep + outnc[0])
+
+    if 'nspinor' in variables:
+        nspinor = variables['nspinor']
+    else:
+        nspinor = 1
+
+    if 'nsppol' in variables:
+        nsppol =  variables['nsppol']
+    else:
+        nsppol = 1
+
+    if 'nspden' in variables:
+        nspden = variables['nspden']
+    else:
+        nspden = nsppol
+
+    # number of matrices per atom:
+    nmpa = get_num_matrices_per_atom(nsppol, nspden, nspinor)
+
     dmatpawu = []
     for i in ret:
         dmatpawu += i['matrix spin 1']
+        if nmpa == 2:
+            dmatpawu += i['matrix spin 2']        
     return dmatpawu
+
+def get_num_matrices_per_atom(nsppol, nspden, nspinor):
+        if nsppol == 1 and nspinor == 1 and nspden == 1:
+            # Non-magnetic system (nsppol=1, nspinor=1, nspden=1):
+            # One (2lpawu+1)x(2lpawu+1) dmatpawu matrix is given for each atom on which +U is applied.
+            # It contains the "spin-up" occupations.
+            return 1
+        elif nsppol == 2 and nspinor == 1 and nspden == 2:
+            # Ferromagnetic spin-polarized (collinear) system (nsppol=2, nspinor=1, nspden=2):
+            # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
+            # They contain the "spin-up" and "spin-down" occupations.
+            return 2
+        elif nsppol == 1 and nspinor == 1 and nspden == 2:
+            # Anti-ferromagnetic spin-polarized(collinear) system(nsppol=1, nspinor=1, nspden=2):
+            # One(2lpawu + 1)x(2lpawu + 1) dmatpawu matrix is given for each atom on which +U is applied.
+            # It contains the "spin-up" occupations.
+            return 1
+        elif nsppol == 1 and nspinor == 2 and nspden == 4:
+            # Non-collinear magnetic system (nsppol=1, nspinor=2, nspden=4):
+            # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
+            # They contains the "spin-up" and "spin-down" occupations (defined as n_up=(n+|m|)/2 and n_dn=(n-|m|)/2),
+            #    where m is the integrated magnetization vector).
+            return 2
+        elif nsppol == 1 and nspinor == 2 and nspden == 1:
+            # Non-collinear magnetic system with zero magnetization (nsppol=1, nspinor=2, nspden=1):
+            # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
+            # They contain the "spin-up" and "spin-down" occupations;
+            return 2

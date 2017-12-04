@@ -27,7 +27,7 @@ before_install:
   # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
-  - sudo apt-get -qq update
+  # sudo apt-get -qq update
   # sudo apt-get install -y gcc gfortran m4 autoconf automake libtool
 
 install:

@@ -4,6 +4,7 @@ from builtins import input
 
 import os
 import sys
+import json
 import argparse
 import numpy as np
 import matplotlib
@@ -230,26 +231,42 @@ if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description='Orbital DFTU Evaluator and Analysis Tool')
 
-    parser.add_argument('-host', type=str, help='Hostname or IP of the Mongo Server', required=False, default='mongo01.systems.wvu.edu')
-    parser.add_argument('-name', type=str, help='Name of Database', required=True)
-    parser.add_argument('-dbuser', type=str, help='Username on Database', required=False, default='apayne9')
-    parser.add_argument('-quser', type=str, help='Username on PBS Queue ', required=False, default='apayne9')
-    parser.add_argument('-queue', type=str, help='Queue', required=False, default='standby')
-    parser.add_argument('-hours', type=int, help='Number of hours to request', required=False, default='4')
-    parser.add_argument('-features', type=str, help='Features for queue', required=False, default='f16c')
-    parser.add_argument('-basepath', type=str, help='Path where calculations are performed', required=False, default='.')
+    parser.add_argument('-db_settings', type=str, help='Filename with PyChemiaDB settings to connect to server (JSON file)', 
+                        required=False, default='dbsettings.json')
+    parser.add_argument('-pbs_settings', type=str, help='Filename with PBS settings for launching jobs', 
+                        required=False, default='pbssettings.json')
+    parser.add_argument('-basepath', type=str, help='Path where calculations are performed', 
+                        required=False, default='.')
 
     args = parser.parse_args()
+
+    # Loading the settings to access the PyChemia Database
+    if not os.path.isfile(args.db_settings):
+        print("Could not read a PyChemiaDB settings file (JSON): %s" % args.db_settings)
+        parser.print_help()
+        sys.exit(1)
+    rf=open(args.db_settings)
+    db_settings=json.load(rf)
+    rf.close()
+    print("DB settings: %s" % db_settings )
+
+    # Loading the settings to access to submit jobs with PBS
+    if not os.path.isfile(args.pbs_settings):
+        print("Could not read a PBS settings file (JSON): %s" % args.pbs_settings)
+        parser.print_help()
+        sys.exit(1)
+    rf=open(args.pbs_settings)
+    pbs_settings=json.load(rf)
+    rf.close()
+    print("PBS settings: %s" % pbs_settings )
+
     basepath = args.basepath    
 
-    passwd = input('Password:')
-
     if not os.path.isdir(args.basepath) or not os.path.isfile(basepath+'/abinit.in'):
-        print('ERROR: Wrong basepath %s' % basepath)
+        print('ERROR: Wrong basepath %s, directory must exist and contain a abinit.in file' % basepath)
         parser.print_help()
         sys.exit(1)
 
-    db_settings={'name': args.name, 'host': args.host, 'user':args.dbuser, 'passwd': passwd, 'ssl': True}
     pcdb = pychemia.db.get_database(db_settings)
-    popu=pychemia.population.OrbitalDFTU(pcdb, basepath+'/abinit.in')
-    popu.evaluator(username=args.quser, basedir=basepath, queue=args.queue, walltime=[args.hours,0,0], ppn=8, features=args.features)
+    popu = pychemia.population.OrbitalDFTU(pcdb, basepath+'/abinit.in')
+    popu.evaluator(pbs_settings=pbs_settings, basedir=basepath)
