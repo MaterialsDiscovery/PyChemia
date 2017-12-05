@@ -5,16 +5,16 @@ from .kpoints import write_kpoints, read_kpoints
 from .incar import write_incar, read_incar
 from .input import VaspInput
 from .outcar import VaspOutput
+from ..codes import CodeRun
 from pychemia import Structure, pcm_log
 from pychemia.crystal import KPoints
-from pychemia.code import Codes
 from pychemia.utils.computing import deep_unicode
 
 
-class VaspJob(Codes):
+class VaspJob(CodeRun):
     def __init__(self):
 
-        Codes.__init__(self)
+        CodeRun.__init__(self)
         self.structure = None
         self.workdir = None
         self.input_variables = None

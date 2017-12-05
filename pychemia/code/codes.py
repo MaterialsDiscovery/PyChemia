@@ -3,23 +3,21 @@ import os
 import subprocess
 import collections
 
-class Codes:
+class CodeRun:
     __metaclass__ = ABCMeta
 
-    def __init__(self):
+    def __init__(self, workdir='.', binary=None):
         self.stdin_file = None
         self.stdout_file = None
         self.stderr_file = None
         self.stdin_filename = None
         self.stdout_filename = None
         self.stderr_filename = None
-        self.binary = None
-        self.runner = None
-        self.workdir = None
-
-    @abstractmethod
-    def initialize(self, structure, workdir=None, kpoints=None, binary=None):
-        pass
+        self.input_path = None
+        self.input = None
+        self.binary = binary
+        self.workdir = workdir
+        self.use_mpi = False
 
     @abstractmethod
     def set_inputs(self):
@@ -29,17 +27,21 @@ class Codes:
     def get_outputs(self):
         pass
 
-    @abstractmethod
-    def finalize(self):
+    @abstractproperty
+    def is_finished(self):
         pass
 
-    def run(self, use_mpi=False, omp_max_threads=0, mpi_num_procs=1):
+    @abstractproperty
+    def is_successful(self):
+        pass
+
+    def execute(self, omp_num_threads=1, mpi_num_procs=1, wait=True):
         """
         Execute the binary and return a reference to the subprocess
         created
 
         :param use_mpi: If mpirun will be called to execute the binary
-        :param omp_max_threads: Number of OpenMP threads to be created
+        :param omp_num_threads: Number of OpenMP threads to be created
                                 by default the environment variable
                                 OMP_NUM_THREADS is not changed
         :param mpi_num_procs: Number of MPI processes
@@ -47,21 +49,33 @@ class Codes:
         """
         cwd = os.getcwd()
         os.chdir(self.workdir)
-        if omp_max_threads > 0:
-            os.environ["OMP_NUM_THREADS"] = str(omp_max_threads)
+        print("Working at: %s" % os.getcwd())
+        if omp_num_threads > 0:
+            os.environ["OMP_NUM_THREADS"] = str(omp_num_threads)
         if self.stdin_filename is not None:
             self.stdin_file = open(self.stdin_filename, 'r')
         if self.stdout_filename is not None:
             self.stdout_file = open(self.stdout_filename, 'w')
         if self.stderr_filename is not None:
             self.stderr_file = open(self.stderr_filename, 'w')
-        if use_mpi:
-            sp = subprocess.Popen(['mpirun', '-n', str(mpi_num_procs), self.binary],
-                                  stdout=self.stdout_file, stderr=self.stderr_file, stdin=self.stdin_file)
+        if self.use_mpi:
+            which_bin=subprocess.check_output('which %s' % self.binary, shell=True)
+            print("Executable: %s" % which_bin.decode('utf8').strip())
+            command_line='mpirun -n %d %s' % (mpi_num_procs, self.binary)
+            print("Running: %s" % command_line)
+            sp = subprocess.Popen(command_line, shell=True,
+                                  stdout=self.stdout_file, 
+                                  stderr=self.stderr_file, 
+                                  stdin=self.stdin_file)
         else:
-            sp = subprocess.Popen(self.binary, stdout=self.stdout_file, stderr=self.stderr_file, stdin=self.stdin_file)
+            sp = subprocess.Popen("%s" % self.binary, shell=True, 
+                                  stdout=self.stdout_file, 
+                                  stderr=self.stderr_file, 
+                                  stdin=self.stdin_file)
+        if wait:
+            sp.wait()
+            print("Program finished with returncode: %d" % sp.returncode)
         os.chdir(cwd)
-        self.runner = sp
         return sp
 
 
@@ -72,6 +86,37 @@ class CodeInput(collections.MutableMapping):
     def __init__(self):
         self.input_file = None
         self.variables = {}
+
+    def __contains__(self, x):
+        if not self.is_hierarchical:
+            return x in self.variables
+        else:
+            return x[1] in self.variables[x[0]]
+
+    def __delitem__(self, x):
+        if not self.is_hierarchical:
+            return self.variables.__delitem__(x)
+        else:
+            return self.variables[x[0]].__delitem__(x[1])
+
+    def __setitem__(self, x, value):
+        if not self.is_hierarchical:
+            return self.variables.__setitem__(x, value)
+        else:
+            return self.variables[x[0]].__setitem__(x[1], value)
+
+    def __getitem__(self, x):
+        if not self.is_hierarchical:
+            return self.variables.__getitem__(x)
+        else:
+            return self.variables[x[0]].__getitem__(x[1])
+
+
+    def __iter__(self):
+        return self.variables.__iter__()
+
+    def __len__(self):
+        return self.variables.__len__()
 
     @abstractmethod
     def read(self):
@@ -147,19 +192,28 @@ class CodeInput(collections.MutableMapping):
 
 
 
-class CodeOutput:
+class CodeOutput(collections.Mapping):
 
     __metaclass__ = ABCMeta
 
     def __init__(self):
-        self.output_file = None
         self.output_values = {}
-        self.number_outputs = 0
 
     @abstractmethod
-    def read_outputfile(self):
+    def read(self):
         pass
 
-    @abstractproperty
     def is_loaded(self):
-        pass
+        return not self.output_values == {}    
+
+    def __contains__(self, x):
+        return x in self.output_values
+
+    def __getitem__(self, x):
+        return self.output_values.__getitem__(x)
+    
+    def __iter__(self):
+        return self.output_values.__iter__()
+
+    def __len__(self):
+        return self.output_values.__len__()

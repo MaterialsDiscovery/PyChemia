@@ -12,6 +12,7 @@ from .abifiles import AbiFiles
 from .input import AbinitInput, xyz2input
 from .abinit import AbinitJob
 from .output import AbinitOutput
+from .run import AbinitRun
 from .utils import psp_name
 from .parser import parser
 

@@ -2,9 +2,9 @@
 Routines anc Classes to manipulate Octopus Inputs
 """
 
-import os as _os
-import gzip as _gzip
-import numpy as _np
+import os
+import gzip
+import numpy as np
 import pychemia
 from ..codes import CodeInput
 
@@ -14,7 +14,7 @@ class OctopusInput(CodeInput):
     Manipulate an octopus input file
     """
 
-    def __init__(self, filename=None):
+    def __init__(self, input_file='inp'):
         """
         Converts a given octopus input file
         into a dictionary where the keys are
@@ -23,10 +23,13 @@ class OctopusInput(CodeInput):
         """
         key = ''
         self.variables = {}
-        if filename is None:
-            return
+        self.input_file = input_file
+        if os.path.isfile(input_file):
+            self.read()
 
-        rfile = open(filename)
+
+    def read(self):
+        rfile = open(self.input_file)
 
         multivalue = False
         values = None
@@ -77,27 +80,32 @@ class OctopusInput(CodeInput):
         the input as it will be written
         in a file
         """
+        # Get all variables and their groups
         oct_vars = get_vars()
-        octvars = self.variables.keys()
+        # All known groups of variables
+        oct_groups = list(oct_vars.keys())
+
+        octvars = list(self.variables.keys())
 
         oct_str = ""
         # Writing the known groups
-        for group in sorted(oct_vars.keys()):
+        for igroup in sorted(oct_groups):
             use = 0
-            for j in sorted(oct_vars[group]):
+            for j in sorted(oct_vars[igroup]):
                 if j in octvars:
                     if use == 0:
                         oct_str += '\n#' + 60 * '-' + '\n'
-                        oct_str += '#' + 3 * ' ' + ' ' + group + '\n'
+                        oct_str += '#' + 3 * ' ' + ' ' + igroup + '\n'
                         oct_str += '#' + 60 * '-' + '\n\n'
                         use = 1
 
                     oct_str += _write_key(j, self.variables[j])
+                    # Remove the variable from the list when written
                     octvars.remove(j)
 
         oct_def = ""
         if len(octvars) > 0:
-            # Writing others
+            # Writing all remaining variables that has not group associated
             oct_def += '\n#' + 60 * '-' + '\n'
             oct_def += '#' + 3 * ' ' + ' ' + 'Definitions' + '\n'
             oct_def += '#' + 60 * '-' + '\n\n'
@@ -130,7 +138,7 @@ def get_vars():
     """
     Get a list of all the variables in octopus
     """
-    data = open(_os.path.dirname(pychemia.__path__[0]) + '/pychemia/octopus/octopus_variables.conf')
+    data = open(os.path.dirname(pychemia.__path__[0]) + '/pychemia/code/octopus/octopus_variables.conf')
     oct_variables = {}
 
     for line in data.readlines():
@@ -156,14 +164,14 @@ class OpenDX:
         """
         Creates an OpenDX file generated for octopus
         """
-        rfile = _gzip.open(filename)
+        rfile = gzip.open(filename)
         data = rfile.readlines()
         rfile.close()
         del rfile
-        self.nsize = _np.array([int(x) for x in data[0].split()[-3:]])
-        self.origin = _np.array([float(x) for x in data[1].split()[-3:]])
-        self.delta = _np.array([[float(x.split()[i]) for i in [1, 2, 3]] for x in data[2:5]])
-        self.field = _np.array(map(float, data[7:_np.prod(self.nsize) + 7]))
+        self.nsize = np.array([int(x) for x in data[0].split()[-3:]])
+        self.origin = np.array([float(x) for x in data[1].split()[-3:]])
+        self.delta = np.array([[float(x.split()[i]) for i in [1, 2, 3]] for x in data[2:5]])
+        self.field = np.array(map(float, data[7:np.prod(self.nsize) + 7]))
         self.field = self.field.reshape(tuple(self.nsize))
         del data
 
@@ -171,8 +179,8 @@ class OpenDX:
         """
         Compute the Integral in the X direction
         """
-        xvalue = _np.arange(self.origin[0], self.origin[0] + self.delta[0, 0] * self.nsize[0], self.delta[0, 0])
-        yvalue = _np.sum(_np.sum(self.field, axis=1), axis=1)
+        xvalue = np.arange(self.origin[0], self.origin[0] + self.delta[0, 0] * self.nsize[0], self.delta[0, 0])
+        yvalue = np.sum(np.sum(self.field, axis=1), axis=1)
         return xvalue, yvalue
 
 

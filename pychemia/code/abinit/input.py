@@ -37,24 +37,6 @@ class AbinitInput(CodeInput):
             else:
                 self.read()
 
-    def __contains__(self, x):
-        pass
-
-    def __delitem__(self, key):
-        return self.variables.__delitem__(key)
-
-    def __setitem__(self, key, value):
-        return self.variables.__setitem__(key, value)
-
-    def __getitem__(self, key):
-        return self.variables.__getitem__(key)
-
-    def __iter__(self):
-        return self.variables.__iter__()
-
-    def __len__(self):
-        return self.variables.__len__()
-
     def __import_input(self, filename):
         """
         Read an ABINIT input file and return a python dictionary

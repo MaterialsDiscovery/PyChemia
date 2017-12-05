@@ -9,7 +9,7 @@ from pychemia.code.lennardjones import lj_compact_evaluate
 from pychemia.utils.mathematics import unit_vector, length_vectors, unit_vectors, rotate_towards_axis, length_vector
 from pychemia.utils.periodic import covalent_radius, atomic_number
 from pychemia.utils.serializer import generic_serializer
-from pychemia.code import LennardJones
+from pychemia.code.lennardjones import LennardJones
 from pychemia.external.symmol import get_point_group
 from ._population import Population
 from ._distances import FingerPrints, StructureDistances

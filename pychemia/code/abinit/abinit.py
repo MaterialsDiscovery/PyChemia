@@ -1,10 +1,10 @@
 import os
 from .abifiles import AbiFiles
 from .input import AbinitInput
-from pychemia.code import Codes
+from ..codes import CodeRun
 
 
-class AbinitJob(Codes):
+class AbinitJob(CodeRun):
     def __init__(self):
         Codes.__init__(self)
         self.abifile = None

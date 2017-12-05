@@ -16,6 +16,7 @@ import tempfile
 import subprocess
 import pychemia
 import pychemia.code.abinit
+from pychemia.utils.netcdf import netcdf2dict
 
 def test_example2():
     """
@@ -56,7 +57,7 @@ def test_example2():
         subprocess.call(['abinit'], stdin=abifile, stdout=logfile)
         if os.path.isfile('abinit-o_WFK'):
             shutil.copyfile('abinit-o_WFK', 'abinit-i_WFK')
-        data = pychemia.code.abinit.netcdf2dict(workdir + '/abinit-o_OUT.nc')
+        data = netcdf2dict(workdir + '/abinit-o_OUT.nc')
         os.rename(workdir + '/abinit-o_OUT.nc', '%s/abinit-o_OUT.nc_%d' % (workdir, i))
         res.append({'ecut': data['ecut'], 'etotal': data['etotal']})
         print('Total energy: %f' % data['etotal'])

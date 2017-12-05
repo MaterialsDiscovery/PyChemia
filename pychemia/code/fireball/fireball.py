@@ -7,10 +7,10 @@ import numpy as np
 from pychemia import pcm_log, Structure
 from pychemia.utils.serializer import generic_serializer
 from pychemia.utils.periodic import atomic_number, atomic_symbol
-from ..codes import Codes
+from ..codes import CodeRun
 
 
-class FireBall(Codes):
+class FireBall(CodeRun):
     def __init__(self, fdata_path=None):
         self.workdir = None
         # The five sections of Fireball

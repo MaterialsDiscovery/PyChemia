@@ -9,8 +9,8 @@ import pychemia
 import time
 
 # OPTIONS
-USEDMATPU = 25
-NSTEP = 50
+USEDMATPU = 23
+NSTEP = 46
 TOLVRS = 1E-14
 TARGET_NRES2 = 1E-12
 NRUNS=10
@@ -107,12 +107,21 @@ if __name__ == "__main__":
         print("Reading the output abinit.out...")
         # The final density matrix is build from the outputi
         ndim = 2*max(abi['lpawu'])+1
-        dmatpawu = pychemia.population.orbitaldftu.get_final_dmatpawu('abinit.out')
-        print('New dmatpawu found, number of elements: %d' % len(dmatpawu))
+        try:
+            newdmatpawu = pychemia.population.orbitaldftu.get_final_dmatpawu('abinit.out')
+            print('New dmatpawu found, number of elements: %d' % len(dmatpawu))
+        except:
+            newdmatpawu = None
+            print("Could not get final dmatpawu from abinit.out")
+        if newdmatpawu is not None:
+            dmatpawu = newdmatpawu
+        else:
+            dmatpawu = abi['dmatpawu']
+
         print('Reshaping to %d matrices %d X %d' % (len(dmatpawu)/(ndim*ndim), ndim, ndim))
         odmatpawu = np.array(dmatpawu).reshape(-1, ndim, ndim)
         params=pychemia.population.orbitaldftu.dmatpawu2params(dmatpawu, ndim)
-        print("New parameters obtained for %d matrices" % par['num_matrices'])
+        print("New parameters obtained for %d matrices" % params['num_matrices'])
 
         # Updating dmatpawu from the output back to input
         abi['dmatpawu'] = list(odmatpawu.flatten())

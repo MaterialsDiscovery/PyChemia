@@ -3,13 +3,13 @@ import re
 import subprocess
 import numpy as np
 import numbers
-from pychemia.code import Codes
+from ..codes import CodeRun
 from pychemia.crystal import KPoints
 from pychemia import Structure, pcm_log
 from pychemia.utils.serializer import generic_serializer
 
 
-class DFTBplus(Codes):
+class DFTBplus(CodeRun):
     def __init__(self):
         Codes.__init__(self)
         self.workdir = None

@@ -12,6 +12,7 @@ class AbinitOutput(CodeOutput):
         self.filename = filename
         rf = open(self.filename)
         self.data = rf.read()
+        self.read()
 
     def reload(self):
         rf = open(self.filename)
@@ -32,6 +33,9 @@ class AbinitOutput(CodeOutput):
                           'residm': list(ret[:, 3]),
                           'nres2': list(ret[:, 4])}
             return energetics
+
+    def read(self):
+        self.output_values = self.get_energetics()
 
     @property
     def is_finished(self):
@@ -97,5 +101,3 @@ class AbinitOutput(CodeOutput):
     @staticmethod
     def read_output_netcdf(filename):
         return file2dict(filename)
-
-

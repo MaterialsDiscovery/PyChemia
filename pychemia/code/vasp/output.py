@@ -31,6 +31,20 @@ class VaspOutput(CodeOutput):
         self.final_data = {}
         self.iteration_data = []
         self.outcar_parser()
+        self.read()
+        
+    def read(self):
+        self.read_outputfile(self.filename)
+        self.outcar_parser()
+        ret = {}
+        ret['energies'] = self.energies
+        ret['forces'] = self.forces
+        ret['bands'] = self.bands
+        ret['positions'] = self.positions
+        ret['kpoints'] = self.kpoints
+        ret['stress'] = self.stress
+        self.output_values = ret
+
 
     def is_loaded(self):
         if self.data is None:
