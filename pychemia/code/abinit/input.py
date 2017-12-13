@@ -1,3 +1,4 @@
+
 import os
 import numpy as np
 from pychemia.utils.periodic import atomic_symbol, covalent_radius, atomic_number
@@ -65,23 +66,6 @@ class AbinitInput(CodeInput):
     def check(self):
         if self.get_number_variables > 0:
             print("ABINIT input is readable and has %d variables" % self.get_number_variables)
-
-    def write(self, filename=None):
-        """
-        Write an input object into a text
-        file that ABINIT can use as an input
-        file
-
-        Args:
-            filename:
-                The 'abinit.in' filename that will be written
-        """
-        if filename is None:
-            filename = self.input_file
-
-        wf = open(filename, 'w')
-        wf.write(self.__str__())
-        wf.close()
 
     def __str__(self):
         """

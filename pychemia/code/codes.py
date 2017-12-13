@@ -27,13 +27,6 @@ class CodeRun:
     def get_outputs(self):
         pass
 
-    @abstractproperty
-    def is_finished(self):
-        pass
-
-    @abstractproperty
-    def is_successful(self):
-        pass
 
     def execute(self, omp_num_threads=1, mpi_num_procs=1, wait=True):
         """
@@ -122,13 +115,31 @@ class CodeInput(collections.MutableMapping):
     def read(self):
         pass
 
-    @abstractmethod
-    def write(self):
-        pass
 
     @abstractmethod
     def __str__(self):
         pass
+
+
+    def write(self, filename=None):
+        """
+        Write an input object into a text
+        file that ABINIT can use as an input
+        file
+
+        Args:
+            filename:
+                The 'abinit.in' filename that will be written
+        """
+        if filename is None:
+            if self.input_file is not None:
+                filename = self.input_file
+            else:
+                raise ValueError("Not filename indicated")
+        wf = open(filename, 'w')
+        wf.write(self.__str__())
+        wf.close()
+
 
     def has_variable(self, varname, section=None):
         if self.is_hierarchical:
@@ -203,6 +214,12 @@ class CodeOutput(collections.Mapping):
     def read(self):
         pass
 
+    # True means that the run is just complete
+    @abstractproperty
+    def is_finished(self):
+        pass
+
+    @property
     def is_loaded(self):
         return not self.output_values == {}    
 

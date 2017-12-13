@@ -9,10 +9,17 @@ class AbinitOutput(CodeOutput):
     def __init__(self, filename='abinit.out'):
 
         CodeOutput.__init__(self)
-        self.filename = filename
-        rf = open(self.filename)
-        self.data = rf.read()
-        self.read()
+        self.filename = None
+        self.data = ''
+        if os.path.isfile(filename):
+            self.filename = filename
+        elif os.path.isdir(filename) and os.path.isfile(filename+os.sep+'abinit.out'):
+            self.filename=filename+os.sep+'abinit.out'
+        if self.filename is not None:
+            rf = open(self.filename)
+            self.data = rf.read()
+            self.read()
+        
 
     def reload(self):
         rf = open(self.filename)
