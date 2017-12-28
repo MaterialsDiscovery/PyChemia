@@ -23,21 +23,56 @@ class ElkInput(CodeInput):
         ret={}
         # Current key
         curkey=None
-        for iline in lines:
+        index=-1
+        for iline in range(len(lines)):
             # Remove leading and trailing spaces and newline jumps
-            line=iline.strip()
+            line=lines[iline].strip()
+            # For debugging parser
+            # print("%3d \t%s" % (iline,line))
             # Ignore empty lines
             if len(line)==0:
                 continue
             # Ignore lines that start with "!"
             elif line[0] == '!':
                 continue
+            elif index>=iline:
+                continue
+            # Special Parsing for atoms
+            elif line == 'atoms':
+                curkey='atoms'
+                index=iline+1
+                line=lines[index]
+                nspecies=int(line.split()[0])
+                ret['atoms'] = {'order': [], 'nspecies': nspecies}
+                for j in range(nspecies):
+                    index+=1
+                    line=lines[index].strip()
+                    spfname=''
+                    for i in range(1, len(line)):
+                        if line[i]=="'":
+                            break
+                        spfname+=line[i]
+                    ret['atoms']['order'].append(spfname)
+                    index+=1
+                    line=lines[index].strip()
+                    natoms=int(line.split()[0])
+                    ret['atoms'][spfname]={'atposl':[], 'bfcmt':[], 'natoms': natoms}
+                    for k in range(natoms):
+                        index+=1
+                        line=lines[index].strip()
+                        atposl=[ float(x) for x in line.split()[:3]] 
+                        ret['atoms'][spfname]['atposl'].append(atposl)
+                        if len(line.split())>=6 and line.split()[4][0]!=':':
+                            bfcmt=[ float(x) for x in line.split()[3:6]]
+                        else:
+                            bfcmt=[0.0,0.0,0.0]
+                        ret['atoms'][spfname]['bfcmt'].append(bfcmt)
             # When Line starts with an alpha character
-            elif line[0].isalpha():
+            elif line[0].isalpha() or line=='.true.' or line=='.false.':
                 # print("alph>%s" % line)
-                if line=='true':
+                if line=='true' or line=='.true.':
                     ret[curkey].append(True)
-                elif line=='false':
+                elif line=='false' or line=='.false.':
                     ret[curkey].append(False)
                 elif curkey is not None and curkey in ret:
                     if len(ret[curkey])==1:
@@ -71,7 +106,6 @@ class ElkInput(CodeInput):
                 ret[curkey].append(word)
             else:
                 print("Could not parse:%s" % line)
-
         self.variables=ret
 
 
@@ -87,25 +121,39 @@ class ElkInput(CodeInput):
             ret+='\n'+ikey+'\n'
             value = self.variables[ikey]
             if ikey == 'atoms':
-                ret+=" %d\n" % value[0]
-                ret+=" '%s'\n" % value[1]
-                natoms = value[2]
-                ret+=" %d\n" % value[2]
-                for j in range(natoms):
-                    ret+=" %9.6f %9.6f %9.6f %9.6f %9.6f %9.6f\n" % tuple(value[3+j*6:3+j*6+6])
+                nspecies = value['nspecies']
+                ret+=" %d\n" % nspecies
+                for i in range(nspecies):
+                    spfname = value['order'][i]
+                    ret+=" '%s'\n" % spfname
+                    natoms = value[spfname]['natoms']
+                    ret+=" %d\n" % natoms
+                    for j in range(natoms):
+                        ret+=" %9.6f %9.6f %9.6f" % tuple(value[spfname]['atposl'][j])
+                        ret+=" %9.6f %9.6f %9.6f\n" % tuple(value[spfname]['bfcmt'][j])
             elif ikey == 'avec':
                 for j in range(3):
                     ret+=" %9.6f %9.6f %9.6f\n" % tuple(value[j*3:j*3+3])
+            elif ikey == 'tasks':
+                for itask in value:
+                    ret+=" %d\n" % itask
+            elif ikey == 'wplot':
+                ret+=" %d %d %d\n" % tuple(value[:3])
+                ret+=" %9.3f %9.3f\n" % tuple(value[3:])
             else:
                 if type(value) == list:
                     for i in value:
                         ret+=" "+str(i)
                     ret+='\n'
-                if type(value) == int:
+                elif type(value) == int:
                     ret+=" %d\n" % value
-                if type(value) == float:
+                elif type(value) == float:
                     ret+=" %f\n" % value
-                if type(value) == str:
+                elif type(value) == str:
                     ret+=" '%s'\n" % value
+                elif type(value) == bool:
+                    ret+="%s\n" % str(value).lower()
+                else:
+                    raise ValueError("Could not identify proper type for %s with type: %s" % (value, type(value)))
 
         return ret

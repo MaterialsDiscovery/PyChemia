@@ -26,6 +26,7 @@ class PBSRunner:
         self.nodes = None
         self.features = None
         self.filename = filename
+        self.jobid = None
         if workdir is None:
             self.workdir = "."
         elif workdir[-1] == os.sep:
@@ -163,8 +164,17 @@ class PBSRunner:
                 print('         The output from qsub was:\n %s' % exc.output )
 
         os.chdir(cwd)
+        self.jobid = stdout.decode().strip()
         return stdout.decode().strip()
 
+    def get_stats(self, username):
+        if self.jobid is None:
+            return None
+        else:
+            jobs=get_jobs(username)
+            if self.jobid in jobs:
+                return jobs[self.jobid]
+        
 
 def get_jobs(user):
     """

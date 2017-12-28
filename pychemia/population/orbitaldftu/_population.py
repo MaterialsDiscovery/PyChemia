@@ -6,7 +6,7 @@ import itertools
 import subprocess
 import random
 import numpy as np
-from ._population import Population
+from .._population import Population
 from pychemia import pcm_log
 from pychemia.code.abinit import AbinitInput, AbinitOutput
 from pychemia.utils.mathematics import gram_smith_qr, gea_all_angles, gea_orthogonal_from_angles, unit_vector
@@ -258,14 +258,13 @@ class OrbitalDFTU(Population):
     def collect_data(self, entry_id, workdir, filename='abinit.out'):
 
         if os.path.isfile(workdir + os.sep + filename):
-            ao = AbinitOutput(workdir + os.sep + filename)
-
-            dmatpawu = get_final_dmatpawu(workdir + os.sep + filename)
+            abo = AbinitOutput(workdir + os.sep + filename)
+            dmatpawu = abo.get_dmatpawu()
             dmat = dmatpawu2params(dmatpawu, self.ndim)
 
-            if 'etot' in ao.get_energetics():
-                etot = ao.get_energetics()['etot'][-1]
-                nres2 = ao.get_energetics()['nres2'][-1]
+            if 'etot' in abo.get_energetics():
+                etot = abo.get_energetics()['etot'][-1]
+                nres2 = abo.get_energetics()['nres2'][-1]
                 print('Uploading energy data for %s' % entry_id)
                 self.set_final_results(entry_id, dmat, etot, nres2)
 
@@ -282,7 +281,7 @@ class OrbitalDFTU(Population):
 
     def collect(self, entry_id, workdir='.'):
         idir = workdir+os.sep+str(entry_id)
-        abinitout = self.get_final_abinit_out(idir)
+        abinitout = get_final_abinit_out(idir)
 
         if self.get_entry(entry_id) is not None and not self.is_evaluated(entry_id):
             print("%s Setting final dmat" % entry_id)
@@ -358,7 +357,7 @@ class OrbitalDFTU(Population):
                     if not os.path.isdir(basedir+os.sep+str(entry_id)):
                         self.prepare_folder(entry_id, workdir=basedir, source_dir=basedir)
                     elif os.path.isfile(basedir+os.sep+str(entry_id)+os.sep+'COMPLETE'):
-                        abinitout = self.get_final_abinit_out(basedir+os.sep+str(entry_id))
+                        abinitout = get_final_abinit_out(basedir+os.sep+str(entry_id))
                         if abinitout is not None:
                             abo = AbinitOutput(abinitout)
                             # check if finished
@@ -394,31 +393,18 @@ class OrbitalDFTU(Population):
             ret = None
         return ret
 
-    @staticmethod
-    def get_final_abinit_out(path):
-        outputfile = None
-
-        if not os.path.isfile(path+os.sep+'abinit.in'):
-            raise ValueError('ERROR: No abinit.in at %s' % path)
-        for i in np.arange(10, -1, -1):
-            filename = path+os.sep+'abinit_%d.out' % i
-            if os.path.isfile(filename):
-                outputfile = filename
-                break
-        return outputfile
-
     def get_final_properties(self, path):
 
-        outputfile = self.get_final_abinit_out(path)
+        outputfile = get_final_abinit_out(path)
         if outputfile is None:
             raise ValueError("Not such dir: %s" % path)
 
         # Reading the OUTPUT
-        dmatpawu = get_final_dmatpawu(outputfile)
+        abo = AbinitOutput(outputfile)        
+        dmatpawu = abo.get_dmatpawu()
         odmatpawu = np.array(dmatpawu).reshape(-1, self.ndim, self.ndim)
         oparams = dmatpawu2params(odmatpawu, self.ndim)
 
-        abo = AbinitOutput(outputfile)
         if not abo.is_finished:
             print('This output is not finished')
             return None, None
@@ -626,7 +612,7 @@ class OrbitalDFTU(Population):
         if not abo.is_finished:
             return None
 
-        dmatpawu = get_final_dmatpawu(abinitout)
+        dmatpawu = abo.get_dmatpawu()
         if dmatpawu is None:
             return None
 
@@ -821,72 +807,6 @@ def get_pattern(params, ndim):
     return connection, pattern
 
 
-def get_final_correlation_matrices_from_output(filename):
-    rf = open(filename)
-    data = rf.read()
-    mainblock = re.findall('LDA\+U DATA[\s\w\d\-.=,>:]*\n', data)
-    if len(mainblock) != 1:
-        for isection in mainblock:
-            print(isection)
-        raise ValueError("Occupations for correlated orbitals could not be detected right")
-
-
-    pattern = "For Atom\s*(\d+), occupations for correlated orbitals. lpawu =\s*([\d]+)\s*Atom\s*[\d]+\s*. Occ. " \
-              "for lpawu and for spin\s*\d+\s*=\s*([\d\.]+)\s*Atom\s*[\d]+\s*. Occ. for lpawu and for " \
-              "spin\s*\d+\s*=\s*([\d\.]+)\s*=> On atom\s*\d+\s*,  local Mag. for lpawu is[\s\d\w\.\-]*== Occupation " \
-              "matrix for correlated orbitals:\s*Occupation matrix for spin  1\s*([\d\.\-\s]*)Occupation matrix " \
-              "for spin  2\s*([\d\.\-\s]*)"
-    ans = re.findall(pattern, mainblock[0])
-    # print(ans)
-
-    ret = []
-    for i in ans:
-        atom_data = {'atom number': int(i[0]),
-                     'orbital': int(i[1]),
-                     'occ spin 1': float(i[2]),
-                     'occ spin 2': float(i[3])}
-        matrix = [float(x) for x in i[4].split()]
-        atom_data['matrix spin 1'] = list(matrix)
-        matrix = [float(x) for x in i[5].split()]
-        atom_data['matrix spin 2'] = list(matrix)
-        ret.append(atom_data)
-    return ret
-
-
-def get_final_dmatpawu(filename):
-    ret = get_final_correlation_matrices_from_output(filename)
-    # Looking for input file
-    dirname = os.path.dirname(os.path.abspath(filename))
-    outnc = [ x for x in os.listdir(dirname) if x[-6:]=='OUT.nc']
-    if len(outnc) < 1:
-        raise ValueError("ERROR: Could not find *.OUT.nc needed to determine nspol, nspden and nspinor")
-    variables = netcdf2dict(dirname + os.sep + outnc[0])
-
-    if 'nspinor' in variables:
-        nspinor = variables['nspinor']
-    else:
-        nspinor = 1
-
-    if 'nsppol' in variables:
-        nsppol =  variables['nsppol']
-    else:
-        nsppol = 1
-
-    if 'nspden' in variables:
-        nspden = variables['nspden']
-    else:
-        nspden = nsppol
-
-    # number of matrices per atom:
-    nmpa = get_num_matrices_per_atom(nsppol, nspden, nspinor)
-
-    dmatpawu = []
-    for i in ret:
-        dmatpawu += i['matrix spin 1']
-        if nmpa == 2:
-            dmatpawu += i['matrix spin 2']        
-    return dmatpawu
-
 def get_num_matrices_per_atom(nsppol, nspden, nspinor):
         if nsppol == 1 and nspinor == 1 and nspden == 1:
             # Non-magnetic system (nsppol=1, nspinor=1, nspden=1):
@@ -914,3 +834,32 @@ def get_num_matrices_per_atom(nsppol, nspden, nspinor):
             # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
             # They contain the "spin-up" and "spin-down" occupations;
             return 2
+
+
+def get_final_abinit_out(path):
+    
+    if not os.path.isdir(path):
+        raise ValueError("ERROR: Could not find folder: %s" % path)
+    
+    outputfile = None
+    abos = [ x for x in os.listdir(path) if x[-3:] in ['txt', 'out']]
+
+    if len(abos) == 0:
+        raise ValueError("ERROR: Not suitable ABINIT output files were found ('*out' or '*txt') for path: %s" % path)
+
+    
+    # Most recent mtime
+    mtime = 0
+
+    for ifile in abos:
+        fpath=path+os.sep+ifile
+        if os.path.getmtime(fpath) > mtime:
+            abo = AbinitOutput(fpath)
+            if abo.is_loaded and abo.is_finished:
+                mtime = os.path.getmtime(fpath)
+                outputfile = fpath
+
+    if outputfile is None:
+        print("WARNING: Could not find any good ABINIT output file: %s" % path)
+
+    return outputfile
