@@ -166,8 +166,9 @@ class VaspInput(CodeInput):
                     real = False
                     string = True
 
+            if len(self.__dict__[varname]) == 1:
+                ret += "%s" % self.__dict__[varname][0]
             if len(self.__dict__[varname]) > 1:
-                print(varname)
                 tmp = [(self.__dict__[varname][0], 1)]
                 prev = self.__dict__[varname][0]
                 for i in self.__dict__[varname][1:]:
