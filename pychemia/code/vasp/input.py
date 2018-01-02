@@ -16,17 +16,16 @@ class VaspInput(CodeInput):
     It contains:
 
     data:
-          variables = Dictionary whose keys are ABINIT variable names
+          variables = Dictionary whose keys are VASP variable names
                       and contains the values as numpy arrays
 
     methods:
-            write = Write the input into as a text file that ABINIT
+            write = Write the input into as a text file that VASP
                     can use as an input file
 
             get_value = Get the value of a particular variable
             set_value = Set the value of a particular variable
     """
-
     def __init__(self, filename=None, variables=None):
 
         if variables is not None:
@@ -45,6 +44,10 @@ class VaspInput(CodeInput):
             if isinstance(value, list):
                 if len(value) == 1:
                     self.__dict__[i] = value[0]
+
+    @property
+    def variables(self):
+        return self.__dict__
 
     def __import_input(self, filename):
         rf = open(filename, 'r')
