@@ -1,6 +1,7 @@
 
 from ..codes import CodeInput
 
+
 class SiestaInput(CodeInput):
 
     def __init__(self):

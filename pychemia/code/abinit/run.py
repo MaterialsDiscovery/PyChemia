@@ -2,10 +2,11 @@ from ..codes import CodeRun
 from .input import AbinitInput
 import os
 
+
 class AbinitRun(CodeRun):
 
     def __init__(self, workdir):
-        binary='abinit'        
+        binary = 'abinit'
         CodeRun.__init__(self, workdir, binary)
         self.use_mpi = True
         self.stdout_filename = 'abinit.out'

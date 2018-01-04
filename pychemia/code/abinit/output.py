@@ -5,6 +5,7 @@ from math import sqrt
 from pychemia.utils.netcdf import file2dict
 from ..codes import CodeOutput
 
+
 class AbinitOutput(CodeOutput):
 
     def __init__(self, filename='abinit.out'):
@@ -14,8 +15,8 @@ class AbinitOutput(CodeOutput):
         self.data = ''
         if os.path.isfile(filename):
             self.filename = filename
-        elif os.path.isdir(filename) and os.path.isfile(filename+os.sep+'abinit.out'):
-            self.filename=filename+os.sep+'abinit.out'
+        elif os.path.isdir(filename) and os.path.isfile(filename + os.sep + 'abinit.out'):
+            self.filename = filename + os.sep + 'abinit.out'
         if self.filename is not None:
             rf = open(self.filename)
             self.data = rf.read()
@@ -31,12 +32,12 @@ class AbinitOutput(CodeOutput):
         ret = re.findall('ETOT\s*([\d]+)\s*([.E\d\-+]+)\s*([.E\d\-+]+)\s*([.E\d\-+]+)\s*([.E\d\-+]+)',
                          self.data)
         if not ret:
-            raise RuntimeError("Could not extract energetic lines from: %s" % self.filename )
+            raise RuntimeError("Could not extract energetic lines from: %s" % self.filename)
 
-        newret=[]
+        newret = []
         for y in ret:
             try:
-                etotline=[float(x) for x in y]
+                etotline = [float(x) for x in y]
                 newret.append(etotline)
             except ValueError:
                 print("This line could not be parsed correctly: %s" % y)
@@ -68,13 +69,13 @@ class AbinitOutput(CodeOutput):
         atoms = [int(x) for x in re.findall('For Atom([\s\w\d]*)', occ_block[0])]
         spins = [int(x) for x in re.findall('Occupation matrix for spin([\s\w\d]*\n)', occ_block[0])]
 
-        #print(occs)
-        #print(atoms)
-        #print(spins)
+        # print(occs)
+        # print(atoms)
+        # print(spins)
 
-        #print("Number of atoms: %d" % len(atoms))
-        #print("Number of spins blocks: %d" % len(spins))
-        #print("Number of occ matrices: %d" % len(occs))
+        # print("Number of atoms: %d" % len(atoms))
+        # print("Number of spins blocks: %d" % len(spins))
+        # print("Number of occ matrices: %d" % len(occs))
 
         if 2 * len(atoms) != len(spins) or len(spins) != len(occs):
             raise RuntimeError("Number of matrices is not consistent with number of atoms and spin")
@@ -84,28 +85,27 @@ class AbinitOutput(CodeOutput):
             atom = atoms[int((i + 1) / 2) + (i + 1) % 2 - 1]
             spin = spins[i]
             occ_matrix = [float(x) for x in occs[i].strip().split()]
-            if len(occ_matrix) not in [25,49]:
+            if len(occ_matrix) not in [25, 49]:
                 raise RuntimeError("Occupation matrices must be 5x5 or 7x7")
-            ret[ (atom, spin)] =  np.array(occ_matrix).reshape((-1, 
-                                                                 int(sqrt(len(occ_matrix))),
-                                                                 int(sqrt(len(occ_matrix)))))
+            ret[(atom, spin)] = np.array(occ_matrix).reshape((-1, int(sqrt(len(occ_matrix))),
+                                                              int(sqrt(len(occ_matrix)))))
         return ret
 
     def get_dmatpawu(self, both_spins=True):
         om = self.get_occupation_matrices()
-        min_atom = min([ x[0] for x in om.keys()])
-        max_atom = max([ x[0] for x in om.keys()])
-        min_spin = min([ x[1] for x in om.keys()])
-        max_spin = max([ x[1] for x in om.keys()])
+        min_atom = min([x[0] for x in om.keys()])
+        max_atom = max([x[0] for x in om.keys()])
+        min_spin = min([x[1] for x in om.keys()])
+        max_spin = max([x[1] for x in om.keys()])
         if not both_spins:
             max_spin = min_spin
         ret = None
         for i in range(min_atom, max_atom + 1):
             for j in range(min_spin, max_spin + 1):
                 if ret is None:
-                    ret=om[(i,j)]
+                    ret = om[(i, j)]
                 else:
-                    ret=np.vstack((ret,om[(i,j)]))
+                    ret = np.vstack((ret, om[(i, j)]))
         return ret
 
     def get_integrated_electronic_densities(self):
@@ -121,7 +121,7 @@ class AbinitOutput(CodeOutput):
         ref = re.findall("Integrated electronic and magnetization densities in atomic spheres:\s*"
                          "---------------------------------------------------------------------\s*"
                          "Note: Diff\(up-dn\) is a rough approximation of local magnetic moment\s*"
-                         "Atom\s*Radius\s*up_density\s*dn_density\s*Total\(up\+dn\)\s*Diff\(up\-dn\)\s*"
+                         "Atom\s*Radius\s*up_density\s*dn_density\s*Total\(up\+dn\)\s*Diff\(up-dn\)\s*"
                          "([\s\d\w.-]*)\n -+\n", self.data)
         # Return None if could not parse the magnetization block
         if len(ref) == 0:
@@ -138,7 +138,6 @@ class AbinitOutput(CodeOutput):
     @staticmethod
     def read_output_netcdf(filename):
         return file2dict(filename)
-
 
 # DEPRECATED CODE, all ABINIT specific operations from orbitaldftu
 # is moved here. 

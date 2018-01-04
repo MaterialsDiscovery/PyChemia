@@ -2,33 +2,35 @@ import os
 import numpy as np
 from scipy.io.netcdf import netcdf_file
 
+
 def file2dict(filename):
 
     if not os.path.isfile(filename):
         raise ValueError("ERROR: Could not read %s" % filename)
 
-    nc=netcdf_file(filename,'r', mmap=False)
-    ret={}
+    nc = netcdf_file(filename, 'r', mmap=False)
+    ret = {}
     for ikey in nc.variables.keys():
-        data=nc.variables[ikey].data
-        if type(data[0])==np.float64:
+        data = nc.variables[ikey].data
+        if type(data[0]) == np.float64:
             if len(data) == 1:
-                data=float(data[0])
+                data = float(data[0])
             else:
-                data=[ float(x) for x in data ]
-        elif type(data[0])==np.int32:
+                data = [float(x) for x in data]
+        elif type(data[0]) == np.int32:
             if len(data) == 1:
-                data=int(data[0])
+                data = int(data[0])
             else:
-                data=[ int(x) for x in data ]
+                data = [int(x) for x in data]
         else:
-            data=list(data)
+            data = list(data)
 
-        ret[ikey]= data
-        del(data)
+        ret[ikey] = data
+        del data
 
     nc.close()
     return ret
+
 
 def netcdf2dict(filename):
     """

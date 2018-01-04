@@ -13,7 +13,7 @@ def notest_abinit2xyz():
     print('Running abinit2xyz')
     script = 'bin/abi_abinit2xyz.py'
     args = path + '/abinit_03/abinit.in'
-    command_line="%s %s %s" % ('python', script, args)
+    command_line = "%s %s %s" % ('python', script, args)
     print(command_line)
     subprocess.check_output(command_line, shell=True)
     mol1 = pychemia.io.xyz.load(path + '/abinit_03/abinit_DS1.xyz')
@@ -31,7 +31,7 @@ def notest_xyz2abinit():
     """
     script = 'bin/abi_xyz2abinit.py'
     args = path + '/xyz/chlorophyll.xyz'
-    command_line="%s %s %s" % ('python', script, args)
+    command_line = "%s %s %s" % ('python', script, args)
     print(command_line)
     subprocess.check_output(command_line, shell=True)
     inp = pychemia.code.abinit.AbinitInput(path + '/xyz/chlorophyll.xyz.in')
@@ -47,7 +47,7 @@ def notest_plot_bonds():
     script = 'bin/abi_plot_bonds.py'
     arg1 = path + '/abinit_01/abinit.files:11'
     arg2 = path + '/abinit_01/abinit.files:21'
-    command_line="%s %s %s %s" % ('python', script, arg1, arg2)
+    command_line = "%s %s %s %s" % ('python', script, arg1, arg2)
     print(command_line)
     subprocess.check_output(command_line, shell=True)
     os.remove("bonds.txt")
@@ -61,7 +61,7 @@ def notest_plot_hist():
     script = 'bin/abi_plot_hist.py'
     arg1 = path + '/abinit_01/abinit.files'
     arg2 = '11'
-    command_line="%s %s %s %s" % ('python', script, arg1, arg2)
+    command_line = "%s %s %s %s" % ('python', script, arg1, arg2)
     print(command_line)
     subprocess.check_output(command_line, shell=True)
     os.remove(path + '/abinit_01/abinit-o_DS11.pdf')

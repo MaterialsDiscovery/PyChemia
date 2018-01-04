@@ -41,7 +41,6 @@ class PBSRunner:
             self.set_template(template)
             self.template = template
 
-
     def set_pbs_params(self, nodes=None, ppn=None, walltime=None, message=None, mail=None, queue=None, features=None):
         """
         Set various PBS params
@@ -51,9 +50,9 @@ class PBSRunner:
             walltime = [12, 0, 0]
         self.set_walltime(walltime)
         if nodes is not None: 
-            self.nodes=nodes
+            self.nodes = nodes
         if self.nodes is None:
-            self.nodes=1
+            self.nodes = 1
         self.ppn = ppn
         self.message = message
         self.mail = mail
@@ -91,11 +90,11 @@ class PBSRunner:
         Evaluatable representation of the object
         """
         return "%s(workdir=%s, filename=%s, jobname=%s, template=%s)" % \
-            ( self.__class__.__name__, 
+            (self.__class__.__name__,
               "'%s'" % self.workdir if self.workdir is not None else None,
               "'%s'" % self.filename if self.filename is not None else None, 
               "'%s'" % self.jobname if self.jobname is not None else None,
-              "'%s'" % self.template if self.template is not None else None )
+              "'%s'" % self.template if self.template is not None else None)
 
     def __str__(self):
         """
@@ -106,26 +105,26 @@ class PBSRunner:
             feat = ':'
         else:
             feat = ':'+self.features+':'
-        ret="#!/bin/sh\n"
+        ret = "#!/bin/sh\n"
         if self.jobname is not None:
-            ret+="\n#PBS -N %s\n" % self.jobname
+            ret += "\n#PBS -N %s\n" % self.jobname
         if self.nodes is not None:
-            ret+="#PBS -l nodes=%d" % self.nodes
+            ret += "#PBS -l nodes=%d" % self.nodes
         if self.ppn is not None:
-            ret+="%sppn=%d\n" %(feat, self.ppn)
+            ret += "%sppn=%d\n" % (feat, self.ppn)
         if self.walltime is not None:
-            ret+="#PBS -l walltime=%d:%02d:%02d\n" % (wt[0] * 24 + wt[1], wt[2], wt[3])
+            ret += "#PBS -l walltime=%d:%02d:%02d\n" % (wt[0] * 24 + wt[1], wt[2], wt[3])
         if self.message is not None:
-            ret+="#PBS -m %s\n" % self.message
+            ret += "#PBS -m %s\n" % self.message
         if self.mail is not None:
-            ret+="#PBS -M %s\n" % self.mail
+            ret += "#PBS -M %s\n" % self.mail
         if self.queue is not None:
-            ret+="#PBS -q %s\n" % self.queue
-        ret+='\ncd $PBS_O_WORKDIR\n'
+            ret += "#PBS -q %s\n" % self.queue
+        ret += '\ncd $PBS_O_WORKDIR\n'
 
         if self.template is not None:
-            ret+="\n# from template\n"
-            ret+="%s\n" % self.template_text
+            ret += "\n# from template\n"
+            ret += "%s\n" % self.template_text
         return ret
 
     def write(self):
@@ -151,17 +150,17 @@ class PBSRunner:
         # Move into the workdir before executing qsub
         os.chdir(self.workdir)
         if priority is None:
-            command_line="qsub %s" % self.filename
+            command_line = "qsub %s" % self.filename
         else:
-            command_line="qsub %s -p %d" % (self.filename, priority)
+            command_line = "qsub %s -p %d" % (self.filename, priority)
 
         try:
             stdout = subprocess.check_output(command_line, shell=True)
         except subprocess.CalledProcessError as exc:
             print('[ERROR]: Torque/PBS returned error code: %s' % exc.returncode)
             print('         Command line was: %s ' % exc.cmd)
-            if len(exc.output)>0:
-                print('         The output from qsub was:\n %s' % exc.output )
+            if len(exc.output) > 0:
+                print('         The output from qsub was:\n %s' % exc.output)
 
         os.chdir(cwd)
         self.jobid = stdout.decode().strip()
@@ -171,7 +170,7 @@ class PBSRunner:
         if self.jobid is None:
             return None
         else:
-            jobs=get_jobs(username)
+            jobs = get_jobs(username)
             if self.jobid in jobs:
                 return jobs[self.jobid]
         

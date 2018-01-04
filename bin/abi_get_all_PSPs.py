@@ -32,7 +32,7 @@ def worker(filename, directory, filepath):
             if os.path.getsize(directory + '/' + filename) == 0:
                 os.remove(directory + '/' + filename)
         except ftplib.error_perm:
-            print('Retrying download of %s' % (filepath))
+            print('Retrying download of %s' % filepath)
             ftp.close()
             time.sleep(1)
             if os.path.isfile(directory + '/' + filename):
@@ -41,7 +41,7 @@ def worker(filename, directory, filepath):
             ftp.login()  # user anonymous, passwd anonymous@
             nofile = False
         except EOFError:
-            print('Retrying download of %s' % (filepath))
+            print('Retrying download of %s' % filepath)
             ftp.close()
             time.sleep(1)
             if os.path.isfile(directory + '/' + filename):

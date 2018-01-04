@@ -326,14 +326,14 @@ class NonCollinearMagMoms(Population):
                 os.remove(workdir+os.sep+i)
             os.symlink(os.path.abspath(self.source_dir+os.sep+i), workdir+os.sep+i)
 
-        input = read_incar(self.source_dir + os.sep + 'INCAR')
+        incar = read_incar(self.source_dir + os.sep + 'INCAR')
         magmom_sph = self.get_entry(entry_id, {'properties.magmom': 1})['properties']['magmom']
         magmom_car = spherical_to_cartesian(magmom_sph)
-        input['MAGMOM'] = [float(x) for x in magmom_car.flatten()]
-        input['M_CONSTR'] = [float(x) for x in magmom_car.flatten()]
+        incar['MAGMOM'] = [float(x) for x in magmom_car.flatten()]
+        incar['M_CONSTR'] = [float(x) for x in magmom_car.flatten()]
         for i in self.incar_extra:
-            input[i] = self.incar_extra[i]
-        input.write(workdir + os.sep + 'INCAR')
+            incar[i] = self.incar_extra[i]
+        incar.write(workdir + os.sep + 'INCAR')
 
     def collect_data(self, entry_id, workdir):
         if os.path.isfile(workdir + '/OUTCAR'):

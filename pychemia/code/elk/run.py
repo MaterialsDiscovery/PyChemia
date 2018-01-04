@@ -1,8 +1,10 @@
 from ..codes import CodeRun
 
+
 class ElkRun(CodeRun):
 
     def __init__(self):
+        CodeRun.__init__(self)
         pass
 
     def set_inputs(self):

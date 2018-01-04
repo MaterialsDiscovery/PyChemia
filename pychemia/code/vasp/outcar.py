@@ -2,7 +2,6 @@ import os
 from .output import VaspOutput
 
 
-
 def read_vasp_stdout(filename):
     if not os.path.isfile(filename):
         raise ValueError("Could not read: %s" % filename)

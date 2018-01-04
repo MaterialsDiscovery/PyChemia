@@ -21,12 +21,12 @@ class OctopusInput(CodeInput):
         variable names and the values are scalars
         or list if the variable is a block
         """
+        CodeInput.__init__(self)
         key = ''
         self.variables = {}
         self.input_file = input_file
         if os.path.isfile(input_file):
             self.read()
-
 
     def read(self):
         rfile = open(self.input_file)
@@ -182,8 +182,6 @@ class OpenDX:
         xvalue = np.arange(self.origin[0], self.origin[0] + self.delta[0, 0] * self.nsize[0], self.delta[0, 0])
         yvalue = np.sum(np.sum(self.field, axis=1), axis=1)
         return xvalue, yvalue
-
-
 
 
 def _write_key(key, value):

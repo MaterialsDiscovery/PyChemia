@@ -3,6 +3,7 @@ import subprocess as _subprocess
 from .utils import netcdf2dict, psp_name
 from .input import AbinitInput
 
+
 class AbiFiles:
     """
     Read an 'abinit.files' file and extract the
@@ -83,7 +84,6 @@ class AbiFiles:
                 print("PSP file is present: %s" % ifile)
             else:
                 print("WARNING: PSP is not present: %s" % ifile)
-
 
     def write(self, filename):
         """

@@ -15,8 +15,6 @@ __status__ = "Development"
 __date__ = "May 13, 2016"
 
 
-
-
 def __parse_word(word):
     """
     Read an string and determines if it is a word or a number

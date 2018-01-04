@@ -58,8 +58,8 @@ class PyChemiaDB:
             try:
                 self._client.server_info()
             except OperationFailure:
-                raise RuntimeError("ERROR: Database '%s' on '%s' cannot be accessed, either the database does not exist or you need the right credentials to get access" % (name, host))
-
+                raise RuntimeError("ERROR: Database '%s' on '%s' cannot be accessed, either the database does not "
+                                   "exist or you need the right credentials to get access" % (name, host))
 
         except ServerSelectionTimeoutError:
             raise RuntimeError("ERROR: No connexion could be established to server: %s" % uri)
@@ -85,6 +85,7 @@ class PyChemiaDB:
         """
         Insert a pychemia structure instance and properties
         into the database
+        :param entry_id: Mongo ID for the entry
         :param structure: (pychemia.Structure) An instance of Pychemia's Structure
         :param properties: (dict) Dictionary of properties
         :param status: (dict) Dictionary of status
@@ -96,7 +97,7 @@ class PyChemiaDB:
             properties = {}
         entry = {'structure': structure.to_dict, 'properties': properties, 'status': status}
         if entry_id is not None:
-            entry['_id']=entry_id
+            entry['_id'] = entry_id
         entry_id = self.entries.insert_one(entry)
         return entry_id
 
@@ -381,6 +382,7 @@ def object_id(entry_id):
         return ObjectId(entry_id)
     elif isinstance(entry_id, ObjectId):
         return entry_id
+
 
 def has_connection(host='localhost'):
     if not HAS_PYMONGO:

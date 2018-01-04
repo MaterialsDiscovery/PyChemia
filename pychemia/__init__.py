@@ -82,7 +82,6 @@ except ImportError:
     gridfs = None
     HAS_GRIDFS = False
 
-
 try:
     import ase
     HAS_ASE = True
@@ -95,9 +94,9 @@ try:
 except ImportError:
     HAS_PYMATGEN = False
 
-
 pcm_log = logging.getLogger(__name__)
 pcm_log.addHandler(logging.NullHandler())
+
 from .core import Structure, Composition
 from . import analysis
 from . import db
@@ -111,6 +110,7 @@ from . import code
 from . import population
 from .core.from_file import structure_from_file
 from pychemia.crystal import samples
+
 
 
 def info():

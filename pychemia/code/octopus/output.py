@@ -1,18 +1,21 @@
 from ..codes import CodeOutput
 import numpy as np
 
+
 class OctopusOutput(CodeOutput):
+
+    @property
+    def is_finished(self):
+        return False
 
     def __init__(self, dirname):
         self.dirname = dirname
         CodeOutput.__init__(self)
-        
 
     def read(self):
         coords = coordinates(self.dirname)
         energs = energy(self.dirname)
-        self.output_values={'energetics': energs, 'coordinates': coords}
-
+        self.output_values = {'energetics': energs, 'coordinates': coords}
 
 
 def coordinates(dirname):

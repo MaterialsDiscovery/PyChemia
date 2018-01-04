@@ -191,8 +191,6 @@ class Population:
                             ret[ids[j]] = [ids[i]]
         return ret
 
-
-
     @abstractmethod
     def add_random(self):
         pass

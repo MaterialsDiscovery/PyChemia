@@ -2,10 +2,11 @@ from ..codes import CodeRun
 from .input import OctopusInput
 import os
 
+
 class OctopusRun(CodeRun):
 
     def __init__(self, workdir):
-        binary='octopus'        
+        binary = 'octopus'
         CodeRun.__init__(self, workdir, binary)
         self.use_mpi = True
         self.stdout_filename = 'octopus.out'

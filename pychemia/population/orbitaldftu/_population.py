@@ -110,8 +110,8 @@ class OrbitalDFTU(Population):
             abiinput = AbinitInput(input_path)
             dmatpawu = np.array(abiinput['dmatpawu']).reshape(-1, self.ndim, self.ndim)
             lpawu = abiinput['lpawu']
-            maxl=max(lpawu)
-            dim=2*maxl+1
+            maxl = max(lpawu)
+            dim = 2*maxl+1
             params = dmatpawu2params(dmatpawu, dim)
             self.num_electrons_dftu = np.apply_along_axis(sum, 1, params['occupations'])
         else:
@@ -334,7 +334,7 @@ class OrbitalDFTU(Population):
             # 2. Get jobs in queue
             if 'user' not in pbs_settings:
                 raise ValueError("PBS settings must contain a keys 'user', 'ppn' and 'walltime'")
-            username=pbs_settings['user']
+            username = pbs_settings['user']
 
             jobs = get_jobs(username)
             jobnames = [jobs[x]['Job_Name'] for x in jobs]
@@ -650,10 +650,10 @@ class OrbitalDFTU(Population):
             raise ValueError('queue is mandatory on pbs_settings')
         if 'template' not in pbs_settings:
             raise ValueError('template is mandatory on pbs_settings')
-        walltime=pbs_settings['walltime']
-        ppn=pbs_settings['ppn']
-        queue=pbs_settings['queue']
-        template=pbs_settings['template']
+        walltime = pbs_settings['walltime']
+        ppn = pbs_settings['ppn']
+        queue = pbs_settings['queue']
+        template = pbs_settings['template']
         if 'features' not in pbs_settings:
             features = None
         else:
@@ -675,7 +675,7 @@ class OrbitalDFTU(Population):
         pbs.set_pbs_params(nodes=1, ppn=ppn, walltime=walltime, message='ae', queue=queue, features=features)
         pbs.write()
 
-        jobid=pbs.submit()
+        jobid = pbs.submit()
         print("Entry: %s Job: %s" % (entry_id, jobid))
 
     def update_dmat_inplace(self, entry_id, dmat):
@@ -842,17 +842,16 @@ def get_final_abinit_out(path):
         raise ValueError("ERROR: Could not find folder: %s" % path)
     
     outputfile = None
-    abos = [ x for x in os.listdir(path) if x[-3:] in ['txt', 'out']]
+    abos = [x for x in os.listdir(path) if x[-3:] in ['txt', 'out']]
 
     if len(abos) == 0:
         raise ValueError("ERROR: Not suitable ABINIT output files were found ('*out' or '*txt') for path: %s" % path)
 
-    
     # Most recent mtime
     mtime = 0
 
     for ifile in abos:
-        fpath=path+os.sep+ifile
+        fpath = path+os.sep+ifile
         if os.path.getmtime(fpath) > mtime:
             abo = AbinitOutput(fpath)
             if abo.is_loaded and abo.is_finished:

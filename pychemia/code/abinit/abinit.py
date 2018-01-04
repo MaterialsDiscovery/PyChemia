@@ -6,7 +6,7 @@ from ..codes import CodeRun
 
 class AbinitJob(CodeRun):
     def __init__(self):
-        Codes.__init__(self)
+        CodeRun.__init__(self)
         self.abifile = None
         self.kpoints = None
         self.structure = None

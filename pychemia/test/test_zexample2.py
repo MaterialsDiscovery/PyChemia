@@ -18,6 +18,7 @@ import pychemia
 import pychemia.code.abinit
 from pychemia.utils.netcdf import netcdf2dict
 
+
 def test_example2():
     """
     Example of a multiple calc                                   :

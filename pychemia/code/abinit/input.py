@@ -135,6 +135,8 @@ class AbinitInput(CodeInput):
         Args:
             varname:
                 The name of the input variable
+            ncolumns:
+                Number of columns for the input variable
         """
 
         ret = ''
@@ -186,7 +188,7 @@ class AbinitInput(CodeInput):
                         else:
                             ret += (17 * ' ' + i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
         elif ncolumns is not None:
-            i=ncolumns
+            i = ncolumns
             for j in range(int(len(varlist) / i)):
                 if j == 0:
                     ret += (i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
@@ -725,8 +727,6 @@ class AbinitInput(CodeInput):
 #                     ret += " "
 #             ret += "\n"
 #         return ret
-
-
 
 
 def merge(abi_into, abi_from, filename=None):

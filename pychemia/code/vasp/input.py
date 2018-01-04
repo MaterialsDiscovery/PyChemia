@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 from builtins import str
 import os
-import re
 import math
 from numbers import Number
 import numpy as np
@@ -28,6 +27,7 @@ class VaspInput(CodeInput):
     """
     def __init__(self, filename=None, variables=None):
 
+        #CodeInput.__init__(self)
         if variables is not None:
             for i in variables:
                 self.__dict__[i] = variables[i]

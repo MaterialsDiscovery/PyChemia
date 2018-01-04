@@ -699,8 +699,8 @@ Empty structure
         self.reduced2positions()
 
     def align_inertia_momenta(self):
-        I = self.inertia_matrix()
-        eigval, eigvec = np.linalg.eig(I)
+        ii = self.inertia_matrix()
+        eigval, eigvec = np.linalg.eig(ii)
         eigvec = eigvec.T[eigval.argsort()[::-1]].T
         inveigvec = np.linalg.inv(eigvec)
         self.positions = np.dot(inveigvec, self.positions.T).T
@@ -1036,18 +1036,18 @@ Empty structure
     def moment_of_inertia(self, axis):
 
         assert self.is_perfect
-        I = 0
+        mofi = 0
         for isite in self:
-            I += mass(isite.symbols[0]) * (sum(isite.position ** 2) - isite.position[axis] ** 2)
-        return I
+            mofi += mass(isite.symbols[0]) * (sum(isite.position ** 2) - isite.position[axis] ** 2)
+        return mofi
 
     def product_of_inertia(self, axis):
 
         assert self.is_perfect
-        I = 0
+        pofi = 0
         for isite in self:
-            I += mass(isite.symbols[0]) * (np.prod(isite.position) / isite.position[axis])
-        return I
+            pofi += mass(isite.symbols[0]) * (np.prod(isite.position) / isite.position[axis])
+        return pofi
 
     def inertia_matrix(self):
 

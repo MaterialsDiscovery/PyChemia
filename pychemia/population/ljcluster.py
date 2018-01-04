@@ -413,8 +413,8 @@ def rotation_move(pos_orig, pos_dest, fraction):
         else:
             new_positions[i] = rotate_towards_axis(pos_orig[i], pos_dest[i], fraction=fraction)
             uv = new_positions[i] / np.linalg.norm(new_positions[i])
-            new_positions[i] = fraction * np.linalg.norm(pos_dest[i]) * uv + (1 - fraction) * np.linalg.norm(
-            pos_orig[i]) * uv
+            new_positions[i] = fraction * np.linalg.norm(pos_dest[i]) * uv + (1 - fraction) * \
+                                np.linalg.norm(pos_orig[i]) * uv
     return new_positions
 
 
@@ -436,9 +436,7 @@ def movement_sweep(pos_orig, pos_dest, symbols, figname='figure.pdf'):
     for f in xx:
         new_positions = direct_move(pos_orig, pos_dest, fraction=f)
 
-        new_structure = Structure(positions=new_positions,
-                                           symbols=symbols,
-                                           periodicity=False)
+        new_structure = Structure(positions=new_positions, symbols=symbols, periodicity=False)
         lj = LennardJones(new_structure)
         ee.append(lj.get_energy())
         ff.append(np.max(lj.get_magnitude_forces()))

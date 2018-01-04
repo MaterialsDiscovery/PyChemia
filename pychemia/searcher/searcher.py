@@ -120,7 +120,7 @@ class Searcher:
             candidates_per_generation = [len(self.get_generation(i)) for i in range(self.current_generation + 1)]
             pcm_log.info('Candidates per generation: %s' % candidates_per_generation)
             pcm_log.info('Current generation: %d Candidates: %d' % (self.current_generation,
-                                                                     len(self.get_generation())))
+                                                                    len(self.get_generation())))
             assert len(self.get_generation()) == self.generation_size
             assert min(candidates_per_generation) == max(candidates_per_generation)
 

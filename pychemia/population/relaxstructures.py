@@ -133,9 +133,9 @@ class RelaxStructures(Population):
             raise ValueError('No composition associated to this population')
         factor = np.random.randint(self.min_comp_mult, self.max_comp_mult + 1)
         comp = self.composition.composition.copy()
-        #print("Initial composition: %s" % comp)
-        #print(Composition(comp))
-        #print(Composition(comp).symbols)
+        # print("Initial composition: %s" % comp)
+        # print(Composition(comp))
+        # print(Composition(comp).symbols)
         for i in comp:
             comp[i] *= factor
         new_comp = Composition(comp)

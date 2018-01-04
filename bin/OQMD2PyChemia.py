@@ -49,9 +49,9 @@ def run_one(a):
         elif 'relaxation' in a.calculations:
             best_calculation = a.calculations['relaxation']
             calculation_name = 'relaxation'
-        elif len(a.calculations)>0:
+        elif len(a.calculations) > 0:
             calculations = sorted(a.calculations.keys())
-            print('Calculations found: %s, using the last one' % calculations )
+            print('Calculations found: %s, using the last one' % calculations)
             best_calculation = a.calculations[calculations[-1]]
             calculation_name = calculations[-1]
         else:
@@ -60,22 +60,23 @@ def run_one(a):
     if best_calculation is not None:
         structure_name = None
         if best_calculation.output is not None:
-            structure_used=best_calculation.output
+            structure_used = best_calculation.output
             structure_id = best_calculation.output_id
             from_output = True
         elif best_calculation.input is not None:
-            print('WARNING: No data was found from the output of the calculation, using input geometries and leaving energetics empty')
-            structure_used=best_calculation.input
+            print(
+                'WARNING: No data was found from the output of the calculation, using input geometries and leaving energetics empty')
+            structure_used = best_calculation.input
             structure_id = best_calculation.input_id
             from_output = False
     else:
         calculation_name = None
         if a.structures is not None and len(a.structures) > 0:
-            struct_keys=sorted(a.structures.keys())
-            print("WARNING: Calculation not found for %s. Structures found: %s using the first one " % (a,struct_keys))
+            struct_keys = sorted(a.structures.keys())
+            print("WARNING: Calculation not found for %s. Structures found: %s using the first one " % (a, struct_keys))
             structure_used = a.structures[struct_keys[0]]
             structure_id = None
-            from_output=False
+            from_output = False
             structure_name = struct_keys[0]
         else:
             print("ERROR: No calculation and no structure found for %s" % a)
@@ -109,11 +110,11 @@ def run_one(a):
         spacegroup_number = None
         from_output = False
 
-    try: 
+    try:
         symm = pychemia.crystal.CrystalSymmetry(structure)
         sym2 = symm.number(1E-2)
     except ValueError:
-        sym2=None
+        sym2 = None
 
     properties = {'oqmd': {'structure_id': structure_id,
                            'entry_id': entry_id,
@@ -132,7 +133,6 @@ def run_one(a):
 
 
 def getter(entry_ids, db_settings, current, start=0):
-    
     pcdb = pychemia.db.get_database(db_settings)
     ret = []
     index = 0
@@ -150,7 +150,7 @@ def getter(entry_ids, db_settings, current, start=0):
         else:
             index = current.index(a_id)
             # Removing duplicated entries
-            if index + 1 < len(current)  and current[index + 1] == a_id:
+            if index + 1 < len(current) and current[index + 1] == a_id:
                 print('We found at least one duplicate!')
                 duplicate = False
                 for entry in pcdb.db.pychemia_entries.find({'properties.oqmd.entry_id': a_id}):
@@ -164,19 +164,18 @@ def getter(entry_ids, db_settings, current, start=0):
 
 
 def setter(db_settings, to_insert):
-
     print('Processing %d entries - ' % len(to_insert), end='')
     pcdb = pychemia.db.get_database(db_settings)
 
     if hasattr(os, 'getppid'):  # only available on Unix
-        print('parent process: %d - ' % os.getppid(),end='')
+        print('parent process: %d - ' % os.getppid(), end='')
     print('process id: %d' % os.getpid())
 
-    index=0
+    index = 0
     for oqmd_id in to_insert:
-        if index%2000 == 0:
+        if index % 2000 == 0:
             print(index, oqmd_id)
-        index+=1
+        index += 1
         structure = None
         properties = None
 
@@ -184,33 +183,39 @@ def setter(db_settings, to_insert):
         structure, properties = run_one(a)
 
         if structure is not None:
-            entry_id='%d_%s_' % (structure.nspecies, structure.formula)
-            n=len(entry_id)
-            texto='%0' + ('%d'% (28-n)) + 'd'
-            entry_id+=texto % properties['oqmd']['entry_id']
+            entry_id = '%d_%s_' % (structure.nspecies, structure.formula)
+            n = len(entry_id)
+            texto = '%0' + ('%d' % (28 - n)) + 'd'
+            entry_id += texto % properties['oqmd']['entry_id']
             if n > 17:
-                print("%2d - %s" % (28-n, entry_id))
+                print("%2d - %s" % (28 - n, entry_id))
             pcdb.insert(structure, properties=properties, entry_id=entry_id)
     return 0
+
 
 def getter_star(a_b):
     return getter(*a_b)
 
+
 def setter_star(a_b):
     return setter(*a_b)
+
 
 version = 0.1
 jump = 10000
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='Create or Update a PyChemia Database from the OQMD Database (www.oqmd.org)')
+    parser = argparse.ArgumentParser(
+        description='Create or Update a PyChemia Database from the OQMD Database (www.oqmd.org)')
     parser.add_argument('-dbname', metavar='<DATABASE>', type=str, help='Database Name', default='PyChemiaMasterDB')
     parser.add_argument('-port', metavar='<PORTNUMBER>', type=int, help='Port (default: 27017)', default=27017)
     parser.add_argument('-ssl', metavar='<SSL>', type=bool, help='Using SSL (default:no)', default=False)
     parser.add_argument('-user', metavar='<USERNAME>', type=str, help='Database Username', default=None)
-    parser.add_argument('-host', metavar='<HOSTNAME>', type=str, help='Hostname (default: localhost)', default='localhost')
-    parser.add_argument('-nprocs', metavar='N', type=int, help='Number of concurrent proccess (default: Number of CPUs)', default=None)
+    parser.add_argument('-host', metavar='<HOSTNAME>', type=str, help='Hostname (default: localhost)',
+                        default='localhost')
+    parser.add_argument('-nprocs', metavar='N', type=int,
+                        help='Number of concurrent proccess (default: Number of CPUs)', default=None)
 
     args = parser.parse_args()
 
@@ -236,7 +241,7 @@ if __name__ == '__main__':
         current.append(entry['properties']['oqmd']['entry_id'])
     current.sort()
     print('Number of entries coming from OQMD: %d' % len(current))
-    
+
     print('Number of entries in OQMD...', end='')
     queryset = Entry.objects.all()
     entry_ids = [entry.id for entry in queryset]
@@ -254,17 +259,17 @@ if __name__ == '__main__':
     a_args = range((len(entry_ids) / jump) + 1)
 
     to_insert = pool.map(getter_star, itertools.izip(itertools.repeat(entry_ids),
-                                              itertools.repeat(db_settings),
-                                              itertools.repeat(current), a_args), chunksize=1)
-     
+                                                     itertools.repeat(db_settings),
+                                                     itertools.repeat(current), a_args), chunksize=1)
+
     pool.close()
 
-#    to_insert=to_insert[:20]
+    #    to_insert=to_insert[:20]
     print(len(to_insert))
     print(db_settings)
 
-    ps=[ None for x in range(nprocs)]
-    counter= 0
+    ps = [None for x in range(nprocs)]
+    counter = 0
 
     # QMPY does not support concurrent executions
     # while counter < len(to_insert):
@@ -285,5 +290,5 @@ if __name__ == '__main__':
     #    pool.close()
 
     for i in range(len(to_insert)):
-        if len(to_insert[i])>0:
+        if len(to_insert[i]) > 0:
             setter(db_settings, to_insert[i])

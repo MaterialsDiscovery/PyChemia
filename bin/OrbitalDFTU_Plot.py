@@ -90,7 +90,7 @@ def check_status(basepath, dirs):
             nscf = len(abo.get_energetics()['etot'])
             print("%-40s %15.6f %15.6e %4d" % (abinitout, etot, nres2, nscf))
         except:
-            print("ERROR: Could not get final energetics from %s" % (abinitout))
+            print("ERROR: Could not get final energetics from %s" % abinitout)
 
 
 def plot_status(basepath, dirs, nstep=50):

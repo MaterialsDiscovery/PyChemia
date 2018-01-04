@@ -3,6 +3,7 @@ import os
 import subprocess
 import collections
 
+
 class CodeRun:
     __metaclass__ = ABCMeta
 
@@ -27,13 +28,12 @@ class CodeRun:
     def get_outputs(self):
         pass
 
-
     def execute(self, omp_num_threads=1, mpi_num_procs=1, wait=True):
         """
         Execute the binary and return a reference to the subprocess
         created
 
-        :param use_mpi: If mpirun will be called to execute the binary
+        :param wait: If true the process waits until the command is completed
         :param omp_num_threads: Number of OpenMP threads to be created
                                 by default the environment variable
                                 OMP_NUM_THREADS is not changed
@@ -52,9 +52,9 @@ class CodeRun:
         if self.stderr_filename is not None:
             self.stderr_file = open(self.stderr_filename, 'w')
         if self.use_mpi:
-            which_bin=subprocess.check_output('which %s' % self.binary, shell=True)
+            which_bin = subprocess.check_output('which %s' % self.binary, shell=True)
             print("Executable: %s" % which_bin.decode('utf8').strip())
-            command_line='mpirun -n %d %s' % (mpi_num_procs, self.binary)
+            command_line = 'mpirun -n %d %s' % (mpi_num_procs, self.binary)
             print("Running: %s" % command_line)
             sp = subprocess.Popen(command_line, shell=True,
                                   stdout=self.stdout_file, 
@@ -104,7 +104,6 @@ class CodeInput(collections.MutableMapping):
         else:
             return self.variables[x[0]].__getitem__(x[1])
 
-
     def __iter__(self):
         return self.variables.__iter__()
 
@@ -115,11 +114,9 @@ class CodeInput(collections.MutableMapping):
     def read(self):
         pass
 
-
     @abstractmethod
     def __str__(self):
         pass
-
 
     def write(self, filename=None):
         """
@@ -139,7 +136,6 @@ class CodeInput(collections.MutableMapping):
         wf = open(filename, 'w')
         wf.write(self.__str__())
         wf.close()
-
 
     def has_variable(self, varname, section=None):
         if self.is_hierarchical:
@@ -192,7 +188,7 @@ class CodeInput(collections.MutableMapping):
         if not self.is_hierarchical:
             return len(self.variables)
         else:
-            ret={}
+            ret = {}
             for i in self.variables:
                 ret[i] = len(self.variables[i])
             return ret
@@ -200,7 +196,6 @@ class CodeInput(collections.MutableMapping):
     @property
     def is_hierarchical(self):
         return False
-
 
 
 class CodeOutput(collections.Mapping):

@@ -5,10 +5,12 @@ from pychemia.utils.serializer import generic_serializer
 from pychemia import pcm_log
 from ..codes import CodeOutput
 
+
 class VaspOutput(CodeOutput):
 
     def __init__(self, filename='OUTCAR'):
 
+        CodeOutput.__init__(self)
         if not os.path.isfile(filename):
             raise ValueError('File not found ' + filename)
         else:
@@ -36,15 +38,9 @@ class VaspOutput(CodeOutput):
     def read(self):
         self.read_outputfile(self.filename)
         self.outcar_parser()
-        ret = {}
-        ret['energies'] = self.energies
-        ret['forces'] = self.forces
-        ret['bands'] = self.bands
-        ret['positions'] = self.positions
-        ret['kpoints'] = self.kpoints
-        ret['stress'] = self.stress
+        ret = {'energies': self.energies, 'forces': self.forces, 'bands': self.bands, 'positions': self.positions,
+               'kpoints': self.kpoints, 'stress': self.stress}
         self.output_values = ret
-
 
     def is_loaded(self):
         if self.data is None:
