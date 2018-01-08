@@ -171,17 +171,11 @@ class CodeInput(collections.MutableMapping):
     def set_variable(self, varname, value, section=None):
         if self.is_hierarchical:
             if section is None:
-                raise ValueError('ERROR: Input variables are hierachical and not section was declared')
+                raise ValueError('ERROR: Input variables are hierarchical and not section was declared')
             else:
-                if self.has_variable(varname, section=section):
-                    return self.variables[section][varname]
-                else:
-                    return None
+                self.variables[section][varname] = value
         else:
-            if self.has_variable(varname):
-                return self.variables[varname]
-            else:
-                return None
+            self.variables[varname] = value
 
     @property
     def get_number_variables(self):

@@ -14,7 +14,7 @@ class Relaxator:
 
     @abstractmethod
     def get_forces_stress_energy(self):
-        pass
+        return None, None, None
 
     @abstractmethod
     def get_final_geometry(self):

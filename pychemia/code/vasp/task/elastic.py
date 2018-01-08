@@ -214,45 +214,45 @@ def elastic_moduli(filename='OUTCAR'):
     return generic_serializer(ret)
 
 
-def mechanical_properties(elastic_moduli):
-    elastic_moduli = np.array(elastic_moduli)
+def mechanical_properties(ls_elastic_moduli):
+    np_elastic_moduli = np.array(ls_elastic_moduli)
 
     # Forcing the matrix to be symmetric
-    elastic_moduli = 0.5 * (elastic_moduli + np.transpose(elastic_moduli))
+    np_elastic_moduli = 0.5 * (np_elastic_moduli + np.transpose(np_elastic_moduli))
 
-    elastic_moduli_inv = np.linalg.inv(elastic_moduli)
+    elastic_moduli_inv = np.linalg.inv(np_elastic_moduli)
 
     # Voigt
-    em = elastic_moduli[:3, :3]
-    Kv = np.trace(em) / 90.0 + 2 * np.sum(np.triu(em, 1)) / 90.0
-    Gv = np.trace(em) - np.sum(np.triu(em, 1)) + 3 * np.trace(elastic_moduli[3:6, 3:6])
-    Gv /= 150
+    em = np_elastic_moduli[:3, :3]
+    kkv = np.trace(em) / 90.0 + 2 * np.sum(np.triu(em, 1)) / 90.0
+    ggv = np.trace(em) - np.sum(np.triu(em, 1)) + 3 * np.trace(np_elastic_moduli[3:6, 3:6])
+    ggv /= 150
 
-    Ev = 1.0 / 3.0 / Gv + 1.0 / 9.0 / Kv
-    Ev = 1.0 / Ev
+    eev = 1.0 / 3.0 / ggv + 1.0 / 9.0 / kkv
+    eev = 1.0 / eev
 
-    vv = 3.0 * Gv / (3.0 * Kv + Gv)
+    vv = 3.0 * ggv / (3.0 * kkv + ggv)
     vv = 1.0 - vv
     vv /= 2
 
     # Reuss
-    Kr = np.trace(elastic_moduli_inv[:3, :3]) + 2 * np.sum(np.triu(elastic_moduli_inv[:3, :3], 1))
-    Kr = 0.1 / Kr
+    kkr = np.trace(elastic_moduli_inv[:3, :3]) + 2 * np.sum(np.triu(elastic_moduli_inv[:3, :3], 1))
+    kkr = 0.1 / kkr
 
     eminv = elastic_moduli_inv[:3, :3]
-    Gr = 4 * np.trace(eminv) - 4 * np.sum(np.triu(eminv, 1)) + 3 * np.trace(elastic_moduli_inv[3:6, 3:6])
-    Gr = 1.5 / Gr
+    ggr = 4 * np.trace(eminv) - 4 * np.sum(np.triu(eminv, 1)) + 3 * np.trace(elastic_moduli_inv[3:6, 3:6])
+    ggr = 1.5 / ggr
 
-    Er = 1.0 / 3.0 / Gr + 1.0 / 9.0 / Kr
-    Er = 1.0 / Er
+    eer = 1.0 / 3.0 / ggr + 1.0 / 9.0 / kkr
+    eer = 1.0 / eer
 
-    vr = 3.0 * Gr / (3.0 * Kr + Gr)
+    vr = 3.0 * ggr / (3.0 * kkr + ggr)
     vr = 1.0 - vr
     vr /= 2
 
-    ret = {'Bulk modulus': {'units': 'GPa', 'Voigt': Kv, 'Reuss': Kr},
-           'Shear modulus': {'units': 'GPa', 'Voigt': Gv, 'Reuss': Gr},
-           'Young modulus': {'units': 'GPa', 'Voigt': Ev, 'Reuss': Er},
+    ret = {'Bulk modulus': {'units': 'GPa', 'Voigt': kkv, 'Reuss': kkr},
+           'Shear modulus': {'units': 'GPa', 'Voigt': ggv, 'Reuss': ggr},
+           'Young modulus': {'units': 'GPa', 'Voigt': eev, 'Reuss': eer},
            'Poisson ratio': {'units': 'GPa', 'Voigt': vv, 'Reuss': vr}}
 
     return ret

@@ -48,13 +48,16 @@ class VaspOutput(CodeOutput):
         else:
             return True
 
-    def read_outputfile(self, filename):
-        rf = open(self.filename, 'r')
+    def read_outputfile(self, filename=None):
+        if filename is not None and os.path.exists(filename):
+            rf = open(filename)
+        else:
+            rf = open(self.filename)
         self.data = rf.read()
         rf.close()        
 
     def reload(self):
-        rf = open(self.filename, 'r')
+        rf = open(self.filename)
         self.data = rf.read()
         rf.close()
 

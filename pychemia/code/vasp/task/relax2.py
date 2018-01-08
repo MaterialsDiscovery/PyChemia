@@ -220,8 +220,8 @@ class IonRelaxation2(Relaxator, Task):
                                                                             info['avg_stress_diag'],
                                                                             info['avg_stress_non_diag']))
                     if self.stage == 7 and info['avg_force'] < self.target_forces and \
-                                            info['avg_stress_diag'] < self.target_forces and \
-                                            info['avg_stress_non_diag'] < self.target_forces:
+                            info['avg_stress_diag'] < self.target_forces and \
+                            info['avg_stress_non_diag'] < self.target_forces:
                         break
 
                 else:

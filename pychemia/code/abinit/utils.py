@@ -119,14 +119,15 @@ def plot_simple(variables, varname):
                           for x in range(ndtset)])
         else:
             y = np.array([sqrt(sum(variables['fcart' + str(x + 1)] ** 2)) for x in range(ndtset)])
-    ax.plot(x, y, 'ro')
-    ax.plot(x, y, 'b-')
-    ax.set_xlabel('Dataset')
-    ax.set_ylabel(varname)
-    ax.set_xlim(1, ndtset + 1)
-    if ndtset < 30:
-        ax.set_xticks(arange(ndtset + 1))
-        ax.grid(which='major', axis='both')
+
+        ax.plot(x, y, 'ro')
+        ax.plot(x, y, 'b-')
+        ax.set_xlabel('Dataset')
+        ax.set_ylabel(varname)
+        ax.set_xlim(1, ndtset + 1)
+        if ndtset < 30:
+            ax.set_xticks(arange(ndtset + 1))
+            ax.grid(which='major', axis='both')
 
 
 def abihelp(varname):
