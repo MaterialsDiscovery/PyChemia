@@ -242,7 +242,7 @@ The executor assumes the existance of a command 'abinit' and 'mpirun' and files 
         nres2 = 1.0
         nres2 = energetics['nres2'][-1]
 
-        if nres2 < target_nres2:
+        if nres2 < target_nres2 or index == max_nruns-1:
             wf = open('COMPLETE','w')
             wf.write("%d\n" % index)
             wf.close()
@@ -256,6 +256,7 @@ The executor assumes the existance of a command 'abinit' and 'mpirun' and files 
             break
         else:
             print("Remaining time %d minutes, time for one more run" % int((start_time + walltime - curtime)/60) )
+
 
         # Incresing index for next run
         index+=1
