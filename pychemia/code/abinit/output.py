@@ -65,6 +65,33 @@ class AbinitOutput:
                     ret.append(iom['occ_matrix'])
         return np.array(ret)
 
+    def get_integrated_electronic_densities(self):
+        """
+        Return the integrated electronic densities in atomic spheres from the output
+        Data is returned serialized as python dictionary with keys
+        'radius', 'up_density', 'dn_density', 'total_up+dn' and 'diff_up-dn'
+        If the method is unable to parse the output file None is returned.
+        
+        :return: (dict) Integrated electronic densities around an atomic radius, up, down, sum and diff
+        """
+
+        ref = re.findall("Integrated electronic and magnetization densities in atomic spheres:\s*"
+                         "---------------------------------------------------------------------\s*"
+                         "Note: Diff\(up-dn\) is a rough approximation of local magnetic moment\s*"
+                         "Atom\s*Radius\s*up_density\s*dn_density\s*Total\(up\+dn\)\s*Diff\(up\-dn\)\s*"
+                         "([\s\d\w.-]*)\n -+\n", self.data)
+        # Return None if could not parse the magnetization block
+        if len(ref) == 0:
+            return None
+        else:
+            magmoms = np.fromstring(ref[0], dtype=float, sep=' ')
+            magmoms.reshape((-1, 6))
+            return {'radius': list(magmoms[:, 1]),
+                    'up_density': list(magmoms[:, 2]),
+                    'dn_density': list(magmoms[:, 3]),
+                    'total_up+dn': list(magmoms[:, 4]),
+                    'diff_up-dn': list(magmoms[:, 5])}
+
     @staticmethod
     def read_output_netcdf(filename):
         return netcdf2dict(filename)
