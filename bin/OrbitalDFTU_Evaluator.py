@@ -7,12 +7,14 @@ import json
 import argparse
 import numpy as np
 import matplotlib
+import multiprocessing
 
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from pychemia.code.abinit import AbinitInput, AbinitOutput
 from pychemia.population.orbitaldftu import dmatpawu2params, params2dmatpawu, OrbitalDFTU
 from pychemia.population.orbitaldftu import get_final_abinit_out
+from pychemia.searcher import FireFly
 from pychemia.db import get_database
 
 
@@ -274,10 +276,54 @@ def plot_status(basepath):
 def create_population(num_candidates):
     popu.random_population(num_candidates)
 
+def safe_read_json(filename):
+    """
+    Safely read a given filename, extract and returns the associated dictionary
+    from the JSON file
+    """
+    if not os.path.exists(filename):
+        raise ValueError("ERROR: Could not read file: %s" % filename)
+    rf = open(filename)
+    try:
+        data = json.load(rf)
+    except ValueError:
+        raise ValueError("ERROR: File is not in proper JSON format: %s" % filename)
+    rf.close()
+    return data
+
 
 def prepare_folders(scrpath):
     for i in popu.members:
         popu.prepare_folder(i, workdir=scrpath, source_dir=scrpath)
+
+def set_populations(parser):
+
+    return parser.add_argument('-p', type=str, nargs='+', required=True, metavar='JSON_file',
+                               help='Population settings (JSON file), includes settings to connect to server and the population')
+
+def evaluate(db_settings, queue_settings, abipath ):
+    pcdb = get_database(db_settings)
+    print("[%s] Path for abinit.in: %s" % (pcdb.name, abipath))
+    popu = OrbitalDFTU(pcdb, abipath + os.sep + 'abinit.in')
+    popu.evaluator(queue_settings, abipath)
+
+def search(db_settings, search_settings, abipath ):
+    pcdb = get_database(db_settings)
+    print("[%s] Path for abinit.in: %s" % (pcdb.name, abipath))
+    popu = OrbitalDFTU(pcdb, abipath + os.sep + 'abinit.in')
+
+    if 'generation_size' in search_settings:
+        generation_size = search_settings.pop('generation_size')
+    else:
+        generation_size = 32
+
+    if 'stabilization_limit' in search_settings:
+        stabilization_limit = search_settings.pop('stabilization_limit')
+    else:
+        stabilization_limit = 10
+
+    fire = FireFly(popu, params=search_settings, generation_size=generation_size, stabilization_limit=stabilization_limit)
+    fire.run()
 
 
 if __name__ == "__main__":
@@ -286,19 +332,22 @@ if __name__ == "__main__":
 
     subparsers = parser.add_subparsers(help='commands', dest='subparser_name')
 
+
     # The create command
     create_parser = subparsers.add_parser('create', help='Create the database')
 
-    create_parser.add_argument('-db_settings', type=str,
-                               help='Filename with PyChemiaDB settings to connect to server (JSON file)',
-                               required=False, default='dbsettings.json')
+    set_populations(create_parser)
+
 
     # The populate command
     populate_parser = subparsers.add_parser('populate', help='Add candidates to the population (used for testing)')
 
-    populate_parser.add_argument('-db_settings', type=str,
-                                 help='Filename with PyChemiaDB settings to connect to server (JSON file)',
-                                 required=False, default='dbsettings.json')
+    set_populations(populate_parser)
+
+
+    populate_parser.add_argument('-clean', action='store_true',
+                                 help='If true, clean the entire database before populate',
+                                 required=False, default=False)
 
     populate_parser.add_argument('-size', type=int,
                                  help='Number of candidates to populate (default: 16)',
@@ -310,71 +359,143 @@ if __name__ == "__main__":
     # A run command
     run_parser = subparsers.add_parser('run', help='Run Evaluator')
 
-    run_parser.add_argument('-db_settings', type=str,
-                            help='Filename with PyChemiaDB settings to connect to server (JSON file)',
-                            required=False, default='dbsettings.json')
-    run_parser.add_argument('-pbs_settings', type=str,
+    set_populations(run_parser)
+
+    run_parser.add_argument('-queue_settings', type=str,
                             help='Filename with PBS settings for launching jobs',
-                            required=False, default='pbssettings.json')
+                            required=False, default='queue.json')
     run_parser.add_argument('-basepath', type=str,
                             help='Path where calculations are performed (default: current folder)',
                             required=False, default='.')
 
+    # A searcher command
+    searcher_parser = subparsers.add_parser('search', help='Run PyChemia Global Searcher')
+
+    set_populations(searcher_parser)
+
+    searcher_parser.add_argument('-search_settings', type=str,
+                                 help='Filename with PBS settings for launching jobs',
+                                 required=False, default='searcher.json')
+    searcher_parser.add_argument('-basepath', type=str,
+                                 help='Path where calculations are performed (default: current folder)',
+                                 required=False, default='.')
+
     # The plot command
     plot_parser = subparsers.add_parser('plot', help='Generate several plots')
 
-    plot_parser.add_argument('-db_settings', type=str,
-                             help='Filename with PyChemiaDB settings to connect to server (JSON file)',
-                             required=False, default='dbsettings.json')
+    set_populations(plot_parser)
+
 
     plot_parser.add_argument('-basepath', type=str,
                              help='Path where calculations are performed',
                              required=False, default='.')
 
     args = parser.parse_args()
+    print(args)
 
-    # Loading the settings to access the PyChemia Database
-    if not os.path.isfile(args.db_settings):
-        print("Could not read a PyChemiaDB settings file (JSON): %s" % args.db_settings)
-        parser.print_help()
-        sys.exit(1)
-    rf = open(args.db_settings)
-    db_settings = json.load(rf)
-    rf.close()
-    print("DB settings: %s" % db_settings)
+    # check all settings in args.p
+    dbs=[]
+    for dbi_file in args.p:
+        dbi = safe_read_json(dbi_file)
+        print("DB settings: %s" % dbi)
+        assert('name' in dbi)
+        assert('u' in dbi)
+        assert('j' in dbi)
+        dbs.append(dbi)
 
-    pcdb = get_database(db_settings)
+    if args.subparser_name == 'create':
+        
+        pcdbs=[]
+        for dbi in dbs:
+            pcdb = get_database(dbi)
+            pcdbs.append(pcdb)
+            print(pcdb)
 
     if args.subparser_name == 'run':
+        queue_settings = safe_read_json(args.queue_settings)
+        print("PBS settings: %s" % queue_settings)
 
-        # Loading the settings to access to submit jobs with PBS
-        if not os.path.isfile(args.pbs_settings):
-            print("Could not read a PBS settings file (JSON): %s" % args.pbs_settings)
-            parser.print_help()
-            sys.exit(1)
-        rf = open(args.pbs_settings)
-        pbs_settings = json.load(rf)
-        rf.close()
-        print("PBS settings: %s" % pbs_settings)
+    # General actions for 'populate', 'run', 'search' and 'plot'
+    if args.subparser_name in ['run', 'plot', 'populate', 'search']:
 
-    if args.subparser_name in ['run', 'plot', 'populate']:
-
-        if not os.path.isdir(args.basepath) or not os.path.isfile(args.basepath + '/abinit.in'):
+        if not os.path.isdir(args.basepath) or not os.path.isfile(args.basepath + os.sep + 'abinit.in'):
             print('ERROR: Wrong basepath %s, directory must exist and contain a abinit.in file' % args.basepath)
             parser.print_help()
             sys.exit(1)
 
-        popu = OrbitalDFTU(pcdb, args.basepath + '/abinit.in')
+        popu = {}
+        for dbi in dbs:
+            name = dbi['name']
+            pcdb = get_database(dbi)
+            if not os.path.isdir(args.basepath + os.sep + name):
+                os.mkdir(args.basepath + os.sep + name)
+            abi = AbinitInput(args.basepath + os.sep + 'abinit.in')
+            
+            abi['upawu'] = ""
+            for i in dbi['u']:
+                abi['upawu'] += str(i) + " "
+            abi['upawu'] += 'eV'
+                
+            abi['jpawu'] = ""
+            for i in dbi['j']:
+                abi['jpawu'] += str(i) + " "
+            abi['jpawu'] += 'eV'
 
+            abipath = args.basepath + os.sep + name + os.sep + 'abinit.in'
+            abi.write(abipath)
+
+            abifiles=args.basepath + os.sep + name + os.sep + 'abinit.files'
+            if os.path.lexists(abifiles):
+                os.remove(abifiles)
+            os.symlink(os.path.abspath(args.basepath + os.sep + 'abinit.files'), abifiles)
+            for i in [x for x in os.listdir(args.basepath) if x[-3:] == 'xml']:
+                psp = args.basepath + os.sep + name + os.sep + i
+                if os.path.lexists(psp):
+                    os.remove(psp)
+                os.symlink(os.path.abspath(args.basepath + os.sep + i), psp)
+
+            popu[name] = OrbitalDFTU(pcdb, abipath)
+
+
+    # Specific actions for 'populate', 'run', 'search' and 'plot'
     if args.subparser_name == 'populate':
-        print(popu)
-        popu.random_population(args.size)
-        print("Total number of candidates: %d" % len(popu))
 
-    if args.subparser_name == 'run':
-        popu.evaluator(pbs_settings=pbs_settings, basedir=args.basepath)
+        for dbi in dbs:
+            name = dbi['name']
+            if args.clean:
+                popu[name].clean()
+            popu[name].random_population(args.size)
+            print("[%s] Total number of candidates: %d" % (name, len(popu[name])))
 
-    if args.subparser_name == 'plot':
+    elif args.subparser_name == 'run':
+        for dbi in dbs:
+            sprocs = {}
+            name = dbi['name']
+            basepath = args.basepath + os.sep + name
+            sprocs[name] = multiprocessing.Process(target=evaluate, args=(dbi, queue_settings, basepath))
+            sprocs[name].start()
+
+        for dbi in dbs:            
+            name = dbi['name']
+            sprocs[name].join()
+
+
+    elif args.subparser_name == 'search':
+        search_settings = safe_read_json(args.search_settings)
+        print("Search settings from file: %s \n%s" % (args.search_settings, search_settings))
+
+        for dbi in dbs:
+            sprocs = {}
+            name = dbi['name']
+            basepath = args.basepath + os.sep + name
+            sprocs[name] = multiprocessing.Process(target=search, args=(dbi, search_settings, basepath))
+            sprocs[name].start()
+
+        for dbi in dbs:
+            name = dbi['name']
+            sprocs[name].join()
+
+    elif args.subparser_name == 'plot':
         check_status(args.basepath)
         plot_status(args.basepath)
         plot_polar(popu, args.basepath)

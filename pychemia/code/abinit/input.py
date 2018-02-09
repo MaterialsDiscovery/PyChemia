@@ -127,7 +127,7 @@ class AbinitInput(CodeInput):
                 ret += '\n'
         return ret
 
-    def write_key(self, varname, ncolumns=None):
+    def write_key(self, varname, ncolumns=None, debug=False):
         """
         Receives an input variable and write their contents
         properly according with their kind and length
@@ -153,9 +153,14 @@ class AbinitInput(CodeInput):
 
         if isinstance(self.variables[varname], (int, float)):
             varlist = [self.variables[varname]]
+        elif isinstance(self.variables[varname], str):
+            varlist = [self.variables[varname]]
         else:
             varlist = self.variables[varname]
 
+        if debug:
+            print('varlist: %s' % varlist)
+            
         # Get the general kind of values for the input variable
         for j in varlist:
             try:
@@ -195,6 +200,9 @@ class AbinitInput(CodeInput):
                 else:
                     ret += (17 * ' ' + i * '%17.10E ' + '\n') % tuple(varlist[j * i:j * i + i])
         else:
+            if debug:
+                print("real: %s  integer: %s  string: %s" % (real, integer, string))
+
             for j in range(len(varlist)):
 
                 if real:

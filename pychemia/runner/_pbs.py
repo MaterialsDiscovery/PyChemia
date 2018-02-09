@@ -41,7 +41,7 @@ class PBSRunner:
             self.set_template(template)
             self.template = template
 
-    def set_pbs_params(self, nodes=None, ppn=None, walltime=None, message=None, mail=None, queue=None, features=None):
+    def set_pbs_params(self, nodes=None, ppn=None, walltime=None, message=None, mail=None, queue=None, features=None, join=None, pvmem=None):
         """
         Set various PBS params
 
@@ -58,6 +58,14 @@ class PBSRunner:
         self.mail = mail
         self.queue = queue
         self.features = features
+        self.pvmem = pvmem
+        if join is not None:
+            if join in [ 'eo', 'oe' ]:
+                self.join = join
+            else:
+                self.join = None
+        else:
+            self.join = None
 
     def set_walltime(self, walltime):
         """
@@ -72,7 +80,6 @@ class PBSRunner:
             walltime = [0] + walltime
         if len(walltime) == 3:
             walltime = [0] + walltime
-
         self.walltime = walltime
 
     def set_template(self, template):
@@ -105,6 +112,9 @@ class PBSRunner:
             feat = ':'
         else:
             feat = ':'+self.features+':'
+        if self.nodes is None:
+            self.nodes = 1
+
         ret = "#!/bin/sh\n"
         if self.jobname is not None:
             ret += "\n#PBS -N %s\n" % self.jobname
@@ -114,12 +124,17 @@ class PBSRunner:
             ret += "%sppn=%d\n" % (feat, self.ppn)
         if self.walltime is not None:
             ret += "#PBS -l walltime=%d:%02d:%02d\n" % (wt[0] * 24 + wt[1], wt[2], wt[3])
+        if self.pvmem is not None:
+            ret += "#PBS -l pvmem=%s\n" % self.pvmem 
         if self.message is not None:
             ret += "#PBS -m %s\n" % self.message
         if self.mail is not None:
             ret += "#PBS -M %s\n" % self.mail
         if self.queue is not None:
             ret += "#PBS -q %s\n" % self.queue
+        if self.join is not None:
+            ret += "#PBS -j %s\n" % self.join 
+
         ret += '\ncd $PBS_O_WORKDIR\n'
 
         if self.template is not None:

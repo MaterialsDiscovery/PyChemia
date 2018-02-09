@@ -56,7 +56,7 @@ class OrbitalDFTU(Population):
             raise ValueError("Abinit input file: %s does not contain 'dmatpawu' variable" % self.input_path)
         self.structure = self.input.get_structure()
 
-        print('Orbital population:')
+        print('[%s] Orbital population' % self.name)
         print('Species [znucl]: %s' % self.input['znucl'])
 
         self.natpawu = 0
@@ -134,6 +134,7 @@ class OrbitalDFTU(Population):
             print('Connections: %s' % self.connections)
         else:
             self.connections = list(range(self.nmatrices))
+        print("")
 
     def __str__(self):
         ret = ' Population LDA+U\n\n'
@@ -660,7 +661,14 @@ class OrbitalDFTU(Population):
             features = pbs_settings['features']
         if not os.path.isfile(template):
             raise ValueError("The file: %s must exist" % template)
-
+        if 'pvmem' in pbs_settings:
+            pvmem = pbs_settings['pvmem']
+        else:
+            pvmem = None
+        if 'join' in pbs_settings:
+            join = pbs_settings['join']
+        else:
+            join = None
         idir = str(entry_id)
         workdir = os.path.abspath(workdir)
         path = workdir+os.sep + idir
@@ -672,7 +680,7 @@ class OrbitalDFTU(Population):
             os.remove(workdir+os.sep+'batch.pbs')
 
         pbs = PBSRunner(workdir=path, template=template)
-        pbs.set_pbs_params(nodes=1, ppn=ppn, walltime=walltime, message='ae', queue=queue, features=features)
+        pbs.set_pbs_params(nodes=1, ppn=ppn, walltime=walltime, message='ae', queue=queue, features=features, join=join, pvmem=pvmem)
         pbs.write()
 
         jobid = pbs.submit()
