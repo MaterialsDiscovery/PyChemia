@@ -9,20 +9,4 @@ pychemia.runner package
 Submodules
 ----------
 
-pychemia.runner.pbs module
---------------------------
-
-.. automodule:: pychemia.runner.pbs
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pychemia.runner.runner module
------------------------------
-
-.. automodule:: pychemia.runner.runner
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
