@@ -20,6 +20,7 @@ except ImportError:
 import tarfile
 import time
 
+
 def worker(filename, directory, filepath):
     ftp = ftplib.FTP('ftp.abinit.org')  # connect to host, default port
     ftp.login()  # user anonymous, passwd anonymous@
@@ -83,9 +84,9 @@ def get_rpath_psp(kind, exchange, atomicnumber=None):
     elif kind == 'FC' and exchange == 'DEN':
         rpath = '/pub/abinitio/Psps/FC_DEN/'
     elif kind == 'PAW' and exchange == 'LDA':
-        rpath =' https://www.abinit.org/ATOMICDATA/JTH-LDA-atomicdata.tar.gz'
+        rpath = ' https://www.abinit.org/ATOMICDATA/JTH-LDA-atomicdata.tar.gz'
     elif kind == 'PAW' and exchange == 'GGA':
-        rpath =' https://www.abinit.org/ATOMICDATA/JTH-PBE-atomicdata.tar.gz'
+        rpath = ' https://www.abinit.org/ATOMICDATA/JTH-PBE-atomicdata.tar.gz'
     else:
         print('Not know kind of PSP')
     return rpath

@@ -276,6 +276,7 @@ def plot_status(basepath):
 def create_population(num_candidates):
     popu.random_population(num_candidates)
 
+
 def safe_read_json(filename):
     """
     Safely read a given filename, extract and returns the associated dictionary
@@ -296,18 +297,22 @@ def prepare_folders(scrpath):
     for i in popu.members:
         popu.prepare_folder(i, workdir=scrpath, source_dir=scrpath)
 
+
 def set_populations(parser):
 
     return parser.add_argument('-p', type=str, nargs='+', required=True, metavar='JSON_file',
-                               help='Population settings (JSON file), includes settings to connect to server and the population')
+                               help='Population settings (JSON file), includes settings to connect to server and the '
+                                    'population')
 
-def evaluate(db_settings, queue_settings, abipath ):
+
+def evaluate(db_settings, queue_settings, abipath):
     pcdb = get_database(db_settings)
     print("[%s] Path for abinit.in: %s" % (pcdb.name, abipath))
     popu = OrbitalDFTU(pcdb, abipath + os.sep + 'abinit.in')
     popu.evaluator(queue_settings, abipath)
 
-def search(db_settings, search_settings, abipath ):
+
+def search(db_settings, search_settings, abipath):
     pcdb = get_database(db_settings)
     print("[%s] Path for abinit.in: %s" % (pcdb.name, abipath))
     popu = OrbitalDFTU(pcdb, abipath + os.sep + 'abinit.in')
@@ -322,7 +327,8 @@ def search(db_settings, search_settings, abipath ):
     else:
         stabilization_limit = 10
 
-    fire = FireFly(popu, params=search_settings, generation_size=generation_size, stabilization_limit=stabilization_limit)
+    fire = FireFly(popu, params=search_settings, generation_size=generation_size,
+                   stabilization_limit=stabilization_limit)
     fire.run()
 
 
@@ -332,18 +338,15 @@ if __name__ == "__main__":
 
     subparsers = parser.add_subparsers(help='commands', dest='subparser_name')
 
-
     # The create command
     create_parser = subparsers.add_parser('create', help='Create the database')
 
     set_populations(create_parser)
 
-
     # The populate command
     populate_parser = subparsers.add_parser('populate', help='Add candidates to the population (used for testing)')
 
     set_populations(populate_parser)
-
 
     populate_parser.add_argument('-clean', action='store_true',
                                  help='If true, clean the entire database before populate',
@@ -385,7 +388,6 @@ if __name__ == "__main__":
 
     set_populations(plot_parser)
 
-
     plot_parser.add_argument('-basepath', type=str,
                              help='Path where calculations are performed',
                              required=False, default='.')
@@ -394,7 +396,7 @@ if __name__ == "__main__":
     print(args)
 
     # check all settings in args.p
-    dbs=[]
+    dbs = []
     for dbi_file in args.p:
         dbi = safe_read_json(dbi_file)
         print("DB settings: %s" % dbi)
@@ -405,7 +407,7 @@ if __name__ == "__main__":
 
     if args.subparser_name == 'create':
         
-        pcdbs=[]
+        pcdbs = []
         for dbi in dbs:
             pcdb = get_database(dbi)
             pcdbs.append(pcdb)
@@ -444,7 +446,7 @@ if __name__ == "__main__":
             abipath = args.basepath + os.sep + name + os.sep + 'abinit.in'
             abi.write(abipath)
 
-            abifiles=args.basepath + os.sep + name + os.sep + 'abinit.files'
+            abifiles = args.basepath + os.sep + name + os.sep + 'abinit.files'
             if os.path.lexists(abifiles):
                 os.remove(abifiles)
             os.symlink(os.path.abspath(args.basepath + os.sep + 'abinit.files'), abifiles)
@@ -455,7 +457,6 @@ if __name__ == "__main__":
                 os.symlink(os.path.abspath(args.basepath + os.sep + i), psp)
 
             popu[name] = OrbitalDFTU(pcdb, abipath)
-
 
     # Specific actions for 'populate', 'run', 'search' and 'plot'
     if args.subparser_name == 'populate':
@@ -478,7 +479,6 @@ if __name__ == "__main__":
         for dbi in dbs:            
             name = dbi['name']
             sprocs[name].join()
-
 
     elif args.subparser_name == 'search':
         search_settings = safe_read_json(args.search_settings)

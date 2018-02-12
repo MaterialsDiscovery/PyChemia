@@ -112,7 +112,6 @@ from .core.from_file import structure_from_file
 from pychemia.crystal import samples
 
 
-
 def info():
     """
     Show basic information about PyChemia, its location and version.

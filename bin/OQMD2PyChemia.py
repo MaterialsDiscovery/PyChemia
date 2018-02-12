@@ -65,7 +65,8 @@ def run_one(a):
             from_output = True
         elif best_calculation.input is not None:
             print(
-                'WARNING: No data was found from the output of the calculation, using input geometries and leaving energetics empty')
+                'WARNING: No data was found from the output of the calculation, using input geometries and leaving '
+                'energetics empty')
             structure_used = best_calculation.input
             structure_id = best_calculation.input_id
             from_output = False

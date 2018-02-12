@@ -680,7 +680,8 @@ class OrbitalDFTU(Population):
             os.remove(workdir+os.sep+'batch.pbs')
 
         pbs = PBSRunner(workdir=path, template=template)
-        pbs.set_pbs_params(nodes=1, ppn=ppn, walltime=walltime, message='ae', queue=queue, features=features, join=join, pvmem=pvmem)
+        pbs.set_pbs_params(nodes=1, ppn=ppn, walltime=walltime, message='ae', queue=queue, features=features,
+                           join=join, pvmem=pvmem)
         pbs.write()
 
         jobid = pbs.submit()

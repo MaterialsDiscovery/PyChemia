@@ -15,6 +15,7 @@ from matplotlib.collections import PatchCollection
 import pychemia
 import bson
 
+
 def label(xy, text, shiftx):
     px = xy[0] - shiftx
     py = xy[1] - 0.0
@@ -214,17 +215,17 @@ def plot_polar():
         pm = popu.get_correlation_params(entry_id)
         etot = popu.value(entry_id)
         ea = np.array(pm['euler_angles'])
-        nres2 = popu.get_entry(entry_id,{'properties.nres2':1})['properties']['nres2']
+        nres2 = popu.get_entry(entry_id, {'properties.nres2': 1})['properties']['nres2']
 
-        fig.text(0.03, grid[i,0][1]+0.08, "%7.2f" % etot, va='center', ha='center', fontsize='24', rotation='vertical',
+        fig.text(0.03, grid[i, 0][1]+0.08, "%7.2f" % etot, va='center', ha='center', fontsize='24', rotation='vertical',
                  color='red')
-        fig.text(0.01, grid[i,0][1]+0.08, "%9.2E" % nres2, va='center', ha='center', fontsize='16', rotation='vertical',
+        fig.text(0.01, grid[i, 0][1]+0.08, "%9.2E" % nres2, va='center', ha='center', fontsize='16', rotation='vertical',
                  color='blue')
 
-        radii = np.array([1,1,1,1])
+        radii = np.array([1, 1, 1, 1])
         #colors = np.array([0, 1, 2, 3])
         colors = ['red', 'blue', 'fuchsia', 'yellow']
-        width = np.array([0.15,0.15,0.1,0.1])
+        width = np.array([0.15, 0.15, 0.1, 0.1])
 
         for j in range(M):
 
@@ -346,10 +347,10 @@ if __name__ == "__main__":
     ff.recover()
     print(ff)
 
-    if len(args.candidates)>0:
-        candidates=[bson.ObjectId(x) for x in args.candidates]
+    if len(args.candidates) > 0:
+        candidates = [bson.ObjectId(x) for x in args.candidates]
     else:
-        candidates=None
+        candidates = None
 
     for i in candidates:
         assert(popu.get_entry(i) is not None)

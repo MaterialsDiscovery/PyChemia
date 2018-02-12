@@ -40,12 +40,12 @@ if __name__ == "__main__":
     print('MILLER: ', miller)
     print('LAYERS: ', layers)
 
-    h = int(miller[0])
-    k = int(miller[1])
-    l = int(miller[2])
+    hh = int(miller[0])
+    kk = int(miller[1])
+    ll = int(miller[2])
 
     structure = pychemia.code.vasp.read_poscar(inputfile)
-    surf = pychemia.analysis.rotate_along_indices(structure, h, k, l, layers)
+    surf = pychemia.analysis.rotate_along_indices(structure, hh, kk, ll, layers)
 
     print(surf)
 

@@ -27,6 +27,8 @@ class PBSRunner:
         self.features = None
         self.filename = filename
         self.jobid = None
+        self.pvmem = None
+        self.join = None
         if workdir is None:
             self.workdir = "."
         elif workdir[-1] == os.sep:

@@ -3,16 +3,18 @@
 from __future__ import print_function
 import os
 import argparse
-import shutil
 import subprocess
-import numpy as np
-import pychemia
 import time
 import shutil
 import socket
+import numpy as np
+from pychemia.code.abinit import AbinitInput, AbinitOutput
+from pychemia.population.orbitaldftu import dmatpawu2params
+
 
 def which(program):
     import os
+
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
@@ -31,8 +33,11 @@ def which(program):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="""Orbital DFTU Executor, execute several ABINIT runs changing the value from dmatpawu from the previous output as input until a tolerance is reached.
-The executor assumes the existance of a command 'abinit' and 'mpirun' and files 'abinit.in' and 'abinit.files' the canonical names for those files in ABINIT""")
+    parser = argparse.ArgumentParser(description="Orbital DFTU Executor, execute several ABINIT runs changing the "
+                                                 "value from dmatpawu from the previous output as input until a "
+                                                 "tolerance is reached. The executor assumes the existance of a "
+                                                 "command 'abinit' and 'mpirun' and files 'abinit.in' and "
+                                                 "'abinit.files' the canonical names for those files in ABINIT")
 
     parser.add_argument('--usedmatpu', type=int, help='ABINIT Variable usedmatpu for each run (default: 25)', 
                         required=False, default=25, metavar='<N>')
@@ -44,9 +49,11 @@ The executor assumes the existance of a command 'abinit' and 'mpirun' and files 
                         required=False, default=1E-12, metavar='<X>')
     parser.add_argument('--max_nruns', type=int, help='Maximum number of runs allowed (default: 10)', 
                         required=False, default=10, metavar='<N>')
-    parser.add_argument('--nhours', type=int, help='Maximun number of hours, ignored if running through a queue system (PBS), mandatory otherwise', 
+    parser.add_argument('--nhours', type=int, help='Maximun number of hours, ignored if running through a queue '
+                                                   'system (PBS), mandatory otherwise',
                         required=False, default=0, metavar='<N>')
-    parser.add_argument('--nparal', type=int, help='Number of cores for use with MPI, ignored if running through a queue system (PBS), mandatory otherwise', 
+    parser.add_argument('--nparal', type=int, help='Number of cores for use with MPI, ignored if running through a '
+                                                   'queue system (PBS), mandatory otherwise',
                         required=False, default=0, metavar='<N>')
 
     args = parser.parse_args()
@@ -63,7 +70,8 @@ The executor assumes the existance of a command 'abinit' and 'mpirun' and files 
         parser.print_help()
         exit(1)
     if args.usedmatpu >= args.nstep:
-        print("Total number of SCF steps 'nstep' must be bigger than 'usedmatpu' the number of steps with 'dmatpawu' fixed")
+        print("Total number of SCF steps 'nstep' must be bigger than 'usedmatpu' the number of steps with 'dmatpawu' "
+              "fixed")
         parser.print_help()
         exit(1)
 
@@ -88,12 +96,13 @@ The executor assumes the existance of a command 'abinit' and 'mpirun' and files 
     target_nres2 = args.target_nres2
     max_nruns = args.max_nruns
 
-    nodefile=os.getenv('PBS_NODEFILE')
+    nodefile = os.getenv('PBS_NODEFILE')
+    nparal = 1
     if nodefile is not None:
         print("Nodefile: %s" % nodefile)
-        rf=open(nodefile)
+        rf = open(nodefile)
         nparal = len(rf.readlines())
-    elif args.nparal>0:
+    elif args.nparal > 0:
         nparal = args.nparal
     else:
         print("ERROR: No queue system detected and no positive value for 'nparal'")
@@ -108,22 +117,22 @@ The executor assumes the existance of a command 'abinit' and 'mpirun' and files 
         print("ERROR: No queue system detected and no positive value for 'nhours'")
         exit(1)
 
-    print("Walltime: %d seconds = %d minutes = %d hours)" % (walltime,int(walltime/60), int(walltime/3600)))
+    print("Walltime: %d seconds = %d minutes = %d hours)" % (walltime, int(walltime/60), int(walltime/3600)))
     print("Number of cores for MPI: %d" % nparal)
 
     # Getting the current time, use to compute the remaining time in execution
-    start_time=time.time()
+    start_time = time.time()
 
-    abi = pychemia.code.abinit.AbinitInput('abinit.in')
+    abi = AbinitInput('abinit.in')
     print("Checking that abinit.in contains value for dmatpawu...", end='')
-    if not 'dmatpawu' in abi.variables:
+    if 'dmatpawu' not in abi.variables:
         print('No')
         raise ValueError("ERROR: Could not open abinit.in")
     else:
         print('Yes')
 
     print("Checking that abinit.in contains value for lpawu...", end='')
-    if not 'lpawu' in abi.variables:
+    if 'lpawu' not in abi.variables:
         print('No')
         raise ValueError("ERROR: Could not open abinit.in")
     else:
@@ -140,19 +149,19 @@ The executor assumes the existance of a command 'abinit' and 'mpirun' and files 
     index = 0
     while True:
         if os.path.isfile('abinit_%02d.in' % index):
-            index+=1
+            index += 1
         else:
             break
     
-    if index>= max_nruns:
-       print("Total number of runs has been achieve already, increse 'max_nruns' if you want to continue")
-       parser.print_help()
-       exit(1)
+    if index >= max_nruns:
+        print("Total number of runs has been achieve already, increse 'max_nruns' if you want to continue")
+        parser.print_help()
+        exit(1)
 
     print("Executing run with index: %d" % index)
-    while index< max_nruns:
+    while index < max_nruns:
         print('\nABINIT execution %d of %d' % (index+1, max_nruns))
-        abi = pychemia.code.abinit.AbinitInput('abinit.in')
+        abi = AbinitInput('abinit.in')
 
         # If possible set the WFK from the output back to input 
         if os.path.isfile('abinit-i_WFK'):
@@ -160,17 +169,17 @@ The executor assumes the existance of a command 'abinit' and 'mpirun' and files 
             abi.write('abinit.in')
 
         # Calling ABINIT
-        command_line="mpirun -np %d abinit < abinit.files > abinit.log 2> abinit.err" % nparal
+        command_line = "mpirun -np %d abinit < abinit.files > abinit.log 2> abinit.err" % nparal
         print('Running; %s' % command_line)
-        start_run=time.time()
+        start_run = time.time()
         subprocess.call(command_line, shell=True)
-        end_run=time.time()
+        end_run = time.time()
 
         # Delete the error file if empty
         if os.path.isfile('abinit.err') and os.path.getsize('abinit.err') == 0:
             os.remove('abinit.err')
 
-        runtime=end_run-start_run
+        runtime = end_run-start_run
         print('Execution finished, execution took %d minutes' % int(runtime/60))
 
         if os.path.isfile('abinit.in'):
@@ -183,7 +192,7 @@ The executor assumes the existance of a command 'abinit' and 'mpirun' and files 
 
         # Opening the output file
         print("Reading the output from 'abinit.out'...")
-        abo = pychemia.code.abinit.AbinitOutput('abinit.out')
+        abo = AbinitOutput('abinit.out')
         if not abo.is_finished:
             print("abinit.out is truncated, discarting that output redoing the calculation")
             continue
@@ -191,7 +200,7 @@ The executor assumes the existance of a command 'abinit' and 'mpirun' and files 
         # The final density matrix is build from the outputi
         ndim = 2*max(abi['lpawu'])+1
 
-        params=pychemia.population.orbitaldftu.dmatpawu2params(abi['dmatpawu'], ndim)
+        params = dmatpawu2params(abi['dmatpawu'], ndim)
         print("Euler angles from 'abinit.in':")
         for i in params['euler_angles']:
             for j in i:
@@ -200,7 +209,7 @@ The executor assumes the existance of a command 'abinit' and 'mpirun' and files 
 
         dmatpawu = abo.get_dmatpawu()
         if dmatpawu is not None:
-            params=pychemia.population.orbitaldftu.dmatpawu2params(dmatpawu, ndim)
+            params = dmatpawu2params(dmatpawu, ndim)
             print("Euler angles from 'abinit.out':")
             for i in params['euler_angles']:
                 for j in i:
@@ -227,7 +236,7 @@ The executor assumes the existance of a command 'abinit' and 'mpirun' and files 
             os.rename('abinit.err', 'abinit_%02d.err' % index)
         if os.path.isfile('abinit-o_WFK'):
             print("Renaming abinit-o_WFK")
-            os.rename('abinit-o_WFK','abinit-i_WFK')
+            os.rename('abinit-o_WFK', 'abinit-i_WFK')
         if os.path.isfile('abinit.out'):
             print("Renaming abinit.out")
             shutil.copy2('abinit.out', 'abinit_%02d.txt' % index)
@@ -243,20 +252,20 @@ The executor assumes the existance of a command 'abinit' and 'mpirun' and files 
         nres2 = energetics['nres2'][-1]
 
         if nres2 < target_nres2 or index == max_nruns-1:
-            wf = open('COMPLETE','w')
+            wf = open('COMPLETE', 'w')
             wf.write("%d\n" % index)
             wf.close()
             break
 
         # Current time
-        curtime=time.time()
+        curtime = time.time()
         if curtime+runtime > start_time + walltime:
             print("Based on previous run, it is unlikely that next run will have time to complete, exiting")
-            print("The walltime for this job is %d minutes and we have been running for %d minutes" % (int(walltime/60), int((curtime-start_time)/60) ))
+            print("The walltime for this job is %d minutes and we have been running for %d minutes" %
+                  (int(walltime/60), int((curtime-start_time)/60)))
             break
         else:
-            print("Remaining time %d minutes, time for one more run" % int((start_time + walltime - curtime)/60) )
-
+            print("Remaining time %d minutes, time for one more run" % int((start_time + walltime - curtime)/60))
 
         # Incresing index for next run
-        index+=1
+        index += 1

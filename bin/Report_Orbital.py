@@ -7,7 +7,6 @@ from pychemia.visual.searcher import *
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 from pychemia.crystal import CrystalSymmetry
-import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
