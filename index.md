@@ -7,7 +7,7 @@
 PyChemia
 ========
 
-Python Materials Discovery Framework
+Python Framework for Materials Discovery and Design
 
 ![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/images/PyChemia_Small.png)
 
