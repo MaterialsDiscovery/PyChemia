@@ -3,7 +3,6 @@
 [![Documentation Status](https://readthedocs.org/projects/pychemia/badge/?version=latest)](http://pychemia.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/MaterialsDiscovery/PyChemia/badge.svg?branch=master)](https://coveralls.io/github/MaterialsDiscovery/PyChemia?branch=master)
 [![HitCount](http://hits.dwyl.io/MaterialsDiscovery/PyChemia.svg)](http://hits.dwyl.io/MaterialsDiscovery/PyChemia)
-[![Research software impact](http://depsy.org/api/package/pypi/pychemia/badge.svg)](http://depsy.org/package/python/pychemia)
 
 PyChemia
 ========
@@ -63,3 +62,14 @@ Documentation
 Documentation is hosted on [Read the Docs](https://readthedocs.org/projects/pychemia/) also available with Short URLs [readthedocs](http://pychemia.readthedocs.io) and [rtfd](http://pychemia.rtfd.io)
 
 Documentation is also hosted on [Python Hosted](http://pythonhosted.org/pychemia/index.html)
+
+Sources
+-------
+
+The main repository is on [GitHub](https://github.com/MaterialsDiscovery/PyChemia)
+
+Sources and wheel binaries are also distrubuted on [PyPI](https://pypi.python.org/pypi/pychemia) or [PyPI](https://pypi.org/project/pychemia/)
+
+
+
+
