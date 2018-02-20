@@ -28,17 +28,25 @@ Installation
 
 Using pip:
 
-    pip install pychemia --user
+    $ pip install pychemia --user
 
 Using virtualenv
 
-    virtualenv pychemia
-    source pychemia/bin/activate
-    pip install pychemia
+    $ virtualenv venv_pcm
+    $ source venv_pcm/bin/activate
+    (venv_pcm)$ pip install pychemia
 
-You can also download the complete source code from GitHub
+To deactivate the virtual environment execute:
+
+    (venv_pcm)$ deactivate
+
+For developers, or if you want to contribute with modifications, or bug corrections you can also download the complete source code from GitHub
 
     git clone https://github.com/MaterialsDiscovery/PyChemia.git
+
+In that case you need to set your $PYTHONPATH before trying to import the library
+
+    export PYTHONPATH=<PATH_TO>/PyChemia:$PYTHONPATH
 
 
 Documentation
