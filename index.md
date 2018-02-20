@@ -1,13 +1,12 @@
-[![Build Status](https://travis-ci.org/MaterialsDiscovery/PyChemia.svg?branch=master)]
-(https://travis-ci.org/MaterialsDiscovery/PyChemia)
+[![[Build Status](https://travis-ci.org/MaterialsDiscovery/PyChemia.svg?branch=master)({{(https://travis-ci.org/MaterialsDiscovery/PyChemia}})]
 
 
-[![PyPI version](https://badge.fury.io/py/pychemia.svg)](https://badge.fury.io/py/pychemia)
+[![PyPI version](https://badge.fury.io/py/pychemia.svg)]({{https://badge.fury.io/py/pychemia}})
 
 [![Coverage Status](https://coveralls.io/repos/github/MaterialsDiscovery/PyChemia/badge.svg?branch=master)]
-(https://coveralls.io/github/MaterialsDiscovery/PyChemia?branch=master)
+({{https://coveralls.io/github/MaterialsDiscovery/PyChemia?branch=master}})
 
-BLABLA
+qwert
 
 PyChemia
 ========
