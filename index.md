@@ -11,22 +11,6 @@ Python Materials Discovery Framework
 
 ![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/images/PyChemia_Small.png)
 
-
-[![[Build Status](https://travis-ci.org/MaterialsDiscovery/PyChemia.svg?branch=master)({{(https://travis-ci.org/MaterialsDiscovery/PyChemia}})]
-
-
-[![PyPI version](https://badge.fury.io/py/pychemia.svg)]({{https://badge.fury.io/py/pychemia}})
-
-[![Coverage Status](https://coveralls.io/repos/github/MaterialsDiscovery/PyChemia/badge.svg?branch=master)]
-({{https://coveralls.io/github/MaterialsDiscovery/PyChemia?branch=master}})
-
-qwert
-
-PyChemia
-========
-
-Python Materials Discovery Framework
-
 <center>
 ![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/images/PyChemia_Small.png)
 </center>
