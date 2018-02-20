@@ -44,8 +44,6 @@ You can also download the complete source code from GitHub
 Documentation
 -------------
 
-Documentation is hosted on [Read the Docs](http://pychemia.readthedocs.io/en/latest/) also available with Short URLs [readthedocs](http://pychemia.readthedocs.io) and [rtfd](http://pychemia.rtfd.io)
+Documentation is hosted on [Read the Docs](https://readthedocs.org/projects/pychemia/) also available with Short URLs [readthedocs](http://pychemia.readthedocs.io) and [rtfd](http://pychemia.rtfd.io)
 
 Documentation is also hosted on [Python Hosted](http://pythonhosted.org/pychemia/index.html)
-
-
