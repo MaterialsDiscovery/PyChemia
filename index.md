@@ -3,7 +3,7 @@
 [![Documentation Status](https://readthedocs.org/projects/pychemia/badge/?version=latest)](http://pychemia.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/MaterialsDiscovery/PyChemia/badge.svg?branch=master)](https://coveralls.io/github/MaterialsDiscovery/PyChemia?branch=master)
 [![HitCount](http://hits.dwyl.io/MaterialsDiscovery/PyChemia.svg)](http://hits.dwyl.io/MaterialsDiscovery/PyChemia)
-
+[![Research software impact](http://depsy.org/api/package/pypi/pychemia/badge.svg)](http://depsy.org/package/python/pychemia)
 
 PyChemia
 ========
@@ -42,12 +42,20 @@ To deactivate the virtual environment execute:
 
 For developers, or if you want to contribute with modifications, or bug corrections you can also download the complete source code from GitHub
 
-    git clone https://github.com/MaterialsDiscovery/PyChemia.git
+    $ git clone https://github.com/MaterialsDiscovery/PyChemia.git
 
-In that case you need to set your $PYTHONPATH before trying to import the library
+In that case you need to set your $PYTHONPATH before trying to import the library. For Korn Shell
 
-    export PYTHONPATH=<PATH_TO>/PyChemia:$PYTHONPATH
+    $ PYTHONPATH=<PATH_TO>/PyChemia:$PYTHONPATH
+    $ export PYTHONPATH
+    
+On Bash (sh and bash) 
 
+    $ export PYTHONPATH=<PATH_TO>/PyChemia:$PYTHONPATH
+
+On c shell (csh and tcsh)
+
+    $ setenv PYTHONPATH <PATH_TO>/PyChemia:$PYTHONPATH
 
 Documentation
 -------------
