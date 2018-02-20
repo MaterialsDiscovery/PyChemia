@@ -1,0 +1,8 @@
+title: Pychemia
+description: Python Materials Discovery Framework
+google_analytics: 
+show_downloads: true
+theme: jekyll-theme-leap-day
+
+gems:
+  - jekyll-mentions
