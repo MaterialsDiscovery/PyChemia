@@ -261,7 +261,10 @@ class Population:
     @property
     def fraction_evaluated(self):
         ret = np.sum([1 for i in self.actives if self.is_evaluated(i)])
-        return float(ret) / len(self.actives)
+        if len(self.actives) != 0:
+            return float(ret) / len(self.actives)
+        else:
+            return 0
 
     @property
     def members(self):

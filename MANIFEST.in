@@ -1,2 +1,3 @@
-include *.txt
-recursive-include docs *.rst
+include *.txt *.md
+recursive-include docs *.md
+recursive-include test *.xyz VASP *.in *.files

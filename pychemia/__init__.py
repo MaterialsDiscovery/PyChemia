@@ -44,10 +44,15 @@ except ImportError:
 
 try:
     import mayavi
-
     HAS_MAYAVI = True
 except ImportError:
     HAS_MAYAVI = False
+
+try:
+    import vtk
+    HAS_VTK = True
+except ImportError:
+    HAS_VTK = False
 
 try:
     import pyhull
@@ -109,7 +114,6 @@ from . import web
 from . import code
 from . import population
 from .core.from_file import structure_from_file
-from pychemia.crystal import samples
 
 
 def info():
@@ -135,7 +139,7 @@ def info():
         print('pymongo Not Found')
 
     for modui in ['numpy', 'scipy', 'mayavi', 'matplotlib',
-                  'future', 'nose', 'coverage', 'spglib', 'pyhull', 'pymatgen', 'qmpy', ]:
+                  'future', 'nose', 'coverage', 'spglib', 'pyhull', 'pymatgen', 'qmpy', 'vtk', 'mayavi']:
         try:
             mm = __import__(modui)
             print('%10s %10s   %s' % (modui, mm.__version__, mm.__path__[0]))

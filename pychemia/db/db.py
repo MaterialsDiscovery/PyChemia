@@ -168,7 +168,7 @@ class PyChemiaDB:
             assert (specie_b in atomic_symbols)
 
         ret = []
-        for entry in self.entries.find({'nspecies': 2, 'formula': {'$regex': atom_fixed}}):
+        for entry in self.entries.find({'structure.nspecies': 2, 'structure.formula': {'$regex': atom_fixed}}):
             comp = Structure.from_dict(entry['structure']).get_composition()
             if atom_fixed in comp.composition and comp.composition[atom_fixed] % number_fixed == 0:
                 species = comp.species
