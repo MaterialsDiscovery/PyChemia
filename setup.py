@@ -9,7 +9,7 @@ def get_scripts():
 ###################################################################
 
 NAME = "pychemia"
-VERSION = '0.18.2.19'
+VERSION = '0.18.2.20'
 KEYWORDS = ["electronic", "structure", "analysis", "materials", "discovery", "metaheuristics"]
 CLASSIFIERS = [
     "Development Status :: 4 - Beta",
