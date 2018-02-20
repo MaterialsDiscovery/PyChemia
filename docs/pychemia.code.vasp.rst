@@ -12,7 +12,6 @@ Subpackages
 .. toctree::
 
     pychemia.code.vasp.task
-    pychemia.code.vasp.tests
 
 Submodules
 ----------

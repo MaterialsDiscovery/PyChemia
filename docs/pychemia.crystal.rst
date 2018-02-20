@@ -6,12 +6,6 @@ pychemia.crystal package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-
-    pychemia.crystal.tests
 
 Submodules
 ----------
@@ -41,10 +35,3 @@ pychemia.crystal.symmetry module
     :show-inheritance:
 
 
-pychemia.crystal.samples module
--------------------------------
-
-.. automodule:: pychemia.crystal.samples
-    :members:
-    :undoc-members:
-    :show-inheritance:

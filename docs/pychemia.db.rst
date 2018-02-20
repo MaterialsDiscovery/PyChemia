@@ -6,12 +6,6 @@ pychemia.db package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-
-    pychemia.db.tests
 
 Submodules
 ----------
