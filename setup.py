@@ -1,5 +1,10 @@
 import os
 from setuptools import setup, find_packages
+import json
+
+rf = open('pychemia' + os.sep + 'setup.json')
+data = json.load(rf)
+rf.close()
 
 
 def get_scripts():
@@ -8,8 +13,7 @@ def get_scripts():
 
 ###################################################################
 
-NAME = "pychemia"
-VERSION = '0.18.2.20'
+
 KEYWORDS = ["electronic", "structure", "analysis", "materials", "discovery", "metaheuristics"]
 CLASSIFIERS = [
     "Development Status :: 4 - Beta",
@@ -36,21 +40,19 @@ INSTALL_REQUIRES = ['numpy >= 1.12.0',
 ###################################################################
 
 setup(
-    name=NAME,
-    version=VERSION,
-    author='Guillermo Avendano-Franco',
-    author_email='gufranco@mail.wvu.edu',
+    name=data['name'],
+    version=data['version'],
+    author=data['author'],
+    author_email=data['email'],
     packages=find_packages(exclude=['scripts', 'docs', 'tests']),
-    url='https://github.com/MaterialsDiscovery/PyChemia',
+    url=data['url'],
     license='LICENSE.txt',
-    description='Python framework for Materials Discovery and Design',
+    description=data['description'],
     long_description=open('README').read(),
     install_requires=INSTALL_REQUIRES,
     keywords=KEYWORDS,
     classifiers=CLASSIFIERS,
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, <4',
-    data_files=[('my_data', ['tests/data/Au.cif'])],
+    package_data={'': ['setup.json']},
     scripts=get_scripts(),
 )
-
-

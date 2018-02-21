@@ -1,7 +1,17 @@
 Installation
 ============
 
-There are basically two ways of installing Pychemia, using pip or by cloning the Github repository.
+Quick and Simple
+----------------
+
+From a terminal install the latest stable version with pip::
+
+    pip install pychemia --user
+
+It will install pychemia and all its dependencies in your $HOME folder. If you want a central installation you can
+install directly with::
+
+    sudo pip install pychemia
 
 Installing PyChemia with pip
 ----------------------------
@@ -25,36 +35,15 @@ or for python 3.x::
 
     pip3 install pychemia --user
 
-This is a simple and usually will work for you. The only situation where it could give you problems is when pip tries
-to compile and install dependencies. In particular, pychemia requires the following packages and versions::
+Uninstall or upgrade pychemia is also very simple with pip::
 
-    numpy  >= 1.11.0
-    scipy  >= 0.17.0
-    future >= 0.15.2
-    spglib >= 1.9.4
+    pip uninstall pychemia
 
-Now, most Linux distributions will probably come with older versions of numpy and scipy. Even more, Linux clusters
-usually have a very conservative approach related to packages and old versions of ``numpy`` and ``scipy`` are probably
-installed. ``numpy`` and ``scipy`` are python libraries that use the old and known BLAS and LAPACK libraries for all
-the usual linear algebra operations. If you encounter problems related with numpy and scipy, check if you have
-installed blas and lapack on your system.
+    pip install pychemia --upgrade
 
-The python library ``future`` is a small package that helps keeping compatibility with python 2 and python 3 on the same
-source code. Finally ``spglib`` is a C-library with python wrappers for computing space groups and related functionality.
 
-We try to keep the dependencies of PyChemia to a very minimum. Some other libraries provides extra functionality that
-could be necessary for some tasks. Consider install pymongo, nose and matplotlib. You can do that using pip with the
-command::
 
-    sudo pip install pymongo nose matplotlib
-
-Remember that you can use ``--user`` if you want to install on your home directory without special privileges.
-The package 'pymongo' offers connectivity with a Mongo database, a must if you plan to use 'pychemia.population'
-subpackage or doing global searches with the 'pychemia.searcher' subpackage. Matplotlib is the 'standard de-facto'
-for 2D plots on python. Many of the functionalities on 'pychemia.visual' subpackage depends on it. Nose is a python
-package for executing automatize tests for PyChemia. If you want to use it more information is below.
-
-Installing PyChemia on a virtual environment
+Installing PyChemia with virtualenv
 --------------------------------------------
 
 PyChemia requieres a relative recent version of Python (Python 2.7 appeared on July 3, 2010). However, it is common for
@@ -66,20 +55,20 @@ You can contour this situation by using Software Collections::
 Install a more recent version of python and virtualenv. After that you can install PyChemia and its dependencies
 contained on a virtual environment following this commands:
 
-1. Create a new virtual environment, lets call it "ve27"
+1. Create a new virtual environment, lets call it "venv_pcm"
 
-virtualenv ve27
+virtualenv venv_pcm
 
 2. Activate the environment by sourcing the activate script
 
-source ve27/bin/activate
+source venv_pcm/bin/activate
 
 3. You will notive that the prompt changes and you get your path pointing to a containerized python environment where
 you can install PyChemia and its dependencies
 
 pip install pychemia
 
-4. After a couple of minutes, you will get all the dependencies installed and the software ready for use without
+4. Shortly after that, you will get all the dependencies installed and the software ready for use without
 touching the libraries and modules installed by your Linux distribution. You can leave the virtual environment with the
 command:
 
@@ -127,6 +116,40 @@ you can add the path for PyChemia adding this line to your .bashrc::
 If you want the changes on .bashrc take inmediate effect execute::
 
     source $HOME/.bashrc
+
+Dependencies
+------------
+
+PyChemia relies on the presence of at least this libraries::
+
+    numpy  >= 1.12.0
+    scipy  >= 0.18.0
+    future >= 0.16.0
+    spglib >= 1.9.9
+    pymongo >= 3.4.0
+
+Most Linux distributions will probably include older versions of those dependencies. HPC Linux clusters
+usually have a very conservative approach related to packages and even older versions of those dependencies will be
+installed the system or completely absent from it.
+
+The packages ``numpy`` and ``scipy`` are well known python packages for Linear Algebra and general scientific computing.
+PyChemia is able to run on Python 2 and 3 using the same sources.
+The python package ``future`` is a small package that helps keeping compatibility with python 2 and python 3 on the same
+source code. The package ``spglib`` is a C-library with python wrappers for computing space groups and related functionality.
+The package ``pymongo`` offers connectivity with a MongoDB database. MongoDB is a document-based NoSQL database engine.
+PyChemia uses MongoDB databases for storing collections of structures or properties and parameters associated to them.
+
+We try to keep the dependencies of PyChemia to a very minimum. Some other libraries provides extra functionality that
+could be necessary for some tasks. Consider install nose and matplotlib. You can do that using pip with the
+command::
+
+    sudo pip install nose matplotlib
+
+Remember that you can use ``--user`` if you want to install on your home directory without special privileges.
+Matplotlib is the 'standard de-facto'
+for 2D plots on python. Many of the functionalities on 'pychemia.visual' subpackage depends on it. Nose is a python
+package for executing automatize tests for PyChemia. If you want to use it more information is below.
+
 
 Importing the library
 ---------------------
