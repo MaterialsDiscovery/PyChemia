@@ -1,0 +1,16 @@
+Global Minimization with Metaheuristics
+=======================================
+
+One of the first features implemented on PyChemia was the ability to perform global minimization for various purposes
+in materials science using a variety of Metaheuristic algorithms. On this set of tutorials, we will demonstrate this
+capability in a variety of problems: Searching optimal configurations of Lennard-Jones clusters, finding structures
+of binaries and ternaries using several Tight-Binding and DFT codes,  optimizing the Magnetic Moments with VASP and
+optimizing the density matrices for DFT+U using ABINIT.
+
+
+.. toctree::
+
+    tutorial.ljclusters
+    tutorial.structural_search
+    tutorial.magnetic_moments
+    tutorial.orbitaldftu
