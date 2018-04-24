@@ -8,6 +8,7 @@ import argparse
 import numpy as np
 import matplotlib
 import multiprocessing
+import logging
 
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
@@ -412,6 +413,7 @@ if __name__ == "__main__":
             pcdb = get_database(dbi)
             pcdbs.append(pcdb)
             print(pcdb)
+            print(pcdb.entries.count())
 
     if args.subparser_name == 'run':
         queue_settings = safe_read_json(args.queue_settings)
@@ -469,30 +471,39 @@ if __name__ == "__main__":
             print("[%s] Total number of candidates: %d" % (name, len(popu[name])))
 
     elif args.subparser_name == 'run':
+        sprocs = {}
         for dbi in dbs:
-            sprocs = {}
             name = dbi['name']
             basepath = args.basepath + os.sep + name
-            sprocs[name] = multiprocessing.Process(target=evaluate, args=(dbi, queue_settings, basepath))
-            sprocs[name].start()
+
+            if os.path.exists(basepath + os.sep + 'ERROR'):
+                print('ERROR: Something was wrong with %s' % abipath)
+            else:
+                sprocs[name] = multiprocessing.Process(target=evaluate, args=(dbi, queue_settings, basepath))
+                sprocs[name].start()
 
         for dbi in dbs:            
             name = dbi['name']
             sprocs[name].join()
 
     elif args.subparser_name == 'search':
+        logging.basicConfig(level=logging.DEBUG)
         search_settings = safe_read_json(args.search_settings)
         print("Search settings from file: %s \n%s" % (args.search_settings, search_settings))
 
+        sprocs = {}
         for dbi in dbs:
-            sprocs = {}
             name = dbi['name']
             basepath = args.basepath + os.sep + name
             sprocs[name] = multiprocessing.Process(target=search, args=(dbi, search_settings, basepath))
             sprocs[name].start()
 
+        print(list(sprocs.keys()))
+
         for dbi in dbs:
             name = dbi['name']
+            if name not in sprocs:
+                print('ERRROR: %s' % str(sprocs))
             sprocs[name].join()
 
     elif args.subparser_name == 'plot':

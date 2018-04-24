@@ -76,17 +76,25 @@ if __name__ == "__main__":
         exit(1)
 
     if not os.path.exists('abinit.in'):
+        with open('ERROR','w') as wf:
+            wf.write('No abinit.in')
         raise RuntimeError("File 'abinit.in' could not be found or its symbolic link is broken")
     if not os.path.exists('abinit.files'):
+        with open('ERROR','w') as wf:
+            wf.write('No abinit.files')
         raise RuntimeError("File 'abinit.files' could not be found or its symbolic link is broken")
 
     # Checking the existance of "mpirun" and "abinit"
     ret = which('mpirun')
     if ret is None:
+        with open('ERROR','w') as wf:
+            wf.write('No mpirun executable')
         raise RuntimeError("Command 'mpirun' could not be found, maybe you need to load the module first")
     print("mpirun: %s" % ret)    
     ret = which('abinit')
     if ret is None:
+        with open('ERROR','w') as wf:
+            wf.write('No abinit executable')
         raise RuntimeError("Command 'abinit' could not be found, maybe you need to load the module first")
     print("abinit: %s" % ret)
 
@@ -182,17 +190,42 @@ if __name__ == "__main__":
         runtime = end_run-start_run
         print('Execution finished, execution took %d minutes' % int(runtime/60))
 
-        if os.path.isfile('abinit.in'):
-            shutil.copy2('abinit.in', 'abinit_%02d.in' % index)
-
         # If everything works fine with ABINIT we have abinit.out
         # Otherwise is better to stop the entire run
         if not os.path.isfile('abinit.out'):
+            with open('ERROR','w') as wf:
+                wf.write('No abinit.out')
             raise ValueError('File not found: abinit.out')
+
+        if not os.path.isfile('abinit.log'):
+            with open('ERROR','w') as wf:
+                wf.write('No abinit.log')
+            raise ValueError('File not found: abinit.log')
+
+        if os.path.isfile('abinit.in'):
+            shutil.copy2('abinit.in', 'abinit_%02d.in' % index)
+
+        # Renaming logs and setting WFK back to input
+        if os.path.isfile('abinit.log'):
+            print("Renaming abinit.log")
+            os.rename('abinit.log', 'abinit_%02d.log' % index)
+        if os.path.isfile('abinit.err'):
+            print("Renaming abinit.err")
+            os.rename('abinit.err', 'abinit_%02d.err' % index)
+        if os.path.isfile('abinit-o_WFK'):
+            print("Renaming abinit-o_WFK")
+            os.rename('abinit-o_WFK', 'abinit-i_WFK')
+        if os.path.isfile('abinit.out'):
+            print("Renaming abinit.out")
+            shutil.copy2('abinit.out', 'abinit_%02d.txt' % index)
+            os.rename('abinit.out', 'abinit_%02d.out' % index)
+            abiout='abinit_%02d.out' % index
+        else:
+            print("Could not find abinit.out")
 
         # Opening the output file
         print("Reading the output from 'abinit.out'...")
-        abo = AbinitOutput('abinit.out')
+        abo = AbinitOutput(abiout)
         if not abo.is_finished:
             print("abinit.out is truncated, discarting that output redoing the calculation")
             continue
@@ -226,23 +259,6 @@ if __name__ == "__main__":
         if os.path.isfile('abinit-i_WFK'):
             abi['irdwfk'] = 1
         abi.write('abinit.in')
-
-        # Renaming logs and setting WFK back to input
-        if os.path.isfile('abinit.log'):
-            print("Renaming abinit.log")
-            os.rename('abinit.log', 'abinit_%02d.log' % index)
-        if os.path.isfile('abinit.err'):
-            print("Renaming abinit.err")
-            os.rename('abinit.err', 'abinit_%02d.err' % index)
-        if os.path.isfile('abinit-o_WFK'):
-            print("Renaming abinit-o_WFK")
-            os.rename('abinit-o_WFK', 'abinit-i_WFK')
-        if os.path.isfile('abinit.out'):
-            print("Renaming abinit.out")
-            shutil.copy2('abinit.out', 'abinit_%02d.txt' % index)
-            os.rename('abinit.out', 'abinit_%02d.out' % index)
-        else:
-            print("Could not find abinit.out")
 
         # Checking if you should accept the current residual
         energetics = abo.get_energetics()
