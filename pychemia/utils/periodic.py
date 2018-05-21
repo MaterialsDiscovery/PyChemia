@@ -196,11 +196,11 @@ blocks = [None,
 
 # Values up to 96:
 #
-# Beatriz Cordero; Verónica Gómez; Ana E. Platero-Prats; Marc Revés; Jorge Echeverría; Eduard Cremades; Flavia Barragán; Santiago Alvarez (2008). 
-# "Covalent radii revisited". Dalton Trans. (21): 2832–2838. doi:10.1039/b801115j
+# Beatriz Cordero; Ver\'onica G\'omez; Ana E. Platero-Prats; Marc Rev\'es; Jorge Echeverr\'\ia; Eduard Cremades; Flavia Barrag\'an; Santiago Alvarez (2008). 
+# "Covalent radii revisited". Dalton Trans. (21): 2832-2838. doi:10.1039/b801115j
 # 
 # Higher values (Single bond values were used):
-# P. Pyykkö; M. Atsumi (2009). "Molecular Single-Bond Covalent Radii for Elements 1-118". Chemistry: A European Journal. 15: 186–197. doi:10.1002/chem.200800987.
+# P. Pyykk\:o; M. Atsumi (2009). "Molecular Single-Bond Covalent Radii for Elements 1-118". Chemistry: A European Journal. 15: 186-197. doi:10.1002/chem.200800987.
 #
 # Also see:
 # https://en.wikipedia.org/wiki/Covalent_radius
