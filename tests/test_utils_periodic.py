@@ -7,7 +7,7 @@ def test_utils():
     """
     assert covalent_radius(1) == 0.31
     assert covalent_radius([1.1, 2]) == [0.31, 0.28]
-    assert len(covalent_radius()) == 103
+    assert len(covalent_radius()) == 118
     assert atomic_symbol(1) == 'H'
     assert atomic_symbol([1, 2.1]) == ['H', 'He']
     assert len(atomic_symbol()) == 118
