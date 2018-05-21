@@ -107,7 +107,7 @@ except ImportError:
 pcm_log = logging.getLogger(__name__)
 pcm_log.addHandler(logging.NullHandler())
 
-from .core import Structure, Composition
+from .core import Structure, Composition, Element
 from . import analysis
 from . import db
 from . import crystal
