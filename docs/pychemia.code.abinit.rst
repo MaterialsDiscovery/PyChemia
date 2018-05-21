@@ -12,7 +12,6 @@ Subpackages
 .. toctree::
 
     pychemia.code.abinit.task
-    pychemia.code.abinit.tests
 
 Submodules
 ----------

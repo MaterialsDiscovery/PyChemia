@@ -7,8 +7,6 @@ if HAS_PYMONGO:
     from .noncollinearmagmoms import NonCollinearMagMoms
     from .ljcluster import LJCluster
 
-from . import orbitaldftu
-
 """
 Populations are objects collecting structures/properties usually for feeding global search algorithms.
 Several populations are implemented.

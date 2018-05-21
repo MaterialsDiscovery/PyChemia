@@ -6,13 +6,6 @@ pychemia.population package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-
-    pychemia.population.tests
-
 Submodules
 ----------
 

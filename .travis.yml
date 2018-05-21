@@ -1,8 +1,8 @@
 language: python
 python:
   - 2.7
-  - 3.4
   - 3.5
+  - 3.6
 notifications:
   email: false
 
@@ -23,15 +23,16 @@ before_install:
     fi
   - echo $PATH
   - pwd
+  - export PYTHONPATH=`pwd`
   - conda update --yes conda
   # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
-  - sudo apt-get -qq update
+  # sudo apt-get -qq update
   # sudo apt-get install -y gcc gfortran m4 autoconf automake libtool
 
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coverage future
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coverage future matplotlib
   - pip install pymongo
   - pip install -e "git+https://github.com/atztogo/spglib.git#egg=spglib&subdirectory=python"
   - pip install -e "git+https://github.com/z4r/python-coveralls.git#egg=coveralls"

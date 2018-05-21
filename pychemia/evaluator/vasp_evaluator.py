@@ -2,7 +2,7 @@ import os
 import shutil
 import json
 import logging
-from pychemia.code.vasp import VaspJob, VaspOutput, InputVariables
+from pychemia.code.vasp import VaspJob, VaspOutput, VaspInput
 from pychemia.crystal import KPoints
 from pychemia.code.vasp import read_poscar
 from pychemia.utils.mathematics import round_small
@@ -42,7 +42,7 @@ class RelaxPopulation:
             print(kpoints)
             vj = VaspJob()
             vj.initialize(workdir=workdir, structure=structure, kpoints=kpoints)
-            inp = InputVariables()
+            inp = VaspInput()
             inp.set_rough_relaxation()
             vj.set_input_variables(inp)
             vj.write_potcar()

@@ -3,7 +3,7 @@ import sys
 from pychemia import HAS_PYMATGEN
 from .structure import Structure
 from pychemia.code.vasp import read_poscar
-from pychemia.code.abinit import InputVariables
+from pychemia.code.abinit import AbinitInput
 
 
 def structure_from_file(structure_file):
@@ -21,7 +21,7 @@ def structure_from_file(structure_file):
     elif structure_file[-6:].lower() == 'contcar':
         st = read_poscar(structure_file)
     elif structure_file[-6:].lower() == 'abinit.in':
-        av = InputVariables(structure_file)
+        av = AbinitInput(structure_file)
         av.get_structure()
     else:
         try:

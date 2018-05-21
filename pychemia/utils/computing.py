@@ -1,6 +1,7 @@
 from __future__ import print_function, unicode_literals
 from builtins import str
 from numbers import Number
+from math import sqrt
 import gzip
 import hashlib
 import os
@@ -173,3 +174,66 @@ def only_ascii(string):
 
     """
     return "".join(x for x in string if ord(x) < 128)
+
+
+def string2number(word):
+    """
+    Take a string and try to convert into a number
+    of list of numbers.
+    It try to returns integer values always that is
+    is possible.
+
+    Examples:
+              '3'         =>     3
+              '3.14'      =>     3.14
+              '1.5e-5'    =>     0.000015
+              '1.5d-5'    =>     0.000015
+              '1.5E-5'    =>     0.000015
+              '1.5D-5'    =>     0.000015
+              '1/2'       =>     0.5
+              'sqrt(3.0)' =>     1.732050
+    Args:
+        word:
+           An string that should be converted into a number
+
+    Returns:
+        number:
+           The value extracted
+        kind:
+           The kind of value
+
+    """
+    number = None
+    kind = None
+    try:
+        number = int(word)
+        kind = 'int'
+    except ValueError:
+        try:
+            number = float(word)
+            kind = 'float'
+        except ValueError:
+            if 'd' in word:
+                word = word.replace('d', 'e')
+            elif 'D' in word:
+                word = word.replace('D', 'e')
+            try:
+                number = float(word)
+                kind = 'float'
+            except ValueError:
+                if '/' in word:
+                    splt = word.split('/')
+
+                    if splt[0].isdigit() and splt[1].isdigit():
+                        number = float(splt[0]) / float(splt[1])
+                        kind = 'float'
+                elif word[:4] == 'sqrt':
+                    number = sqrt(float(word[5:-1]))
+                    kind = 'float'
+
+                elif word[:5] == '-sqrt':
+                    number = -sqrt(float(word[6:-1]))
+                    kind = 'float'
+                else:
+                    print('ERROR: "%s" is not a number\n' % word)
+    return number, kind

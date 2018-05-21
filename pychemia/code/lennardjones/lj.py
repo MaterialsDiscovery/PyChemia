@@ -155,6 +155,7 @@ def lj_energy(pos, sigmas, epsilons, cp=0.0):
 
 
 def lj_compact_evaluate(structure, gtol, minimal_density):
+    print(structure)
     k = 1
     while structure.density < minimal_density:
         iniden = structure.density

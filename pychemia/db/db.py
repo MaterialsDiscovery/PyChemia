@@ -5,7 +5,7 @@ from multiprocessing import Pool
 
 import numpy as np
 import pymongo
-from pymongo.errors import ServerSelectionTimeoutError
+from pymongo.errors import ServerSelectionTimeoutError, OperationFailure
 from bson.objectid import ObjectId
 
 from pychemia import Structure, HAS_PYMONGO
@@ -51,14 +51,18 @@ class PyChemiaDB:
             elif pymongo.version_tuple[0] == 3:
                 self._client = pymongo.MongoClient(uri, ssl=ssl,
                                                    ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE,
-
                                                    replicaSet=replicaset, serverSelectionTimeoutMS=maxSevSelDelay)
             else:
                 raise ValueError('Wrong version of pymongo')
-            self._client.server_info()
+
+            try:
+                self._client.server_info()
+            except OperationFailure:
+                raise RuntimeError("ERROR: Database '%s' on '%s' cannot be accessed, either the database does not "
+                                   "exist or you need the right credentials to get access" % (name, host))
+
         except ServerSelectionTimeoutError:
-            print("ERROR: No connexion could be established to server: %s" % uri)
-            exit(1)
+            raise RuntimeError("ERROR: No connexion could be established to server: %s" % uri)
 
         self.db = self._client[name]
         self.entries = self.db.pychemia_entries
@@ -77,10 +81,11 @@ class PyChemiaDB:
         json.dump(self.db_settings, wf, sort_keys=True, indent=4, separators=(',', ': '))
         wf.close()
 
-    def insert(self, structure, properties=None, status=None):
+    def insert(self, structure, properties=None, status=None, entry_id=None):
         """
         Insert a pychemia structure instance and properties
         into the database
+        :param entry_id: Mongo ID for the entry
         :param structure: (pychemia.Structure) An instance of Pychemia's Structure
         :param properties: (dict) Dictionary of properties
         :param status: (dict) Dictionary of status
@@ -91,7 +96,9 @@ class PyChemiaDB:
         if properties is None:
             properties = {}
         entry = {'structure': structure.to_dict, 'properties': properties, 'status': status}
-        entry_id = self.entries.insert(entry)
+        if entry_id is not None:
+            entry['_id'] = entry_id
+        entry_id = self.entries.insert_one(entry)
         return entry_id
 
     def clean(self):
@@ -161,7 +168,7 @@ class PyChemiaDB:
             assert (specie_b in atomic_symbols)
 
         ret = []
-        for entry in self.entries.find({'nspecies': 2, 'formula': {'$regex': atom_fixed}}):
+        for entry in self.entries.find({'structure.nspecies': 2, 'structure.formula': {'$regex': atom_fixed}}):
             comp = Structure.from_dict(entry['structure']).get_composition()
             if atom_fixed in comp.composition and comp.composition[atom_fixed] % number_fixed == 0:
                 species = comp.species
@@ -306,6 +313,12 @@ class PyChemiaDB:
 
 
 def get_database(db_settings):
+    """
+    Return a PyChemiaDB object either by recovering the database from its name on MongoDB or
+    by creating a new one. The argument is a single python dictionary that should contain
+    keys and values to create or get the database.
+
+    """
     if 'host' not in db_settings:
         db_settings['host'] = 'localhost'
     if 'port' not in db_settings:
@@ -314,28 +327,30 @@ def get_database(db_settings):
         db_settings['ssl'] = False
     if 'replicaset' not in db_settings:
         db_settings['replicaset'] = None
-
     if 'user' not in db_settings:
         pcdb = PyChemiaDB(name=db_settings['name'], host=db_settings['host'], port=db_settings['port'],
                           ssl=db_settings['ssl'], replicaset=db_settings['replicaset'])
     else:
-        pcdb = PyChemiaDB(name=db_settings['name'], host=db_settings['host'], port=db_settings['port'],
-                          user=db_settings['user'], passwd=db_settings['passwd'], ssl=db_settings['ssl'],
-                          replicaset=db_settings['replicaset'])
+        if 'admin_name' in db_settings and 'admin_passwd' in db_settings:
+            pcdb = create_database(name=db_settings['name'], host=db_settings['host'], 
+                                   port=db_settings['port'], ssl=db_settings['ssl'], 
+                                   user_name=db_settings['user'], 
+                                   user_passwd=db_settings['passwd'],
+                                   admin_name=db_settings['admin_name'], 
+                                   admin_passwd=db_settings['admin_passwd'],
+                                   replicaset=db_settings['replicaset'])
+        else:
+            pcdb = PyChemiaDB(name=db_settings['name'], host=db_settings['host'], 
+                              port=db_settings['port'], user=db_settings['user'], 
+                              passwd=db_settings['passwd'], ssl=db_settings['ssl'],
+                              replicaset=db_settings['replicaset'])
     return pcdb
 
 
-def object_id(entry_id):
-    if isinstance(entry_id, str):
-        return ObjectId(entry_id)
-    elif isinstance(entry_id, ObjectId):
-        return entry_id
-
-
-def create_user(name, admin_name, admin_passwd, user_name, user_passwd, host='localhost', port=27017, ssl=False,
-                replicaset=None):
+def create_database(name, admin_name, admin_passwd, user_name, user_passwd, 
+                    host='localhost', port=27017, ssl=False, replicaset=None):
     """
-    Creates a new user for the database 'name'
+    Creates a new database for the database 'name'
 
     :param name: (str) The name of the database
     :param admin_name: (str) The administrator name
@@ -349,17 +364,24 @@ def create_user(name, admin_name, admin_passwd, user_name, user_passwd, host='lo
 
     """
     maxSevSelDelay = 2
-    mc = pymongo.MongoClient(host=host, port=port, ssl=ssl, ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE,
+    mc = pymongo.MongoClient(host=host, port=port, ssl=ssl, 
+                             ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE,
                              replicaset=replicaset, serverSelectionTimeoutMS=maxSevSelDelay)
-    mc.admin.authenticate(admin_name, admin_passwd)
+    try:
+        mc.admin.authenticate(admin_name, admin_passwd)
+    except OperationFailure:
+        raise RuntimeError("Could not authenticate with the provided credentials")
+
     mc[name].add_user(user_name, user_passwd)
     return PyChemiaDB(name=name, user=user_name, passwd=user_passwd, host=host, port=port, ssl=ssl,
                       replicaset=replicaset)
 
 
-def create_database(name, admin_name, admin_passwd, user_name, user_passwd, host='localhost', port=27017, ssl=False,
-                    replicaset=None):
-    return create_user(name, admin_name, admin_passwd, user_name, user_passwd, host, port, ssl, replicaset)
+def object_id(entry_id):
+    if isinstance(entry_id, str):
+        return ObjectId(entry_id)
+    elif isinstance(entry_id, ObjectId):
+        return entry_id
 
 
 def has_connection(host='localhost'):

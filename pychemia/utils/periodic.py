@@ -17,8 +17,8 @@ atomic_names = ['', 'Hydrogen', 'Helium',
                 'Radium', 'Actinium', 'Thorium', 'Protactinium', 'Uranium', 'Neptunium', 'Plutonium', 'Americium',
                 'Curium', 'Berkelium', 'Californium', 'Einsteinium', 'Fermium', 'Mendelevium', 'Nobelium',
                 'Lawrencium', 'Rutherfordium', 'Dubnium', 'Seaborgium', 'Bohrium', 'Hassium', 'Meitnerium',
-                'Darmstadtium', 'Roentgenium', 'Copernicium', 'Ununtrium', 'Flerovium', 'Ununpentium', 'Livermorium',
-                'Ununseptium', 'Ununoctium']
+                'Darmstadtium', 'Roentgenium', 'Copernicium', 'Nihonium', 'Flerovium', 'moscovium', 'Livermorium',
+                'Tennessine', 'Oganesson']
 
 electronegativities = [None, 2.2, None, 0.98, 1.57, 2.04, 2.55, 3.04, 3.44, 3.98,
                        None, 0.93, 1.31, 1.61, 1.9, 2.19, 2.58, 3.16, None, 0.82,
@@ -116,9 +116,9 @@ atomic_symbols = ['',
                   'Lu', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn',
                   'Fr', 'Ra',
                   'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No',
-                  'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Uut', 'Fl', 'Uup', 'Lv', 'Uus', 'Uuo']
+                  'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og']
 
-valences = [0,
+valences_nominal = [0,
             1, 0,
             1, 2, 3, 4, 5, 2, 1, 0,
             1, 2, 3, 4, 5, 6, 7, 0,
@@ -129,7 +129,22 @@ valences = [0,
             4, 5, 6, 7, 8, 8, 6, 5, 4, 3, 4, 5, 6, 7, 0,
             1, 2,
             3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-            4, 5, 6, 7, 8]
+            4, 5, 6, 7, 8,
+            None, None, None, None, None, None, None, None, None, None]
+
+valences = [ 0,
+             1,  0,   
+             1,  2,  3,  4,  5,  2,  1,  0,  
+             1,  2,  3,  4,  5,  6,  7,  0,  
+             1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,  2,  3,  4,  5, 6,  7,  0,  
+             1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,  2,  3,  4,  5, 6,  7,  0,  
+             1,  2,  
+             3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,  3,  
+             8,  5,  6,  7,  8,  9, 10, 11,  2,  3,  4,  5,  6,  7,  0,  
+             1,  2,  
+             3,  4,  5,  6,  7,  8,  9,  9, 11, 12, 13, 14, 15, 16, 17,  
+             4,  5,  6,  7,  8,
+             None, None, None, None, None, None, None, None, None, None]
 
 periods = [None, 1, 1,
            2, 2, 2, 2, 2, 2, 2, 2,
@@ -190,7 +205,8 @@ covalent_radii = [0.2, 0.31, 0.28, 1.28, 0.96, 0.84, 0.76, 0.71, 0.66,
                   1.75, 1.7, 1.62, 1.51, 1.44, 1.41, 1.36, 1.36, 1.32,
                   1.45, 1.46, 1.48, 1.4, 1.5, 1.5, 2.6, 2.21, 2.15,
                   2.06, 2., 1.96, 1.9, 1.87, 1.8, 1.69, 0.2, 0.2,
-                  0.2, 0.2, 0.2, 0.2, 0.2]
+                  0.2, 0.2, 0.2, 0.2, 0.2,
+                  None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
 
 masses = [0.0, 1.00794, 4.002602, 6.941, 9.012182,
           10.811, 12.011, 14.00674, 15.9994, 18.9984032,
@@ -212,7 +228,9 @@ masses = [0.0, 1.00794, 4.002602, 6.941, 9.012182,
           210.0, 222.0, 223.0, 226.0254, 230.0,
           232.0381, 231.0359, 238.0289, 237.0482, 242.0,
           243.0, 247.0, 247.0, 249.0, 254.0,
-          253.0, 256.0, 254.0, 257.0, 260.0]
+          253.0, 256.0, 254.0, 257.0, 260.0,
+          None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+
 
 cpk_colors = [None, (1, 1, 1),  # Hydrogen
               (0.0, 1.0, 1.0),  # Helium
@@ -280,7 +298,10 @@ def _get_property(table, value=None, scale_factor=1):
     elif isinstance(value, float):
         ret = (scale_factor * table[int(value)]) if value is not None else None
     elif isinstance(value, str) and value in atomic_symbols:
-        ret = scale_factor * table[atomic_number(value)]
+        if table[atomic_number(value)] is None:
+            ret = float('nan')
+        else:
+            ret = scale_factor * table[atomic_number(value)]
     else:
         try:
             ret = [scale_factor * table[int(x)] for x in value]
@@ -315,6 +336,30 @@ def valence(value=None):
     [1, 0]
     """
     return _get_property(valences, value)
+
+
+def valence_nominal(value=None):
+    """
+    Return the 'valences' as taken from
+    http://www.ptable.com/#Property/Valence
+
+    Args:
+        value: (int,float,str,list) The value/s
+               for which the valence will be evaluated
+               Float values will be cast into integer
+
+    Return:
+        The valence of the element/s
+
+    Examples:
+    >>> valence(1)
+    1
+    >>> valence([1, 2])
+    [1, 0]
+    >>> valence(['H', 'He'])
+    [1, 0]
+    """
+    return _get_property(valences_nominal, value)
 
 
 def period(value=None):
@@ -563,3 +608,24 @@ def atomic_number(arg):
         return [atomic_number(x) for x in arg]
     except TypeError:  # catch when for loop fails
         raise ValueError('Argument not recognized as atomic symbol or list of atomic symbols')
+
+
+def atomic_name(value):
+    return _get_property(atomic_names, value)
+
+
+def melting_point(value):
+    return _get_property(melting_points, value)
+
+
+def boiling_point(value):
+    return _get_property(boiling_points, value)
+
+
+def crystal_structure(value):
+    return _get_property(crystal_structures, value)
+
+
+def phase(value):
+    return _get_property(phases, value)
+

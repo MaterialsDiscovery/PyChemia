@@ -4,8 +4,31 @@ Global optimization of correlation matrices for DFT+U (Abinit)
 The variable dmatpawu
 ~~~~~~~~~~~~~~~~~~~~~
 
-The objective of this global search is finding the optimal values for the correlation matrices in DFT+U.
-For this tutorial consider the abinit input file stored on 'pychemia/test/data/abinit_dmatpaw/abinit.in'.
+The objective of this global search is finding the optimal values for the density matrices in DFT+U.
+ABINIT allows to locally optimize the density matrices from a given initial value.
+The initial density matrices used in LDA+U are kept fixed during the first `usedmatpu` SCF iterations.
+For SCF iterations beyond that, the density matrices change. The challenge here is that from a given
+initial set of density matrices the system gets easily trapped into a local minimun, the usual procedure
+then is to start from several initial options hoping to reach the global minimum at some point.
+
+A global minimizer takes the responsability of efficiently explore the configuration space of the problem.
+PyChemia implements several global searchers as we saw on previous tutorials. Those global searchers joined
+by an efficient evaluation infraestructure allows many evaluations being perform without human assistance and an
+effective chance of reaching a global minimum if the search is long enough.
+
+For this tutorial consider the following problem:
+
+
+
+
+
+
+
+
+
+
+
+ 'pychemia/test/data/abinit_dmatpaw/abinit.in'.
 First, we can read the abinit input and access the contents of the variable 'dmatpawu'::
 
     import pychemia

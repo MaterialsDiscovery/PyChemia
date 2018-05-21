@@ -31,8 +31,8 @@ Before installing PyChemia, you may need to first install a few critical depende
 Mandatory
 ---------
 
-1. Python >= 2.7 or Python >= 3.4
-   The library is tested on Travis for versions of Python 2.7, 3.4 and 3.5
+1. Python >= 2.7 or Python >= 3.5
+   The library is tested on Travis for versions of Python 2.7, 3.5 and 3.6
 
    https://travis-ci.org/MaterialsDiscovery/PyChemia
 

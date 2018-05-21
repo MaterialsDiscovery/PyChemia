@@ -101,11 +101,12 @@ def read_poscar(path='POSCAR'):
         return Structure(cell=newcell, symbols=symbols, reduced=pos, comment=comment)
 
 
-def write_poscar(structure, filepath='POSCAR', newformat=True, direct=True):
+def write_poscar(structure, filepath='POSCAR', newformat=True, direct=True, comment=None):
     """
     Takes an structure from pychemia and save the file
     POSCAR for VASP.
 
+    :param comment: Optional comment to the first line of the POSCAR
     :param structure: (pychemia.Structure) Structure to write POSCAR
     :param filepath: (str) Filename of POSCAR file to create
     :param newformat: (bool) If the new VASP format is used to create the POSCAR
@@ -115,8 +116,11 @@ def write_poscar(structure, filepath='POSCAR', newformat=True, direct=True):
     species = get_species_list(structure)
 
     ret = ''
-    for i in species:
-        ret += ' ' + i
+    if comment is None:
+        for i in species:
+            ret += ' ' + i
+    else:
+        ret += comment.strip()
     ret += '\n'
     ret += '1.0\n'
     for i in range(3):

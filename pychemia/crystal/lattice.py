@@ -30,27 +30,27 @@ class Lattice:
 
         >>> cubic = Lattice()
         >>> cubic.lengths
-        array([ 1.,  1.,  1.])
+        array([1., 1., 1.])
         >>> cubic.angles
-        array([ 90.,  90.,  90.])
+        array([90., 90., 90.])
 
         >>> ortho = Lattice([1, 2, 3])
         >>> ortho.lengths
-        array([ 1.,  2.,  3.])
+        array([1., 2., 3.])
         >>> ortho.angles
-        array([ 90.,  90.,  90.])
+        array([90., 90., 90.])
 
         >>> bcc = Lattice([[0.5, 0.5, -0.5], [-0.5, 0.5, 0.5], [0.5, -0.5, 0.5]])
         >>> bcc.angles
-        array([ 109.47122063,  109.47122063,  109.47122063])
+        array([109.47122063, 109.47122063, 109.47122063])
         >>> bcc.lengths
-        array([ 0.8660254,  0.8660254,  0.8660254])
+        array([0.8660254, 0.8660254, 0.8660254])
 
         >>> fcc = Lattice([[0.5, 0.5, 0], [0, 0.5, 0.5], [0.5, 0, 0.5]])
         >>> fcc.lengths
-        array([ 0.70710678,  0.70710678,  0.70710678])
+        array([0.70710678, 0.70710678, 0.70710678])
         >>> fcc.angles
-        array([ 60.,  60.,  60.])
+        array([60., 60., 60.])
 
         """
         if cell is None:
@@ -249,7 +249,7 @@ class Lattice:
         array([[ True,  True,  True,  True],
                [ True,  True,  True,  True],
                [ True,  True,  True,  True],
-               [ True,  True,  True,  True]], dtype=bool)
+               [ True,  True,  True,  True]])
 
         """
         # Just in case of one single coordinate

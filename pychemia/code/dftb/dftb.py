@@ -3,15 +3,15 @@ import re
 import subprocess
 import numpy as np
 import numbers
-from pychemia.code import Codes
+from ..codes import CodeRun
 from pychemia.crystal import KPoints
 from pychemia import Structure, pcm_log
 from pychemia.utils.serializer import generic_serializer
 
 
-class DFTBplus(Codes):
+class DFTBplus(CodeRun):
     def __init__(self):
-        Codes.__init__(self)
+        CodeRun.__init__(self)
         self.workdir = None
         self.geometry = {}
         self.driver = {}
@@ -528,7 +528,7 @@ def read_detailed_out(filename='detailed.out'):
     else:
         total_energy = None
 
-    scc = re.findall('iSCC Total electronic   Diff electronic      SCC error  \s*  ([\s\dE+-.]*)', data)
+    scc = re.findall('iSCC Total electronic\s+Diff electronic\s+SCC error\s+([\s\dE+-.]*)', data)
     if len(scc) > 0:
         ret['SCC'] = {}
         ret['SCC']['iSCC'] = int(scc[0].split()[0])

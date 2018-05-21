@@ -6,13 +6,6 @@ pychemia.utils package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-
-    pychemia.utils.tests
-
 Submodules
 ----------
 

@@ -80,6 +80,7 @@ def run(to_evaluate, worker, nconcurrent=1, sleeping_time=120):
         if index >= len(to_evaluate):
             break
 
+
 if __name__ == '__main__':
 
     to_evaluate = range(100)  # Creating 100 cases to evaluate

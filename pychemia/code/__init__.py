@@ -4,18 +4,17 @@ Currently there are implementations for *ABINIT*, *DFTB+*, *Fireball*, an intern
 LennardJones 'calculator', *Octopus* and *VASP*.
 
 """
-from .codes import Codes
 from .relaxator import Relaxator
 from . import vasp
 from . import dftb
-from .lennardjones import LennardJones
+from . import lennardjones
 from . import fireball
-from pychemia import HAS_SCIPY
 from . import sprkkr
 from . import phonopy
 from . import new_fireball
-
-if HAS_SCIPY:
-    from . import abinit
+from . import siesta
+from . import elk
+from . import abinit
+from . import octopus
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

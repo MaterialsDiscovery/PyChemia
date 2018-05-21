@@ -7,11 +7,12 @@ import numpy as np
 from pychemia import pcm_log, Structure
 from pychemia.utils.serializer import generic_serializer
 from pychemia.utils.periodic import atomic_number, atomic_symbol
-from ..codes import Codes
+from ..codes import CodeRun
 
 
-class FireBall(Codes):
+class FireBall(CodeRun):
     def __init__(self, fdata_path=None):
+        CodeRun.__init__(self)
         self.workdir = None
         # The five sections of Fireball
         self.option = {}
@@ -214,7 +215,7 @@ def read_fireball_stdout(filename):
     max_force = [x[0] for x in ret]
     rms = [x[1] for x in ret]
 
-    energy_data = re.findall(r'---------- T H E  T O T A L  E N E R G Y -----------([\s\w\d.\-=/]+)--- \n', data)
+    energy_data = re.findall(r'---------- T H E\s+T O T A L\s+E N E R G Y -----------([\s\w\d.\-=/]+)--- \n', data)
 
     energy = []
     for idata in energy_data:

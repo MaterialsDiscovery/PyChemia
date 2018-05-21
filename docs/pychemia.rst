@@ -23,7 +23,6 @@ Subpackages
     pychemia.population
     pychemia.runner
     pychemia.searcher
-    pychemia.test
     pychemia.utils
     pychemia.web
 

@@ -1,0 +1,11 @@
+{
+  "name": "pychemia",
+  "description": "Python Framework for Materials Discovery and Design",
+  "url": "https://materialsdiscovery.github.io/PyChemia",
+  "author": "Guillermo Avendano-Franco",
+  "email": "gufranco@mail.wvu.edu",
+  "status": "Development",
+  "copyright": "Copyright 2018",
+  "version": "0.18.2.21",
+  "date": "February 21, 2018"
+}

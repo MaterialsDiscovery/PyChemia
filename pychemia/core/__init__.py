@@ -6,6 +6,6 @@ The class 'Structure' and the class 'Composition' are widely used for the entire
 
 from .composition import Composition
 from .structure import Structure
-
+from .element import Element
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())

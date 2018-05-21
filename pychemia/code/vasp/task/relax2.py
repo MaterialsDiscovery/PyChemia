@@ -9,12 +9,13 @@ import numpy as np
 from pychemia import pcm_log
 from pychemia.crystal import KPoints
 from pychemia.utils.serializer import generic_serializer
-from ..incar import InputVariables
 from ..outcar import VaspOutput, read_vasp_stdout
 from ..poscar import read_poscar
 from ..vasp import VaspJob, VaspAnalyser, VaspOutput
+from ..input import VaspInput
 from ...relaxator import Relaxator
 from ...tasks import Task
+
 
 __author__ = 'Guillermo Avendano-Franco'
 
@@ -158,7 +159,7 @@ class IonRelaxation2(Relaxator, Task):
         print('=========')
         vj = self.vaspjob
         vj.clean()
-        inp = InputVariables()
+        inp = VaspInput()
         inp.set_rough_relaxation()
         vj.set_input_variables(inp)
         vj.input_variables.variables['PREC'] = 'LOW'
@@ -219,8 +220,8 @@ class IonRelaxation2(Relaxator, Task):
                                                                             info['avg_stress_diag'],
                                                                             info['avg_stress_non_diag']))
                     if self.stage == 7 and info['avg_force'] < self.target_forces and \
-                                           info['avg_stress_diag'] < self.target_forces and \
-                                           info['avg_stress_non_diag'] < self.target_forces:
+                            info['avg_stress_diag'] < self.target_forces and \
+                            info['avg_stress_non_diag'] < self.target_forces:
                         break
 
                 else:

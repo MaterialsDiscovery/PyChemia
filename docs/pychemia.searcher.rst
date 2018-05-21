@@ -6,12 +6,6 @@ pychemia.searcher package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-
-    pychemia.searcher.tests
 
 Submodules
 ----------

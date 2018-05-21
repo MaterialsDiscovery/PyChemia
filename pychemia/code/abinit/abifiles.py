@@ -1,6 +1,7 @@
-import os as _os
+import os as os
 import subprocess as _subprocess
 from .utils import netcdf2dict, psp_name
+from .input import AbinitInput
 
 
 class AbiFiles:
@@ -33,8 +34,8 @@ class AbiFiles:
         """
         self.inp = None
         if len(args) == 1:
-            if _os.path.isfile(args[0]):
-                (self.basedir, self.filename) = _os.path.split(args[0])
+            if os.path.isfile(args[0]):
+                (self.basedir, self.filename) = os.path.split(args[0])
                 if self.basedir == "":
                     self.basedir = "."
                 inputfile = open(args[0], "r")
@@ -45,10 +46,10 @@ class AbiFiles:
                 self.files['tmp'] = inputfile.readline()[:-1]
                 self.files['psps'] = map(str.strip, inputfile.readlines())
 
-            elif _os.path.isdir(args[0]):
+            elif os.path.isdir(args[0]):
                 self.basedir = args[0]
 
-            elif not _os.path.exists(args[0]):
+            elif not os.path.exists(args[0]):
                 self.basedir = args[0]
 
         if len(kwargs) > 0:
@@ -67,6 +68,23 @@ class AbiFiles:
                 if x in kwargs:
                     self.files[x] = kwargs[x]
 
+    def check(self):
+        if os.path.exists(self.filename):
+            print("ABINIT files exists: %s" % self.filename)
+        else:
+            print("WARNING: ABINIT files does not exists: %s" % self.filename)
+        if os.path.exists(self.files['in']):
+            print("ABINIT input file exists: %s" % self.files['in'])
+#            abi = AbinitInput(self.files['in'])
+#            abi.check()
+        else:
+            print("WARNING: ABINIT input does not exists: %s" % self.files['in'])
+        for ifile in self.files['psps']:
+            if os.path.exists(ifile):
+                print("PSP file is present: %s" % ifile)
+            else:
+                print("WARNING: PSP is not present: %s" % ifile)
+
     def write(self, filename):
         """
         Write the file 'filename' with the format of an
@@ -84,8 +102,8 @@ class AbiFiles:
         if it does not exists
         """
 
-        if not _os.path.exists(self.basedir):
-            _os.makedirs(self.basedir)
+        if not os.path.exists(self.basedir):
+            os.makedirs(self.basedir)
         self.write(self.basedir + "/" + self.filename)
         # Write the input file
         if self.inp is not None:
@@ -140,19 +158,19 @@ class AbiFiles:
         """
         Remove all the output
         """
-        if _os.path.isdir(self.basedir):
-            _os.remove(self.get_out_filename())
+        if os.path.isdir(self.basedir):
+            os.remove(self.get_out_filename())
             outfile = self.files['out']
-            outs = [x for x in _os.listdir(self.basedir) if x[:len(outfile)] == outfile]
+            outs = [x for x in os.listdir(self.basedir) if x[:len(outfile)] == outfile]
             for i in outs:
-                _os.remove(self.basedir + '/' + i)
+                os.remove(self.basedir + '/' + i)
 
     def cleanall(self):
-        if _os.path.isdir(self.basedir):
+        if os.path.isdir(self.basedir):
             outfile = self.files['out']
-            outs = [x for x in _os.listdir(self.basedir)]
+            outs = [x for x in os.listdir(self.basedir)]
             for i in outs:
-                _os.remove(self.basedir + '/' + i)
+                os.remove(self.basedir + '/' + i)
             self.create()
 
     def set_input(self, inp):
@@ -172,14 +190,14 @@ class AbiFiles:
         Utility that copy a given script and execute the given
         command inside the directory
         """
-        cwd = _os.getcwd()
-        _os.chdir(self.basedir)
+        cwd = os.getcwd()
+        os.chdir(self.basedir)
         abifile = open(self.filename)
         logfile = open('abinit.log', 'w')
         _subprocess.call([abinit_binary], stdin=abifile, stdout=logfile)
         logfile.close()
         abifile.close()
-        _os.chdir(cwd)
+        os.chdir(cwd)
 
     def set_psps(self, exchange='LDA', kind='FHI'):
         """
@@ -194,7 +212,7 @@ class AbiFiles:
             print('ABINIT input file not declared, the pseudopotentials cannot be set')
         else:
             self.files['psps'] = []
-            pspdir = _os.getenv('HOME') + '/.abinit/' + exchange + '_' + kind
+            pspdir = os.getenv('HOME') + '/.abinit/' + exchange + '_' + kind
             if isinstance(self.inp.variables['znucl'], (int, float)):
                 lstznucl = [self.inp.variables['znucl']]
             else:

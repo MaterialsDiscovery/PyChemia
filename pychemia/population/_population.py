@@ -59,6 +59,9 @@ class Population:
             ret[i] = self.value(i)
         return ret
 
+    def clean(self):
+        self.pcdb.clean()
+
     def update_properties(self, entry_id, new_properties):
         self.pcdb.update(entry_id, properties=new_properties)
 
@@ -191,8 +194,6 @@ class Population:
                             ret[ids[j]] = [ids[i]]
         return ret
 
-
-
     @abstractmethod
     def add_random(self):
         pass
@@ -260,7 +261,10 @@ class Population:
     @property
     def fraction_evaluated(self):
         ret = np.sum([1 for i in self.actives if self.is_evaluated(i)])
-        return float(ret) / len(self.actives)
+        if len(self.actives) != 0:
+            return float(ret) / len(self.actives)
+        else:
+            return 0
 
     @property
     def members(self):
