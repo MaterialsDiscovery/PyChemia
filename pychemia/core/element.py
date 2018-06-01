@@ -90,6 +90,14 @@ class Element():
     def melting_point(self):
         return melting_point(self.symbol)
 
+    @property
+    def oxidation_states(self):
+        return oxidation_state(self.symbol)
+
+    @property
+    def oxidation_states_common(self):
+        return oxidation_state(self.symbol, common=True)
+
     def __str__(self):
 
         ret = """

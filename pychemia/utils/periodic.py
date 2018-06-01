@@ -334,7 +334,7 @@ oxidation_states = [(),
                     (-5, -2, -1, 1, 2, 3),  # In
                     (-4, -3, -2, -1, 1, 2, 3, 4),  # Sn
                     (-3, -2, -1, 1, 2, 3, 4, 5),  # Sb
-                    (-2, -1, 1, 3, 4, 5, 6),  # Te
+                    (-2, -1, 1, 2, 3, 4, 5, 6),  # Te
                     (-1, 1, 3, 4, 5, 6, 7),  # I
                     (2, 4, 6, 8),  # Xe
                     (-1, 1),  # Cs
@@ -369,7 +369,7 @@ oxidation_states = [(),
                     (-2, 2, 4, 5, 6),  # Po
                     (-1, 1, 3, 5, 7),  # At
                     (2, 6),  # Rn
-                    (1, ),  # Fr
+                    (1,),  # Fr
                     (2,),  # Ra
                     (3,),  # Ac
                     (1, 2, 3, 4),  # Th
@@ -404,6 +404,129 @@ oxidation_states = [(),
                     (),  # Lv
                     (),  # Ts
                     ()]  # Og
+
+oxidation_states_common = [(),
+                           (-1, 1),  # H
+                           (),  # He
+                           (1,),  # Li
+                           (2,),  # Be
+                           (3,),  # B
+                           (-4, -3, -2, -1, 1, 2, 3, 4),  # C
+                           (-3, 3, 5),  # N
+                           (-2,),  # O
+                           (-1,),  # F
+                           (),  # Ne
+                           (1,),  # Na
+                           (2,),  # Mg
+                           (3,),  # Al
+                           (-4, 4),  # Si
+                           (-3, 3, 5),  # P
+                           (-2, 2, 4, 6),  # S
+                           (-1, 1, 3, 5, 7),  # Cl
+                           (),  # Ar
+                           (1,),  # K
+                           (2,),  # Ca
+                           (3,),  # Sc
+                           (4,),  # Ti
+                           (5,),  # V
+                           (3, 6),  # Cr
+                           (2, 4, 7),  # Mn
+                           (2, 3, 6),  # Fe
+                           (2, 3),  # Co
+                           (2,),  # Ni
+                           (2,),  # Cu
+                           (2,),  # Zn
+                           (3,),  # Ga
+                           (-4, 2, 4),  # Ge
+                           (-3, 3, 5),  # As
+                           (-2, 2, 4, 6),  # Se
+                           (-1, 1, 3, 5),  # Br
+                           (2,),  # Kr
+                           (1,),  # Rb
+                           (2,),  # Sr
+                           (3,),  # Y
+                           (4,),  # Zr
+                           (5,),  # Nb
+                           (4, 6),  # Mo
+                           (4, 7),  # Tc
+                           (3, 4),  # Ru
+                           (3,),  # Rh
+                           (2, 4),  # Pd
+                           (1,),  # Ag
+                           (2,),  # Cd
+                           (3,),  # In
+                           (-4, 2, 4),  # Sn
+                           (-3, 3, 5),  # Sb
+                           (-2, 2, 4, 6),  # Te
+                           (-1, 1, 3, 5, 7),  # I
+                           (2, 4, 6),  # Xe
+                           (1,),  # Cs
+                           (2,),  # Ba
+                           (3,),  # La
+                           (3, 4),  # Ce
+                           (3,),  # Pr
+                           (3,),  # Nd
+                           (3,),  # Pm
+                           (3,),  # Sm
+                           (2, 3),  # Eu
+                           (3,),  # Gd
+                           (3,),  # Tb
+                           (3,),  # Dy
+                           (3,),  # Ho
+                           (3,),  # Er
+                           (3,),  # Tm
+                           (3,),  # Yb
+                           (3,),  # Lu
+                           (4,),  # Hf
+                           (5,),  # Ta
+                           (4, 6),  # W
+                           (4,),  # Re
+                           (4,),  # Os
+                           (3, 4),  # Ir
+                           (2, 4),  # Pt
+                           (3,),  # Au
+                           (1, 2),  # Hg
+                           (1, 3),  # Tl
+                           (2, 4),  # Pb
+                           (3,),  # Bi
+                           (-2, 2, 4),  # Po
+                           (-1, 1),  # At
+                           (2,),  # Rn
+                           (1,),  # Fr
+                           (2,),  # Ra
+                           (3,),  # Ac
+                           (4,),  # Th
+                           (5,),  # Pa
+                           (6,),  # U
+                           (5,),  # Np
+                           (4,),  # Pu
+                           (3,),  # Am
+                           (3,),  # Cm
+                           (3,),  # Bk
+                           (3,),  # Cf
+                           (3,),  # Es
+                           (3,),  # Fm
+                           (3,),  # Md
+                           (2,),  # No
+                           (3,),  # Lr
+                           (4,),  # Rf
+                           (5,),  # Db
+                           (6,),  # Sg
+                           (7,),  # Bh
+                           (8,),  # Hs
+                           (),  # Mt
+                           (),  # Ds
+                           (),  # Rg
+                           (),  # Mt
+                           (),  # Ds
+                           (),  # Rg
+                           (2,),  # Cn
+                           (),  # Nh
+                           (),  # Fl
+                           (),  # Mc
+                           (),  # Lv
+                           (),  # Ts
+                           ()]  # Og
 
 
 def cpk_color(arg):
@@ -768,5 +891,8 @@ def phase(value):
     return _get_property(phases, value)
 
 
-def oxidation_state(value):
-    return _get_property(oxidation_states, value)
+def oxidation_state(value, common=False):
+    if common:
+        return _get_property(oxidation_states_common, value)
+    else:
+        return _get_property(oxidation_states, value)
