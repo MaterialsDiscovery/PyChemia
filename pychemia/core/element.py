@@ -136,6 +136,7 @@ Melting Point     : %f
             # In case the element is already a noble gas the previous one look one period above in Periodic Table
             return inerts[self.period - 2]
 
+    @property
     def madelung_filling(self):
 
         order = ['1s', '2s', '2p', '3s', '3p', '4s', '3d', '4p', '5s', '4d',
@@ -205,6 +206,7 @@ Melting Point     : %f
             raise ValueError('Not a valid subshell: %s' % subshell)
         return 2*(2*l+1)
 
+    @property
     def electronic_configuration(self):
         """
         Return the known electronic configuration including exceptions to Madelung's rule
@@ -219,6 +221,7 @@ Melting Point     : %f
         else:
             return self.madelung_filling()
 
+    @property
     def is_madelung_exception(self):
 
         return self.symbol in madelung_exceptions

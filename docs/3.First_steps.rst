@@ -1,13 +1,17 @@
-First Steps
+Quick Start
 ===========
 
-This is short and direct introduction to some of the basic functionalities from pychemia.
-To keep things simple, we will be using only the mandatory libraries, and we will not call any external simulation
-packages.
+PyChemia is built from several layers of code, the foundations being the ability to manipulate conglomerates of atoms,
+either molecules or crystals. Before doing more complex operations such execute tasks on various electronic structure
+codes or running structural searches we need to understand how the fundamental blocks work and that is the purpose of
+this quick start section.
 
-You can use the official python terminal for executing this examples, however, you can gain some extra advantage by
-using the far more powerfull IPython terminal. On Linux machines with Debian, Ubuntu or Linux Mint, you can use the
-following command to install the IPython terminal::
+For the examples presented here you can use the official python terminal, however, the IPython terminal or a Jupyter
+notebook offers you more power to go across the examples and explore what PyChemia can do for you. At least, installing
+IPython is very simple on many operating systems.
+
+For example on machines running a debian derivative (Ubuntu, Mint and several others) you can use the following command
+to install the IPython terminal::
 
     sudo apt-get install python-ipython
 
@@ -15,30 +19,98 @@ or for python 3.x::
 
     sudo apt-get install python3-python
 
-On MacOS using macports,
+On MacOS using macports::
 
     sudo port install py27-ipython
 
-or for python 3.x
+or for python 3.x::
 
     sudo port install py35-ipython
 
-FCC crystal of gold
--------------------
 
-Most of the case of use for pychemia start with a Structure. A PyChemia Structure stores atomic positions and cell
+Element
+-------
+
+PyChemia is about materials, molecules, cluster and crystals. A class for elements can become handy to serve as a
+periodic table and inquire for the properties of a given specie. Alchemy was all about transmuting materials into gold.
+Lets explore what PyChemia can tell us about that element::
+
+    In [1]: import pychemia
+
+    In [2]: ele=pychemia.Element('Au')
+
+    In [3]: ele.atomic_number
+    Out[3]: 79
+
+    In [4]: ele.name
+    Out[4]: 'Gold'
+
+    In [5]: ele.electronegativity
+    Out[5]: 2.54
+
+    In [6]: ele.group
+    Out[6]: 11
+
+    In [7]: ele.period
+    Out[7]: 6
+
+    In [8]: ele.block
+    Out[8]: 'd'
+
+    In [9]: ele.mass
+    Out[9]: 196.96654
+
+    In [10]: ele.electronic_configuration
+    Out[10]: ['Xe', '6s1', '4f14', '5d10']
+
+    In [11]: ele.is_madelung_exception
+    Out[11]: True
+
+    In [12]: ele.oxidation_states
+    Out[12]: (-3, -2, -1, 1, 2, 3, 5)
+
+    In [13]: ele.oxidation_states_common
+    Out[13]: (3,)
+
+    In [14]: ele.covalent_radius
+    Out[14]: 1.36
+
+The Element class provide a set of useful properties about all elements in the periodic table. The chapter about Element
+will explain the several properties that can be accessed on the Element class.
+
+Composition
+-----------
+
+Now, atoms group themselves into molecules, clusters or crystals. Without entering into the geometry, we can think only
+about the composition, the list of atoms contained in the molecule or cluster or the list of atoms in the cell that
+builds the crystal. The Composition class offers a set of routines to manipulate lists of atoms. Lets consider for
+example Gold(III) oxide (Au2O3)::
+
+    In [1]: import pychemia
+
+    In [2]: comp=pychemia.Composition('Au2O3')
+
+    In [3]: comp
+    Out[3]: Composition({'Au': 2, 'O': 3})
+
+    In [4]: comp['Au']
+    Out[4]: 2
+
+    In [5]: comp.nspecies
+    Out[5]: 2
+
+    In [6]: comp.symbols
+    Out[6]: ['Au', 'Au', 'O', 'O', 'O']
+
+Compositions can be created from the formula and also from a python dictionary and after you can use the composition
+object to ask for the number of atoms of each specie.
+
+Structure
+---------
+
+In most cases, pychemia uses Structures. A PyChemia Structure stores atomic positions and cell
 parameters for periodic structures. Lets start with a very simple structure, the FCC structure of gold. One way of
 creating and structure is by directly specifying atomic positions and cell parameters, for example::
-
-    $ ipython3-3.5
-    Python 3.5.1 (default, Mar  2 2016, 03:38:02)
-    Type "copyright", "credits" or "license" for more information.
-
-    IPython 4.2.0 -- An enhanced Interactive Python.
-    ?         -> Introduction and overview of IPython's features.
-    %quickref -> Quick reference.
-    help      -> Python's own help system.
-    object?   -> Details about 'object', use 'object??' for extra details.
 
     In [1]: import pychemia
 
@@ -140,3 +212,55 @@ supercell, 2x2x1 using the supercell method::
          0.0000     8.1000     0.0000
          0.0000     0.0000     4.0500
 
+PyChemia is much more than just elements, compositions and structures. For the purpose of this introduction, those are
+the most basic building blocks for most of the of higher level operations such as populations and global searches.
+
+Lattice
+-------
+
+For periodic structures, the lattice is fundamental to describe how the geometry of the atoms is repeated. PyChemia
+offers a class Lattice for manipulate cell parameters both for the real space lattice and the reciprocal one. For
+example from the example before::
+
+    In [1]: import pychemia
+
+    In [2]: a=4.05
+
+    In [3]: b=a/2
+
+    In [4]: fcc = pychemia.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
+
+    In [5]: lat=fcc.lattice
+
+    In [6]: print(lat)
+    Cell=       0.000        2.025        2.025
+                2.025        0.000        2.025
+                2.025        2.025        0.000
+
+    Angles: alpha =       60.000
+             beta =       60.000
+            gamma =       60.000
+
+    Lengths:    a =        2.864
+                b =        2.864
+                c =        2.864
+
+
+    In [7]: rlat = lat.reciprocal()
+
+    In [8]: print(rlat)
+    Cell=      -0.247        0.247        0.247
+                0.247       -0.247        0.247
+                0.247        0.247       -0.247
+
+    Angles: alpha =      109.471
+             beta =      109.471
+            gamma =      109.471
+
+    Lengths:    a =        0.428
+                b =        0.428
+                c =        0.428
+
+As you can see from the example above, the reciprocal lattice can be obtained from the real space lattice. The class is
+useful to obtain the Brillouin zone via computing the Wigner Seitz from the reciprocal lattice. Those and several other
+functionality can be accessed from the class as described on the corresponding chapter.
