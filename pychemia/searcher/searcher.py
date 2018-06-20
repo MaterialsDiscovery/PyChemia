@@ -125,11 +125,13 @@ class Searcher:
             assert min(candidates_per_generation) == max(candidates_per_generation)
 
     def __str__(self):
-        ret = ' Searcher Name:       %s\n' % self.searcher_name
-        ret += ' Generation size:     %d\n' % self.generation_size
-        ret += ' Stabilization limit: %d\n' % self.stabilization_limit
-        ret += ' Current Generation:  %d\n' % self.current_generation
-        ret += ' Parameters: %s\n' % str(self.get_params())
+        ret = '\n'
+        ret += '[%s] Searcher Name:       %s\n' % (self.population.tag,self.searcher_name)
+        ret += '[%s] Generation size:     %d\n' % (self.population.tag,self.generation_size)
+        ret += '[%s] Stabilization limit: %d\n' % (self.population.tag,self.stabilization_limit)
+        ret += '[%s] Current Generation:  %d\n' % (self.population.tag,self.current_generation)
+        ret += '[%s] Parameters: %s\n' % (self.population.tag,str(self.get_params()))
+        ret += '\n'
         return ret
 
     def enforce_generation_size(self):
@@ -157,7 +159,10 @@ class Searcher:
             else:
                 pcm_log.debug('Less %d' % len(actives))
                 sizes = [len(self.lineage[x]) for x in self.lineage]
-                assert min(sizes) == max(sizes)
+                if len(sizes) == 0:
+                    print("No elements in Lineages")
+                else:
+                    assert min(sizes) == max(sizes)
                 for i in self.lineage:
                     entry_id = self.lineage[i][-1]
                     print('Activating', i, entry_id)
@@ -200,16 +205,21 @@ class Searcher:
         return [x for x in self.generation if generation_number in self.generation[x]]
 
     def print_status(self):
-        pcm_log.info(' %s (tag: %s)' % (self.population.name, self.population.tag))
-        pcm_log.info(' Current Generation             : %4d' % self.current_generation)
-        pcm_log.info(' Population (evaluated/total)   : %4d /%4d' % (len(self.population.evaluated),
-                                                                     len(self.population.members)))
-        pcm_log.info(' Actives (evaluated/total)      : %4d /%4d' % (len(self.population.actives_evaluated),
-                                                                     len(self.population.actives)))
-        pcm_log.info(' Size of Generation (this/next) : %4d /%4d\n' % (len(self.get_generation()),
-                                                                       len(self.get_generation(
-                                                                         self.current_generation + 1))))
+        ret =  '[%s] Database: %s\n' % (self.population.tag, 
+                                      self.population.name)
+        ret += '[%s] Current Generation             : %4d\n' % (self.population.tag,
+                                                                self.current_generation)
+        ret += '[%s] Population (evaluated/total)   : %4d /%4d\n' % (self.population.tag,
+                                                                     len(self.population.evaluated),
+                                                                     len(self.population.members))
+        ret += '[%s] Actives (evaluated/total)      : %4d /%4d\n' % (self.population.tag,
+                                                                     len(self.population.actives_evaluated),
+                                                                     len(self.population.actives))
+        ret += '[%s] Size of Generation (this/next) : %4d /%4d\n' % (self.population.tag,
+                                                                     len(self.get_generation()),
+                                                                     len(self.get_generation(self.current_generation + 1)))
 
+        print(ret)
         if len(self.get_generation(self.current_generation + 1)) + len(self.population.actives) != self.generation_size:
             pcm_log.debug('Change in generations')
             for i in self.old_actives:
@@ -270,7 +280,7 @@ class Searcher:
             for entry_id in sorted(self.generation):
                 info = self.generation[entry_id]
                 if self.pcdb.db.generations.find_one({'_id': entry_id}) is None:
-                    self.pcdb.db.generations.insert({'_id': entry_id, self.searcher_id: info})
+                    self.pcdb.db.generations.insert({'_id': entry_id, self.searcher_id: info, 'tag': self.population.tag})
                 else:
                     self.pcdb.db.generations.update({'_id': entry_id}, {'$set': {self.searcher_id: info}})
 
@@ -285,7 +295,8 @@ class Searcher:
             if self.pcdb.db.lineage.find_one({'_id': self.searcher_id}) is None:
                 self.pcdb.db.lineage.insert({'_id': self.searcher_id,
                                              'lineage_inv': lineage_inv,
-                                             'lineage': lineage})
+                                             'lineage': lineage,
+                                             'tag': self.population.tag})
             else:
                 self.pcdb.db.lineage.update({'_id': self.searcher_id}, {'$set': {'lineage': lineage,
                                                                                  'lineage_inv': lineage_inv}})
@@ -355,11 +366,7 @@ class Searcher:
         :return:
         """
 
-        print("Population Information")
-        print("======================")
         print(self.population)
-        print("Searcher Information")
-        print("====================")
         print(self)
         self.save_info()
         self.population.save_info()
@@ -368,7 +375,7 @@ class Searcher:
         survival_for_best = 0
 
         while True:
-            print('\nGENERATION: %d' % self.current_generation)
+#            print('\nGENERATION: %d' % self.current_generation)
             if len(self.population) > 0:
                 self.print_status()
 
@@ -376,6 +383,7 @@ class Searcher:
                                                                                   self.generation_size))
             self.enforce_generation_size()
             self.update_lineages()
+            self.save_generations()
 
             self.old_actives = self.population.actives
             self.old_nextgen = self.get_generation(self.current_generation + 1)

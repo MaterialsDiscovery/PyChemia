@@ -34,15 +34,18 @@ class Population:
                 self.pcdb = name
 
     def __iter__(self):
-        return self.pcdb.entries.find()
+        if self.tag != 'global':
+            return self.pcdb.entries.find({'status.tag': self.tag})
+        else:
+            return self.pcdb.entries.find({})
 
     def __len__(self):
         return len(self.members)
 
     def __str__(self):
-        ret = ' Population Name:     %s\n' % self.name
-        ret += ' Tag:                 %s\n' % self.tag
-        ret += ' Members:             %s\n' % len(self)
+        ret =  '[%s] Database: %s\n' % (self.tag, self.name)
+        ret += '[%s] Tag:      %s\n' % (self.tag, self.tag)
+        ret += '[%s] Members:  %s\n' % (self.tag, len(self))
         return ret
 
     def disable(self, entry_id):
@@ -268,7 +271,10 @@ class Population:
 
     @property
     def members(self):
-        return [x['_id'] for x in self.pcdb.entries.find({}, {'_id': 1})]
+        if self.tag != 'global':
+            return [x['_id'] for x in self.pcdb.entries.find({'status.tag': self.tag}, {'_id': 1})]
+        else:
+            return [x['_id'] for x in self.pcdb.entries.find({}, {'_id': 1})]
 
     @property
     def to_dict(self):

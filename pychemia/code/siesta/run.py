@@ -5,19 +5,23 @@ import os
 class SiestaRun(CodeRun):
 
     def __init__(self, workdir, input_path, pseudo_path, pseudo_file=None, pseudo_list=None):
-        CodeRun.__init__(self)
+        CodeRun.__init__(self, binary='siesta', workdir=workdir, use_mpi=False)
 
         if pseudo_file is None and pseudo_list is None:
             raise ValueError("Declare either the list of pseudo names or a file that contain the list.")
 
-        if not os.path.isdir(pseudo_path):
+        if pseudo_list is not None and not os.path.isdir(pseudo_path):
             raise ValueError('ERROR: Directory with Pseudo-potentials not found: %s' % pseudo_path)
 
-        if not os.path.exists(input_path):
+        if pseudo_path is not None and not os.path.exists(input_path):
             raise ValueError('ERROR: File not found: %s' % input_path)
 
         self.workdir = workdir
         self.input_path = input_path
+        self.stdin_filename = 'siesta.fdf'
+        self.stdout_filename = 'siesta.out'
+        self.stderr_filename = 'siesta.err'
+
         self.pseudo_path = os.path.abspath(pseudo_path)
 
         if os.path.exists(pseudo_file):

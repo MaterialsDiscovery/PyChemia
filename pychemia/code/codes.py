@@ -7,7 +7,7 @@ import collections
 class CodeRun:
     __metaclass__ = ABCMeta
 
-    def __init__(self, workdir='.', binary=None):
+    def __init__(self, binary, workdir='.', use_mpi=False):
         self.stdin_file = None
         self.stdout_file = None
         self.stderr_file = None
@@ -18,7 +18,7 @@ class CodeRun:
         self.input = None
         self.binary = binary
         self.workdir = workdir
-        self.use_mpi = False
+        self.use_mpi = use_mpi
 
     @abstractmethod
     def set_inputs(self):
@@ -28,7 +28,7 @@ class CodeRun:
     def get_outputs(self):
         pass
 
-    def execute(self, omp_num_threads=1, mpi_num_procs=1, wait=True):
+    def run(self, omp_num_threads=1, mpi_num_procs=1, wait=True):
         """
         Execute the binary and return a reference to the subprocess
         created

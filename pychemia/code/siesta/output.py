@@ -36,7 +36,7 @@ class SiestaOutput(CodeOutput):
         rf.close()
 
         subdata=re.findall("siesta: Final energy \(eV\):[\s\d\w\W]*\n\n",self.data)
-        print(subdata)
+        #print(subdata)
         if len(subdata)==0:
             raise ValueError('No Final data could be retrieved')
         elif len(subdata)>1:

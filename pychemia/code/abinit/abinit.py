@@ -6,18 +6,16 @@ from ..codes import CodeRun
 
 class AbinitJob(CodeRun):
     def __init__(self):
-        CodeRun.__init__(self)
+        CodeRun.__init__(self, binary='abinit', workdir='.', use_mpi=True)
         self.abifile = None
         self.kpoints = None
         self.structure = None
-        self.workdir = None
         self.kind = None
         self.exchange = None
         self.inp = AbinitInput()
         self.stdout_filename = 'abinit.log'
         self.stdin_filename = 'abinit.files'
         self.stderr_filename = 'abinit.err'
-        self.binary = 'abinit'
 
     def finalize(self):
         self.stdout_file.close()

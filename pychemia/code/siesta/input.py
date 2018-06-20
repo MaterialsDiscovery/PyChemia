@@ -12,12 +12,19 @@ class SiestaInput(CodeInput):
     def read(self, filename):
         if not os.path.isfile(filename):
             raise ValueError('ERROR: File not found: %s' % filename)
-        rf = open(filename)
-        data = rf.readlines()
+
+        try:
+            rf = open(filename)
+            data = rf.readlines()
+        except UnicodeDecodeError:
+            rf = open(filename, encoding='ISO-8859-1')
+            data = rf.readlines()
+
         inblock = False
         ret = {}
 
         for i in range(len(data)):
+#            print(data[i])
             # Ignoring blanks
             if data[i].strip()=='':
                 continue
@@ -25,11 +32,11 @@ class SiestaInput(CodeInput):
             elif data[i].strip().startswith('#'):
                 comment = data[i].strip()
             # Reading a block
-            elif data[i].strip().startswith('%block'):
+            elif data[i].strip().lower().startswith('%block'):
                 blockname = data[i][6:].strip()
                 inblock = True
                 blockdata = []
-            elif data[i].strip().startswith('%endblock'):
+            elif data[i].strip().lower().startswith('%endblock'):
                 # Store the block of data
                 ret['block+'+blockname]=list(blockdata)
                 inblock = False
@@ -38,6 +45,7 @@ class SiestaInput(CodeInput):
                 blockdata.append(lblock)
             else:
                 lblock = self.process_line(data[i])
+                #print('==> %s' % lblock)
                 varname = lblock[0]
                 if '_' in varname:
                     varname = varname.replace('_','')

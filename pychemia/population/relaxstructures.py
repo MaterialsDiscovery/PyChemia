@@ -88,7 +88,7 @@ class RelaxStructures(Population):
 
     def new_entry(self, structure, active=True):
         properties = {'forces': None, 'stress': None, 'energy': None}
-        status = {self.tag: active}
+        status = {self.tag: active, 'tag': self.tag}
         entry = {'structure': structure.to_dict, 'properties': properties, 'status': status}
         entry_id = self.insert_entry(entry)
         pcm_log.debug('Added new entry: %s with tag=%s: %s' % (str(entry_id), self.tag, str(active)))
@@ -373,21 +373,21 @@ class RelaxStructures(Population):
             return self.new_entry(new_structure, active=False)
 
     def __str__(self):
-        ret = ' Structure Population\n\n'
-        ret += ' Name:               %s\n' % self.name
-        ret += ' Tag:                %s\n' % self.tag
-        ret += ' Target-Forces:      %7.2E\n' % self.target_forces
-        ret += ' Value tolerance:    %7.2E\n' % self.value_tol
-        ret += ' Distance tolerance: %7.2E\n\n' % self.distance_tolerance
+        ret =  '\n'
+        ret += '[%s] Population type:    %s\n' % (self.tag, 'Relax Structures')
+        ret += '[%s] Database:           %s\n' % (self.tag,self.name)
+        ret += '[%s] Tag:                %s\n' % (self.tag,self.tag)
+        ret += '[%s] Target-Forces:      %7.2E\n' % (self.tag,self.target_forces)
+        ret += '[%s] Value tolerance:    %7.2E\n' % (self.tag,self.value_tol)
+        ret += '[%s] Distance tolerance: %7.2E\n\n' % (self.tag,self.distance_tolerance)
         if self.composition is not None:
-            ret += ' Composition:                  %s\n' % self.composition.formula
-            ret += ' Minimal composition multiplier: %d\n' % self.min_comp_mult
-            ret += ' Maximal composition multiplier: %d\n\n' % self.max_comp_mult
-        else:
-            ret += '\n'
-        ret += ' Members:            %d\n' % len(self.members)
-        ret += ' Actives:            %d\n' % len(self.actives)
-        ret += ' Evaluated:          %d\n' % len(self.evaluated)
+            ret += '[%s] Composition:                    %s\n' % (self.tag,self.composition.formula)
+            ret += '[%s] Minimal composition multiplier: %d\n' % (self.tag,self.min_comp_mult)
+            ret += '[%s] Maximal composition multiplier: %d\n' % (self.tag,self.max_comp_mult)
+        ret += '[%s] Members:            %d\n' % (self.tag,len(self.members))
+        ret += '[%s] Actives:            %d\n' % (self.tag,len(self.actives))
+        ret += '[%s] Evaluated:          %d\n' % (self.tag,len(self.evaluated))
+        ret += '\n'
         return ret
 
     def value(self, entry_id):

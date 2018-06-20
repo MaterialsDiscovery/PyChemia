@@ -85,8 +85,10 @@ def get_rpath_psp(kind, exchange, atomicnumber=None):
         rpath = '/pub/abinitio/Psps/FC_DEN/'
     elif kind == 'PAW' and exchange == 'LDA':
         rpath = ' https://www.abinit.org/ATOMICDATA/JTH-LDA-atomicdata.tar.gz'
-    elif kind == 'PAW' and exchange == 'GGA':
+    elif kind == 'PAW' and exchange == 'PBE':
         rpath = ' https://www.abinit.org/ATOMICDATA/JTH-PBE-atomicdata.tar.gz'
+    elif kind == 'ONC' and exchange == 'PBE':
+        rpath = ' http://www.pseudo-dojo.org/pseudos/nc-sr_pbe_standard_psp8.tgz'
     else:
         print('Not know kind of PSP')
     return rpath
@@ -96,14 +98,14 @@ def get_all_psps(basedir, exchange, kind):
     directory = basedir + os.sep + exchange + '_' + kind
     if not os.path.isdir(directory):
         os.mkdir(directory)
-    if kind == 'PAW':
+    if kind in ['PAW', 'ONC']:
         rpath = get_rpath_psp(kind, exchange)
         filename = rpath.split('/')[-1]
         if not os.path.isfile(directory + '/' + filename):
             u = urlopen(rpath)
             f = open(directory + os.sep + filename, 'wb')
             meta = u.info()
-            file_size = int(meta.get("Content-Length")[0])
+            file_size = int(meta.get("Content-Length"))
             print("Downloading: %s Bytes: %s" % (filename, file_size))
             file_size_dl = 0
             block_sz = 8192
@@ -192,30 +194,33 @@ def get_all_psps(basedir, exchange, kind):
                     print("Complete")
 
         if len(files) > 0:
-            print("kind == '%s' and exchange == '%s' and i in %s" % (kind, exchange, files))
+            print("kind == '%s' and exchange == '%s'" % (kind, exchange))
+            for i in files:
+                print(" %s" % str(i))
 
 
 if __name__ == '__main__':
 
     print("Script to download PSP files from ftp.abinit.org")
-    print("Files will be downloaded to: $HOME/.abinit")
-
     home = os.environ['HOME']
     basedir = home + "/.abinit"
+
+    print("Files will be downloaded at: %s/.abinit" % home)
 
     if not os.path.isdir(basedir):
         os.mkdir(basedir)
 
-    for exchange in ['LDA', 'GGA', 'DEN']:
+    for exchange in ['LDA', 'GGA', 'DEN', 'PBE']:
         print('\n=> ' + exchange, end='\n')
         lista = []
         if exchange == 'LDA':
             lista = ['FHI', 'TM', 'GTH', 'PAW', 'CORE', 'HGH']
         elif exchange == 'GGA':
-            lista = ['FHI', 'HGH', 'PAW']
+            lista = ['FHI', 'HGH']
         elif exchange == 'DEN':
             lista = ['AE', 'FC']
-
+        elif exchange == 'PBE':
+            lista = ['ONC', 'PAW']
         for kind in lista:
             print('--> %5s ' % kind, end=' ')
             get_all_psps(basedir, exchange, kind)
