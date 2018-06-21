@@ -30,7 +30,6 @@ def test_abinit2xyz():
     assert (mol2.natom == 16)
     os.remove(path + '/abinit_03/abinit_DS1.xyz')
     os.remove(path + '/abinit_03/abinit_DS2.xyz')
-    os.remove(path + '/abinit_03/abinit.files')
 
 
 def test_xyz2abinit():

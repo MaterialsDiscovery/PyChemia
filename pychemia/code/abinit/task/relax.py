@@ -37,7 +37,7 @@ class IonRelaxation(Relaxator, Task):
         self.abinitjob.set_ecut(self.ecut)
         self.abinitjob.set_psps()
         self.abinitjob.write_all()
-        self.abinitjob.run(use_mpi=True, omp_max_threads=nparal, mpi_num_procs=nparal)
+        self.abinitjob.run(omp_num_threads=nparal, mpi_num_procs=nparal)
 
     def get_final_geometry(self):
         pass

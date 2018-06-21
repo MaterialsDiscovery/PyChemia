@@ -137,6 +137,8 @@ class AbinitInput(CodeInput):
                 The name of the input variable
             ncolumns:
                 Number of columns for the input variable
+            debug:
+                Shows contents of variable before creating string out of it
         """
 
         ret = ''

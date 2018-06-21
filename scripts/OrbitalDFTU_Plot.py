@@ -231,7 +231,7 @@ def plot_polar():
 
             theta = ea[:, j]
 
-            ax = fig.add_axes([grid[i,j][0], grid[i,j][1], 0.146, 0.146], projection='polar')
+            ax = fig.add_axes([grid[i, j][0], grid[i, j][1], 0.146, 0.146], projection='polar')
             ax.set_axis_bgcolor('mintcream')
             #ax.yaxis.set_tick_params(labelsize=0)
             #ax.xaxis.set_tick_params(labelsize=0)
@@ -354,7 +354,7 @@ if __name__ == "__main__":
 
     for i in candidates:
         assert(popu.get_entry(i) is not None)
-        entry=popu.get_entry(i)
+        entry = popu.get_entry(i)
         print("%s %f" % (entry['_id'], entry['properties']['etot']))
         
     print('Plotting Evolution')

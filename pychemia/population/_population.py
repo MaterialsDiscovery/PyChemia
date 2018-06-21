@@ -43,7 +43,7 @@ class Population:
         return len(self.members)
 
     def __str__(self):
-        ret =  '[%s] Database: %s\n' % (self.tag, self.name)
+        ret = '[%s] Database: %s\n' % (self.tag, self.name)
         ret += '[%s] Tag:      %s\n' % (self.tag, self.tag)
         ret += '[%s] Members:  %s\n' % (self.tag, len(self))
         return ret

@@ -52,7 +52,12 @@ class CodeRun:
         if self.stderr_filename is not None:
             self.stderr_file = open(self.stderr_filename, 'w')
         if self.use_mpi:
-            which_bin = subprocess.check_output('which %s' % self.binary, shell=True)
+            try:
+                which_bin = subprocess.check_output('which %s' % self.binary, shell=True)
+            except subprocess.CalledProcessError:
+                print('ERROR: Executable %s could not be found in PATH' % self.binary)
+                return
+
             print("Executable: %s" % which_bin.decode('utf8').strip())
             command_line = 'mpirun -n %d %s' % (mpi_num_procs, self.binary)
             print("Running: %s" % command_line)

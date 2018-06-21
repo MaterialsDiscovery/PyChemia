@@ -12,11 +12,11 @@ from pychemia.utils.computing import deep_unicode
 
 
 class VaspJob(CodeRun):
-    def __init__(self):
 
-        CodeRun.__init__(self)
+    def __init__(self, binary='vasp', workdir='.'):
+
+        CodeRun.__init__(self, binary=binary, workdir=workdir, use_mpi=True)
         self.structure = None
-        self.workdir = None
         self.input_variables = None
         self.potcar_setup = None
         self.potcar_pspfiles = None
@@ -24,16 +24,13 @@ class VaspJob(CodeRun):
         self.kpoints = None
         self.outcar = None
         self.poscar_setup = None
-        self.binary = None
         self.stdout_file = None
         self.runner = None
         self.stdout_filename = 'vasp_stdout.log'
 
-    def initialize(self, structure, workdir='.', kpoints=None, binary='vasp'):
-        self.workdir = workdir
+    def initialize(self, structure, kpoints=None):
         self.structure = structure
         self.set_kpoints(kpoints)
-        self.binary = binary
 
     def _check_workdir(self):
 

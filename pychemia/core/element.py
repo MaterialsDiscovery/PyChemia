@@ -3,27 +3,27 @@ from pychemia.utils.periodic import *
 
 madelung_exceptions = {'Cr': ['Ar', '4s1', '3d5'],
                        'Cu': ['Ar', '4s1', '3d10'],
-                        'Nb': ['Kr', '5s1', '4d4'],
-                                  'Mo': ['Kr', '5s1', '4d5'],
-                              'Ru': ['Kr', '5s1', '4d7'],
-                              'Rh': ['Kr', '5s1', '4d8'],
-                              'Pd': ['Kr', '4d10'],
-                              'Ag': ['Kr', '5s1', '4d10'],
-                              'La': ['Xe', '6s2', '5d1'],
-                              'Ce': ['Xe', '6s2', '4f1', '5d1'],
-                              'Gd': ['Xe', '6s2', '4f7', '5d1'],
-                              'Pt': ['Xe', '6s1', '4f14', '5d9'],
-                              'Au': ['Xe', '6s1', '4f14', '5d10'],
-                              'Ac': ['Rn', '7s2', '6d1'],
-                              'Th': ['Rn', '7s2', '6d2'],
-                              'Pa': ['Rn', '7s2', '5f2', '6d1'],
-                              'U': ['Rn', '7s2', '5f3', '6d1'],
-                              'Np': ['Rn', '7s2', '5f4', '6d1'],
-                              'Cm': ['Rn', '7s2', '5f7', '6d1'],
-                              'Lr': ['Rn', '7s2', '5f14', '7p1']}
+                       'Nb': ['Kr', '5s1', '4d4'],
+                       'Mo': ['Kr', '5s1', '4d5'],
+                       'Ru': ['Kr', '5s1', '4d7'],
+                       'Rh': ['Kr', '5s1', '4d8'],
+                       'Pd': ['Kr', '4d10'],
+                       'Ag': ['Kr', '5s1', '4d10'],
+                       'La': ['Xe', '6s2', '5d1'],
+                       'Ce': ['Xe', '6s2', '4f1', '5d1'],
+                       'Gd': ['Xe', '6s2', '4f7', '5d1'],
+                       'Pt': ['Xe', '6s1', '4f14', '5d9'],
+                       'Au': ['Xe', '6s1', '4f14', '5d10'],
+                       'Ac': ['Rn', '7s2', '6d1'],
+                       'Th': ['Rn', '7s2', '6d2'],
+                       'Pa': ['Rn', '7s2', '5f2', '6d1'],
+                       'U': ['Rn', '7s2', '5f3', '6d1'],
+                       'Np': ['Rn', '7s2', '5f4', '6d1'],
+                       'Cm': ['Rn', '7s2', '5f7', '6d1'],
+                       'Lr': ['Rn', '7s2', '5f14', '7p1']}
 
 
-class Element():
+class Element:
 
     def __init__(self, value=None):
 
@@ -165,7 +165,7 @@ Melting Point     : %f
             numele = self.atomic_number - inert.atomic_number
         else:
             numele = self.atomic_number
-            inert_remain =0
+            inert_remain = 0
 
         for i in order:
             if inert_remain >= max_electrons[i]:
@@ -199,12 +199,12 @@ Melting Point     : %f
     def max_electrons_subshell(subshell):
 
         if subshell in ['s', 'p', 'd', 'f', 'g']:
-            l = Element.azimuthal_quantum_number(subshell)
+            ll = Element.azimuthal_quantum_number(subshell)
         elif subshell in [0, 1, 2, 3, 4]:
-            l = subshell
+            ll = subshell
         else:
             raise ValueError('Not a valid subshell: %s' % subshell)
-        return 2*(2*l+1)
+        return 2*(2*ll+1)
 
     @property
     def electronic_configuration(self):
@@ -219,7 +219,7 @@ Melting Point     : %f
         if self.symbol in madelung_exceptions:
             return madelung_exceptions[self.symbol]
         else:
-            return self.madelung_filling()
+            return self.madelung_filling
 
     @property
     def is_madelung_exception(self):

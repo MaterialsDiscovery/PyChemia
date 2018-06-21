@@ -126,11 +126,11 @@ class Searcher:
 
     def __str__(self):
         ret = '\n'
-        ret += '[%s] Searcher Name:       %s\n' % (self.population.tag,self.searcher_name)
-        ret += '[%s] Generation size:     %d\n' % (self.population.tag,self.generation_size)
-        ret += '[%s] Stabilization limit: %d\n' % (self.population.tag,self.stabilization_limit)
-        ret += '[%s] Current Generation:  %d\n' % (self.population.tag,self.current_generation)
-        ret += '[%s] Parameters: %s\n' % (self.population.tag,str(self.get_params()))
+        ret += '[%s] Searcher Name:       %s\n' % (self.population.tag, self.searcher_name)
+        ret += '[%s] Generation size:     %d\n' % (self.population.tag, self.generation_size)
+        ret += '[%s] Stabilization limit: %d\n' % (self.population.tag, self.stabilization_limit)
+        ret += '[%s] Current Generation:  %d\n' % (self.population.tag, self.current_generation)
+        ret += '[%s] Parameters: %s\n' % (self.population.tag, str(self.get_params()))
         ret += '\n'
         return ret
 

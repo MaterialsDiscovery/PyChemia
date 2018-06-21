@@ -43,7 +43,8 @@ class PBSRunner:
             self.set_template(template)
             self.template = template
 
-    def set_pbs_params(self, nodes=None, ppn=None, walltime=None, message=None, mail=None, queue=None, features=None, join=None, pvmem=None):
+    def set_pbs_params(self, nodes=None, ppn=None, walltime=None, message=None, mail=None, queue=None, features=None,
+                       join=None, pvmem=None):
         """
         Set various PBS params
 
@@ -62,7 +63,7 @@ class PBSRunner:
         self.features = features
         self.pvmem = pvmem
         if join is not None:
-            if join in [ 'eo', 'oe' ]:
+            if join in ['eo', 'oe']:
                 self.join = join
             else:
                 self.join = None
@@ -100,10 +101,10 @@ class PBSRunner:
         """
         return "%s(workdir=%s, filename=%s, jobname=%s, template=%s)" % \
             (self.__class__.__name__,
-              "'%s'" % self.workdir if self.workdir is not None else None,
-              "'%s'" % self.filename if self.filename is not None else None, 
-              "'%s'" % self.jobname if self.jobname is not None else None,
-              "'%s'" % self.template if self.template is not None else None)
+             "'%s'" % self.workdir if self.workdir is not None else None,
+             "'%s'" % self.filename if self.filename is not None else None,
+             "'%s'" % self.jobname if self.jobname is not None else None,
+             "'%s'" % self.template if self.template is not None else None)
 
     def __str__(self):
         """

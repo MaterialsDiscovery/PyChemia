@@ -373,20 +373,20 @@ class RelaxStructures(Population):
             return self.new_entry(new_structure, active=False)
 
     def __str__(self):
-        ret =  '\n'
+        ret = '\n'
         ret += '[%s] Population type:    %s\n' % (self.tag, 'Relax Structures')
-        ret += '[%s] Database:           %s\n' % (self.tag,self.name)
-        ret += '[%s] Tag:                %s\n' % (self.tag,self.tag)
-        ret += '[%s] Target-Forces:      %7.2E\n' % (self.tag,self.target_forces)
-        ret += '[%s] Value tolerance:    %7.2E\n' % (self.tag,self.value_tol)
-        ret += '[%s] Distance tolerance: %7.2E\n\n' % (self.tag,self.distance_tolerance)
+        ret += '[%s] Database:           %s\n' % (self.tag, self.name)
+        ret += '[%s] Tag:                %s\n' % (self.tag, self.tag)
+        ret += '[%s] Target-Forces:      %7.2E\n' % (self.tag, self.target_forces)
+        ret += '[%s] Value tolerance:    %7.2E\n' % (self.tag, self.value_tol)
+        ret += '[%s] Distance tolerance: %7.2E\n\n' % (self.tag, self.distance_tolerance)
         if self.composition is not None:
-            ret += '[%s] Composition:                    %s\n' % (self.tag,self.composition.formula)
-            ret += '[%s] Minimal composition multiplier: %d\n' % (self.tag,self.min_comp_mult)
-            ret += '[%s] Maximal composition multiplier: %d\n' % (self.tag,self.max_comp_mult)
-        ret += '[%s] Members:            %d\n' % (self.tag,len(self.members))
-        ret += '[%s] Actives:            %d\n' % (self.tag,len(self.actives))
-        ret += '[%s] Evaluated:          %d\n' % (self.tag,len(self.evaluated))
+            ret += '[%s] Composition:                    %s\n' % (self.tag, self.composition.formula)
+            ret += '[%s] Minimal composition multiplier: %d\n' % (self.tag, self.min_comp_mult)
+            ret += '[%s] Maximal composition multiplier: %d\n' % (self.tag, self.max_comp_mult)
+        ret += '[%s] Members:            %d\n' % (self.tag, len(self.members))
+        ret += '[%s] Actives:            %d\n' % (self.tag, len(self.actives))
+        ret += '[%s] Evaluated:          %d\n' % (self.tag, len(self.evaluated))
         ret += '\n'
         return ret
 

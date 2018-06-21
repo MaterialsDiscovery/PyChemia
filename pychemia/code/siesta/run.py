@@ -2,6 +2,7 @@ from ..codes import CodeRun
 from .input import SiestaInput
 import os
 
+
 class SiestaRun(CodeRun):
 
     def __init__(self, workdir, input_path, pseudo_path, pseudo_file=None, pseudo_list=None):
@@ -47,17 +48,16 @@ class SiestaRun(CodeRun):
         pass
 
     def is_finished(self):
-        outputfile=self.workdir+os.sep+'siesta.out'
+        outputfile = self.workdir+os.sep+'siesta.out'
         if not os.path.isfile(outputfile):
             return False
-        rf=open(outputfile)
-        data=rf.read()
-        if data[-4:]=='Job completed\n':
+        rf = open(outputfile)
+        data = rf.read()
+        if data[-4:] == 'Job completed\n':
             return True
         else:
             return False
 
-
     def is_successful(self):
         return self.is_finished()
-        
+

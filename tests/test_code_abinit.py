@@ -1,5 +1,3 @@
-import pychemia
-
 
 def test_abinit_parser():
     """
@@ -94,6 +92,7 @@ def test_abinit():
     """
     Tests (pychemia.code.abinit) [general]                       :
     """
+    import os
     import pychemia.code.abinit
 
     af = pychemia.code.abinit.AbiFiles(basedir='tests/data/abinit_03')
@@ -103,3 +102,10 @@ def test_abinit():
     af.create()
     iv.write(af.get_input_filename())
     assert len(open(af.get_input_filename()).readlines()) == 71
+    rf = open('tests/data/abinit_03/abinit.files')
+    data = rf.readlines()
+    print(data)
+    for i in [ -4, -3, -2, -1]:
+        assert(data[i].strip()[-4:] == '.fhi')
+    rf.close()
+    os.remove('tests/data/abinit_03/abinit.files')

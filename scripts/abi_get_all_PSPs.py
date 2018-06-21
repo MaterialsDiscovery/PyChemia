@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # This script download several sets of pseudopotentials
 # form the Website of ABINIT
@@ -6,17 +6,15 @@
 # '.abinit' of the user home directory, just aside of the
 # tarballs.
 # AE are the Hirshfeld All Electron (AE) densities
+# This script is for Python 3 only as it depends on urllib.request
+# Not backwards support for Python 2.x
 
 from __future__ import print_function
 import os
 import ftplib
 from concurrent.futures import ThreadPoolExecutor
 from pychemia.code.abinit import psp_name
-
-try:
-    from urllib2 import urlopen
-except ImportError:
-    from urllib.request import urlopen
+from urllib.request import urlopen
 import tarfile
 import time
 

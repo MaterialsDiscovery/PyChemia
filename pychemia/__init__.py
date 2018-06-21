@@ -143,8 +143,8 @@ def info():
     except ImportError:
         print('pymongo Not Found')
 
-    for modui in ['numpy', 'scipy', 'spglib', 'future',
-                'matplotlib', 'nose', 'coverage', 'pyhull', 'pymatgen', 'networkx', 'ase', 'mayavi', 'qmpy', ]:
+    for modui in ['numpy', 'scipy', 'spglib', 'future', 'matplotlib', 'nose', 'coverage', 'pyhull', 'pymatgen',
+                  'networkx', 'ase', 'mayavi', 'qmpy', ]:
         try:
             mm = __import__(modui)
             print('%10s %10s   %s' % (modui, mm.__version__, mm.__path__[0]))
