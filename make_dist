@@ -1,0 +1,13 @@
+#!/bin/bash
+
+version=`cat pychemia/setup.json | grep version | awk -F: '{print $2}' | awk -F\" '{print $2}'`
+
+cd docs
+make html
+cd ..
+
+python3 setup.py sdist
+python3 setup.py bdist_wheel
+
+twine-3.6 upload -r pypi dist/pychemia-$version-py3-none-any.whl
+twine-3.6 upload -r pypi dist/pychemia-$version.tar.gz

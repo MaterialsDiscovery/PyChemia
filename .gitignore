@@ -56,3 +56,8 @@ docs/_build/
 
 #Linux Files
 .directory
+
+cover
+.pypirc
+symmol.out
+*/ipython_log.py
