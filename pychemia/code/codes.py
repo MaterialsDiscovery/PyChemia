@@ -1,13 +1,22 @@
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
 import os
 import subprocess
 import collections
+import psutil
 
 
 class CodeRun:
     __metaclass__ = ABCMeta
 
-    def __init__(self, binary, workdir='.', use_mpi=False):
+    def __init__(self, executable, workdir='.', use_mpi=False):
+        """
+        CodeRun is the superclass defining the operations for running codes either directly or asynchronously via a
+        submission script on a cluster.
+
+        :param executable:   Name or Path to the executable if can be found on the $PATH or path to the executable
+        :param workdir:  Path to a folder where input and output will be located (Default: '.')
+        :param use_mpi:  True if code relies on MPI for execution (Default: False)
+        """
         self.stdin_file = None
         self.stdout_file = None
         self.stderr_file = None
@@ -16,63 +25,117 @@ class CodeRun:
         self.stderr_filename = None
         self.input_path = None
         self.input = None
-        self.binary = binary
+        self.executable = executable
         self.workdir = workdir
         self.use_mpi = use_mpi
 
     @abstractmethod
     def set_inputs(self):
+        """
+        This method must be implemented by child classes, it should write all the input files and prepare environment
+        for execution
+
+        :return: None
+        """
         pass
 
     @abstractmethod
     def get_outputs(self):
+        """
+        This method must be implemented by child classes, it check the existance of output files and prepare the
+        reading and parsing of output data.
+
+        :return: None
+        """
         pass
 
-    def run(self, omp_num_threads=1, mpi_num_procs=1, wait=True):
+    def run(self, num_threads=None, mpi_num_procs=None, nodefile=None, wait=True, verbose=False):
         """
-        Execute the binary and return a reference to the subprocess
-        created
+        Run the executable and return a reference to the subprocess
+        created. The execution can set a number of threading variables to control their number.
+        If the code uses MPI the variable mpi_num_procs control the number of processes used.
 
-        :param wait: If true the process waits until the command is completed
-        :param omp_num_threads: Number of OpenMP threads to be created
-                                by default the environment variable
-                                OMP_NUM_THREADS is not changed
-        :param mpi_num_procs: Number of MPI processes
+        :param num_threads: Control the number of threads in multithreading applications. There are several environment
+        variables used for that purpose. The default is None, meaning that not variable is set, if an integer is given
+        only OMP_NUM_THREADS is set dynamically for the run if a dictionary of variables is provided with keys
+        OMP_NUM_THREADS, OPENBLAS_NUM_THREADS, GOTO_NUM_THREADS and MKL_NUM_THREADS, the corresponding integers
+        associated to those variables are used to set the number of corresponding threads.
+
+        :param mpi_num_procs: Number of MPI processes, if None and the code uses MPI, the default is to set the maximum
+        number of cores available on the system.
+
+        :param nodefile: If a nodefile is provided, and the code uses MPI, the contents are used to select the number of
+        of processes created. Setting nodefile does not override the use of mpi_num_procs but if mpi_num_procs is None
+        it will assume the number of processes equal to the machines declared on nodefile.
+
+        :param wait: If True the process waits until the command is completed, otherwise a Popen instance is returned
+
+        :param verbose: Print extra information before and after the execution
         :return:
         """
+
         cwd = os.getcwd()
         os.chdir(self.workdir)
-        print("Working at: %s" % os.getcwd())
-        if omp_num_threads > 0:
-            os.environ["OMP_NUM_THREADS"] = str(omp_num_threads)
+        if verbose:
+            print("Working at: %s" % cwd)
+
+        env_vars = ''
+        if num_threads is not None:
+            if isinstance(num_threads, int):
+                env_vars = 'OMP_NUM_THREADS='+str(num_threads)
+        elif isinstance(num_threads, dict):
+            for evar in ['OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'GOTO_NUM_THREADS', 'MKL_NUM_THREADS']:
+                if evar in num_threads and isinstance(num_threads[evar], int) and num_threads[evar] > 0:
+                    env_vars += evar+'='+str(num_threads[evar])+' '
+
         if self.stdin_filename is not None:
             self.stdin_file = open(self.stdin_filename, 'r')
         if self.stdout_filename is not None:
             self.stdout_file = open(self.stdout_filename, 'w')
         if self.stderr_filename is not None:
             self.stderr_file = open(self.stderr_filename, 'w')
-        if self.use_mpi:
-            try:
-                which_bin = subprocess.check_output('which %s' % self.binary, shell=True)
-            except subprocess.CalledProcessError:
-                print('ERROR: Executable %s could not be found in PATH' % self.binary)
-                return
 
-            print("Executable: %s" % which_bin.decode('utf8').strip())
-            command_line = 'mpirun -n %d %s' % (mpi_num_procs, self.binary)
-            print("Running: %s" % command_line)
+        # Checking availability of executable
+        if not os.path.exists(self.executable):
+            try:
+                which_bin = subprocess.check_output('which %s' % self.executable, shell=True)
+            except subprocess.CalledProcessError:
+                print('ERROR: Executable %s could not be found as an absolute, relative or via the $PATH variable' %
+                      self.executable)
+                return
+            exec_path = which_bin.decode('utf8').strip()
+            print("Executable %s " % exec_path)
+        else:
+            exec_path = self.executable
+
+        print("Executable %s is located at %s" % (exec_path, os.path.dirname(os.path.abspath(exec_path))))
+
+        if self.use_mpi:
+
+            np = 1
+            if mpi_num_procs is None:
+                np = psutil.cpu_count(logical=False)
+            elif isinstance(mpi_num_procs, int):
+                np = mpi_num_procs
+            else:
+                print("WARNING: Declared variable mpi_num_procs is not integer, defaulting to 1 process")
+
+            command_line = '%s mpirun -n %d %s' % (env_vars, np, self.executable)
+            if verbose:
+                print("Running: %s" % command_line)
             sp = subprocess.Popen(command_line, shell=True,
                                   stdout=self.stdout_file, 
                                   stderr=self.stderr_file, 
                                   stdin=self.stdin_file)
         else:
-            sp = subprocess.Popen("%s" % self.binary, shell=True, 
+            sp = subprocess.Popen("%s" % self.executable, shell=True,
                                   stdout=self.stdout_file, 
                                   stderr=self.stderr_file, 
                                   stdin=self.stdin_file)
         if wait:
             sp.wait()
-            print("Program finished with returncode: %d" % sp.returncode)
+            if verbose:
+                print("Program finished with returncode: %d" % sp.returncode)
         os.chdir(cwd)
         return sp
 
@@ -209,7 +272,8 @@ class CodeOutput(collections.Mapping):
         pass
 
     # True means that the run is just complete
-    @abstractproperty
+    @property
+    @abstractmethod
     def is_finished(self):
         pass
 

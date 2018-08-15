@@ -3,3 +3,4 @@ numpy
 future
 spglib
 pymongo
+psutil

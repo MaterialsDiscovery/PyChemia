@@ -10,9 +10,12 @@ from pychemia.utils.serializer import generic_serializer
 
 
 class DFTBplus(CodeRun):
-    def __init__(self):
-        CodeRun.__init__(self)
-        self.workdir = None
+    def __init__(self, workdir='.'):
+
+        if not os.path.lexists(workdir):
+            os.mkdir(workdir)
+
+        CodeRun.__init__(self, executable='dftb+', workdir=workdir)
         self.geometry = {}
         self.driver = {}
         self.hamiltonian = {}
@@ -21,22 +24,17 @@ class DFTBplus(CodeRun):
         self.parser_options = {}
         self.slater_koster = []
         self.structure = Structure()
-        self.binary = 'dftb+'
         self.runner = None
         self.kpoints = None
         self.stdout_file = None
         self.output = None
         self.kp_density = None
 
-    def initialize(self, structure, workdir='.', kpoints=None, binary='dftb+', kp_density=10000):
+    def initialize(self, structure, kpoints=None, kp_density=10000):
         assert structure.is_crystal
         assert structure.is_perfect
         self.structure = structure
         self.get_geometry()
-        self.workdir = workdir
-        if not os.path.lexists(workdir):
-            os.mkdir(workdir)
-        self.binary = binary
         self.kp_density = kp_density
         if kpoints is None:
             kpoints = KPoints.optimized_grid(self.structure.lattice, kp_density=self.kp_density, force_odd=True)
@@ -48,16 +46,6 @@ class DFTBplus(CodeRun):
 
     def get_outputs(self):
         self.output = read_detailed_out(filename=self.workdir + os.sep + 'detailed.out')
-
-    def run(self, use_mpi=False, omp_max_threads=4, mpi_num_procs=1):
-        cwd = os.getcwd()
-        os.chdir(self.workdir)
-        os.environ["OMP_NUM_THREADS"] = str(omp_max_threads)
-        self.stdout_file = open('dftb_stdout.log', 'w')
-        sp = subprocess.Popen(self.binary, stdout=self.stdout_file)
-        os.chdir(cwd)
-        self.runner = sp
-        return sp
 
     def run_status(self):
         if self.runner is None:

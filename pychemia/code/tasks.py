@@ -7,7 +7,7 @@ from abc import ABCMeta, abstractmethod
 class Task:
     __metaclass__ = ABCMeta
 
-    def __init__(self, structure, task_params=None, workdir='.', binary=None):
+    def __init__(self, structure, task_params=None, workdir='.', executable=None):
         self.structure = structure
         self.workdir = workdir
         if not os.path.isdir(self.workdir):
@@ -17,7 +17,7 @@ class Task:
             self.task_params = task_params
         else:
             self.task_params = {}
-        self.binary = binary
+        self.executable = executable
         self.finished = False
         self.success = False
         self.started = False

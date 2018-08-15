@@ -6,7 +6,7 @@ import os
 class SiestaRun(CodeRun):
 
     def __init__(self, workdir, input_path, pseudo_path, pseudo_file=None, pseudo_list=None):
-        CodeRun.__init__(self, binary='siesta', workdir=workdir, use_mpi=False)
+        CodeRun.__init__(self, executable='siesta', workdir=workdir, use_mpi=False)
 
         if pseudo_file is None and pseudo_list is None:
             raise ValueError("Declare either the list of pseudo names or a file that contain the list.")

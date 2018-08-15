@@ -6,7 +6,7 @@ import os
 class AbinitRun(CodeRun):
 
     def __init__(self, workdir):
-        CodeRun.__init__(self, binary='abinit', workdir=workdir, use_mpi=True)
+        CodeRun.__init__(self, executable='abinit', workdir=workdir, use_mpi=True)
         self.stdout_filename = 'abinit.out'
         self.stderr_filename = 'abinit.err'
         self.stdin_filename = 'abinit.files'

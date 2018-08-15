@@ -5,8 +5,8 @@ import os
 
 class OctopusRun(CodeRun):
 
-    def __init__(self, workdir):
-        CodeRun.__init__(self, binary='octopus', workdir=workdir, use_mpi=True)
+    def __init__(self, workdir='.'):
+        CodeRun.__init__(self, octopus='octopus', workdir=workdir, use_mpi=True)
         self.stdout_filename = 'octopus.out'
         self.stderr_filename = 'octopus.err'
 

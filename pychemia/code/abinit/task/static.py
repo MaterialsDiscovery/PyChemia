@@ -9,7 +9,7 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class StaticCalculation(Task):
-    def __init__(self, structure, workdir='.', binary='abinit', ecut=50, kpoints=None, kp_density=1E4):
+    def __init__(self, structure, workdir='.', executable='abinit', ecut=50, kpoints=None, kp_density=1E4):
 
         self.ecut = ecut
         if kpoints is None:
@@ -18,18 +18,23 @@ class StaticCalculation(Task):
         else:
             self.kpoints = kpoints
         self.task_params = {'ecut': self.ecut, 'kpoints': self.kpoints.to_dict}
-        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, binary=binary)
+        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=executable)
         self.abinitjob = AbinitJob()
-        self.abinitjob.initialize(workdir=workdir, structure=structure, binary=binary)
+        self.abinitjob.initialize(structure=structure)
+        self.is_prepared=False
 
-    def run(self, nparal=1):
-
+    def prepare(self):
         self.abinitjob.set_kpoints(kpoints=self.kpoints)
         self.abinitjob.job_static()
         self.abinitjob.set_ecut(self.ecut)
         self.abinitjob.set_psps()
         self.abinitjob.write_all()
-        self.abinitjob.run(use_mpi=True, omp_max_threads=nparal, mpi_num_procs=nparal)
+        self.is_prepared = True
+
+    def run(self, num_threads=None, mpi_num_procs=None):
+        if not self.is_prepared:
+            self.prepare()
+        self.abinitjob.run(num_threads=num_threads, mpi_num_procs=mpi_num_procs)
 
     def plot(self, figname='static_calculation.pdf'):
         if not self.finished:

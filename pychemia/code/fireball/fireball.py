@@ -11,8 +11,8 @@ from ..codes import CodeRun
 
 
 class FireBall(CodeRun):
-    def __init__(self, fdata_path=None):
-        CodeRun.__init__(self)
+    def __init__(self, workdir='.', fdata_path=None):
+        CodeRun.__init__(self, executable='fireball.x', workdir=workdir, use_mpi=False)
         self.workdir = None
         # The five sections of Fireball
         self.option = {}
@@ -24,10 +24,8 @@ class FireBall(CodeRun):
 
         self.fdata_path = os.path.abspath(fdata_path)
         self.structure = None
-        self.binary = 'fireball.x'
         self.runner = None
         self.kpoints = None
-        Codes.__init__(self)
 
     @property
     def to_dict(self):

@@ -5,8 +5,8 @@ from ..codes import CodeRun
 
 
 class AbinitJob(CodeRun):
-    def __init__(self):
-        CodeRun.__init__(self, binary='abinit', workdir='.', use_mpi=True)
+    def __init__(self, executable='abinit', workdir='.'):
+        CodeRun.__init__(self, executable=executable, workdir=workdir, use_mpi=True)
         self.abifile = None
         self.kpoints = None
         self.structure = None
@@ -23,8 +23,7 @@ class AbinitJob(CodeRun):
     def get_outputs(self):
         pass
 
-    def initialize(self, workdir, structure=None, input_file='abinit.in', binary='abinit', psp_kind='FHI',
-                   psp_exchange='LDA'):
+    def initialize(self, structure=None, input_file='abinit.in', psp_kind='PBE', psp_exchange='ONC'):
         """
         Initialize the mandatory variables for a AbinitJob
 
@@ -37,16 +36,14 @@ class AbinitJob(CodeRun):
 
         :return:
         """
-        self.workdir = workdir
         self.abifile = AbiFiles(self.workdir)
-        if not os.path.lexists(workdir):
-            os.mkdir(workdir)
+        if not os.path.lexists(self.workdir):
+            os.mkdir(self.workdir)
         if structure is not None:
             assert structure.is_crystal
             assert structure.is_perfect
             self.structure = structure
             self.inp.from_structure(self.structure)
-        self.binary = binary
         if os.path.isfile(input_file):
             self.inp = AbinitInput(input_file)
         self.abifile.set_input(self.inp)
@@ -97,7 +94,7 @@ class AbinitJob(CodeRun):
         self.inp.set_value('ecut5', 300)
         self.inp.set_value('ecut6', 500)
 
-    def set_psps(self, exchange='LDA', kind='FHI'):
+    def set_psps(self, exchange='PBE', kind='ONC'):
         self.abifile.set_psps(exchange=exchange, kind=kind)
 
     def set_inputs(self):

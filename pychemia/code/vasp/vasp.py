@@ -15,7 +15,7 @@ class VaspJob(CodeRun):
 
     def __init__(self, binary='vasp', workdir='.'):
 
-        CodeRun.__init__(self, binary=binary, workdir=workdir, use_mpi=True)
+        CodeRun.__init__(self, executable=binary, workdir=workdir, use_mpi=True)
         self.structure = None
         self.input_variables = None
         self.potcar_setup = None

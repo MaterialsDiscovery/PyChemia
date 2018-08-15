@@ -4,7 +4,7 @@ from ..codes import CodeRun
 class ElkRun(CodeRun):
 
     def __init__(self, workdir):
-        CodeRun.__init__(self, binary='elk', workdir=workdir, use_mpi=True)
+        CodeRun.__init__(self, executable='elk', workdir=workdir, use_mpi=True)
 
     def set_inputs(self):
         pass

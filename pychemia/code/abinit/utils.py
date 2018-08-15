@@ -70,8 +70,10 @@ def psp_name(atomicnumber, exchange, kind):
         filename = 'JTH-LDA-atomicdata-0.2/' + atom_symbol + '.LDA_PW-JTH.xml'
     elif kind == 'HGH' and exchange == 'GGA':
         filename = str(atomicnumber).zfill(2) + atom_symbol.lower() + '.pbe_hgh'
+    elif kind == 'ONC' and exchange == 'PBE':
+        filename = 'pbe_s_sr' + os.sep + atom_symbol + '.psp8'
     else:
-        print('Not know kind of PSP')
+        print('The combination of exchange=%s and kind=%s is not known' % (exchange, kind))
         filename = ''
     return filename
 
