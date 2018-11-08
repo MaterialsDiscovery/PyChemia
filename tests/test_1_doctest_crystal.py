@@ -17,5 +17,5 @@ def test_lattice():
     DocTests (pychemia.crystal.lattice)                          :
     """
     import pychemia.crystal.lattice
-    dt = doctest.testmod(pychemia.crystal.lattice, verbose=True)
+    dt = doctest.testmod(pychemia.crystal.lattice, verbose=True, optionflags=doctest.NORMALIZE_WHITESPACE)
     assert dt.failed == 0

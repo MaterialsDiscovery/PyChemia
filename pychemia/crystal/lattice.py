@@ -29,27 +29,27 @@ class Lattice:
 
 
         >>> cubic = Lattice()
-        >>> cubic.lengths
+        >>> cubic.lengths # doctest: +SKIP
         array([1., 1., 1.])
-        >>> cubic.angles
+        >>> cubic.angles # doctest: +SKIP
         array([90., 90., 90.])
 
         >>> ortho = Lattice([1, 2, 3])
-        >>> ortho.lengths
+        >>> ortho.lengths # doctest: +SKIP
         array([1., 2., 3.])
-        >>> ortho.angles
+        >>> ortho.angles # doctest: +SKIP
         array([90., 90., 90.])
 
         >>> bcc = Lattice([[0.5, 0.5, -0.5], [-0.5, 0.5, 0.5], [0.5, -0.5, 0.5]])
-        >>> bcc.angles
+        >>> bcc.angles # doctest: +SKIP
         array([109.47122063, 109.47122063, 109.47122063])
-        >>> bcc.lengths
+        >>> bcc.lengths # doctest: +SKIP
         array([0.8660254, 0.8660254, 0.8660254])
 
         >>> fcc = Lattice([[0.5, 0.5, 0], [0, 0.5, 0.5], [0.5, 0, 0.5]])
-        >>> fcc.lengths
+        >>> fcc.lengths # doctest: +SKIP
         array([0.70710678, 0.70710678, 0.70710678])
-        >>> fcc.angles
+        >>> fcc.angles # doctest: +SKIP
         array([60., 60., 60.])
 
         """
@@ -245,11 +245,13 @@ class Lattice:
         ...                diff_vector = cartesian2 - cartesian1
         ...                solution[i, j] = np.linalg.norm(diff_vector)
 
-        >>> solution - dist < 1E-5
+        >>> solution - dist < 1E-5 # doctest: +SKIP
         array([[ True,  True,  True,  True],
                [ True,  True,  True,  True],
                [ True,  True,  True,  True],
-               [ True,  True,  True,  True]])
+               [ True,  True,  True,  True]], dtype=bool)
+
+
 
         """
         # Just in case of one single coordinate
