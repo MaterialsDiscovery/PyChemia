@@ -34,7 +34,7 @@ before_install:
 
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coverage future matplotlib
-  - pip install pymongo
+  - pip install pymongo psutil
   - pip install -e "git+https://github.com/atztogo/spglib.git#egg=spglib&subdirectory=python"
   - pip install -e "git+https://github.com/z4r/python-coveralls.git#egg=coveralls"
 
