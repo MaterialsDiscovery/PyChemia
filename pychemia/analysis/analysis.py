@@ -355,6 +355,13 @@ class StructureAnalysis:
         return bonds, coordination, distances_list, tolerances, cutoff_radius
 
     def hardness_XX(self, initial_cutoff_radius=0.8, use_laplacian=True):
+        """
+        Implementation of Hardness algorithm:
+        
+        First-principles structural design of superhard materials
+        J. Chem. Phys. 138, 114101 (2013); https://doi.org/10.1063/1.4794424
+        Xinxin Zhang, et al.
+        """
 
         bonds, coordination, cutoff_radius = self.bonds_coordination(initial_cutoff_radius=initial_cutoff_radius,
                                                                      use_laplacian=use_laplacian)
