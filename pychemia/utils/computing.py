@@ -1,5 +1,4 @@
-from __future__ import print_function, unicode_literals
-from builtins import str
+
 from numbers import Number
 from math import sqrt
 import gzip

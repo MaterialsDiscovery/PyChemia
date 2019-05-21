@@ -2,7 +2,6 @@
 # Copyright (c) Guillermo Avendano-Franco
 # Distributed under the terms of the MIT License.
 
-from __future__ import division, unicode_literals
 import os
 from re import findall
 from numpy import zeros, array, sum

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from builtins import input
 import os
 import argparse
 import logging

@@ -8,7 +8,7 @@ locations for the pseudopotentials and the results
 are post-process using the output in NetCDF format
 "abinit-o_OUT.nc"
 """
-from __future__ import print_function
+
 import os
 import shutil
 import json

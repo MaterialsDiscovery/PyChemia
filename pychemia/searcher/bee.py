@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from .searcher import Searcher
 from pychemia import pcm_log
 

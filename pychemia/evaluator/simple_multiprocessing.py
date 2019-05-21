@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function  # Compatibility between python 2 and 3
 import os                              # Operating System module (create directories)
 import time                            # To create a sleeping timer
 import random

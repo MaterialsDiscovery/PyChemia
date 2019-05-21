@@ -9,7 +9,6 @@
 # This script is for Python 3 only as it depends on urllib.request
 # Not backwards support for Python 2.x
 
-from __future__ import print_function
 import os
 import ftplib
 from concurrent.futures import ThreadPoolExecutor

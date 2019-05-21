@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import time
 from abc import ABCMeta, abstractmethod
 from pychemia import pcm_log, HAS_PYMONGO

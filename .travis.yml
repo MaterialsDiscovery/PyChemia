@@ -1,8 +1,6 @@
 language: python
 python:
-  - 2.7
   - 3.6
-  - 3.7
 notifications:
   email: false
 
@@ -32,7 +30,7 @@ before_install:
   # sudo apt-get install -y gcc gfortran m4 autoconf automake libtool
 
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coverage future matplotlib
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coverage matplotlib
   - pip install pymongo psutil
   - pip install -e "git+https://github.com/atztogo/spglib.git#egg=spglib&subdirectory=python"
   - pip install -e "git+https://github.com/z4r/python-coveralls.git#egg=coveralls"
