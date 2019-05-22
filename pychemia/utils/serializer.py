@@ -1,6 +1,6 @@
 
 import json
-from abc import ABCMeta, abstractproperty
+from abc import ABCMeta, abstractmethod
 import numpy as np
 from pychemia.utils.computing import deep_unicode
 from numbers import Integral, Real
@@ -13,7 +13,8 @@ class PyChemiaJsonable(object):
     """
     __metaclass__ = ABCMeta
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def to_dict(self):
         """
         A JSON representation of an object.

@@ -31,8 +31,9 @@ Before installing PyChemia, you may need to first install a few critical depende
 Mandatory
 ---------
 
-1. Python >= 2.7 or Python >= 3.5
-   The library is tested on Travis for versions of Python 2.7, 3.5 and 3.6
+1. Python >= 3.6
+   The library is tested on Travis for versions of Python 3.6
+   Support for Python 2.7 has been removed 
 
    https://travis-ci.org/MaterialsDiscovery/PyChemia
 
@@ -51,18 +52,7 @@ Mandatory
 4. [Spglib](http://spglib.sourceforge.net/) >= 1.9.9
    Spglib is used to determine symmetry groups for structures
 
-5. [future](http://python-future.org)
-   This is a library that offers some easy hacks to support python 2.7
-   and python 3 on the same code source. The library is easy to install
-   with pip
-
-   pip install future
-
-   or
-
-   pip install future --user
-
-6. [PyMongo](http://api.mongodb.org/python/current/) >= 3.4
+5. [PyMongo](http://api.mongodb.org/python/current/) >= 3.4
    At least for structural search PyChemia relies strongly in MongoDB and its
    python driver. For the MongoDB server, any version beyond 3.0 should be fine.
    We have tested pychemia on MongoDB 3.2

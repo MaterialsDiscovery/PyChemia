@@ -1,7 +1,7 @@
 
 import itertools
 import math
-from fractions import gcd
+from math import gcd
 from math import cos, sin, sqrt
 import numpy as np
 import pprint

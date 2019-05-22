@@ -1,6 +1,6 @@
 import random
 import uuid
-from fractions import gcd
+from math import gcd
 import numpy as np
 from ._population import Population
 from pychemia import Composition, Structure, pcm_log

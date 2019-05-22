@@ -1,6 +1,6 @@
 
 from numpy import array, argsort
-from fractions import gcd as _gcd
+from math import gcd as _gcd
 from math import pi
 from pychemia.utils.periodic import atomic_symbols, electronegativity, atomic_number, covalent_radius
 from pychemia.utils.computing import deep_unicode
