@@ -61,3 +61,4 @@ cover
 .pypirc
 symmol.out
 */ipython_log.py
+pychemia/**/*.html

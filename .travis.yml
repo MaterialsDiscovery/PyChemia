@@ -30,7 +30,7 @@ before_install:
   # sudo apt-get install -y gcc gfortran m4 autoconf automake libtool
 
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coverage matplotlib
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose coverage matplotlib cython
   - pip install pymongo psutil
   - pip install -e "git+https://github.com/atztogo/spglib.git#egg=spglib&subdirectory=python"
   - pip install -e "git+https://github.com/z4r/python-coveralls.git#egg=coveralls"

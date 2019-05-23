@@ -1,6 +1,15 @@
 import os
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 import json
+
+try:
+    from Cython.Build import cythonize
+    from Cython.Distutils import build_ext
+except ImportError:
+    USE_CYTHON = False
+else:
+    USE_CYTHON = True
+
 
 rf = open('pychemia' + os.sep + 'setup.json')
 data = json.load(rf)
@@ -39,6 +48,10 @@ INSTALL_REQUIRES = ['numpy >= 1.12.0',
 
 ###################################################################
 
+ext = '.pyx' if USE_CYTHON else '.c'
+
+extensions = [Extension("pychemia.code.lennardjones.lj", ['pychemia/code/lennardjones/lj' + ext])]
+
 setup(
     name=data['name'],
     version=data['version'],
@@ -55,4 +68,10 @@ setup(
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, <4',
     package_data={'': ['setup.json']},
     scripts=get_scripts(),
+    ext_modules=cythonize(extensions, annotate=True, compiler_directives={'embedsignature': True})
 )
+
+# ext_modules=cythonize(Extension('pychemia.code.lennardjones.hello',
+#                                     ['pychemia/code/lennardjones/lj_utils.pyx'],
+#                                     language='c',
+#                                     extra_compile_args='-march=native'))
