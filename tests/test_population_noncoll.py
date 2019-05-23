@@ -5,7 +5,7 @@ import pychemia
 from .local_mongo import has_local_mongo
 
 
-def test_popu_noncoll():
+def notest_popu_noncoll():
     """
     Tests (pychemia.population.NonCollinearMagMoms)              :
     """
