@@ -50,7 +50,7 @@ INSTALL_REQUIRES = ['numpy >= 1.12.0',
 
 ext = '.pyx' if USE_CYTHON else '.c'
 
-extensions = [Extension("pychemia.code.lennardjones.lj", ['pychemia/code/lennardjones/lj' + ext])]
+extensions = [Extension("pychemia.code.lennardjones.lj_utils", ['pychemia/code/lennardjones/lj_utils' + ext])]
 
 setup(
     name=data['name'],
