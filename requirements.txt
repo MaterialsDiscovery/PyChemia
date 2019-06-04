@@ -1,5 +1,6 @@
-scipy
 numpy
-spglib
+scipy
 pymongo
 psutil
+matplotlib
+spglib
