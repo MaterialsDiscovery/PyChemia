@@ -1,5 +1,5 @@
-Global optimization of correlation matrices for DFT+U (Abinit)
---------------------------------------------------------------
+Correlation matrices for DFT+U (Abinit)
+---------------------------------------
 
 The variable dmatpawu
 ~~~~~~~~~~~~~~~~~~~~~
@@ -18,17 +18,6 @@ effective chance of reaching a global minimum if the search is long enough.
 
 For this tutorial consider the following problem:
 
-
-
-
-
-
-
-
-
-
-
- 'pychemia/test/data/abinit_dmatpaw/abinit.in'.
 First, we can read the abinit input and access the contents of the variable 'dmatpawu'::
 
     import pychemia

@@ -1,5 +1,5 @@
-Optimization of Magnetic Moments (VASP)
----------------------------------------
+Magnetic Moments (VASP)
+-----------------------
 
 This tutorial shows how to perform global search for optimal magnetic
 moments on VASP.

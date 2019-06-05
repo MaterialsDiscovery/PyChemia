@@ -1,0 +1,251 @@
+Lennard-Jones Clusters
+----------------------
+
+This tutorial will guide to how search for global minima using the methods implemented on
+PyChemia.
+
+Before discussing global minimization, a process that involves populations of clusters,
+we start first with the local minimization of a single cluster. This will provide a good
+foundation on why local minimization is just not enough to get the global minima of
+atomic structures.
+
+
+A single Lennard-Jones cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For this example, we will use IPython. IPython is an interactive python shell that offers
+features very useful when conducting exploratory scientific computing. On the terminal execute
+``ipython`` and you will get access to the IPython shell::
+
+    $ ipython
+    Python 3.7.2 (default, Feb 12 2019, 17:15:23)
+    Type 'copyright', 'credits' or 'license' for more information
+    IPython 7.5.0 -- An enhanced Interactive Python. Type '?' for help.
+
+    In [1]:
+
+
+The first command on that shell is import PyChemia. After that most features of PyChemia will
+be available for you::
+
+    In [1]: import pychemia
+
+It is time to create our first cluster, lets start with a random set of 13 atoms of Xenon::
+
+  In [3]: st=pychemia.Structure.random_cluster('Xe13')
+
+The most important object in PyChemia is the Structure. Structures can be periodic or non-periodic,
+in this case we are creating a non-periodic atomic structure.
+
+This is a random cluster with 13 atoms of Xe, the actual specie does not matter to us,
+but physically the closest to real Lennard Jones clusters are atoms in the Helium column,
+as they are inert gases and interact very weakly to each other.
+
+You can have a first look to the atomic positions::
+
+    In [4]: print(st)
+    13
+
+     Symb  (             Positions            )
+       Xe  (     1.5366     0.7426    -0.3236 )
+       Xe  (    -0.8608    -0.9002     1.8714 )
+       Xe  (     0.1371    -0.2194     2.5789 )
+       Xe  (     1.4888    -1.0917    -2.0336 )
+       Xe  (    -1.9269     2.6057    -0.0731 )
+       Xe  (     0.2325    -1.9348    -2.8912 )
+       Xe  (     0.5361     3.6689    -1.1550 )
+       Xe  (    -1.1061    -1.9473     3.1906 )
+       Xe  (     1.0366    -3.6791     1.5244 )
+       Xe  (     3.5369     2.3095     0.3493 )
+       Xe  (    -2.7669     1.2844    -2.9621 )
+       Xe  (    -1.0901     1.0229     4.7788 )
+       Xe  (    -0.7538    -1.8613    -4.8549 )
+
+    Non-periodic structure
+
+There is not much to see here, but the atoms are actually randomly located.
+If you want, we can store that structure in XYZ file format, a very common format for
+non-periodic atomic structures.
+
+We need to import a submodule in PyChemia that is not imported by default::
+
+    In [8]: import pychemia.io
+
+    In [9]: pychemia.io.xyz.save(st,'Xe13.xyz')
+
+Now you can use your favorite module visualizer to see the structure, I recommend Vesta
+
+https://jp-minerals.org/vesta/en/download.html
+
+Or Avogadro
+
+http://avogadro.cc
+
+Here you will see the cluster that I got, yours will be different, they are actually
+random atoms wisely separated from each other to create a cluster.
+
+
+
+Lets move forward and create a Lennard-Jones object out of them::
+
+    In [12]: lj=pychemia.code.lennardjones.LennardJones(st)
+
+The object lj is a LennardJones cluster for PyChemia. You can do more sophisticated things
+with them like associate different LJ parameters.
+Lennard-Jones potentials are very simple, there are just 2 parameters (actually 1 with
+one energy gauge), sigma, and epsilon.
+The command line above creates a LennardJones cluster associating sigma=1 and epsilon=1.
+Lets call them canonical LJ clusters.
+
+Lets check the energy of this cluster::
+
+    In [15]: lj.get_energy()
+    Out[15]: -0.9088473535594638
+
+And forces::
+
+    In [16]: lj.get_forces()
+    Out[16]:
+    array([[ 1.16555739e-02, -8.69803797e-03, -1.55867774e-02],
+           [ 1.11953113e+00,  4.86115920e-01,  1.25700853e+00],
+           [-1.24741878e+00, -8.75880609e-01, -8.12715188e-01],
+           [-3.35890918e-01, -1.96351440e-01, -2.02336855e-01],
+           [ 1.30072745e-02,  1.91418193e-04, -9.31262083e-03],
+           [ 2.91729752e-01,  2.29363091e-01,  1.45478323e-01],
+           [-7.93490587e-03, -1.37226651e-02,  8.15613475e-03],
+           [ 1.32052676e-01,  3.98922152e-01, -4.39176338e-01],
+           [-7.66530276e-03,  1.07925037e-02,  3.50087806e-03],
+           [-2.42884881e-02, -1.60901059e-02, -8.31412961e-03],
+           [ 3.63069683e-03,  1.08174113e-03,  5.31882905e-03],
+           [ 7.88564171e-03, -1.40157367e-02, -1.94914439e-02],
+           [ 4.37056554e-02, -1.70823121e-03,  8.74706538e-02]])
+
+As you see this cluster is far from equilibrium, some forces are quite high.
+
+The energy is actually very high, see for example this Website with a collection of LJ clusters and their minimal energies
+
+http://doye.chem.ox.ac.uk/jon/structures/LJ/tables.150.html
+
+For a LJ13 the minimum is::
+
+    13	Ih	-44.326801
+
+Lets minimize this cluster::
+
+    In [17]: lj.local_minimization()
+    Out[17]:
+          fun: -39.14380752041304
+     hess_inv: array([[ 0.11901007, -0.0185633 , -0.02159654, ...,  0.07613736,
+            -0.01945148, -0.00172829],
+           [-0.0185633 ,  0.09244635,  0.01096307, ..., -0.00138655,
+             0.08190313,  0.00124267],
+           [-0.02159654,  0.01096307,  0.09621005, ...,  0.00149852,
+             0.01460605,  0.07670523],
+           ...,
+           [ 0.07613736, -0.00138655,  0.00149852, ...,  0.13920985,
+            -0.020624  , -0.02222332],
+           [-0.01945148,  0.08190313,  0.01460605, ..., -0.020624  ,
+             0.14967333,  0.00175442],
+           [-0.00172829,  0.00124267,  0.07670523, ..., -0.02222332,
+             0.00175442,  0.09608583]])
+          jac: array([-5.58953395e-07,  2.58097307e-06, -2.83262469e-07, -1.87019611e-06,
+            3.53422708e-06, -4.00518921e-06,  2.54749681e-06,  7.36629650e-06,
+            1.43407979e-06, -2.11626380e-06, -3.21620669e-06, -3.06804740e-07,
+            3.56960270e-06, -7.71121551e-07,  2.10194603e-06, -3.22466448e-09,
+            1.82685119e-06, -2.40470085e-06,  1.96127544e-06, -8.09258395e-07,
+            1.18768223e-06, -7.36043344e-08, -1.44671445e-06,  7.86085192e-07,
+            3.11682092e-07, -7.25226917e-06, -2.50593641e-06, -3.53781951e-06,
+           -1.23629252e-06, -1.16162655e-07, -1.75567322e-06, -1.14233834e-06,
+           -1.83153626e-06,  2.00436404e-07,  1.42059108e-07,  1.93411455e-06,
+            1.32524159e-06,  4.23794167e-07,  4.00968480e-06])
+      message: 'Optimization terminated successfully.'
+         nfev: 304
+          nit: 144
+         njev: 304
+       status: 0
+      success: True
+            x: array([ 0.3358363 ,  0.01004974, -0.05827837, -0.63757887, -0.2874429 ,
+            0.28639427,  0.74135059, -0.36706575,  0.88867617,  0.41938748,
+            0.1371934 , -1.14599561, -0.3899746 ,  0.83074088,  0.3263444 ,
+           -0.25979756, -0.66614319, -0.72275627,  0.37601656,  1.02845738,
+           -0.44971176, -0.24003233, -0.88236898,  1.16298861,  0.21860736,
+           -1.05906905,  0.18307233,  0.67762311,  0.76316168,  0.64702081,
+           -0.54741719,  0.38935218, -0.64850076, -0.14386306,  0.2097411 ,
+            1.17588387, -0.55015779, -0.10660649, -1.64513769])
+
+
+PyChemia have used a local minimization algorithm (from Scipy) to get a local minimum for this
+cluster. The energy of the minimal structure is::
+
+    fun: -39.14380752041304
+
+Much closer to the minimal value from the website.
+
+We can say PyChemia to move the current positions to the local minima::
+
+    In [20]: lj.move_to_minima()
+
+And now ask for the known forces and energy of the relaxed structure::
+
+    In [22]: lj.get_forces()
+    Out[22]:
+    array([[ 5.58953392e-07, -2.58097310e-06,  2.83262481e-07],
+           [ 1.87019611e-06, -3.53422708e-06,  4.00518921e-06],
+           [-2.54749679e-06, -7.36629651e-06, -1.43407979e-06],
+           [ 2.11626380e-06,  3.21620669e-06,  3.06804739e-07],
+           [-3.56960271e-06,  7.71121568e-07, -2.10194606e-06],
+           [ 3.22466448e-09, -1.82685119e-06,  2.40470085e-06],
+           [-1.96127544e-06,  8.09258421e-07, -1.18768224e-06],
+           [ 7.36043344e-08,  1.44671445e-06, -7.86085193e-07],
+           [-3.11682091e-07,  7.25226918e-06,  2.50593641e-06],
+           [ 3.53781952e-06,  1.23629253e-06,  1.16162647e-07],
+           [ 1.75567322e-06,  1.14233833e-06,  1.83153625e-06],
+           [-2.00436429e-07, -1.42059121e-07, -1.93411451e-06],
+           [-1.32524159e-06, -4.23794158e-07, -4.00968478e-06]])
+
+
+    In [23]: lj.get_energy()
+    Out[23]: -39.14380752041305
+
+As we did before, we can export the new structure to have a look at it with a molecule
+visualizer::
+
+    In [24]: pychemia.io.xyz.save(lj.structure,'NewXe13.xyz')
+
+
+You can see our result, the structure is better, the forces are small, energy is more negative but still
+we are not getting the global minima.
+A local minimizer found a “Local Minima“, not the “Global mimima”.
+
+I use LJ13 for a very good reason. The global minima is very special in this case. It is actually
+with atoms in the corners of a icosahedron with one atom in the center.
+
+The symmetry is very special for LJ13. The point group is called Ih and it actually the point group
+of the Icosahedron.
+
+I hope that you succeed reaching this point, you should now get a flavor of the beauty of the problem
+at hand. Very simple but very challenging.
+
+Even with just 13 atoms, a local minimization not always move you to the global minimum.
+Eventually if you try several times you will get it.
+If you are lucky you get on the first one. But we are trying to get luck out of our way.
+
+
+Working with a population of clusters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The shortest version of a global search using the FireFly method will look like this
+
+    >>> from pychemia.searcher import FireFly
+    >>> from pychemia.population import LJCluster
+    >>> popu = LJCluster('LJ13', composition='Xe13', refine=True, direct_evaluation=True)
+    >>> searcher = FireFly(popu, generation_size=16, stabilization_limit=10)
+    >>> searcher.run()
+
+For this case, you should have a mongo server running on you local machine, no SSL encryption
+and no authorization with username and password.
+The population will be created with Lennard-Jones clusters with 13 particles each.
+Each new candidate is locally relaxed when created.
+The searcher will use 16 candidates on each generation and will stop when the best candidate
+survives for 10 generations.
+

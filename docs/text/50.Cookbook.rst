@@ -4,6 +4,12 @@ PyChemia CookBook
 This is a set of small recipes for getting the 'job done' quickly
 using the methods and classes implemented on PyChemia
 
+.. toctree::
+    :maxdepth: 4
+
+    51.Euler_Angles
+
+
 Reading a formula and extracting the composition
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -118,10 +124,10 @@ remains the same::
 
 Here you see the result of the two structures, the original and the rotated along the 111 axis.
 
-.. image:: images/conventional.jpg
+.. image:: ../_static/conventional.jpg
     :width: 300 px
 
-.. image:: images/rotated.jpg
+.. image:: ../_static/rotated.jpg
     :width: 300 px
 
 Get the spatial group

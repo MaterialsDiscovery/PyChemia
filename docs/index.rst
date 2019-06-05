@@ -11,20 +11,21 @@ Contents:
 .. toctree::
    :maxdepth: 4
 
-   1.Introduction
-   2.Installation
-   3.First_steps
-   4.GlobalMinimization
+   text/10.Introduction
+   text/20.Installation
+   text/30.First_steps
+   text/40.GlobalMinimization
+   text/50.Cookbook
 
-..   4.Tutorials
-..   5.PyChemiaAPI
-..   6.Contributors
+..   text/40.Tutorials
+..   text/5.PyChemiaAPI
+..   text/6.Contributors
 
 
 Indices and tables
 ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
 

@@ -9,8 +9,9 @@ optimizing the density matrices for DFT+U using ABINIT.
 
 
 .. toctree::
+    :maxdepth: 4
 
-    tutorial.ljclusters
-    tutorial.structural_search
-    tutorial.magnetic_moments
-    tutorial.orbitaldftu
+    41.LJ_Clusters
+    42.Structural_Search
+    43.OrbitalDFTU
+    44.Magnetic_Moments
