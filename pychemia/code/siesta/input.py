@@ -1,5 +1,8 @@
 from ..codes import CodeInput
+from pychemia.utils.periodic import atomic_symbol
+from pychemia import Structure
 import os
+import numpy as np
 
 
 class SiestaInput(CodeInput):
@@ -176,3 +179,37 @@ class SiestaInput(CodeInput):
         else:
             raise ValueError("%s %s" % (key, self.variables[key]))
         return ret + '\n'
+
+    def get_structure(self):
+
+        natoms = self.get('NumberOfAtoms')
+        nspecies = self.get('NumberOfSpecies')
+        chemspecies = self.get('block+ChemicalSpeciesLabel')
+
+        cell = self.get('block+LatticeVectors')
+
+        positions = np.zeros(natoms)
+        symbols = natoms * [None]
+
+        if self.has_variable('AtomicCoordinatesFormat'):
+            atomic_format = self.get('AtomicCoordinatesFormat')
+        else:
+            atomic_format = 'NotScaledCartesianBohr'
+
+        atomic_coords = self.get('block+AtomicCoordinatesAndAtomicSpecies')
+
+        index = 0
+        for iline in atomic_coords:
+            positions[index] = np.array(iline[:3])
+            for i in chemspecies:
+                if i[0] == iline[-1]:
+                    symbol = atomic_symbol(i[1])
+            symbols[index] = symbol
+        index += 1
+
+        if atomic_format in ['Fractional', 'ScaledByLatticeVectors']:
+            return Structure(symbols=symbols, reduced=positions, cell=cell, periodicity=True)
+        elif atomic_format in ['Bohr', 'NotScaledCartesianBohr']:
+            return Structure(symbols=symbols, positions=positions, cell=cell, periodicity=True)
+        elif atomic_format in ['Ang', 'NotScaledCartesianAng']:
+            return Structure(symbols=symbols, positions=positions, cell=cell, periodicity=True)
