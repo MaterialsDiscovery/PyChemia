@@ -31,20 +31,18 @@ CLASSIFIERS = [
     "Natural Language :: English",
     "Operating System :: POSIX",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 2",
-    "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.4",
     "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
     "Topic :: Scientific/Engineering :: Chemistry",
     "Topic :: Scientific/Engineering :: Physics",
 ]
 INSTALL_REQUIRES = ['numpy >= 1.12.0',
                     'scipy >= 0.18.0',
-                    'spglib>=1.9.9',
-                    'pymongo>=3.4.0',
-                    'psutil>=5.4.7']
+                    'spglib >= 1.9.9',
+                    'pymongo >= 3.4.0',
+                    'psutil >= 5.4.7']
 
 ###################################################################
 

@@ -16,10 +16,8 @@ Contents:
    text/30.First_steps
    text/40.GlobalMinimization
    text/50.Cookbook
-
-..   text/40.Tutorials
-..   text/5.PyChemiaAPI
-..   text/6.Contributors
+   text/5.PyChemiaAPI
+   text/6.Contributors
 
 
 Indices and tables
