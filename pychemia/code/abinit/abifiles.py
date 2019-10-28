@@ -1,7 +1,7 @@
 import os as os
 import subprocess as _subprocess
 from .utils import netcdf2dict, psp_name
-from .input import AbinitInput
+#from .input import AbinitInput
 
 
 class AbiFiles:
@@ -17,7 +17,7 @@ class AbiFiles:
              'tmpin': 'abinit-i',
              'tmpout': 'abinit-o',
              'tmp': 'abinit',
-             'psps': ''}
+             'psps': []}
 
     def __init__(self, *args, **kwargs):
         """

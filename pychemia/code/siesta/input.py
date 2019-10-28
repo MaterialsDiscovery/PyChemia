@@ -198,14 +198,21 @@ class SiestaInput(CodeInput):
 
         atomic_coords = self.get('block+AtomicCoordinatesAndAtomicSpecies')
 
+        # index = 0
+        # for iline in atomic_coords:
+        #     positions[index] = np.array(iline[:3])
+        #     for i in chemspecies:
+        #         if i[0] == iline[-1]:
+        #             symbol = atomic_symbol(i[1])
+        #     symbols[index] = symbol
+        # index += 1
+
+        #modified a bit
         index = 0
         for iline in atomic_coords:
-            positions[index] = np.array(iline[:3])
-            for i in chemspecies:
-                if i[0] == iline[-1]:
-                    symbol = atomic_symbol(i[1])
-            symbols[index] = symbol
-        index += 1
+            positions.append(np.array(iline[:3])) #since we can't set an array element with a sequence in np
+            symbols[index] = iline[-1]
+            index +=1
 
         if atomic_format in ['Fractional', 'ScaledByLatticeVectors']:
             return Structure(symbols=symbols, reduced=positions, cell=cell, periodicity=True)
