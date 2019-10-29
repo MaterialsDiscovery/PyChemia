@@ -226,7 +226,7 @@ class ConvergenceKPointGrid(Task, Convergence):
         if recover:
             self.recover()
         self.task_params = {'energy_tolerance': self.energy_tolerance, 'encut': self.encut}
-        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, binary=binary)
+        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=binary)
 
     def recover(self):
         kpoints_file = self.workdir + os.sep + 'KPOINTS'
@@ -240,9 +240,9 @@ class ConvergenceKPointGrid(Task, Convergence):
     def run(self, nparal=4):
 
         self.started = True
-        vj = VaspJob()
+        vj = VaspJob(workdir=self.workdir, binary=self.binary)
         kp = KPoints()
-        vj.initialize(self.structure, self.workdir, kp, binary=self.binary)
+        vj.initialize(structure=self.structure, kpoints=kp)
         grid = None
         energies = []
         if not self.is_converge:
@@ -261,13 +261,13 @@ class ConvergenceKPointGrid(Task, Convergence):
                 vj.job_static()
                 vj.input_variables.set_density_for_restart()
                 vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir + os.sep + 'POTCAR')
-                vj.input_variables.variables['NBANDS'] = nparal * ((30 + self.structure.valence_electrons()) /
+                vj.input_variables.variables['NBANDS'] = nparal * ((30 + self.structure.valence_electrons()) //
                                                                    nparal + 1)
                 vj.input_variables.set_ismear(kp)
                 vj.input_variables.variables['SIGMA'] = 0.2
                 vj.input_variables.variables['ISPIN'] = 2
                 vj.set_inputs()
-                vj.run(use_mpi=True, mpi_num_procs=nparal)
+                vj.run(mpi_num_procs=nparal)
                 while True:
                     energy_str = ''
                     filename = self.workdir + os.sep + 'vasp_stdout.log'
