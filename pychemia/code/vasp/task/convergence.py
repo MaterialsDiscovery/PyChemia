@@ -108,13 +108,13 @@ class ConvergenceCutOffEnergy(Task, Convergence):
         Convergence.__init__(self, energy_tolerance)
         self.task_params = {'energy_tolerance': self.energy_tolerance, 'increment_factor': self.increment_factor,
                             'initial_encut': self.initial_encut}
-        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, binary=binary)
+        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=binary)
 
     def run(self, nparal=4):
 
         self.started = True
-        vj = VaspJob()
-        vj.initialize(self.structure, self.workdir, self.kpoints, binary=self.binary)
+        vj = VaspJob(workdir=self.workdir, binary=self.binary)
+        vj.initialize(structure=self.structure, kpoints=self.kpoints)
         energies = []
         if not self.is_converge:
             x = self.initial_encut
@@ -133,7 +133,7 @@ class ConvergenceCutOffEnergy(Task, Convergence):
             vj.set_inputs()
             encut = vj.input_variables.variables['ENCUT']
             print('Testing ENCUT = %7.3f' % encut)
-            vj.run(use_mpi=True, mpi_num_procs=nparal)
+            vj.run(mpi_num_procs=nparal)
             pcm_log.debug('Starting VASP')
             while True:
                 energy_str = ''

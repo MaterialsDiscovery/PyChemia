@@ -6,6 +6,7 @@ from ..kpoints import write_kpoints
 from ..poscar import write_poscar
 from ..incar import write_incar
 from ..input import VaspInput
+from ....runner import Runner
 
 __author__ = 'Guillermo Avendano-Franco'
 
@@ -38,7 +39,7 @@ class Polarization(Task):
         self.stepfield = abs(stepfield)
         task_params = {'maxfield': self.maxfield, 'stepfield': self.stepfield, 'external': self.external,
                        'portcar': self.potcar}
-        Task.__init__(self, structure=structure, task_params=task_params, workdir=workdir, binary=binary)
+        Task.__init__(self, structure=structure, task_params=task_params, workdir=workdir, executable=binary)
 
     def initialize(self, kpoints, cleandir=False):
         if not os.path.isdir(self.workdir):
@@ -80,7 +81,7 @@ class Polarization(Task):
             for field in fields:
                 pathname = self.workdir + os.sep + 'Field' + sign + str(field)
                 for step in ['SCF', 'BANDS', 'berry_IGPAR1', 'berry_IGPAR2', 'berry_IGPAR3']:
-                    tk = Tasks()
+                    tk = Task()
                     tk.minimum(ENCUT=200, POTCAR=self.potcar)
                     tk.vaspinput['EDIFF'] = 1E-9
                     tk.vaspinput['IBRION'] = -1

@@ -201,7 +201,6 @@ class SiestaInput(CodeInput):
             atomic_format = 'NotScaledCartesianBohr'
 
         atomic_coords = self.get('block+AtomicCoordinatesAndAtomicSpecies')
-        index = 0
 
         # index = 0
         # for iline in atomic_coords:
@@ -218,7 +217,6 @@ class SiestaInput(CodeInput):
             positions.append(np.array(iline[:3])) #since we can't set an array element with a sequence in np
             symbols[index] = iline[-1]
             index +=1 
-
 
         if atomic_format in ['Fractional', 'ScaledByLatticeVectors']:
             return Structure(symbols=symbols, reduced=positions, cell=cell, periodicity=True)
