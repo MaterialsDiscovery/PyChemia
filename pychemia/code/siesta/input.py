@@ -186,9 +186,13 @@ class SiestaInput(CodeInput):
         nspecies = self.get('NumberOfSpecies')
         chemspecies = self.get('block+ChemicalSpeciesLabel')
 
-        cell = self.get('block+LatticeVectors')
+        #get lattice constant
+        lattice_constant = self.get('LatticeConstant')[0]
 
-        positions = np.zeros(natoms)
+        #dot with lattice constant to scale
+        cell = np.array(self.get('block+LatticeVectors'),dtype=float)*float(lattice_constant)
+
+        positions =[] #np.zeros(natoms)
         symbols = natoms * [None]
 
         if self.has_variable('AtomicCoordinatesFormat'):
@@ -212,7 +216,7 @@ class SiestaInput(CodeInput):
         for iline in atomic_coords:
             positions.append(np.array(iline[:3])) #since we can't set an array element with a sequence in np
             symbols[index] = iline[-1]
-            index +=1
+            index +=1 
 
         if atomic_format in ['Fractional', 'ScaledByLatticeVectors']:
             return Structure(symbols=symbols, reduced=positions, cell=cell, periodicity=True)
