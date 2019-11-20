@@ -9,6 +9,7 @@ import os
 import sys
 import logging
 import json
+import importlib
 
 with open(__path__[0] + os.sep + 'setup.json') as rf:
     data = json.load(rf)
@@ -20,12 +21,11 @@ __email__ = data['email']
 __status__ = data['status']
 __date__ = data['date']
 
-try:
-    import scipy
 
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
+spec = importlib.util.find_spec("scipy")
+HAS_SCIPY = spec is not None
+
+
 
 try:
     try:
@@ -36,72 +36,47 @@ try:
 except ImportError:
     HAS_SPGLIB = False
 
+spec = importlib.util.find_spec("matplotlib")
+HAS_MATPLOTLIB = spec is not None
 
-try:
+if HAS_MATPLOTLIB and 'matplotlib' not in sys.modules:
     import matplotlib
-    HAS_MATPLOTLIB = True
-    if 'matplotlib' not in sys.modules:
-        matplotlib.use('agg')
+    matplotlib.use('agg')
 
-except ImportError:
-    HAS_MATPLOTLIB = False
+spec = importlib.util.find_spec("matplotlib")
+HAS_MATPLOTLIB = spec is not None
 
-try:
-    import mayavi
-    HAS_MAYAVI = True
-except ImportError:
-    HAS_MAYAVI = False
+spec = importlib.util.find_spec("mayavi")
+HAS_MAYAVI = spec is not None
 
-try:
-    import vtk
-    HAS_VTK = True
-except ImportError:
-    HAS_VTK = False
+spec = importlib.util.find_spec("vtk")
+HAS_VTK = spec is not None
 
-try:
-    import pyhull
+spec = importlib.util.find_spec("pyhull")
+HAS_PYHULL = spec is not None
 
-    HAS_PYHULL = True
-except ImportError:
-    HAS_PYHULL = False
+spec = importlib.util.find_spec("networkx")
+HAS_NETWORKX = spec is not None
 
-try:
-    import networkx
+spec = importlib.util.find_spec("pymongo")
+HAS_PYMONGO = spec is not None
 
-    HAS_NETWORKX = True
-except ImportError:
-    HAS_NETWORKX = False
-
-try:
+if HAS_PYMONGO:
     import pymongo
 
     if pymongo.version_tuple[0] < 3:
         HAS_PYMONGO = False
     else:
         HAS_PYMONGO = True
-except ImportError:
-    pymongo = None
-    HAS_PYMONGO = False
 
-try:
-    import gridfs
+spec = importlib.util.find_spec("gridfs")
+HAS_GRIDFS = spec is not None
 
-    HAS_GRIDFS = True
-except ImportError:
-    gridfs = None
-    HAS_GRIDFS = False
+spec = importlib.util.find_spec("ase")
+HAS_ASE = spec is not None
 
-try:
-    import ase
-    HAS_ASE = True
-except ImportError:
-    HAS_ASE = False
-
-try:
-    import pymatgen
-    HAS_PYMATGEN = True
-except ImportError:
-    HAS_PYMATGEN = False
+spec = importlib.util.find_spec("pymatgen")
+HAS_PYMATGEN = spec is not None
 
 pcm_log = logging.getLogger(__name__)
 pcm_log.addHandler(logging.NullHandler())

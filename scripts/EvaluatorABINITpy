@@ -5,7 +5,7 @@ import sys
 import shutil
 import logging
 from pychemia.db import get_database
-from pychemia.code.abinit import InputVariables
+from pychemia.code.abinit import AbinitInput
 import time
 
 version = 0.1
@@ -125,7 +125,7 @@ if __name__ == '__main__':
             path = input_workdir + os.sep + str(entry['_id'])
             if not os.path.isdir(path):
                 os.mkdir(path)
-                inputvar = InputVariables(base_input)
+                inputvar = AbinitInput(base_input)
                 inputvar.set_value('dmatpawu', entry['properties']['dmatpawu'])
                 inputvar.write(path + os.sep + 'abinit.in')
                 wf = open(path + os.sep + 'abinit.files', 'w')

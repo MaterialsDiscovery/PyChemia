@@ -3,4 +3,5 @@ Includes class LennardJones and several methods to relax and compute forces and 
 
 """
 
-from .lj import LennardJones, lj_energy, lj_forces, lj_gradient, lj_compact_evaluate
+from .lj import LennardJones, lj_compact_evaluate
+from .lj_utils import lj_energy, lj_forces, lj_gradient

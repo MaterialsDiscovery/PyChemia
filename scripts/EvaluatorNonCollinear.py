@@ -5,7 +5,7 @@ import logging
 import argparse
 import time
 import pychemia
-from pychemia.runner.pbs import get_jobs
+from pychemia.runner import get_jobs
 
 if __name__ == '__main__':
 
