@@ -103,6 +103,13 @@ class VaspOutput(CodeOutput):
         energy = re.findall(r'Iteration\s*(\d+)\s*\(\s*(\d+)\)[-+*/=():.\s\d\w]+>0\)\s*=\s*([-.\d]+)', self.data)
         # pcm_log.debug('Energy(eV) [(ionic iter, Energy (elect. Iter)),...]: ' + str(energy))
 
+        ### BAD idea this way
+        ###re.findall(r'free\s*energy\s*TOTEN\s*=\s*([-.\d]+)\s*eV', data)
+        if energy == []:
+            energy=re.findall(r'FREE ENERGIE OF THE ION-ELECTRON SYSTEM
+            \(eV\)\s*[-]+\s*free\s*energy\s*TOTEN\s*=\s*([-.\d]+)\s*eV', data)
+
+
         self.energies = []
         index = None
 

@@ -25,7 +25,6 @@ class VaspJob(CodeRun):
         self.outcar = None
         self.poscar_setup = None
         self.stdout_file = None
-        self.runner = None
         self.stdout_filename = 'vasp_stdout.log'
 
     def initialize(self, structure, kpoints=None):

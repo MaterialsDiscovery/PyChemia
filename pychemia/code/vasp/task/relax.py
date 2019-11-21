@@ -21,25 +21,28 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class IonRelaxation(Relaxator, Task):
-    def __init__(self, structure, workdir='.', target_forces=1E-3, waiting=False, binary='vasp',
-                 encut=1.3, kp_grid=None, kp_density=1E4, relax_cell=True, max_calls=10):
+    def __init__(self, structure, workdir='.', target_forces=1E-3, executable='vasp',
+                 encut=1.3, kp_grid=None, kp_density=1E4, relax_cell=True,
+                 max_calls=10, extra_vars={}):
 
         Relaxator.__init__(self, target_forces)
         self.target_forces = target_forces
-        self.waiting = waiting
-        self.vaspjob = VaspJob()
+
+        self.vaspjob = VaspJob(binary=executable, workdir=workdir)
         self.relaxed = False
         if kp_grid is not None:
             self.kpoints = KPoints(kmode='gamma', grid=kp_grid)
         else:
             self.kpoints = KPoints.optimized_grid(structure.lattice, kp_density=kp_density)
-        self.vaspjob.initialize(workdir=workdir, structure=structure, kpoints=self.kpoints, binary=binary)
+        self.vaspjob.initialize(structure=structure, kpoints=self.kpoints)
         self.encut = encut
         self.relax_cell = relax_cell
         self.max_calls = max_calls
+        self.extra_vars=extra_vars
+
         task_params = {'target_forces': self.target_forces, 'encut': self.encut, 'relax_cell': self.relax_cell,
                        'max_calls': self.max_calls}
-        Task.__init__(self, structure=structure, task_params=task_params, workdir=workdir, binary=binary)
+        Task.__init__(self, structure=structure, task_params=task_params, workdir=workdir, executable=executable)
 
     def create_dirs(self, clean=False):
         if not os.path.isdir(self.workdir):
@@ -159,7 +162,7 @@ class IonRelaxation(Relaxator, Task):
         vj.save_json(self.workdir + os.sep + 'vaspjob.json')
         return True
 
-    def first_run(self, nparal=4):
+    def first_run(self, nparal=4, waiting=True):
 
         vj = self.vaspjob
         vj.clean()
@@ -170,12 +173,14 @@ class IonRelaxation(Relaxator, Task):
         vj.write_potcar()
         vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir + os.sep + 'POTCAR')
         vj.input_variables.set_density_for_restart()
+
+        for i in self.extra_vars:
+            vj.input_variables[i]=self.extra_vars[i]
+
         vj.set_kpoints(self.kpoints)
         vj.set_inputs()
         print('Launching VASP using %d processes' % nparal)
-        vj.run(use_mpi=True, mpi_num_procs=nparal)
-        if self.waiting:
-            vj.runner.wait()
+        vj.run(mpi_num_procs=nparal, wait=waiting)
 
     def cleaner(self):
 
@@ -184,7 +189,7 @@ class IonRelaxation(Relaxator, Task):
             if i[:5] in ['INCAR', 'POSCA', 'OUTCA', 'vaspr']:
                 os.remove(self.workdir + os.sep + i)
 
-    def run(self, nparal=1):
+    def run(self, nparal=1, waiting=True):
 
         self.started = True
         self.cleaner()
@@ -224,7 +229,7 @@ class IonRelaxation(Relaxator, Task):
                 self.update()
 
                 vj.run(use_mpi=True, mpi_num_procs=nparal)
-                if self.waiting:
+                if waiting:
                     vj.runner.wait()
             else:
                 filename = self.workdir + os.sep + 'vasp_stdout.log'

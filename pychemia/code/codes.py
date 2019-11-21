@@ -29,6 +29,7 @@ class CodeRun:
         self.executable = executable
         self.workdir = workdir
         self.use_mpi = use_mpi
+        self.runner = None
 
     @abstractmethod
     def set_inputs(self):
@@ -125,21 +126,21 @@ class CodeRun:
             command_line = '%s mpirun -n %d %s' % (env_vars, np, self.executable)
             if verbose:
                 print("Running: %s" % command_line)
-            sp = subprocess.Popen(command_line, shell=True,
+            self.runner = subprocess.Popen(command_line, shell=True,
                                   stdout=self.stdout_file, 
                                   stderr=self.stderr_file, 
                                   stdin=self.stdin_file)
         else:
-            sp = subprocess.Popen("%s" % self.executable, shell=True,
+            self.runner = subprocess.Popen("%s" % self.executable, shell=True,
                                   stdout=self.stdout_file, 
                                   stderr=self.stderr_file, 
                                   stdin=self.stdin_file)
         if wait:
-            sp.wait()
+            self.runner.wait()
             if verbose:
-                print("Program finished with returncode: %d" % sp.returncode)
+                print("Program finished with returncode: %d" % self.runner.returncode)
         os.chdir(cwd)
-        return sp
+        return self.runner
 
 
 class CodeInput(collections.MutableMapping):
