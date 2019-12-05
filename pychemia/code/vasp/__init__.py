@@ -17,3 +17,4 @@ from .queue import write_from_queue
 from . import task
 from .input import VaspInput
 from .output import VaspOutput
+from .xml_output import parse_vasprun

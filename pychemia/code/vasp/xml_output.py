@@ -120,7 +120,7 @@ def get_general(xml_tree,ret):
         return ret   
 
 
-def parse_vasprun(vaprun):
+def parse_vasprun(vasprun):
     tree = ET.parse(vasprun)
     root = tree.getroot()
 
@@ -270,20 +270,8 @@ def parse_vasprun(vaprun):
                     general[ielement.tag] = get_general(ielement,general[ielement.tag])
                     
                     
-    return 
-    calculation = []
-    structures  = []
-    forces      = []
-    stresses    = []
-    orbital_magnetization = {}
-    run_info = {}
-    incar = {}
-    general = {}
-    kpoints_info = {}
-    vasp_params = {}
-    kpoints_list = [] 
-    k_weights = []
-    atom_info = {} 
+    return {'calculation':calculation,'structures':structures,'forces':forces,'run_info':run_info,'incar':incar,'general':general,'kpoints_info':kpoints_info,'vasp_params':vasp_params,'kpoints':{'kpoints_list':kpoints_list,'k_weights':k_weights},'atom_info':atom_info}
+
 
 if __name__ == '__main__':
     vi = pychemia.code.vasp.VaspInput(variables=incar)   

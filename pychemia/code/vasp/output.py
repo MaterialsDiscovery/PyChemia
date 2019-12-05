@@ -4,7 +4,7 @@ import numpy as np
 from pychemia.utils.serializer import generic_serializer
 from pychemia import pcm_log
 from ..codes import CodeOutput
-
+from .xml_output import parse_vasprun
 
 class VaspOutput(CodeOutput):
 
@@ -36,14 +36,17 @@ class VaspOutput(CodeOutput):
         self.read()
         
     def read(self):
-        self.read_outputfile(self.filename)
-        self.outcar_parser()
-        ret = {'energies': self.energies, 'forces': self.forces, 'bands': self.bands, 'positions': self.positions,
+        if self.filename[-3:] == 'xml':
+            ret=parse_vasprun(self.filename)
+        else:
+            self.read_outputfile(self.filename)
+            self.outcar_parser()
+            ret = {'energies': self.energies, 'forces': self.forces, 'bands': self.bands, 'positions': self.positions,
                'kpoints': self.kpoints, 'stress': self.stress}
         self.output_values = ret
 
     def is_loaded(self):
-        if self.data is None:
+        if self.output_values is None:
             return False
         else:
             return True
