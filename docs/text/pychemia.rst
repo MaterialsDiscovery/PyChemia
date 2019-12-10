@@ -11,10 +11,10 @@ Subpackages
 
 .. toctree::
 
-    pychemia.analysis
-    pychemia.code
     pychemia.core
     pychemia.crystal
+    pychemia.code
+    pychemia.analysis
     pychemia.db
     pychemia.evaluator
     pychemia.external

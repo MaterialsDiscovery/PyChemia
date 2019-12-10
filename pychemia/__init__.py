@@ -1,7 +1,7 @@
 """
-PyChemia is a python library for automatize atomistic-level calculations. The library provide an API to manipulate
-structures, store structures and properties in a Mongo database, search for new structures of a given composition,
-interact with several atomistic simulation codes and visualize atomistic-related data
+PyChemia is a python library for automatize atomistic-level calculations. The library provides classes and routines to manipulate the geometry of atomic structures, with emphasis on crystals.
+It has connectors to manipulate the input for several DFT codes and interpret the output from those codes too.
+PyChemia allows the store of structures and properties in a Mongo database, search for new structures of a given composition, and perform a structural search using several metaheuristic global search algorithms included on PyChemia.
 
 """
 
@@ -24,7 +24,6 @@ __date__ = data['date']
 
 spec = importlib.util.find_spec("scipy")
 HAS_SCIPY = spec is not None
-
 
 
 try:
@@ -95,11 +94,18 @@ from . import population
 from .core.from_file import structure_from_file
 
 
+class Version:
+    @staticmethod
+    def full_version():
+        return 'PyChemia version: ' + __version__ + ' from: ' + __date__
+
+    def __init__(self):
+        pass
+
 def info():
     """
     Show basic information about PyChemia, its location and version.
-        Also information about other libraries used by PyChemia
-        both mandatory and optional
+    Also information about other libraries used by PyChemia both mandatory and optional
 
     """
     print('PyChemia\n--------\n')
@@ -130,12 +136,3 @@ def info():
         print('%10s %10s   %s' % ('vtk', vtk.VTK_VERSION, vtk.__path__[0]))
     except ImportError:
         print('%10s %10s Not Found' % ('vtk', ''))
-
-
-class Version:
-    @staticmethod
-    def full_version():
-        return 'PyChemia version: ' + __version__ + ' from: ' + __date__
-
-    def __init__(self):
-        pass
