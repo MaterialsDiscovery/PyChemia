@@ -8,7 +8,7 @@ PyChemia
 
 Python Materials Discovery Framework
 
-![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/images/PyChemia_Small.png)
+![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/_static/PyChemia_Small.png)
 
 PyChemia is an open-source Python Library for materials structural search. The purpose of the initiative is to create
 a method agnostic framework for materials discovery and design using a variety of methods from Minima Hoping to
@@ -114,6 +114,9 @@ Optional
 
     https://coveralls.io/github/MaterialsDiscovery/PyChemia
 
+10. [psutil](https://github.com/giampaolo/psutil) 
+    Cross-platform lib for process and system monitoring in Python
+
 Documentation
 =============
 
@@ -131,9 +134,9 @@ can be found on two repositories for documentation:
 Structure of the Library
 ========================
 
-![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/images/PyChemia_code.png)
+![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/_static/PyChemia_code.png)
 
-![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/images/PyChemia_workflow.png)
+![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/_static/PyChemia_workflow.png)
 
 Contributors
 ============

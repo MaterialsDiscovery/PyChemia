@@ -1,6 +1,6 @@
 numpy
 scipy
 pymongo
-psutil
 matplotlib
 spglib
+psutil
