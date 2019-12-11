@@ -63,3 +63,4 @@ symmol.out
 */ipython_log.py
 pychemia/**/*.html
 pychemia/**/*.c
+pychemia/version.py

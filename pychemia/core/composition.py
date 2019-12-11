@@ -1,3 +1,13 @@
+"""
+Chemical composition is just the description of the amount of atoms of each specie. In the case of clusters or
+molecules, ie a finite structure, it represents the complete set of atoms. For periodic structures it represents
+the species present on a cell.
+
+In its most basic form, a composition is just a list of species with a number indicating how many atoms of that specie
+are in the structure. A generalized structure will associate fractional values for structures where the number and
+specific species cannot be fixed.
+"""
+
 
 from numpy import array, argsort
 from math import gcd as _gcd
@@ -9,27 +19,25 @@ from collections import Mapping
 
 
 class Composition(Mapping):
-    u"""
-    The class Composition is basically a dictionary with species as keys and
-    number of atoms of that specie as values. The methods provided for Composition objects should
-    not contain geometrical information or graph connectivity.
+    """
+    The class Composition is basically a dictionary with species as keys and number of atoms of that specie as values.
+    A composition object do not contain geometrical information or graph connectivity.
 
-    The main purpose of this class is to be able to parse formulas into compositions and return
-    string formulas sorted in various ways.
+    The main purpose of this class is to be able to parse formulas into compositions and return string formulas sorted
+    in various ways.
     """
 
     def __init__(self, value=None):
         """
-        Creates a new composition, internally it is a dictionary
-        where each specie is the key and the value is an integer
-        with the number of atoms of that specie
+        Creates a new composition,  currently only absolute formulas are supported.
 
-        :param value: (str, dict) The value could be a string with a chemical formula or the actual dictionary
-        of species and values
+        :param value: (str, dict) The input argument could be a string with a chemical formula or the actual dictionary
+        of species and values. The order of species is not guaranteed to be preserved. A iterable of atomic symbols
+        is also accepted to build a composition object.
 
         :rtype: Composition
 
-        Example:
+        Examples:
         >>> import pychemia
         >>> comp = pychemia.Composition({'Ba': 2, 'Cu': 3, 'O': 7, 'Y': 1})
         >>> comp.formula
@@ -47,15 +55,21 @@ class Composition(Mapping):
         0
 
         """
+        # The internal dictionary where atom species and numbers of atoms of each specie are stored.
         self._composition = {}
+        # Convert strings and dictionaries into unicode
         if value is not None:
             value = deep_unicode(value)
+        # Case 1: The input is a formula
         if isinstance(value, str):
             self._set_composition(self.formula_parser(value))
+        # Case 2: The input is a dictionary
         elif isinstance(value, dict):
             self._set_composition(value)
+        # Case 3: The input is another composition object
         elif isinstance(value, Composition):
             self._set_composition(value.composition)
+        # Case 4: The input is an iterable of atomic symbols
         elif hasattr(value, "__len__"):
             dvalue = {}
             for i in value:
@@ -93,7 +107,7 @@ class Composition(Mapping):
 
     def _set_composition(self, value):
         """
-        Checks the values of a dictionary before seting the actual composition
+        Checks the values of a dictionary before setting the actual composition
 
         :param value: (dict)
         :rtype: None
@@ -124,8 +138,8 @@ class Composition(Mapping):
     @property
     def gcd(self):
         """
-        The number of formulas that can be extracted from a composition
-        The greatest common denominator for the composition.
+        :return: The number of formulas that can be extracted from a composition
+                 The greatest common denominator for the composition.
 
         :rtype: (int)
 
@@ -149,6 +163,9 @@ class Composition(Mapping):
 
     @property
     def symbols(self):
+        """
+        :returns:  A list of atomic symbols
+        """
         ret = []
         for specie in self:
             number_atoms_specie = self.composition[specie]
@@ -159,7 +176,7 @@ class Composition(Mapping):
     @property
     def species(self):
         """
-        :return: The list of species
+        :return: The list of species, no particular order but atoms of the same specie are contiguous.
 
         :rtype: list
         """
@@ -167,6 +184,9 @@ class Composition(Mapping):
 
     @property
     def nspecies(self):
+        """
+        :returns: Number of species in the composition
+        """
         return len(self.species)
 
     @property
@@ -240,9 +260,8 @@ class Composition(Mapping):
     @staticmethod
     def formula_to_list(formula, nunits=1):
         """
-        Reads a formula and returns a list of
-        atomic symbols consistent with the formula
-        and the number of formulas given by nunits
+        Reads a formula and returns a list of atomic symbols consistent with the formula and the number of
+        formulas given by nunits
 
         :param formula: (str) Chemical formula as string
 
@@ -354,6 +373,13 @@ class Composition(Mapping):
         return deep_unicode(ret)
 
     def species_encoded(self, base):
+        """
+        :returns: Encodes the species as a number.
+
+        :param base: Integer used as base for encoding.
+
+        :rtype: int
+        """
         ret = 0
         i = 0
         for atom_number in sorted(atomic_number(self.species)):
@@ -363,15 +389,12 @@ class Composition(Mapping):
 
     def species_hex(self):
         """
-        Encodes the species into a hexadecimal representation where
-        each specie is stored on a 2-Byte slot ordered by atomic
-        number.
-        This is a 'confortable' encoding where each 2 characters
-        from the hexadecimal will encode a single species and the
-        species are ordered by atomic number making the codification
-        unique.
+        :return: Encodes the species into a hexadecimal representation where each specie is stored on a 2-Byte slot
+                 ordered by atomic number.
+                 The output produces a unique encoding where each 2 character from the hexadecimal will encode a single
+                 species and the species are ordered by atomic number making the codification unique.
 
-        :return: str
+        :rtype: str
 
         Example:
         >>> comp = Composition('YBa2Cu3O7')
@@ -385,11 +408,9 @@ class Composition(Mapping):
     @staticmethod
     def get_species_from_hex(arg):
         """
-        Return a set of species from the encoded species hexadecimal
-        representation.
+        :return: Return a set of species from the encoded species created by the output of "species_hex" method.
 
         :param arg: str String with hexadecimal representation of list of species.
-        :return:
 
         Example:
         >>> Composition.get_species_from_hex('0x38271d08')
@@ -405,8 +426,7 @@ class Composition(Mapping):
 
     def covalent_volume(self, packing='cubes'):
         """
-        Returns the volume occupied by a given formula
-        assuming a 'cubes' packing or 'spheres' packing
+        :returns: The volume occupied by a given formula assuming a 'cubes' packing or 'spheres' packing
 
         :param packing: (str) The kind of packing could be 'cubes' or 'spheres'
 

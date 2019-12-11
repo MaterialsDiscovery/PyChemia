@@ -1,7 +1,13 @@
 """
-PyChemia works with atomic structures, this module provides two main classes to store structure information.
-The class 'Structure' and the class 'Composition' are widely used for the entire package.
+pychemia.core is the central subpackage in pychemia. It offers three important classes that are widely
+used by all other modules.
 
+The class 'Composition' stores and manipulates chemical compositions.
+
+The class 'Structure' is used to store and manipulated chemical structures, ie, a composition with associated geometry
+and in the case of crystals, a lattice.
+
+The class 'Element' allow the retrieval of chemical and physical information about chemical species.
 """
 
 from .composition import Composition
