@@ -132,11 +132,12 @@ INSTALL_REQUIRES = ['numpy >= 1.17.4',
                     'scipy >= 1.3.1',
                     'spglib >= 1.9.9',
                     'pymongo >= 3.9.0',
-                    'matplotlib >= 3.1.1',
+                    'matplotlib >= 3.0.1',
                     'psutil >= 5.6.7']
 
 ###################################################################
 
+print('Using Cython: %s' % USE_CYTHON)
 data = write_version_py()
 
 cmdclass = {}
@@ -156,6 +157,9 @@ ext_modules = [Extension("pychemia.code.lennardjones.lj_utils", ['pychemia/code/
 
 if USE_CYTHON:
     cmdclass.update({'build_ext': build_ext})
+    from Cython.Build import cythonize
+    ext_modules = cythonize([Extension("pychemia.code.lennardjones.lj_utils", ['pychemia/code/lennardjones/lj_utils' + ext])])
+
 
 setup(
     name=data['name'],

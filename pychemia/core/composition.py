@@ -38,21 +38,21 @@ class Composition(Mapping):
         :rtype: Composition
 
         Examples:
-        >>> import pychemia
-        >>> comp = pychemia.Composition({'Ba': 2, 'Cu': 3, 'O': 7, 'Y': 1})
+        >>> comp = Composition({'Ba': 2, 'Cu': 3, 'O': 7, 'Y': 1})
         >>> comp.formula
-        u'Ba2Cu3O7Y'
-        >>> comp = pychemia.Composition('Ba2Cu3O7Y')
-        >>> comp2 = pychemia.Composition(comp)
+        'Ba2Cu3O7Y'
+        >>> comp = Composition('Ba2Cu3O7Y')
+        >>> comp2 = Composition(comp)
         >>> len(comp2)
         4
         >>> comp.nspecies
         4
-        >>> comp = pychemia.Composition()
-        >>> comp.composition
-        {}
+        >>> comp = Composition(['O', 'H', 'O'])
+
         >>> len(comp)
-        0
+        2
+        >>> comp['O']
+        2
 
         """
         # The internal dictionary where atom species and numbers of atoms of each specie are stored.
@@ -84,13 +84,43 @@ class Composition(Mapping):
     def __len__(self):
         return len(self._composition)
 
-    def __getitem__(self, item):
-        if item in self._composition:
-            return self._composition[item]
+    def __getitem__(self, specie):
+        """
+        Returns the number of atoms of a given specie
+
+        Args:
+            specie:
+
+        Returns: (int) number of atoms of the specie
+
+        Example:
+        >>> comp = Composition('H2')
+
+        >>> comp['H']
+        2
+        >>> comp['He']
+        0
+        """
+        if specie in self._composition:
+            return self._composition[specie]
         else:
             return 0
 
     def __repr__(self):
+        """
+        Evaluable representation of Composition object
+
+        Returns: (str) Text representation that can be evaluated
+
+        Examples:
+        >>> comp=Composition('H2O')
+
+        >>> comp2=eval(repr(comp))
+
+        >>> comp2 == comp
+        True
+
+        """
         return 'Composition(' + str(self.composition) + ')'
 
     def __str__(self):
@@ -102,8 +132,22 @@ class Composition(Mapping):
     def __iter__(self):
         return iter(self.composition)
 
-    def __contains__(self, item):
-        return item in self._composition
+    def __contains__(self, specie):
+        """
+        Returns True if 'specie' is present in composition
+
+        Args:
+            specie: atomic specie
+
+        Returns: (bool) True if specie is present, False otherwise
+
+        Examples:
+        >>> comp = Composition('H2O')
+
+        >>> 'He' in comp
+        False
+        """
+        return specie in self._composition
 
     def _set_composition(self, value):
         """
@@ -144,14 +188,13 @@ class Composition(Mapping):
         :rtype: (int)
 
         Example:
-        >>> import pychemia
-        >>> comp = pychemia.Composition('NaCl')
+        >>> comp = Composition('NaCl')
         >>> comp.gcd
         1
-        >>> comp = pychemia.Composition('Na2Cl2')
+        >>> comp = Composition('Na2Cl2')
         >>> comp.gcd
         2
-        >>> comp = pychemia.Composition()
+        >>> comp = Composition()
         >>> comp.gcd is None
         True
 
@@ -218,13 +261,12 @@ class Composition(Mapping):
         :rtype: dict
 
         Examples:
-        >>> import pychemia
         >>> import pprint
-        >>> pychemia.Composition.formula_parser('Au20')
-        {u'Au': 20}
-        >>> ret = pychemia.Composition.formula_parser('UutUupUusUuo')
+        >>> Composition.formula_parser('Au20')
+        {'Au': 20}
+        >>> ret = Composition.formula_parser('UutUupUusUuo')
         >>> pprint.pprint(ret)
-        {u'Uuo': 1, u'Uup': 1, u'Uus': 1, u'Uut': 1}
+        {'Uuo': 1, 'Uup': 1, 'Uus': 1, 'Uut': 1}
 
         """
         ret = {}
@@ -272,7 +314,7 @@ class Composition(Mapping):
         Examples:
         >>> import pychemia
         >>> pychemia.Composition.formula_to_list('NaCl')
-        [u'Na', u'Cl']
+        ['Na', 'Cl']
         >>> flist = pychemia.Composition.formula_to_list(u'Uut2Uup3Uus4Uuo5')
         >>> len(flist)
         14
@@ -313,32 +355,32 @@ class Composition(Mapping):
 
         >>> comp=Composition('YBa2Cu3O7')
         >>> comp.sorted_formula()
-        u'Ba2Cu3O7Y'
+        'Ba2Cu3O7Y'
         >>> comp.sorted_formula(sortby='hill')
-        u'Ba2Cu3O7Y'
+        'Ba2Cu3O7Y'
         >>> comp.sorted_formula(sortby='electroneg')
-        u'Ba2YCu3O7'
+        'Ba2YCu3O7'
         >>> comp = Composition('H10C5')
         >>> comp.sorted_formula(sortby='hill', reduced=True)
-        u'CH2'
+        'CH2'
         >>> comp = Composition('IBr')
         >>> comp.sorted_formula(sortby='hill', reduced=False)
-        u'BrI'
+        'BrI'
         >>> comp = Composition('Cl4C')
         >>> comp.sorted_formula(sortby='hill', reduced=False)
-        u'CCl4'
+        'CCl4'
         >>> comp = Composition('IH3C')
         >>> comp.sorted_formula(sortby='hill', reduced=False)
-        u'CH3I'
+        'CH3I'
         >>> comp = Composition('BrH5C2')
         >>> comp.sorted_formula(sortby='hill', reduced=False)
-        u'C2H5Br'
+        'C2H5Br'
         >>> comp = Composition('S04H2')
         >>> comp.sorted_formula(sortby='hill', reduced=False)
-        u'H2S4'
+        'H2S4'
         >>> comp = Composition('SO4H2')
         >>> comp.sorted_formula(sortby='hill', reduced=False)
-        u'H2O4S'
+        'H2O4S'
 
         """
         if reduced and self.gcd > 1:
@@ -432,20 +474,18 @@ class Composition(Mapping):
 
         :rtype : (float)
 
-        >>> import pychemia
-        >>> comp=pychemia.Composition('C5H10')
+        >>> comp = Composition('C5H10')
         >>> comp.covalent_volume()
         19.942320000000002
         >>> comp.covalent_volume(packing='spheres')
         10.441774334589468
-
         """
         if packing == 'cubes':
             factor = 8
         elif packing == 'spheres':
             factor = 4 * pi / 3.0
         else:
-            raise ValueError('Non-valid packing value ', packing)
+            raise ValueError('Non-valid packing: "%s"' % packing)
 
         # find volume of unit cell by adding cubes
         volume = 0.0
