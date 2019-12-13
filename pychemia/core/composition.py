@@ -2,13 +2,9 @@
 Chemical composition is just the description of the amount of atoms of each specie. In the case of clusters or
 molecules, ie a finite structure, it represents the complete set of atoms. For periodic structures it represents
 the species present on a cell.
-
-In its most basic form, a composition is just a list of species with a number indicating how many atoms of that specie
-are in the structure. A generalized structure will associate fractional values for structures where the number and
-specific species cannot be fixed.
 """
 
-
+import re
 from numpy import array, argsort
 from math import gcd as _gcd
 from math import pi
@@ -20,8 +16,9 @@ from collections import Mapping
 
 class Composition(Mapping):
     """
-    The class Composition is basically a dictionary with species as keys and number of atoms of that specie as values.
-    A composition object do not contain geometrical information or graph connectivity.
+    A Composition is basically a mapping between a number of species and a integer indicating how many atoms of that
+    specie are present in the structure.
+    A composition object do not contain geometrical information or bonding.
 
     The main purpose of this class is to be able to parse formulas into compositions and return string formulas sorted
     in various ways.
@@ -37,21 +34,19 @@ class Composition(Mapping):
 
         :rtype: Composition
 
-        Examples:
-        >>> comp = Composition({'Ba': 2, 'Cu': 3, 'O': 7, 'Y': 1})
-        >>> comp.formula
+        >>> cp = Composition({'Ba': 2, 'Cu': 3, 'O': 7, 'Y': 1})
+        >>> cp.formula
         'Ba2Cu3O7Y'
-        >>> comp = Composition('Ba2Cu3O7Y')
-        >>> comp2 = Composition(comp)
-        >>> len(comp2)
+        >>> cp = Composition('Ba2Cu3O7Y')
+        >>> cp2 = Composition(cp)
+        >>> len(cp2)
         4
-        >>> comp.nspecies
+        >>> cp.nspecies
         4
-        >>> comp = Composition(['O', 'H', 'O'])
-
-        >>> len(comp)
+        >>> cp = Composition(['O', 'H', 'O'])
+        >>> len(cp)
         2
-        >>> comp['O']
+        >>> cp['O']
         2
 
         """
@@ -88,14 +83,11 @@ class Composition(Mapping):
         """
         Returns the number of atoms of a given specie
 
-        Args:
-            specie:
+        :param specie: Atomic Symbol for which the value will be returned
+        :return: number of atoms of the given specie
+        :rtype: int
 
-        Returns: (int) number of atoms of the specie
-
-        Example:
         >>> comp = Composition('H2')
-
         >>> comp['H']
         2
         >>> comp['He']
@@ -110,20 +102,25 @@ class Composition(Mapping):
         """
         Evaluable representation of Composition object
 
-        Returns: (str) Text representation that can be evaluated
+        :return: Text representation that can be evaluated
+        :rtype: str
 
-        Examples:
-        >>> comp=Composition('H2O')
-
-        >>> comp2=eval(repr(comp))
-
-        >>> comp2 == comp
+        >>> cp1 = Composition('H2O')
+        >>> cp2 = eval(repr(cp1))
+        >>> cp2 == cp1
         True
-
         """
         return 'Composition(' + str(self.composition) + ')'
 
     def __str__(self):
+        """
+
+        :return: String representation of the composition
+
+        >>> cp = Composition('YBa2Cu3O7')
+        >>> str(cp).strip()
+        'Y:    1    Ba:    2    Cu:    3     O:    7'
+        """
         ret = ''
         for i in self.species:
             ret += " %3s: %4d  " % (i, self.composition[i])
@@ -133,18 +130,14 @@ class Composition(Mapping):
         return iter(self.composition)
 
     def __contains__(self, specie):
-        """
-        Returns True if 'specie' is present in composition
+        """True if 'specie' is present in composition
 
-        Args:
-            specie: atomic specie
+        :return: True if specie is present
+        :param  specie: atomic specie
+        :rtype: bool
 
-        Returns: (bool) True if specie is present, False otherwise
-
-        Examples:
-        >>> comp = Composition('H2O')
-
-        >>> 'He' in comp
+        >>> cp = Composition('H2O')
+        >>> 'He' in cp
         False
         """
         return specie in self._composition
@@ -163,104 +156,70 @@ class Composition(Mapping):
 
     @property
     def composition(self):
-        """
-        :return: The composition dictionary
+        """Dictionary with composition
 
+        :return: The composition dictionary
         :rtype: dict
+
+        >>> import pprint
+        >>> cp = Composition('H2O')
+        >>> pprint.pprint(cp.composition)
+        {'H': 2, 'O': 1}
+
         """
         return self._composition
 
+    def covalent_volume(self, packing='cubes'):
+        """
+        :param packing: The kind of packing could be 'cubes' or 'spheres'
+        :type packing: str
+        :return: The volume occupied by a given formula assuming a 'cubes' packing or 'spheres' packing
+        :rtype: (float)
+
+        >>> cp = Composition('C5H10')
+        >>> cp.covalent_volume()
+        19.942320000000002
+        >>> cp.covalent_volume(packing='spheres')
+        10.441774334589468
+        """
+        if packing == 'cubes':
+            factor = 8
+        elif packing == 'spheres':
+            factor = 4 * pi / 3.0
+        else:
+            raise ValueError('Non-valid packing: "%s"' % packing)
+
+        # find volume of unit cell by adding cubes
+        volume = 0.0
+        for specie in self:
+            number_atoms_specie = self.composition[specie]
+            # Pack each atom in a cube (2*r)^3
+            volume += factor * number_atoms_specie * covalent_radius(specie) ** 3
+        return volume
+
     @property
     def formula(self):
-        """
-        :return: The chemical formula with atoms sorted alphabetically
+        """Chemical formula
 
+        :return: The chemical formula with atoms sorted alphabetically
         :rtype: str
+
+        >>> cp = Composition('NaCl')
+        >>> cp.formula
+        'ClNa'
+
         """
         return self.sorted_formula(sortby='alpha', reduced=True)
 
-    @property
-    def gcd(self):
-        """
-        :return: The number of formulas that can be extracted from a composition
-                 The greatest common denominator for the composition.
-
-        :rtype: (int)
-
-        Example:
-        >>> comp = Composition('NaCl')
-        >>> comp.gcd
-        1
-        >>> comp = Composition('Na2Cl2')
-        >>> comp.gcd
-        2
-        >>> comp = Composition()
-        >>> comp.gcd is None
-        True
-
-        """
-        if self.natom > 0:
-            return reduce(_gcd, self.values)
-        else:
-            return None
-
-    @property
-    def symbols(self):
-        """
-        :returns:  A list of atomic symbols
-        """
-        ret = []
-        for specie in self:
-            number_atoms_specie = self.composition[specie]
-            for i in range(number_atoms_specie):
-                ret.append(specie)
-        return sorted(deep_unicode(ret))
-
-    @property
-    def species(self):
-        """
-        :return: The list of species, no particular order but atoms of the same specie are contiguous.
-
-        :rtype: list
-        """
-        return [deep_unicode(x) for x in self._composition]
-
-    @property
-    def nspecies(self):
-        """
-        :returns: Number of species in the composition
-        """
-        return len(self.species)
-
-    @property
-    def values(self):
-        """
-        :return: The number of atoms of each specie
-
-        :rtype: list
-        """
-        return [self._composition[x] for x in self._composition]
-
-    @property
-    def natom(self):
-        """
-        :return: The number of atoms in the composition
-
-        :rtype: int
-        """
-        return sum(self.values)
-
     @staticmethod
     def formula_parser(value):
-        """
+        """Return a dictionary from a chemical formula
+
         :return: Convert an string representing a chemical formula into a dictionary with the species as keys
                  and values as the number of atoms of that specie
-
-        :param value: (str) String representing a chemical formula
-
+        :param value: (str) Chemical formula
         :rtype: dict
 
-        Examples:
         >>> import pprint
         >>> Composition.formula_parser('Au20')
         {'Au': 20}
@@ -306,25 +265,20 @@ class Composition(Mapping):
         formulas given by nunits
 
         :param formula: (str) Chemical formula as string
-
         :param nunits: (int) Number of formulas to apply
+        :return: list of atomic symbols
+        :rtype: list
 
-        :rtype : (list)
-
-        Examples:
-        >>> import pychemia
-        >>> pychemia.Composition.formula_to_list('NaCl')
+        >>> Composition.formula_to_list('NaCl')
         ['Na', 'Cl']
-        >>> flist = pychemia.Composition.formula_to_list(u'Uut2Uup3Uus4Uuo5')
+        >>> flist = Composition.formula_to_list(u'Uut2Uup3Uus4Uuo5')
         >>> len(flist)
         14
-        >>> flist = pychemia.Composition.formula_to_list('Uut2Uup3Uus4Uuo5', nunits=2)
+        >>> flist = Composition.formula_to_list('Uut2Uup3Uus4Uuo5', nunits=2)
         >>> len(flist)
         28
 
         """
-        import re
-
         # decompose composition
         a = re.findall(r"[A-Z][a-z0-9]*", formula)
         composition = []
@@ -340,48 +294,146 @@ class Composition(Mapping):
 
         return composition
 
+    @property
+    def gcd(self):
+        """ Number of minimal formulas on a given composition.
+
+        :return: The number of formulas that can be extracted from a composition ie, the greatest common denominator
+                 for the composition.
+        :rtype: int
+
+        >>> cp = Composition('NaCl')
+        >>> cp.gcd
+        1
+        >>> cp = Composition('Na2Cl2')
+        >>> cp.gcd
+        2
+        >>> cp = Composition()
+        >>> cp.gcd is None
+        True
+
+        """
+        if self.natom > 0:
+            return reduce(_gcd, self.values)
+        else:
+            return None
+
+    @staticmethod
+    def get_species_from_hex(arg):
+        """List of species encoded for hex string produced by species_hex
+
+        :return: Return a set of species from the encoded species created by the output of "species_hex" method.
+        :param arg: str String with hexadecimal representation of list of species.
+
+        >>> Composition.get_species_from_hex('0x38271d08')
+        [8, 29, 39, 56]
+
+        """
+        num = int(arg, 16)
+        ret = []
+        while num > 0:
+            ret.append(num % 256)
+            num = (num-ret[-1])//256
+        return ret
+
+    @property
+    def natom(self):
+        """
+        :return: The number of atoms in the composition
+        :rtype: int
+
+        >>> cp = Composition('H2O')
+        >>> cp.natom
+        3
+        """
+        return sum(self.values)
+
+    @property
+    def nspecies(self):
+        """
+        :return: Number of species in the composition
+        :rtype: int
+
+        >>> cp = Composition('H2O')
+        >>> cp.nspecies
+        2
+        """
+        return len(self.species)
+
+
+    @property
+    def symbols(self):
+        """List of species on the composition
+
+        :return: A list of atomic symbols
+        :rtype: list
+
+        >>> cp = Composition('H2O')
+        >>> cp.symbols
+        ['H', 'H', 'O']
+        """
+        ret = []
+        for specie in self:
+            number_atoms_specie = self.composition[specie]
+            for i in range(number_atoms_specie):
+                ret.append(specie)
+        return sorted(deep_unicode(ret))
+
+    @property
+    def species(self):
+        """List of species on the composition
+
+        :return: The list of species, no particular order but atoms of the same specie are contiguous.
+        :rtype: list
+
+        >>> cp = Composition('H2O')
+        >>> cp.species
+        ['H', 'O']
+        """
+        return [deep_unicode(x) for x in self._composition]
+
     def sorted_formula(self, sortby='alpha', reduced=True):
         """
         :return: The chemical formula. It could be sorted  alphabetically using sortby='alpha', by electronegativity
-                 using sortby='electroneg' or using Hill System with sortby='Hill'
-
+                 using sortby='electronegativity' or using Hill System with sortby='Hill'
+                 Just the first 3 letters are unambiguous and case is not taken in account so you can use 'alp', 'hil'
+                 or 'ele'
         :param sortby: (str) 'alpha' : Alphabetically
-                             'electroneg' : Electronegativity
+                             'electronegativity' : Electronegativity
                              'hill' : Hill System
-
         :param reduced: (bool) If the formula should be normalized
-
         :rtype: str
 
-        >>> comp=Composition('YBa2Cu3O7')
-        >>> comp.sorted_formula()
-        'Ba2Cu3O7Y'
-        >>> comp.sorted_formula(sortby='hill')
-        'Ba2Cu3O7Y'
-        >>> comp.sorted_formula(sortby='electroneg')
-        'Ba2YCu3O7'
-        >>> comp = Composition('H10C5')
-        >>> comp.sorted_formula(sortby='hill', reduced=True)
-        'CH2'
-        >>> comp = Composition('IBr')
-        >>> comp.sorted_formula(sortby='hill', reduced=False)
-        'BrI'
-        >>> comp = Composition('Cl4C')
-        >>> comp.sorted_formula(sortby='hill', reduced=False)
-        'CCl4'
-        >>> comp = Composition('IH3C')
-        >>> comp.sorted_formula(sortby='hill', reduced=False)
-        'CH3I'
-        >>> comp = Composition('BrH5C2')
-        >>> comp.sorted_formula(sortby='hill', reduced=False)
-        'C2H5Br'
-        >>> comp = Composition('S04H2')
-        >>> comp.sorted_formula(sortby='hill', reduced=False)
-        'H2S4'
-        >>> comp = Composition('SO4H2')
-        >>> comp.sorted_formula(sortby='hill', reduced=False)
-        'H2O4S'
+        .. notes: Hill exceptions have not being implemented yet
 
+        >>> cp = Composition('YBa2Cu3O7')
+        >>> cp.sorted_formula()
+        'Ba2Cu3O7Y'
+        >>> cp.sorted_formula(sortby='hill')
+        'Ba2Cu3O7Y'
+        >>> cp.sorted_formula(sortby='electroneg')
+        'Ba2YCu3O7'
+        >>> cp = Composition('H10C5')
+        >>> cp.sorted_formula(sortby='hill', reduced=True)
+        'CH2'
+        >>> cp = Composition('IBr')
+        >>> cp.sorted_formula(sortby='hill', reduced=False)
+        'BrI'
+        >>> cp = Composition('Cl4C')
+        >>> cp.sorted_formula(sortby='hill', reduced=False)
+        'CCl4'
+        >>> cp = Composition('IH3C')
+        >>> cp.sorted_formula(sortby='hill', reduced=False)
+        'CH3I'
+        >>> cp = Composition('BrH5C2')
+        >>> cp.sorted_formula(sortby='hill', reduced=False)
+        'C2H5Br'
+        >>> cp = Composition('S04H2')
+        >>> cp.sorted_formula(sortby='hill', reduced=False)
+        'H2S4'
+        >>> cp = Composition('SO4H2')
+        >>> cp.sorted_formula(sortby='hill', reduced=False)
+        'H2O4S'
         """
         if reduced and self.gcd > 1:
             comp = Composition(self.composition)
@@ -389,13 +441,14 @@ class Composition(Mapping):
                 comp._composition[i] //= self.gcd
         else:
             comp = self
-        if sortby == 'electroneg':
+        if sortby.lower()[:3] == 'ele':
             electroneg = list(electronegativity(comp.species))
-            for i in range(len(electroneg)):
-                if electroneg[i] is None:
-                    electroneg[i] = -1
+            # Not longer needed as electronegativy will return 0 for 'None' values
+            # for i in range(len(electroneg)):
+            #    if electroneg[i] is None:
+            #        electroneg[i] = -1
             sortedspecies = array(comp.species)[argsort(electroneg)]
-        elif sortby == "hill":  # FIXME: Hill system exceptions not implemented
+        elif sortby.lower()[:3] == "hil":  # FIXME: Hill system exceptions not implemented
             sortedspecies = []
             presortedspecies = sorted(comp.species)
             if 'C' in presortedspecies:
@@ -415,12 +468,15 @@ class Composition(Mapping):
         return deep_unicode(ret)
 
     def species_encoded(self, base):
-        """
-        :returns: Encodes the species as a number.
+        """Encode the list of species with a number
 
+        :return: Encodes the species as a number.
         :param base: Integer used as base for encoding.
-
         :rtype: int
+
+        >>> cp = Composition('H2O')
+        >>> cp.species_encoded(100)
+        801
         """
         ret = 0
         i = 0
@@ -430,67 +486,32 @@ class Composition(Mapping):
         return ret
 
     def species_hex(self):
-        """
+        """Encoding in hexadecimal with 2 bytes per specie (base 256)
+
         :return: Encodes the species into a hexadecimal representation where each specie is stored on a 2-Byte slot
                  ordered by atomic number.
                  The output produces a unique encoding where each 2 character from the hexadecimal will encode a single
                  species and the species are ordered by atomic number making the codification unique.
-
         :rtype: str
 
-        Example:
-        >>> comp = Composition('YBa2Cu3O7')
-        >>> comp.species_hex()
+        >>> cp = Composition('YBa2Cu3O7')
+        >>> cp.species_hex()
         '0x38271d08'
-
         """
         enc = self.species_encoded(256)
         return hex(enc)
 
-    @staticmethod
-    def get_species_from_hex(arg):
+
+    @property
+    def values(self):
         """
-        :return: Return a set of species from the encoded species created by the output of "species_hex" method.
+        :return: The number of atoms of each specie
+        :rtype: list
 
-        :param arg: str String with hexadecimal representation of list of species.
-
-        Example:
-        >>> Composition.get_species_from_hex('0x38271d08')
-        [8, 29, 39, 56]
-
+        >>> cp = Composition('YBa2Cu3O7')
+        >>> cp.values
+        [1, 2, 3, 7]
         """
-        num = int(arg, 16)
-        ret = []
-        while num > 0:
-            ret.append(num % 256)
-            num = (num-ret[-1])//256
-        return ret
+        return [self._composition[x] for x in self._composition]
 
-    def covalent_volume(self, packing='cubes'):
-        """
-        :returns: The volume occupied by a given formula assuming a 'cubes' packing or 'spheres' packing
 
-        :param packing: (str) The kind of packing could be 'cubes' or 'spheres'
-
-        :rtype : (float)
-
-        >>> comp = Composition('C5H10')
-        >>> comp.covalent_volume()
-        19.942320000000002
-        >>> comp.covalent_volume(packing='spheres')
-        10.441774334589468
-        """
-        if packing == 'cubes':
-            factor = 8
-        elif packing == 'spheres':
-            factor = 4 * pi / 3.0
-        else:
-            raise ValueError('Non-valid packing: "%s"' % packing)
-
-        # find volume of unit cell by adding cubes
-        volume = 0.0
-        for specie in self:
-            number_atoms_specie = self.composition[specie]
-            # Pack each atom in a cube (2*r)^3
-            volume += factor * number_atoms_specie * covalent_radius(specie) ** 3
-        return volume

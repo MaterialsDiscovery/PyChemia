@@ -1,7 +1,5 @@
 """
-Definition of the class Structure
-This class defines methods to create and manipulate
-atomic structures such as molecules, clusters and crystals
+Structure contains the description of a set of atoms in space, for periodic structures it adds a lattice.
 """
 try:
     import itertools.izip as zip
@@ -25,14 +23,6 @@ from pychemia.utils.computing import deep_unicode
 from pychemia.utils.periodic import mass, atomic_number, covalent_radius, valence, atomic_symbols
 import scipy.spatial
 
-__author__ = "Guillermo Avendano-Franco"
-__copyright__ = "Copyright 2016"
-__version__ = "0.1"
-__maintainer__ = "Guillermo Avendano-Franco"
-__email__ = "gtux.gaf@gmail.com"
-__status__ = "Development"
-__date__ = "May 13, 2016"
-
 
 class Structure(MutableSequence):
     """
@@ -55,52 +45,39 @@ class Structure(MutableSequence):
     Magnetic moments can be associated in the array vector_info['magnetic_moments'].
     """
 
-    def __init__(self, **kwargs):
-        """
-        :param comment:
-        :param natom:
-        :param symbols:
-        :param periodicity:
-        :param cell:
-        :param positions:
-        :param reduced:
-        :param mag_moments:
-        :param kwargs:
+    def __init__(self, natom=None, symbols=None, periodicity=False, cell=None, positions=None, reduced=None,
+                 mag_moments=None, occupancies=None, sites=None, name=None, comment=None):
+        """ Structure is a container for geometric structure and composition for both periodic and non periodic
+        atomic structures
 
-        Args:
+        :param natom: Number of atoms
+        :param symbols: List of atomic symbols
+        :param periodicity: (True) if the structure is periodic, False for finite structures and a list of booleans for
+        structures that are periodic only along specific directions.
+        :param cell: The cell parameters, could be scalar for a cubic cell, a list of 3 numbers for a orthogonal cell
+        or a complete numpy array or list of lists. Each row is considered a cell vector.
+        :param positions: Array of rows with 3 elements for the positions of atoms in cartesian coordinates.
+        :param reduced: Positions of atoms as reduced coordinates relative to the cell vectors ie cell-scaled in range
+        [0,1]
+        :param mag_moments: Magnetic moments for atoms in the structure
+        :param occupancies: Atomic occupancies. 1 by default, lower values for vacancies and non-perfect crystals.
+        :param sites: Atomic sites
 
-        natom      : Integer with number of atoms
-        symbols    : String list of atom symbols
-        positions  : Array of atomic positions
-                     Those are dimensional units
-        cell       : Dimensional cell (3x3 matrix)
-        reduced    : Cell-scaled positions
-                     Dimensionless
-        mag_moments: Array of Magnetic moments
-        periodicity: Periodicity on each direction
-                     3-array of booleans
-        symm   : Symmetry information like point symm operations
-                     and space group
-        name       : Free text to identify structure (Only one line, max 50 chars)
-        comment    : Free text to identify structure
-
-        Examples:
->>> import pychemia
->>> a = pychemia.Structure()
->>> print(a)
-Empty structure
->>> a = pychemia.Structure(symbols=['Xe'])
->>> print(a.natom)
-1
->>> d = 1.104
->>> a = pychemia.Structure(symbols=['N', 'N'], positions=[[0, 0, 0], [0, 0, d]], periodicity=False)
->>> print(a.natom)
-2
->>> a = 4.05
->>> b = a/2
->>> fcc = pychemia.Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
->>> print(fcc.natom)
-1
+        >>> a = Structure()
+        >>> print(a)
+        Empty structure
+        >>> a = Structure(symbols=['Xe'])
+        >>> print(a.natom)
+        1
+        >>> d = 1.104
+        >>> a = Structure(symbols=['N', 'N'], positions=[[0, 0, 0], [0, 0, d]], periodicity=False)
+        >>> print(a.natom)
+        2
+        >>> a = 4.05
+        >>> b = a/2
+        >>> fcc = Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
+        >>> print(fcc.natom)
+        1
         """
         self.vector_info = {}
         self.name = None
@@ -114,46 +91,70 @@ Empty structure
         self.vector_info['mag_moments'] = None
         self.sites = None
         self.occupancies = None
-
         self._lattice = None
         self._composition = None
 
-        # Fill the values from args
-        if 'name' in kwargs and kwargs['name'] is not None:
-            self.name = kwargs['name'].split('\n')[0][:50]
-        if 'comment' in kwargs:
-            self.comment = kwargs['comment']
-        if 'natom' in kwargs:
-            self.natom = int(kwargs['natom'])
-        if 'symbols' in kwargs:
-            self.symbols = list(kwargs['symbols'])
-        if 'periodicity' in kwargs:
-            periodicity = kwargs['periodicity']
-            self.set_periodicity(periodicity)
-        if 'cell' in kwargs and kwargs['cell'] is not None:
-            cell = np.array(kwargs['cell'])
-            self.set_cell(cell)
-        if 'positions' in kwargs:
-            positions = np.array(kwargs['positions'])
-            self.set_positions(positions)
-        if 'reduced' in kwargs and kwargs['reduced'] is not None:
-            reduced = np.array(kwargs['reduced'])
-            self.set_reduced(reduced)
-        if 'mag_moments' in kwargs:
-            self.set_mag_moments(np.array(kwargs['mag_moments']))
-        if 'occupancies' in kwargs:
-            self.occupancies = list(kwargs['occupancies'])
-        if 'sites' in kwargs:
-            self.sites = kwargs['sites']
+        # By default the number of atoms will be the value given or zero except if other information overrules
+        # that value
+        if natom is not None:
+            self.natom = int(natom)
+        else:
+            self.natom = 0
 
-        # Lets autocomplete the missing information
+        if symbols is not None:
+            for iatom in list(symbols):
+                assert(iatom in atomic_symbols)
+            self.symbols = list(symbols)
+            self.natom = len(self.symbols)
+        else:
+            if self.natom != 0:
+                raise ValueError('List of atomic symbols not provided for structure with %d atoms', self.natom)
+
+        # No periodicity will be assumed except if cell or reduced coordinates are provided
+        if periodicity is None:
+            periodicity = [False, False, False]
+        if isinstance(periodicity, bool):
+            periodicity = 3*[periodicity]
+        self.set_periodicity(periodicity)
+
+        if cell is not None:
+            cell = np.array(cell)
+            self.set_cell(cell)
+
+        if positions is not None:
+            positions = np.array(positions)
+            self.set_positions(positions)
+        if reduced is not None:
+            reduced = np.array(reduced)
+            self.set_reduced(reduced)
+        if mag_moments is not None:
+            self.set_mag_moments(np.array(mag_moments))
+        if occupancies is not None:
+            self.occupancies = list(occupancies)
+        if sites is not None:
+            self.sites = sites
+
+        self.name = name
+        self.comment = comment
+
+        # This routine completes the missing values and makes all the values coherent.
         self._autocomplete()
 
         if not self._check():
-            print('Arguments non consistent')
+            raise ValueError('Arguments non consistent')
 
     def __len__(self):
-        return self.natom
+        """ Number of sites in structure.
+        In for perfect crystals it will match the number of atoms as each atomic site will have a single atom.
+
+        :return: Number of sites in structure
+        :rtype; int
+
+        >>> st = Structure(symbols=['H', 'O'], positions= [[0,0,0], [0,0,1]])
+        >>> len(st)
+        2
+        """
+        return self.nsites
 
     def __str__(self):
         if self.natom == 0:
@@ -200,6 +201,17 @@ Empty structure
         return xyz
 
     def __repr__(self):
+        """
+        Evaluatable representation of Structure
+
+        :return: String representation of the structure
+        :rtype: str
+
+        >>> st1 = Structure(symbols=['H'])
+        >>> st2 = eval(repr(st1))
+        >>> st1 == st2
+        True
+        """
         ret = 'Structure(symbols=' + str(self.symbols)
         if self.is_periodic:
             if np.all(np.diag(self.cell.diagonal()) == self.cell):
@@ -497,14 +509,12 @@ Empty structure
         :param factor_optimal_volume: (float)
         :return:
 
-        Examples:
-        >>> import pychemia
         >>> import os
-        >>> st = pychemia.Structure.random_cell('LiAlCl4', stabilization_number=3)
+        >>> st = Structure.random_cell('LiAlCl4', stabilization_number=3)
         >>> st.natom
         6
         >>> st.save_json('test.json')
-        >>> st2 = pychemia.Structure.load_json('test.json')
+        >>> st2 = Structure.load_json('test.json')
         >>> st == st2
         True
         >>> os.remove('test.json')

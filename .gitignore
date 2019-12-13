@@ -57,6 +57,7 @@ docs/_build/
 #Linux Files
 .directory
 
+MANIFEST
 cover
 .pypirc
 symmol.out
