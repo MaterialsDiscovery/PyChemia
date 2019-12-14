@@ -1093,7 +1093,7 @@ class Structure(MutableSequence):
         assert self.is_perfect
         mofi = 0
         for isite in self:
-            mofi += mass(isite.symbols[0]) * (sum(isite.position ** 2) - isite.position[axis] ** 2)
+            mofi += mass(isite.symbols[0]) * (sum(np.array(isite.position) ** 2) - isite.position[axis] ** 2)
         return mofi
 
     def product_of_inertia(self, axis):
@@ -1149,8 +1149,17 @@ def load_structure_json(filename):
 
 
 class SiteSet:
+    """
+    Collection of atomic sites.
+    Starting from a Structure the object will create a set of Sites storing the species, occupancies and
+    positions of each site.
+    """
     def __init__(self, structure):
+        """
+        SiteSet is a container for a list of Sites
 
+        :param structure: structure from which the Sites will be created.
+        """
         self.structure = structure
         self.sitelist = []
         reduced = None
@@ -1172,7 +1181,7 @@ class SiteSet:
                 position = structure.positions[isite]
                 if self.structure.is_periodic:
                     reduced = structure.reduced[isite]
-            self.sitelist.append(Site(symbols=symbols, occupancies=occupancies, position=position, reduced=reduced))
+            self.sitelist.append(Site(symbols=symbols, occupancies=occupancies, position=position))
 
     def __iter__(self):
         return iter(self.sitelist)
@@ -1276,6 +1285,8 @@ def random_structure(method, composition, periodic=True, max_volume=1E10):
             rpos = np.random.rand(natom, 3)
             mins = [min(rpos[:, i]) for i in range(3)]
             rpos -= mins
+
+            new_lattice = lattice
         else:
             lattice = Lattice.random_cell(comp)
             # Random reduced positions
@@ -1299,6 +1310,7 @@ def random_structure(method, composition, periodic=True, max_volume=1E10):
                 # print(minimal_distance)
 
             else:
+                print('Volume of Structure %f is larger than max_volume=%f' % (new_lattice.volume, max_volume))
                 new_structure = None
     else:
         pos = np.random.rand(natom, 3)
@@ -1316,6 +1328,7 @@ def random_structure(method, composition, periodic=True, max_volume=1E10):
         if current_volume < max_volume:
             new_structure = Structure(symbols=symbols, positions=pos, periodicity=False)
         else:
+            print('Volume of Structure %f is larger than max_volume=%f'%(current_volume, max_volume))
             new_structure = None
 
     return new_structure
