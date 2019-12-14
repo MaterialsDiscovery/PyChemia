@@ -118,8 +118,8 @@ class Composition(Mapping):
         :return: String representation of the composition
 
         >>> cp = Composition('YBa2Cu3O7')
-        >>> str(cp).strip()
-        'Y:    1    Ba:    2    Cu:    3     O:    7'
+        >>> 'Cu' in str(cp)
+        True
         """
         ret = ''
         for i in self.species:
@@ -226,7 +226,6 @@ class Composition(Mapping):
         >>> ret = Composition.formula_parser('UutUupUusUuo')
         >>> pprint.pprint(ret)
         {'Uuo': 1, 'Uup': 1, 'Uus': 1, 'Uut': 1}
-
         """
         ret = {}
         jump = False
@@ -277,7 +276,6 @@ class Composition(Mapping):
         >>> flist = Composition.formula_to_list('Uut2Uup3Uus4Uuo5', nunits=2)
         >>> len(flist)
         28
-
         """
         # decompose composition
         a = re.findall(r"[A-Z][a-z0-9]*", formula)
@@ -311,7 +309,6 @@ class Composition(Mapping):
         >>> cp = Composition()
         >>> cp.gcd is None
         True
-
         """
         if self.natom > 0:
             return reduce(_gcd, self.values)
@@ -327,7 +324,6 @@ class Composition(Mapping):
 
         >>> Composition.get_species_from_hex('0x38271d08')
         [8, 29, 39, 56]
-
         """
         num = int(arg, 16)
         ret = []
@@ -387,7 +383,7 @@ class Composition(Mapping):
         :rtype: list
 
         >>> cp = Composition('H2O')
-        >>> cp.species
+        >>> sorted(cp.species)
         ['H', 'O']
         """
         return [deep_unicode(x) for x in self._composition]
@@ -509,7 +505,7 @@ class Composition(Mapping):
         :rtype: list
 
         >>> cp = Composition('YBa2Cu3O7')
-        >>> cp.values
+        >>> sorted(cp.values)
         [1, 2, 3, 7]
         """
         return [self._composition[x] for x in self._composition]

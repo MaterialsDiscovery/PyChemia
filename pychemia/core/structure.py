@@ -46,7 +46,7 @@ class Structure(MutableSequence):
     """
 
     def __init__(self, natom=None, symbols=None, periodicity=False, cell=None, positions=None, reduced=None,
-                 mag_moments=None, occupancies=None, sites=None, name=None, comment=None):
+                 mag_moments=None, occupancies=None, sites=None, name=None, comment=None, vector_info=None):
         """ Structure is a container for geometric structure and composition for both periodic and non periodic
         atomic structures
 
@@ -93,6 +93,7 @@ class Structure(MutableSequence):
         self.occupancies = None
         self._lattice = None
         self._composition = None
+        self.vector_info = None
 
         # By default the number of atoms will be the value given or zero except if other information overrules
         # that value
@@ -102,9 +103,13 @@ class Structure(MutableSequence):
             self.natom = 0
 
         if symbols is not None:
-            for iatom in list(symbols):
-                assert(iatom in atomic_symbols)
-            self.symbols = list(symbols)
+            if symbols in atomic_symbols:
+                self.symbols = [symbols]
+            else:
+                for iatom in list(symbols):
+                    assert(iatom in atomic_symbols)
+                self.symbols = list(symbols)
+
             self.natom = len(self.symbols)
         else:
             if self.natom != 0:
@@ -112,7 +117,7 @@ class Structure(MutableSequence):
 
         # No periodicity will be assumed except if cell or reduced coordinates are provided
         if periodicity is None:
-            periodicity = [False, False, False]
+            periodicity = 3*[False]
         if isinstance(periodicity, bool):
             periodicity = 3*[periodicity]
         self.set_periodicity(periodicity)
@@ -120,6 +125,7 @@ class Structure(MutableSequence):
         if cell is not None:
             cell = np.array(cell)
             self.set_cell(cell)
+            self.periodicity = 3*[True]
 
         if positions is not None:
             positions = np.array(positions)
@@ -127,12 +133,18 @@ class Structure(MutableSequence):
         if reduced is not None:
             reduced = np.array(reduced)
             self.set_reduced(reduced)
+            self.periodicity = 3*[True]
         if mag_moments is not None:
             self.set_mag_moments(np.array(mag_moments))
         if occupancies is not None:
             self.occupancies = list(occupancies)
         if sites is not None:
             self.sites = sites
+
+        if vector_info is None:
+            self.vector_info = {'mag_moments': None}
+        else:
+            self.vector_info = vector_info
 
         self.name = name
         self.comment = comment
@@ -157,18 +169,48 @@ class Structure(MutableSequence):
         return self.nsites
 
     def __str__(self):
+        """String representation of Structure
+
+        :return: Human readable text for Structure
+
+        >>> st = Structure(symbols=['Xe'])
+        >>> print(st)
+        1
+        <BLANKLINE>
+        Symb  (             Positions            )
+          Xe  (     0.0000     0.0000     0.0000 )
+        <BLANKLINE>
+        Non-periodic structure
+
+        >>> a = 4.05
+        >>> b = a/2
+        >>> fcc = Structure(symbols=['Au'], cell=[[0, b, b], [b, 0, b], [b, b, 0]], periodicity=True)
+        >>> print(fcc)
+        1
+        <BLANKLINE>
+        Symb  (             Positions            ) [     Cell-reduced coordinates     ]
+          Au  (     0.0000     0.0000     0.0000 ) [     0.0000     0.0000     0.0000 ]
+        <BLANKLINE>
+        Periodicity:  X Y Z
+        <BLANKLINE>
+        Lattice vectors:
+             0.0000     2.0250     2.0250
+             2.0250     0.0000     2.0250
+             2.0250     2.0250     0.0000
+        <BLANKLINE>
+        """
         if self.natom == 0:
             xyz = 'Empty structure'
         else:
             xyz = str(self.natom) + '\n\n'
             if self.is_crystal:
-                xyz += ' Symb  (             Positions            ) [     Cell-reduced coordinates     ]\n'
+                xyz += 'Symb  (             Positions            ) [     Cell-reduced coordinates     ]\n'
             else:
-                xyz += ' Symb  (             Positions            )\n'
+                xyz += 'Symb  (             Positions            )\n'
 
             for i in range(self.natom):
                 if self.is_crystal:
-                    xyz += (" %4s  ( %10.4f %10.4f %10.4f ) [ %10.4f %10.4f %10.4f ]\n"
+                    xyz += ("%4s  ( %10.4f %10.4f %10.4f ) [ %10.4f %10.4f %10.4f ]\n"
                             % (self.symbols[i],
                                self.positions[i, 0],
                                self.positions[i, 1],
@@ -177,7 +219,7 @@ class Structure(MutableSequence):
                                self.reduced[i, 1],
                                self.reduced[i, 2]))
                 else:
-                    xyz += (" %4s  ( %10.4f %10.4f %10.4f )\n"
+                    xyz += ("%4s  ( %10.4f %10.4f %10.4f )\n"
                             % (self.symbols[i],
                                self.positions[i, 0],
                                self.positions[i, 1],
@@ -211,6 +253,9 @@ class Structure(MutableSequence):
         >>> st2 = eval(repr(st1))
         >>> st1 == st2
         True
+        >>> st = Structure(symbols='He', cell=[2,2,2])
+        >>> st
+        Structure(symbols=['He'], cell=2, reduced=[[0.0, 0.0, 0.0]], periodicity=True)
         """
         ret = 'Structure(symbols=' + str(self.symbols)
         if self.is_periodic:
@@ -1134,29 +1179,57 @@ class SiteSet:
 
 
 class Site:
-    def __init__(self, symbols, occupancies, position, reduced=None):
+    """
+    A site is a mapping of one location of space with one or more atoms and the corresponding occupancies.
+    The sum of occupancies must be lower or equal to 1.
+    """
+    def __init__(self, symbols, occupancies=None, position=None):
+        """
+        Create a atomic site with one or more atoms defined on a unique location on space.
 
-        if isinstance(symbols, list):
-            self.symbols = symbols
-        else:
+        :param symbols: atomic symbol or list of atomic symbols
+        :param occupancies: list of floats with the probability of occupancy for the atom in the site
+        :param position: iterable with the location of the atom in space in cartesian coordinates
+
+        .. notes: This class is used for internal operations inside Structure. Not much reason to expose it
+        out of this module.
+
+        >>> sit = Site('H')
+        >>> sit
+        Site(symbols=['H'],occupancies=[1.0],position=[0.0, 0.0, 0.0])
+        >>> sit = Site(symbols = ['O', 'N'], occupancies=[0.5, 0.5], position=[1,1,1])
+        >>> sit
+        Site(symbols=['O', 'N'],occupancies=[0.5, 0.5],position=[1.0, 1.0, 1.0])
+        """
+        if symbols in atomic_symbols:
             self.symbols = [symbols]
-
-        if isinstance(occupancies, list):
-            self.occupancies = occupancies
         else:
-            self.occupancies = [occupancies]
+            try:
+                self.symbols = list(symbols)
+            except TypeError:
+                raise TypeError("%s is not iterable" % symbols)
+        for i in self.symbols:
+            assert i in atomic_symbols
+
+        if occupancies is None:
+            occupancies = 1.0
+        if position is None:
+           position = 3*[0.0]
+
+        try:
+            self.occupancies = [float(x) for x in occupancies]
+        except TypeError:
+            self.occupancies = [float(occupancies)]
 
         assert (len(self.occupancies) == len(self.symbols))
+        assert sum(self.occupancies) <= 1
 
-        self.position = position
-        self.reduced = reduced
+        self.position = [float(x) for x in position]
 
     def __repr__(self):
-        ret = 'Site(symbols=' + repr(self.symbols)
+        ret = self.__class__.__name__+'(symbols=' + repr(self.symbols)
         ret += ',occupancies=' + repr(self.occupancies)
         ret += ',position=' + repr(self.position)
-        if self.reduced is not None:
-            ret += ',reduced=' + repr(self.reduced)
         ret += ')'
         return ret
 
@@ -1168,7 +1241,25 @@ def worker_star(x):
     return random_structure(*x)
 
 
-def random_structure(method, composition, periodic=True, best_volume=1E10):
+def random_structure(method, composition, periodic=True, max_volume=1E10):
+    """
+    Random Structure created  by random positioning of atoms followed by either scaling of the cell or
+    adding a sheer stretching along the smaller distances. The purpose of the lattice change is to avoid any two
+    atoms to be closer than the sum of their covalent radius.
+
+    :param method: Can be 'stretching' or 'scaling'.
+    :param composition: Can be a Composition object or formula.
+    :param periodic: If True, the structure will be periodical in all directions, otherwise a finite system is created.
+    :param max_volume: Threshold for creating the Structure, if the volume exceeds the target the method returns None
+    :return: Structure if the volume is below than best_volume, None otherwise
+
+    >>> st = random_structure(method='scaling', composition='H2O', periodic=False)
+    >>> st.natom
+    3
+    >>> st = random_structure(method='stretching', composition='NaCl', periodic=True)
+    >>> st.natom
+    2
+    """
     comp = Composition(composition)
     natom = comp.natom
     symbols = comp.symbols
@@ -1194,7 +1285,7 @@ def random_structure(method, composition, periodic=True, best_volume=1E10):
 
             new_lattice = lattice.stretch(symbols, rpos, tolerance=1.0, extra=0.1)
 
-        if new_lattice.volume < best_volume:
+        if new_lattice.volume < max_volume:
             test = True
             for i in range(natom):
                 for j in range(i + 1, natom):
@@ -1222,7 +1313,7 @@ def random_structure(method, composition, periodic=True, best_volume=1E10):
         current_volume = (max(pos[:, 0]) - min(pos[:, 0])) * (max(pos[:, 1]) - min(pos[:, 1])) * (
             max(pos[:, 2]) - min(pos[:, 2]))
 
-        if current_volume < best_volume:
+        if current_volume < max_volume:
             new_structure = Structure(symbols=symbols, positions=pos, periodicity=False)
         else:
             new_structure = None

@@ -36,7 +36,6 @@ class CrystalSymmetry(object):
 
         :param structure:
 
-        Example:
         >>> import pychemia
         >>> a = 4.05
         >>> b = a/2
