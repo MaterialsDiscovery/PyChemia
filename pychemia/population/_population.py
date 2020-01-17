@@ -48,10 +48,10 @@ class Population:
         return ret
 
     def disable(self, entry_id):
-        self.pcdb.entries.update({'_id': entry_id}, {'$set': {'status.' + self.tag: False}})
+        self.pcdb.entries.update_one({'_id': entry_id}, {'$set': {'status.' + self.tag: False}})
 
     def enable(self, entry_id):
-        self.pcdb.entries.update({'_id': entry_id}, {'$set': {'status.' + self.tag: True}})
+        self.pcdb.entries.update_one({'_id': entry_id}, {'$set': {'status.' + self.tag: True}})
         if self.direct_evaluation:
             self.evaluate_entry(entry_id)
 
@@ -80,7 +80,8 @@ class Population:
             entry['properties'] = {}
         if 'status' not in entry:
             entry['status'] = {}
-        return self.pcdb.entries.insert(entry)
+        result = self.pcdb.entries.insert_one(entry)
+        return result.inserted_id
 
     def set_entry(self, entry):
         return self.insert_entry(entry)
@@ -117,7 +118,7 @@ class Population:
         filep = open(filename, 'r')
         data = json.load(filep)
         for entry in data:
-            self.pcdb.entries.insert(entry)
+            self.pcdb.entries.insert_one(entry)
 
     def random_population(self, n):
         """

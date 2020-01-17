@@ -7,7 +7,7 @@ class SerializerTest(unittest.TestCase):
 
     def test_serializer(self):
         """
-        Tests (pychemia.utils.serializer)                            :
+        Test (pychemia.utils.serializer)                            :
         """
         a = np.array([1, 2, 3])
         assert generic_serializer(a) == [1, 2, 3]

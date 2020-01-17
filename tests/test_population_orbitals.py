@@ -9,7 +9,7 @@ import shutil
 class PopulationTest(unittest.TestCase):
     def test_orbital(self):
         """
-        Tests (pychemia.population.OrbitalDFTU)                      :
+        Test (pychemia.population.OrbitalDFTU)                      :
         """
         if not pychemia.db.has_connection():
             return

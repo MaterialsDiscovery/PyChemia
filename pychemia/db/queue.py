@@ -59,13 +59,13 @@ class PyChemiaQueue:
 
             file_id = self.fs.put(rf, filename=os.path.basename(filename), hash=hashcode)
             print('New file ', file_id)
-            self.db.pychemia_entries.update({'_id': entry_id}, {'$addToSet': {location + '.files': {'file_id': file_id,
+            self.db.pychemia_entries.update_one({'_id': entry_id}, {'$addToSet': {location + '.files': {'file_id': file_id,
                                                                                                     'name': filename,
                                                                                                     'hash': hashcode}}})
         else:
             file_id = existing['_id']
             print('File already present ', file_id)
-            self.db.pychemia_entries.update({'_id': entry_id}, {'$addToSet': {location + '.files': {'file_id': file_id,
+            self.db.pychemia_entries.update_one({'_id': entry_id}, {'$addToSet': {location + '.files': {'file_id': file_id,
                                                                                                     'name': filename,
                                                                                                     'hash': hashcode}}})
 
@@ -75,20 +75,20 @@ class PyChemiaQueue:
     def set_minimal_schema(self):
         for entry in self.db.pychemia_entries.find({'meta': None}, {'_id': 1}):
             print('Missing field "meta" on', entry['_id'])
-            self.db.pychemia_entries.update({'_id': entry['_id']}, {'$set': {'meta': {}}})
+            self.db.pychemia_entries.update_one({'_id': entry['_id']}, {'$set': {'meta': {}}})
         for entry in self.db.pychemia_entries.find({'input': None}, {'_id': 1}):
             print('Missing field "input" on', entry['_id'])
-            self.db.pychemia_entries.update({'_id': entry['_id']}, {'$set': {'input': {}}})
+            self.db.pychemia_entries.update_one({'_id': entry['_id']}, {'$set': {'input': {}}})
         for entry in self.db.pychemia_entries.find({'output': None}, {'_id': 1}):
             print('Missing field "output" on', entry['_id'])
-            self.db.pychemia_entries.update({'_id': entry['_id']}, {'$set': {'output': {}}})
+            self.db.pychemia_entries.update_one({'_id': entry['_id']}, {'$set': {'output': {}}})
         for entry in self.db.pychemia_entries.find({'job': None}, {'_id': 1}):
             print('Missing field "job" on', entry['_id'])
-            self.db.pychemia_entries.update({'_id': entry['_id']}, {'$set': {'job': {}}})
+            self.db.pychemia_entries.update_one({'_id': entry['_id']}, {'$set': {'job': {}}})
 
     def set_structure(self, entry_id, location, structure):
         assert (location in ['input', 'output'])
-        self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {location + '.structure': structure.to_dict}})
+        self.db.pychemia_entries.update_one({'_id': entry_id}, {'$set': {location + '.structure': structure.to_dict}})
 
     def set_input(self, entry_id, code, inputvar):
 
@@ -97,7 +97,7 @@ class PyChemiaQueue:
                 value = inputvar.pop(i)
                 inputvar[i[1:]] = value
         print('INPUTVAR:\n %s %s' % (inputvar, dict(inputvar)))
-        self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'input.variables': dict(inputvar),
+        self.db.pychemia_entries.update_one({'_id': entry_id}, {'$set': {'input.variables': dict(inputvar),
                                                                      'input.code': code.lower()}})
 
     def new_entry(self, structure=None, variables=None, code=None, files=None, priority=0, dbname=None, db_id=None):
@@ -113,7 +113,8 @@ class PyChemiaQueue:
                                                                 'deployed': False,
                                                                 'dbname': dbname,
                                                                 'db_id': db_id}}
-        entry_id = self.db.pychemia_entries.insert(entry)
+        result = self.db.pychemia_entries.insert_one(entry)
+        entry_id = result.inserted_id
 
         # Commented for compatibility with mongo 2.4
         # self.db.pychemia_entries.update_one({'_id': entry_id}, {'$currentDate': {'meta.CreationDate': True}})
@@ -130,19 +131,19 @@ class PyChemiaQueue:
     def set_job_settings(self, entry_id, nparal=None, queue=None, nhours=None, mail=None, task_name=None,
                          task_settings=None, task_kind=None):
         if nparal is not None:
-            self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.nparal': nparal}})
+            self.db.pychemia_entries.update_one({'_id': entry_id}, {'$set': {'job.nparal': nparal}})
         if queue is not None:
-            self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.queue': queue}})
+            self.db.pychemia_entries.update_one({'_id': entry_id}, {'$set': {'job.queue': queue}})
         if mail is not None:
-            self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.mail': mail}})
+            self.db.pychemia_entries.update_one({'_id': entry_id}, {'$set': {'job.mail': mail}})
         if nhours is not None:
-            self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.nhours': nhours}})
+            self.db.pychemia_entries.update_one({'_id': entry_id}, {'$set': {'job.nhours': nhours}})
         if task_name is not None:
-            self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.task_name': task_name}})
+            self.db.pychemia_entries.update_one({'_id': entry_id}, {'$set': {'job.task_name': task_name}})
         if task_kind is not None:
-            self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.task_kind': task_name}})
+            self.db.pychemia_entries.update_one({'_id': entry_id}, {'$set': {'job.task_kind': task_name}})
         if task_settings is not None:
-            self.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'job.task_settings': task_settings}})
+            self.db.pychemia_entries.update_one({'_id': entry_id}, {'$set': {'job.task_settings': task_settings}})
 
     def set_input_structure(self, entry_id, structure):
         return self.set_structure(entry_id, 'input', structure)

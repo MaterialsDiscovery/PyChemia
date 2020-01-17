@@ -15,7 +15,7 @@ path = 'tests/data'
 
 def test_abinit2xyz():
     """
-    Test command abinit2xyz                                      :
+    Test command abinit2xyz                                    :
     """
     pychemia.info()
     print('Running abinit2xyz')
@@ -34,7 +34,7 @@ def test_abinit2xyz():
 
 def test_xyz2abinit():
     """
-    Test command xyz2abinit                                      :
+    Test command xyz2abinit                                  :
     """
     script = 'scripts/abi_xyz2abinit.py'
     args = path + '/xyz/chlorophyll.xyz'
@@ -49,7 +49,7 @@ def test_xyz2abinit():
 
 def test_plot_bonds():
     """
-    Test command plot_bonds                                      :
+    Test command plot_bonds                                  :
     """
     script = 'scripts/abi_plot_bonds.py'
     arg1 = path + '/abinit_01/abinit.files:11'
@@ -63,7 +63,7 @@ def test_plot_bonds():
 
 def test_plot_hist():
     """
-    Test command plot_hist                                       :
+    Test command plot_hist                                    :
     """
     script = 'scripts/abi_plot_hist.py'
     arg1 = path + '/abinit_01/abinit.files'

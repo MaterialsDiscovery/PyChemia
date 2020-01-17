@@ -11,7 +11,7 @@ class SearcherTest(unittest.TestCase):
 
     def test_harmony(self):
         """
-        Tests (pychemia.searcher.harmony) with NonCollinearMagMoms   :
+        Test (pychemia.searcher.harmony) with NonCollinearMagMoms   :
         """
         logging.basicConfig(level=logging.DEBUG)
         if not HAS_PYMONGO:
@@ -34,7 +34,7 @@ class SearcherTest(unittest.TestCase):
 
     def test_firefly(self):
         """
-        Tests (pychemia.searcher.firefly) with NonCollinearMagMoms   :
+        Test (pychemia.searcher.firefly) with NonCollinearMagMoms   :
         """
         logging.basicConfig(level=logging.DEBUG)
         if not HAS_PYMONGO:
@@ -57,7 +57,7 @@ class SearcherTest(unittest.TestCase):
 
     def test_genetic(self):
         """
-        Tests (pychemia.searcher.genetic) with NonCollinearMagMoms   :
+        Test (pychemia.searcher.genetic) with NonCollinearMagMoms   :
         """
         logging.basicConfig(level=logging.DEBUG)
         if not HAS_PYMONGO:

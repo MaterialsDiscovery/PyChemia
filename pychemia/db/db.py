@@ -98,8 +98,8 @@ class PyChemiaDB:
         entry = {'structure': structure.to_dict, 'properties': properties, 'status': status}
         if entry_id is not None:
             entry['_id'] = entry_id
-        entry_id = self.entries.insert_one(entry)
-        return entry_id
+        result = self.entries.insert_one(entry)
+        return result.inserted_id
 
     def clean(self):
         self._client.drop_database(self.name)
@@ -135,7 +135,7 @@ class PyChemiaDB:
         if status is not None:
             entry['status'] = status
 
-        self.entries.update({'_id': entry_id}, entry)
+        self.entries.replace_one({'_id': entry_id}, entry)
         return entry_id
 
     def find_AnBm(self, specie_a=None, specie_b=None, n=1, m=1):

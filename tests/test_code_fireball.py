@@ -6,7 +6,7 @@ import os
 
 def test_fireball():
     """
-    Tests (pychemia.code.fireball) [Reading fireball output]     :
+    Test (pychemia.code.fireball) [Reading fireball output]     :
     """
     tmpdir = tempfile.mkdtemp()
     path = os.path.abspath('tests/data/1280.zip')

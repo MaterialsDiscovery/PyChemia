@@ -3,7 +3,7 @@ from pychemia.utils.periodic import *
 
 def test_utils():
     """
-    Tests (pychemia.utils.periodic)                              :
+    Test (pychemia.utils.periodic)                              :
     """
     assert covalent_radius(1) == 0.31
     assert covalent_radius([1.1, 2]) == [0.31, 0.28]
@@ -15,7 +15,7 @@ def test_utils():
 
 def test_atomicnumber():
     """
-    Tests (pychemia.utils.periodic) [atomic_number]              :
+    Test (pychemia.utils.periodic) [atomic_number]              :
     """
     assert (atomic_number('H') == 1)
     assert (atomic_number(['H', 'He']) == [1, 2])
@@ -23,7 +23,7 @@ def test_atomicnumber():
 
 def test_mass():
     """
-    Tests (pychemia.utils.periodic) [mass]                       :
+    Test (pychemia.utils.periodic) [mass]                       :
     """
     assert (mass(['H', 'He']) == [1.00794, 4.002602])
     assert (mass([1, 2]) == [1.00794, 4.002602])
@@ -32,7 +32,7 @@ def test_mass():
 
 def test_symbol():
     """
-    Tests (pychemia.utils.periodic) [atomic_symbol]              :
+    Test (pychemia.utils.periodic) [atomic_symbol]              :
     """
     assert (atomic_symbol(1) == 'H')
     assert (atomic_symbol([1, 2]) == ['H', 'He'])
@@ -40,7 +40,7 @@ def test_symbol():
 
 def test_covalent_radius():
     """
-    Tests (pychemia.utils.periodic) [covalent_radius]            :
+    Test (pychemia.utils.periodic) [covalent_radius]            :
     """
     assert (covalent_radius('H') == 0.31)
     assert (covalent_radius([1, 2]) == [0.31, 0.28])
@@ -49,7 +49,7 @@ def test_covalent_radius():
 
 def test_valence():
     """
-    Tests (pychemia.utils.periodic) [valence]                    :
+    Test (pychemia.utils.periodic) [valence]                    :
     """
     assert (valence(1) == 1)
     assert (valence([1, 2]) == [1, 0])

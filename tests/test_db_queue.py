@@ -10,7 +10,7 @@ from pychemia.db import has_connection
 
 def test_queue():
     """
-    Tests (pychemia.db.PyChemiaQueue)                            :
+    Test (pychemia.db.PyChemiaQueue)                            :
     """
     if not has_connection():
         return

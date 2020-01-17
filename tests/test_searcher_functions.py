@@ -15,7 +15,7 @@ class SearcherTest(unittest.TestCase):
 
     def test_harmony(self):
         """
-        Tests (pychemia.searcher.harmony)                            :
+        Test (pychemia.searcher.harmony)                            :
         """
         pcm_log.debug('HarmonySearch')
         mini = Sphere().minimum(3)
@@ -30,7 +30,7 @@ class SearcherTest(unittest.TestCase):
 
     def test_swarm(self):
         """
-        Tests (pychemia.searcher.swarm)                              :
+        Test (pychemia.searcher.swarm)                              :
         """
         pcm_log.debug('ParticleSwarm')
         mini = Sphere().minimum(3)
@@ -44,7 +44,7 @@ class SearcherTest(unittest.TestCase):
 
     def test_firefly(self):
         """
-        Tests (pychemia.searcher.firefly)                            :
+        Test (pychemia.searcher.firefly)                            :
         """
         pcm_log.debug('FireFly')
         mini = Sphere().minimum(3)
@@ -59,7 +59,7 @@ class SearcherTest(unittest.TestCase):
 
     def test_genetic(self):
         """
-        Tests (pychemia.searcher.genetic)                            :
+        Test (pychemia.searcher.genetic)                            :
         """
         pcm_log.debug('GeneticAlgorithm')
         mini = Sphere().minimum(3)

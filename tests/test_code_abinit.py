@@ -1,7 +1,7 @@
 
 def test_abinit_parser():
     """
-    Tests (pychemia.code.abinit) [parser]                        :
+    Test (pychemia.code.abinit) [parser]                        :
     """
     from pychemia.code.abinit import parser
     from numpy import array, all, ones
@@ -44,7 +44,7 @@ def test_abinit_parser():
 
 def test_abinit_utils():
     """
-    Tests (pychemia.code.abinit) [utils]                         :
+    Test (pychemia.code.abinit) [utils]                         :
     """
     from pychemia.utils.netcdf import netcdf2dict
     from pychemia.code.abinit import xyz2input, psp_name
@@ -59,7 +59,7 @@ def test_abinit_utils():
 
 def test_abinit_abifiles():
     """
-    Tests (pychemia.code.abinit) [abifiles]                      :
+    Test (pychemia.code.abinit) [abifiles]                      :
     """
 
     from pychemia.code.abinit import AbiFiles
@@ -72,7 +72,7 @@ def test_abinit_abifiles():
 
 def test_abinit_input():
     """
-    Tests (pychemia.code.abinit) [input]                         :
+    Test (pychemia.code.abinit) [input]                         :
     """
     from pychemia.code.abinit import AbiFiles, AbinitInput
 
@@ -90,7 +90,7 @@ def test_abinit_input():
 
 def test_abinit():
     """
-    Tests (pychemia.code.abinit) [general]                       :
+    Test (pychemia.code.abinit) [general]                       :
     """
     import os
     import pychemia.code.abinit

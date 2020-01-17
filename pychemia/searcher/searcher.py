@@ -64,7 +64,7 @@ class Searcher:
                             changed = True
                 if changed and changedb:
                     print('Lineage was changed (Some entry was null)')
-                    self.pcdb.db.lineage.update({'_id': self.searcher_id}, {'$set': {'lineage': lineage}})
+                    self.pcdb.db.lineage.update_one({'_id': self.searcher_id}, {'$set': {'lineage': lineage}})
 
                 sizes = [len(lineage[x]) for x in lineage]
                 assert min(sizes) == max(sizes)
@@ -276,9 +276,9 @@ class Searcher:
             for entry_id in sorted(self.generation):
                 info = self.generation[entry_id]
                 if self.pcdb.db.generations.find_one({'_id': entry_id}) is None:
-                    self.pcdb.db.generations.insert({'_id': entry_id, self.searcher_id: info})
+                    self.pcdb.db.generations.insert_one({'_id': entry_id, self.searcher_id: info})
                 else:
-                    self.pcdb.db.generations.update({'_id': entry_id}, {'$set': {self.searcher_id: info}})
+                    self.pcdb.db.generations.update_one({'_id': entry_id}, {'$set': {self.searcher_id: info}})
 
             lineage = {}
             for i in self.lineage.keys():
@@ -289,11 +289,11 @@ class Searcher:
                 lineage_inv[str(i)] = self.lineage_inv[i]
 
             if self.pcdb.db.lineage.find_one({'_id': self.searcher_id}) is None:
-                self.pcdb.db.lineage.insert({'_id': self.searcher_id,
+                self.pcdb.db.lineage.insert_one({'_id': self.searcher_id,
                                              'lineage_inv': lineage_inv,
                                              'lineage': lineage})
             else:
-                self.pcdb.db.lineage.update({'_id': self.searcher_id}, {'$set': {'lineage': lineage,
+                self.pcdb.db.lineage.update_one({'_id': self.searcher_id}, {'$set': {'lineage': lineage,
                                                                                  'lineage_inv': lineage_inv}})
 
     def set_generation(self, entry_id, value):
@@ -463,7 +463,7 @@ class Searcher:
             change['tag'] = self.searcher_name
             change['generation'] = self.current_generation
             change['from'] = entry_id
-            self.pcdb.db.generation_changes.insert(change)
+            self.pcdb.db.generation_changes.insert_one(change)
 
     def update_generation(self):
         # Increase the current generation number
@@ -497,9 +497,9 @@ class Searcher:
             if data is None:
                 data = self.to_dict
                 data['_id'] = self.searcher_id
-                self.pcdb.db.searcher_info.insert(data)
+                self.pcdb.db.searcher_info.insert_one(data)
             else:
-                self.pcdb.db.searcher_info.update({'_id': self.searcher_id}, self.to_dict)
+                self.pcdb.db.searcher_info.update_one({'_id': self.searcher_id}, self.to_dict)
 
     def clean(self):
         if self.pcdb is not None:

@@ -7,7 +7,7 @@ from .local_mongo import has_local_mongo
 
 def notest_popu_noncoll():
     """
-    Tests (pychemia.population.NonCollinearMagMoms)              :
+    Test (pychemia.population.NonCollinearMagMoms)              :
     """
     if not pychemia.HAS_PYMONGO:
         print('PyChemiaDB was disabled')

@@ -23,6 +23,96 @@ Fireball. This allows the library to compute electronic-structure
 properties using state-of-the-art ab-initio software packages and
 extract properties from those calculations.
 
+Installation
+============
+
+You can install pychemia in several ways, using the sources or the packages on pip
+
+Installing with pip from pypi.org on a virtual environment 
+----------------------------------------------------------
+
+Create the virtual environment
+
+```bash
+virtualenv pychemia_ve
+```
+
+Activate the virtual environment
+
+```bash
+source pychemia_ve/bin/activate
+```
+
+Install pychemia with pip
+
+```bash
+pip install pychemia
+```
+
+Installing with pip from a cloned repo on a virtual environment
+---------------------------------------------------------------
+
+Create the virtual environment
+
+```bash
+virtualenv pychemia_ve
+```
+
+Activate the virtual environment
+
+```bash
+source pychemia_ve/bin/activate
+```
+
+Clone the repository
+
+```bash
+git clone https://github.com/MaterialsDiscovery/PyChemia.git
+```
+
+Install from the repo folder
+
+```bash
+pip install PyChemia
+```
+
+Using PyChemia from repo folder on a virtual environment
+--------------------------------------------------------
+
+Create the virtual environment
+
+```bash
+virtualenv pychemia_ve
+```
+
+Activate the virtual environment
+
+```bash
+source pychemia_ve/bin/activate
+```
+
+Clone the repository
+
+```bash
+git clone https://github.com/MaterialsDiscovery/PyChemia.git
+```
+
+Go to repo folder and execute `setup.py` to build the Cython modules.  
+
+```bash
+cd PyChemia
+pip install Cython
+python setup.py build_ext --inplace
+python setup.py build
+```
+
+Install the packages required for PyChemia to work
+
+```bash
+pip install -r requirements.txt
+```
+
+
 
 PyChemia requirements
 =====================
@@ -34,25 +124,28 @@ Mandatory
 ---------
 
 1.  Python >= 3.6
-    The library is tested on Travis for versions of Python 3.6
+    The library is tested on Travis for Python 3.6 and 3.7
     Support for Python 2.7 has been removed
 
     https://travis-ci.org/MaterialsDiscovery/PyChemia
 
-2.  Numpy >= 1.12 NumPy is a fundamental package for any Python
+2.  Numpy >= 1.17 NumPy is a fundamental package for any Python
     scientific library. Numpy arrays are essential for efficient array
     manipulation. Many distributions come with relatively old version of
     numpy, so you should install a more recent version.
 
-3.  SciPy >= 0.18 SciPy is used for many linear algebra and FFT calls
+3.  SciPy >= 1.3 SciPy is used for many linear algebra and FFT calls
     Most distros comes with scipy 0.13 or below. PyChemia uses
     scipy.spatial that have been actively developed since version 0.15,
     we have tested PyChemia on 0.17.
 
-4.  Spglib >= 1.9.9 Spglib is used to determine symmetry groups for
+4.  Spglib >= 1.9 Spglib is used to determine symmetry groups for
     structures
 
-6.  PyMongo >= 3.4 At least for structural search PyChemia relies
+5.  Matplotlib >= 3.0 Used to plot band structures, densities of states
+    and other 2D plots
+
+6.  PyMongo >= 3.9 At least for structural search PyChemia relies
     strongly in MongoDB and its python driver. For the MongoDB server,
     any version beyond 3.0 should be fine. We have tested pychemia on
     MongoDB 3.2
@@ -63,48 +156,46 @@ Mandatory
 
     pip install pymongo --user
 
-Optional Highly Recommended
----------------------------
+7. PSUtil >= 5.6 Used to get insign about computer load at a given time.
+
+Optional
+--------
 
 1.  nose (https://nose.readthedocs.io/en/latest/) >= 1.3.7 A python
     library for testing, simply go to the source directory and execute
 
     nosetests -v
 
-2.  Matplotlib >= 1.2 Used to plot band structures, densities of states
-    and other 2D plots
+2.  pytest Another utility for testing. 
 
-Optional
---------
+3.  Pandas Library for Data Analysis used by the datamining modules
 
-1.  Pandas Library for Data Analysis used by the datamining modules
-
-2.  PyMC PyMC is a python module that implements Bayesian statistical
+4.  PyMC PyMC is a python module that implements Bayesian statistical
     models and fitting algorithms Important for the datamining
     capabilities of PyChemia
 
-3.  Mayavi >= 4.1 Some basic visualization tools are incorporated using
+5.  Mayavi >= 4.1 Some basic visualization tools are incorporated using
     this library
 
-4.  ScientificPython >2.6 This library is used for reading and writing
+6.  ScientificPython >2.6 This library is used for reading and writing
     NetCDF files
 
-5.  pymatgen >= 2.9 pymatgen is an excellent library for materials
+7.  pymatgen >= 2.9 pymatgen is an excellent library for materials
     analysis
 
-6.  ASE Atomic Simulation Environment is another good library for
+8.  ASE Atomic Simulation Environment is another good library for
     ab-initio calculations. Quite impressive for the number of ab-initio
     packages supported
 
-7.  qmpy The Python library behind the Open Quantum Materials Database.
+9.  qmpy The Python library behind the Open Quantum Materials Database.
     The OQMD is a database of DFT calculated structures. For the time
     being the database contains more than 300000 structures, with more
     than 90% of them with the electronic ground-state computed.
 
-8.  [coverage] (https://bitbucket.org/ned/coveragepy) >= 4.0.1 Provides
+10.  [coverage] (https://bitbucket.org/ned/coveragepy) >= 4.0.1 Provides
     code coverage analysis
 
-9.  python-coveralls To submit coverage information to coveralls.io
+11.  python-coveralls To submit coverage information to coveralls.io
 
     https://coveralls.io/github/MaterialsDiscovery/PyChemia
 

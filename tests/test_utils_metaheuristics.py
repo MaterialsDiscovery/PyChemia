@@ -6,7 +6,7 @@ class MetaheuristicFunctionTest(unittest.TestCase):
 
     def test_metaheuristic(self):
         """
-        Tests (pychemia.utils.metaheuristics)                        :
+        Test (pychemia.utils.metaheuristics)                        :
         """
         for i in ['Sphere', 'Ackley', 'Rosenbrock', 'Beale', 'GoldsteinPrice', 'Booth', 'BukinN6', 'Matyas', 'LeviN13',
                   'ThreeHump', 'Easom', 'CrossInTray', 'Eggholder', 'HolderTable', 'McCormick', 'SchafferN2',

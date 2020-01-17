@@ -9,7 +9,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_incar(self):
         """
-        Tests (pychemia.code.vasp) [INCAR parsing and writing]       :
+        Test (pychemia.code.vasp) [INCAR parsing and writing]       :
         """
         print(os.getcwd())
         iv = pychemia.code.vasp.read_incar('tests/data/vasp_01/INCAR')
@@ -32,14 +32,14 @@ class MyTestCase(unittest.TestCase):
 
     def test_bad_outcar(self):
         """
-        Tests (pychemia.code.vasp) [corrupted VASP OUTCAR]           :
+        Test (pychemia.code.vasp) [corrupted VASP OUTCAR]           :
         """
         vo = pychemia.code.vasp.VaspOutput('tests/data/vasp_04/OUTCAR')
         self.assertTrue(vo.is_finished)
 
     def test_encut_setup(self):
         """
-        Tests (pychemia.code.vasp) [ENCUT setup]                     :
+        Test (pychemia.code.vasp) [ENCUT setup]                     :
         """
         iv = pychemia.code.vasp.read_incar('tests/data/vasp_06')
         iv.set_encut(ENCUT=1.2, POTCAR='tests/data/vasp_06/POTCAR')
@@ -50,7 +50,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_vaspjob(self):
         """
-        Tests (pychemia.code.vasp) [VaspJob]                         :
+        Test (pychemia.code.vasp) [VaspJob]                         :
         """
         td = tempfile.mkdtemp()
         st = pychemia.code.vasp.read_poscar('tests/data/vasp_06')
@@ -67,7 +67,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_outcar(self):
         """
-        Tests (pychemia.code.vasp) [outcar]                          :
+        Test (pychemia.code.vasp) [outcar]                          :
         """
         vo = pychemia.code.vasp.VaspOutput('tests/data/vasp_06/OUTCAR')
         self.assertEqual(vo.get_memory_used()['grid'], (1028.0, 'kBytes'))
@@ -77,7 +77,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_poscar(self):
         """
-        Tests (pychemia.code.vasp) [poscar]                          :
+        Test (pychemia.code.vasp) [poscar]                          :
         """
         # Temporal directory for outputs
         tmpdir = tempfile.mkdtemp()

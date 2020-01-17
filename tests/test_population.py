@@ -12,7 +12,7 @@ def funx2(x):
 class PopulationTest(unittest.TestCase):
     def test_ljcluster(self):
         """
-        Tests (pychemia.population.LJCluster)                        :
+        Test (pychemia.population.LJCluster)                        :
         """
         if not has_local_mongo():
             return
@@ -23,7 +23,7 @@ class PopulationTest(unittest.TestCase):
 
     def test_structure(self):
         """
-        Tests (pychemia.population.RelaxStructures)                  :
+        Test (pychemia.population.RelaxStructures)                  :
         """
         if not has_local_mongo():
             return
@@ -34,7 +34,7 @@ class PopulationTest(unittest.TestCase):
 
     def test_noncoll(self):
         """
-        Tests (pychemia.population.NonCollinearMagMoms)              :
+        Test (pychemia.population.NonCollinearMagMoms)              :
         """
         if not has_local_mongo():
             return
@@ -45,7 +45,7 @@ class PopulationTest(unittest.TestCase):
 
     def test_dftu(self):
         """
-        Tests (pychemia.population.OrbitalDFTU)                      :
+        Test (pychemia.population.OrbitalDFTU)                      :
         """
         if not has_local_mongo():
             return
@@ -57,7 +57,7 @@ class PopulationTest(unittest.TestCase):
 
     def test_euclidean(self):
         """
-        Tests (pychemia.population.RealFunction)                     :
+        Test (pychemia.population.RealFunction)                     :
         """
         if not has_local_mongo():
             return

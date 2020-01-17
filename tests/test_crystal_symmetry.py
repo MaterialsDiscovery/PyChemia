@@ -6,7 +6,7 @@ import numpy as np
 class CrystalSymmetryTest(unittest.TestCase):
     def test_optimized_grid(self):
         """
-        Tests (pychemia.crystal.symmetry)                            :
+        Test (pychemia.crystal.symmetry)                            :
         """
         from pychemia import pcm_log
         pcm_log.debug("CrystalSymmetryTest")

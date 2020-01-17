@@ -5,7 +5,7 @@ from .samples import CaTiO3
 
 def test_xyz():
     """
-    Tests (pychemia.io.xyz)                                      :
+    Test (pychemia.io.xyz)                                      :
     """
     st1 = CaTiO3()
     st1.set_periodicity(False)
@@ -17,7 +17,7 @@ def test_xyz():
 
 def test_ascii():
     """
-    Tests (pychemia.io.ascii)                                    :
+    Test (pychemia.io.ascii)                                    :
     """
     st1 = CaTiO3()
     file = tempfile.NamedTemporaryFile()

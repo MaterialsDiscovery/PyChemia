@@ -22,7 +22,7 @@ def lj_searcher():
 
 def notest_searcher():
     """
-    Tests (pychemia.searcher) with LJ Clusters                   :
+    Test (pychemia.searcher) with LJ Clusters                   :
     """
     if not has_connection():
         return
@@ -39,7 +39,7 @@ class SearcherTest(unittest.TestCase):
 
     def test_firefly(self):
         """
-        Tests (pychemia.searcher.firefly) with LJ Clusters           :
+        Test (pychemia.searcher.firefly) with LJ Clusters           :
         """
         if not has_connection():
             return
@@ -57,7 +57,7 @@ class SearcherTest(unittest.TestCase):
     def test_genetic(self):
         """
 
-        Tests (pychemia.searcher.genetic) with LJ Clusters           :
+        Test (pychemia.searcher.genetic) with LJ Clusters           :
         """
         if not has_connection():
             return
@@ -70,7 +70,7 @@ class SearcherTest(unittest.TestCase):
 
     def test_harmony(self):
         """
-        Tests (pychemia.searcher.harmony) with LJ Clusters           :
+        Test (pychemia.searcher.harmony) with LJ Clusters           :
         """
         if not has_connection():
             return
@@ -83,7 +83,7 @@ class SearcherTest(unittest.TestCase):
 
     def test_swarm(self):
         """
-        Tests (pychemia.searcher.swarm) with LJ Clusters             :
+        Test (pychemia.searcher.swarm) with LJ Clusters             :
         """
         if not has_connection():
             return

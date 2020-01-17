@@ -6,7 +6,7 @@ class KPointsTest(unittest.TestCase):
 
     def test_optimized_grid(self):
         """
-        Tests (pychemia.crystal.kpoints)                             :
+        Test (pychemia.crystal.kpoints)                             :
         """
         st = pychemia.code.vasp.read_poscar('tests/data/SbBi/POSCAR')
         kp = pychemia.crystal.KPoints.optimized_grid(st.lattice)

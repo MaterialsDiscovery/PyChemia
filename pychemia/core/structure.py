@@ -1279,39 +1279,48 @@ def random_structure(method, composition, periodic=True, max_volume=1E10):
 
         assert (method in ['scaling', 'stretching'])
 
-        if method == 'scaling':
-            lattice = Lattice.random_cell(comp)
-            # Random reduced positions
-            rpos = np.random.rand(natom, 3)
-            mins = [min(rpos[:, i]) for i in range(3)]
-            rpos -= mins
+        while True:
 
-            new_lattice = lattice
-        else:
-            lattice = Lattice.random_cell(comp)
-            # Random reduced positions
-            rpos = np.random.rand(natom, 3)
-            mins = [min(rpos[:, i]) for i in range(3)]
-            rpos -= mins
+            trial = 0    
+            if method == 'scaling':
+                lattice = Lattice.random_cell(comp)
+                # Random reduced positions
+                rpos = np.random.rand(natom, 3)
+                mins = [min(rpos[:, i]) for i in range(3)]
+                rpos -= mins
 
-            new_lattice = lattice.stretch(symbols, rpos, tolerance=1.0, extra=0.1)
-
-        if new_lattice.volume < max_volume:
-            test = True
-            for i in range(natom):
-                for j in range(i + 1, natom):
-                    distance = new_lattice.minimal_distance(rpos[i], rpos[j])
-                    covalent_dim = sum(covalent_radius([symbols[i], symbols[j]]))
-                    if distance < covalent_dim:
-                        test = False
-            if test:
-                new_structure = Structure(symbols=symbols, reduced=rpos, cell=new_lattice.cell, periodicity=True)
-                minimal_distance = np.min(new_structure.distance_matrix() + 10 * np.eye(new_structure.natom))
-                # print(minimal_distance)
-
+                new_lattice = lattice
             else:
-                print('Volume of Structure %f is larger than max_volume=%f' % (new_lattice.volume, max_volume))
-                new_structure = None
+                lattice = Lattice.random_cell(comp)
+                # Random reduced positions
+                rpos = np.random.rand(natom, 3)
+                mins = [min(rpos[:, i]) for i in range(3)]
+                rpos -= mins
+
+                new_lattice = lattice.stretch(symbols, rpos, tolerance=1.0, extra=0.1)
+
+            if new_lattice.volume < max_volume:
+                test = True
+                for i in range(natom):
+                    for j in range(i + 1, natom):
+                        distance = new_lattice.minimal_distance(rpos[i], rpos[j])
+                        covalent_dim = sum(covalent_radius([symbols[i], symbols[j]]))
+                        if distance < covalent_dim:
+                            test = False
+                if test:
+                    new_structure = Structure(symbols=symbols, reduced=rpos, cell=new_lattice.cell, periodicity=True)
+                    minimal_distance = np.min(new_structure.distance_matrix() + 10 * np.eye(new_structure.natom))
+                    break
+                else:
+                    print("Trial failed, distance %f is less than covalent radious %f" % (distance, covalent_dim))
+                    trial+=1
+
+            if trial>10:
+                break
+
+        else:
+            print('Volume of Structure %f is larger than max_volume=%f' % (new_lattice.volume, max_volume))
+            new_structure = None
     else:
         pos = np.random.rand(natom, 3)
 

@@ -128,12 +128,12 @@ CLASSIFIERS = [
     "Topic :: Scientific/Engineering :: Chemistry",
     "Topic :: Scientific/Engineering :: Physics",
 ]
-INSTALL_REQUIRES = ['numpy >= 1.17.4',
-                    'scipy >= 1.3.1',
-                    'spglib >= 1.9.9',
-                    'pymongo >= 3.9.0',
-                    'matplotlib >= 3.0.1',
-                    'psutil >= 5.6.7']
+INSTALL_REQUIRES = ['numpy >= 1.17',
+                    'scipy >= 1.3',
+                    'spglib >= 1.9',
+                    'pymongo >= 3.9',
+                    'matplotlib >= 3.0',
+                    'psutil >= 5.6']
 
 ###################################################################
 

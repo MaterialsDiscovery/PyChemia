@@ -5,7 +5,7 @@ from .samples import Al2O3
 
 def test_analysis():
     """
-    Tests (pychemia.analysis.analysis)                           :
+    Test (pychemia.analysis.analysis)                           :
     """
     st = Al2O3()
     sa = pychemia.analysis.StructureAnalysis(st, radius=20)
@@ -15,7 +15,7 @@ def test_analysis():
 
 def test_match():
     """
-    Tests (pychemia.analysis.match)                              :
+    Test (pychemia.analysis.match)                              :
     """
     st = Al2O3()
     st2 = st.supercell((2, 3, 4))
@@ -27,7 +27,7 @@ def test_match():
 
 def test_distances():
     """
-    Tests (pychemia.analysis.match)                              :
+    Test (pychemia.analysis.match)                              :
     """
     print(os.getcwd())
     st = pychemia.io.xyz.load('tests/data/xyz/chlorophyll.xyz')
