@@ -41,8 +41,8 @@ developers who want to change the code and get those changes operative without
 an explicit instalation.
 
 
-Installing with pip from pypi.org on a virtual environment 
-----------------------------------------------------------
+Installing with pip from pypi.org 
+---------------------------------
 
 This method installs PyChemia from the packages uploaded
 to PyPi every month. It will provides a version of 
@@ -64,8 +64,8 @@ with pip
 pip install pychemia
 ```
 
-Installing with pip from a cloned repo on a virtual environment
----------------------------------------------------------------
+Installing with pip from a cloned repo
+--------------------------------------
 
 This method installs PyChemia from the Github repo.
 The method will install PyChemia from the most recent sources.
@@ -90,8 +90,8 @@ Finally, install from the repo folder
 pip install PyChemia
 ```
 
-Using PyChemia from repo folder on a virtual environment
---------------------------------------------------------
+Using PyChemia from repo folder
+-------------------------------
 
 This method is mostly used for development. 
 In this way PyChemia is not actually installed and changes to the code
