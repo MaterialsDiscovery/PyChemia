@@ -23,7 +23,7 @@ path = 'tests/data'
 
 def test_example1():
     """
-    Example of a simple calc                                     :
+    Example of a simple calc                                    :
     """
     workdir = tempfile.mkdtemp()
     print(workdir)

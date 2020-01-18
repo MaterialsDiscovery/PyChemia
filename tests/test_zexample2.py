@@ -21,7 +21,7 @@ from pychemia.utils.netcdf import netcdf2dict
 
 def test_example2():
     """
-    Example of a multiple calc                                   :
+    Example of a multiple calc                                  :
     """
     path = 'tests/data'
     assert (os.path.isdir(path))
