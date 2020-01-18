@@ -2,13 +2,12 @@
 [![PyPI version](https://badge.fury.io/py/pychemia.svg)](https://badge.fury.io/py/pychemia)
 [![Coverage Status](https://coveralls.io/repos/github/MaterialsDiscovery/PyChemia/badge.svg?branch=master)](https://coveralls.io/github/MaterialsDiscovery/PyChemia?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/pychemia/badge/?version=latest)](http://pychemia.readthedocs.io/en/latest/?badge=latest)
+[![HitCount](http://hits.dwyl.io/MaterialsDiscovery/PyChemia.svg)](http://hits.dwyl.io/MaterialsDiscovery/PyChemia)
 
-PyChemia
-========
+PyChemia, Python Framework for Materials Discovery and Design
+=============================================================
 
 ![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/_static/PyChemia_Small.png)
-
-Python Materials Discovery Framework
 
 PyChemia is an open-source Python Library for materials structural
 search. The purpose of the initiative is to create a method agnostic
@@ -128,10 +127,16 @@ Finally, install the packages required for PyChemia to work
 pip install -r requirements.txt
 ```
 
-Set the variable $PYTHONPATH to point to PyChemia folder
+Set the variable $PYTHONPATH to point to PyChemia folder, in the case of bash it will be:
 
 ```bash
 export PYTHONPATH=`path`
+```
+
+On C shell (csh or tcsh)
+
+```csh
+setenv PYTHONPATH `path`
 ```
 
 PyChemia requirements
@@ -232,6 +237,17 @@ can be found on two repositories for documentation:
 * Python Hosted:
     
    http://pythonhosted.org/pychemia
+
+Documentation is hosted on [Read the Docs](https://readthedocs.org/projects/pychemia/) also available with Short URLs [readthedocs](http://pychemia.readthedocs.io) and [rtfd](http://pychemia.rtfd.io)
+
+Documentation is also hosted on [Python Hosted](http://pythonhosted.org/pychemia/index.html)
+
+Sources
+=======
+
+The main repository is on [GitHub](https://github.com/MaterialsDiscovery/PyChemia)
+
+Sources and wheel binaries are also distrubuted on [PyPI](https://pypi.python.org/pypi/pychemia) or [PyPI](https://pypi.org/project/pychemia/)
 
 Structure of the Library
 ========================
