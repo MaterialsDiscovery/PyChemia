@@ -32,24 +32,34 @@ extract properties from those calculations.
 Installation
 ============
 
-You can install pychemia in several ways, using the sources or the packages on pip
+You can install pychemia in several ways. We are showing 3 ways of
+installing PyChemia inside a Virtual environment. A virtual environment
+is a good way of isolating software packages from the pacakges installed
+with the Operating System. The decision on which method to use
+depends if you want to use the most recent code or the package uploaded
+from time to time to PyPi. The last method is particularly suited for
+developers who want to change the code and get those changes operative without
+an explicit instalation.
+
 
 Installing with pip from pypi.org on a virtual environment 
 ----------------------------------------------------------
 
-Create the virtual environment
+This method installs PyChemia from the packages uploaded
+to PyPi every month. It will provides a version of 
+PyChemia that is stable.
+
+First, create and activate the virtual environment.
+We are using the name `pychemia_ve`, but that is arbitrary.
 
 ```bash
 virtualenv pychemia_ve
-```
-
-Activate the virtual environment
-
-```bash
 source pychemia_ve/bin/activate
 ```
 
-Install pychemia with pip
+When the virtual environment is activated, your prompt 
+changes to `(pychemia_ve)...$`. Now, install pychemia 
+with pip
 
 ```bash
 pip install pychemia
@@ -58,25 +68,24 @@ pip install pychemia
 Installing with pip from a cloned repo on a virtual environment
 ---------------------------------------------------------------
 
-Create the virtual environment
+This method installs PyChemia from the Github repo.
+The method will install PyChemia from the most recent sources.
+
+First, create and activate the virtual environment.
+We are using the name `pychemia_ve`, but that is arbitrary.
 
 ```bash
 virtualenv pychemia_ve
-```
-
-Activate the virtual environment
-
-```bash
 source pychemia_ve/bin/activate
 ```
 
-Clone the repository
+Second, clone the repository from GitHub
 
 ```bash
 git clone https://github.com/MaterialsDiscovery/PyChemia.git
 ```
 
-Install from the repo folder
+Finally, install from the repo folder
 
 ```bash
 pip install PyChemia
@@ -85,15 +94,15 @@ pip install PyChemia
 Using PyChemia from repo folder on a virtual environment
 --------------------------------------------------------
 
-Create the virtual environment
+This method is mostly used for development. 
+In this way PyChemia is not actually installed and changes to the code
+will take inmediate effect.
 
+First, create and activate the virtual environment.
+We are using the name `pychemia_ve`, but that is arbitrary.
+ 
 ```bash
 virtualenv pychemia_ve
-```
-
-Activate the virtual environment
-
-```bash
 source pychemia_ve/bin/activate
 ```
 
@@ -103,7 +112,8 @@ Clone the repository
 git clone https://github.com/MaterialsDiscovery/PyChemia.git
 ```
 
-Go to repo folder and execute `setup.py` to build the Cython modules.  
+Go to repo folder, install Cython with pip and 
+execute `setup.py` to build the Cython modules.  
 
 ```bash
 cd PyChemia
@@ -112,17 +122,25 @@ python setup.py build_ext --inplace
 python setup.py build
 ```
 
-Install the packages required for PyChemia to work
+Finally, install the packages required for PyChemia to work
 
 ```bash
 pip install -r requirements.txt
 ```
 
+Set the variable $PYTHONPATH to point to PyChemia folder
+
+```bash
+export PYTHONPATH=`path`
+```
+
 PyChemia requirements
 =====================
 
-Before installing PyChemia, you may need to first install a few critical
-dependencies
+PyChemia relies on a number of other python packages to 
+operate. Some of them are mandatory and they must be installed.
+Other packages are optional and their absence will only constrain
+certain capabilities. 
 
 Mandatory
 ---------
@@ -150,12 +168,6 @@ Mandatory
     Used for structural search PyChemia relies strongly in MongoDB and its python driver. 
     For the MongoDB server, any version beyond 3.0 should be fine. 
     We have tested pychemia on MongoDB 3.4
-
-    pip install pymongo
-
-    or
-
-    pip install pymongo --user
 
 7.  [psutil](https://github.com/giampaolo/psutil) >= 5.6
     Cross-platform lib for process and system monitoring in Python

@@ -17,7 +17,7 @@ def test_abinit2xyz():
     """
     Test command abinit2xyz                                    :
     """
-    pychemia.info()
+    #pychemia.info()
     print('Running abinit2xyz')
     script = 'scripts/abi_abinit2xyz.py'
     args = path + '/abinit_03/abinit.in'
