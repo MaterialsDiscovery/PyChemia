@@ -4,8 +4,8 @@
 [![Documentation Status](https://readthedocs.org/projects/pychemia/badge/?version=latest)](http://pychemia.readthedocs.io/en/latest/?badge=latest)
 [![HitCount](http://hits.dwyl.io/MaterialsDiscovery/PyChemia.svg)](http://hits.dwyl.io/MaterialsDiscovery/PyChemia)
 
-PyChemia, Python Framework for Materials Discovery and Design
-=============================================================
+PyChemia
+========
 
 ![PyChemia](https://raw.githubusercontent.com/MaterialsDiscovery/PyChemia/master/docs/_static/PyChemia_Small.png)
 
