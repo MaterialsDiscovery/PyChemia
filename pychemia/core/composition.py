@@ -11,7 +11,7 @@ from math import pi
 from pychemia.utils.periodic import atomic_symbols, electronegativity, atomic_number, covalent_radius
 from pychemia.utils.computing import deep_unicode
 from functools import reduce
-from collections import Mapping
+from collections.abc import Mapping
 
 
 class Composition(Mapping):

@@ -1,4 +1,4 @@
-from collections import Mapping
+from collections.abc import Mapping
 from pychemia.utils.periodic import *
 
 madelung_exceptions = {'Cr': ['Ar', '4s1', '3d5'],

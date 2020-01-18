@@ -143,7 +143,7 @@ class CodeRun:
         return self.runner
 
 
-class CodeInput(collections.MutableMapping):
+class CodeInput(collections.abc.MutableMapping):
 
     __metaclass__ = ABCMeta
 
@@ -263,7 +263,7 @@ class CodeInput(collections.MutableMapping):
         return False
 
 
-class CodeOutput(collections.Mapping):
+class CodeOutput(collections.abc.Mapping):
 
     __metaclass__ = ABCMeta
 

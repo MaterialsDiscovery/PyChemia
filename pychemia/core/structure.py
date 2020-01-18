@@ -11,7 +11,7 @@ import os
 import struct
 import sys
 import numpy as np
-from collections import MutableSequence
+from collections.abc import MutableSequence
 from itertools import combinations, repeat
 from math import sin, cos
 from multiprocessing import Pool
