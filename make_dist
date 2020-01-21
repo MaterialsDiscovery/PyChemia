@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=`cat pychemia/setup.json | grep version | awk -F: '{print $2}' | awk -F\" '{print $2}'`
+version=`cat setup.json | grep version | awk -F: '{print $2}' | awk -F\" '{print $2}'`
 
 cd docs
 make html
@@ -9,6 +9,6 @@ cd ..
 python3 setup.py sdist
 python3 setup.py bdist_wheel
 
-twine upload --verbose -r pypi dist/pychemia-$version-cp37-cp37m-linux_x86_64.whl 
+#twine upload --verbose -r pypi dist/pychemia-$version-cp37-cp37m-linux_x86_64.whl 
 twine upload --verbose -r pypi dist/pychemia-$version.tar.gz
 
