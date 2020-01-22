@@ -103,15 +103,15 @@ class CodeRun:
             try:
                 which_bin = subprocess.check_output('which %s' % self.executable, shell=True)
             except subprocess.CalledProcessError:
-                print('ERROR: Executable %s could not be found as an absolute, relative or via the $PATH variable' %
+                raise ValueError('ERROR: Executable %s could not be found as an absolute, relative or via the $PATH variable' %
                       self.executable)
-                return
+                
             exec_path = which_bin.decode('utf8').strip()
-            print("Executable %s " % exec_path)
         else:
             exec_path = self.executable
 
-        print("Executable %s is located at %s" % (exec_path, os.path.dirname(os.path.abspath(exec_path))))
+        if verbose:
+            print("Executable: %s " % exec_path)
 
         if self.use_mpi:
 

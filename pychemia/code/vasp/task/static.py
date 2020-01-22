@@ -13,7 +13,7 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class StaticCalculation(Task):
-    def __init__(self, structure, workdir='.', binary='vasp', encut=1.3, kpoints=None, kp_density=1E4,
+    def __init__(self, structure, workdir='.', executable='vasp', encut=1.3, kpoints=None, kp_density=1E4,
                  extra_incar=None):
 
         self.encut = encut
@@ -23,18 +23,18 @@ class StaticCalculation(Task):
         else:
             self.kpoints = kpoints
         self.task_params = {'encut': self.encut, 'kpoints': self.kpoints.to_dict, 'extra_incar': extra_incar}
-        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, binary=binary)
+        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=executable)
 
     def run(self, nparal=4):
 
-        vj = VaspJob()
-        vj.initialize(self.structure, self.workdir, self.kpoints, binary=self.binary)
+        vj = VaspJob(workdir=self.workdir, executable=self.executable)
+        vj.initialize(self.structure, self.kpoints)
         vj.clean()
         vj.job_static()
         vj.input_variables.set_density_for_restart()
         vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir + os.sep + 'POTCAR')
-        vj.input_variables.variables['NBANDS'] = nparal * ((int(self.structure.valence_electrons()) +
-                                                            self.structure.natom) / nparal + 1)
+        vj.input_variables.variables['NBANDS'] = int(nparal * ((int(self.structure.valence_electrons()) +
+                                                            self.structure.natom) / nparal + 1))
         vj.input_variables.set_ismear(self.kpoints)
         vj.input_variables.variables['SIGMA'] = 0.2
         vj.input_variables.variables['ISPIN'] = 2
@@ -43,7 +43,7 @@ class StaticCalculation(Task):
                 vj.input_variables.variables[i] = self.task_params['extra_incar'][i]
         vj.set_inputs()
         self.encut = vj.input_variables.variables['ENCUT']
-        vj.run(use_mpi=True, mpi_num_procs=nparal)
+        vj.run(mpi_num_procs=nparal)
         pcm_log.debug('Starting VASP')
         while True:
             energy_str = ''
