@@ -14,7 +14,7 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class ElasticModuli(Task):
-    def __init__(self, structure, workdir='.', binary='vasp', encut=1.3, kpoints=None, kp_density=1E4):
+    def __init__(self, structure, workdir='.', executable='vasp', encut=1.3, kpoints=None, kp_density=1E4):
 
         self.encut = encut
         if kpoints is None:
@@ -23,12 +23,12 @@ class ElasticModuli(Task):
         else:
             self.kpoints = kpoints
         self.task_params = {'encut': self.encut, 'kpoints': self.kpoints.to_dict}
-        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, binary=binary)
+        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=executable)
 
     def run(self, nparal=4):
 
         vj = VaspJob()
-        vj.initialize(self.structure, self.workdir, self.kpoints, binary=self.binary)
+        vj.initialize(self.structure, self.workdir, self.kpoints, executable=self.executable)
         vj.clean()
         vj.job_static()
         vj.input_variables.set_density_for_restart()

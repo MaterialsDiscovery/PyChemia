@@ -21,7 +21,7 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class IonRelaxation2(Relaxator, Task):
-    def __init__(self, structure, workdir='.', target_forces=1E-3, waiting=False, binary='vasp',
+    def __init__(self, structure, workdir='.', target_forces=1E-3, waiting=False, executable='vasp',
                  encut=1.3, kp_grid=None, kp_density=1E4, relax_cell=True):
 
         Relaxator.__init__(self, target_forces)
@@ -33,11 +33,11 @@ class IonRelaxation2(Relaxator, Task):
             self.kpoints = KPoints(kmode='gamma', grid=kp_grid)
         else:
             self.kpoints = KPoints.optimized_grid(structure.lattice, kp_density=kp_density)
-        self.vaspjob.initialize(workdir=workdir, structure=structure, kpoints=self.kpoints, binary=binary)
+        self.vaspjob.initialize(workdir=workdir, structure=structure, kpoints=self.kpoints, executable=executable)
         self.encut = encut
         self.relax_cell = relax_cell
         task_params = {'target_forces': self.target_forces, 'encut': self.encut, 'relax_cell': self.relax_cell}
-        Task.__init__(self, structure=structure, task_params=task_params, workdir=workdir, binary=binary)
+        Task.__init__(self, structure=structure, task_params=task_params, workdir=workdir, executable=executable)
         self.stage = 1
 
     def create_dirs(self, clean=False):

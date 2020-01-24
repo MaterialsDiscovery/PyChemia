@@ -27,7 +27,7 @@ class Polarization(Task):
     def load(self):
         pass
 
-    def __init__(self, structure, workdir, potcar_filepath, external=None, maxfield=0, stepfield=0, binary='vasp'):
+    def __init__(self, structure, workdir, potcar_filepath, external=None, maxfield=0, stepfield=0, executable='vasp'):
 
         self.external = None
         self.potcar = potcar_filepath
@@ -39,7 +39,7 @@ class Polarization(Task):
         self.stepfield = abs(stepfield)
         task_params = {'maxfield': self.maxfield, 'stepfield': self.stepfield, 'external': self.external,
                        'portcar': self.potcar}
-        Task.__init__(self, structure=structure, task_params=task_params, workdir=workdir, executable=binary)
+        Task.__init__(self, structure=structure, task_params=task_params, workdir=workdir, executable=executable)
 
     def initialize(self, kpoints, cleandir=False):
         if not os.path.isdir(self.workdir):

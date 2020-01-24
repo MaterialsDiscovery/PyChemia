@@ -10,7 +10,7 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class IdealStrength(Task):
-    def __init__(self, structure, workdir='.', binary='vasp', ini_factor=1.0, fin_factor=1.2, delta_factor=0.01,
+    def __init__(self, structure, workdir='.', executable='vasp', ini_factor=1.0, fin_factor=1.2, delta_factor=0.01,
                  kp=None, kp_density=1E4, expansion=(1, 1, 1), encut=1.3, target_forces=1E-3, output_file=None,
                  energy_tol=1E-3):
 
@@ -34,7 +34,7 @@ class IdealStrength(Task):
         task_params = {'ini_factor': ini_factor, 'fin_factor': fin_factor, 'delta_factor': delta_factor,
                        'kp_density': kp_density, 'expansion': expansion, 'encut': encut,
                        'target_forces': target_forces, 'kp': kp.to_dict}
-        Task.__init__(self, structure=structure, task_params=task_params, binary=binary, workdir=workdir)
+        Task.__init__(self, structure=structure, task_params=task_params, executable=executable, workdir=workdir)
 
         self.output = []
 
@@ -73,7 +73,7 @@ class IdealStrength(Task):
                 print('\nConvergence of K-Point Grid')
                 print('---------------------------\n')
                 ck = ConvergenceKPointGrid(newst, workdir=self.workdir + os.sep + 'KPCONV_' + str(ifactor),
-                                           binary=self.binary, encut=self.encut, energy_tolerance=self.energy_tol,
+                                           executable=self.executable, encut=self.encut, energy_tolerance=self.energy_tol,
                                            recover=True)
                 ck.run(nparal=nparal)
                 ck.save()
@@ -86,7 +86,7 @@ class IdealStrength(Task):
             relax = IonRelaxation(structure=newst, workdir=self.workdir + os.sep + 'RELAX_' + str(ifactor),
                                   kp_grid=self.kpoints.grid, encut=self.encut,
                                   relax_cell=False, target_forces=self.target_forces, waiting=False,
-                                  binary=self.binary)
+                                  executable=self.executable)
             relax.run(nparal=nparal)
 
             vo = pychemia.code.vasp.VaspOutput(self.workdir + '_' + str(ifactor) + '/OUTCAR')

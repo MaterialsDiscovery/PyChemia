@@ -316,7 +316,7 @@ class NonCollinearMagMoms(Population):
 
         return entry_id, entry_jd
 
-    def prepare_folder(self, entry_id, workdir, binary='vasp', source_dir='.'):
+    def prepare_folder(self, entry_id, workdir, executable='vasp', source_dir='.'):
 
         if not os.path.isdir(workdir):
             os.mkdir(workdir)

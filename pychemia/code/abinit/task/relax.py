@@ -10,7 +10,7 @@ __author__ = 'Guillermo Avendano-Franco'
 
 
 class IonRelaxation(Relaxator, Task):
-    def __init__(self, structure, workdir='.', tolmxf=1E-4, tolrff=1E-2, waiting=False, binary='abinit',
+    def __init__(self, structure, workdir='.', tolmxf=1E-4, tolrff=1E-2, waiting=False, executable='abinit',
                  ecut=50, kp_grid=None, kp_density=1E4, relax_cell=True, max_calls=10):
 
         Relaxator.__init__(self, tolmxf)
@@ -23,12 +23,12 @@ class IonRelaxation(Relaxator, Task):
             self.kpoints = KPoints(kmode='gamma', grid=kp_grid)
         else:
             self.kpoints = KPoints.optimized_grid(structure.lattice, kp_density=kp_density)
-        self.abinitjob.initialize(workdir=workdir, structure=structure, binary=binary)
+        self.abinitjob.initialize(workdir=workdir, structure=structure, executable=executable)
         self.relax_cell = relax_cell
         self.max_calls = max_calls
         task_params = {'tolmxf': self.target_forces, 'ecut': self.ecut, 'relax_cell': self.relax_cell,
                        'max_calls': self.max_calls}
-        Task.__init__(self, structure=structure, task_params=task_params, workdir=workdir, binary=binary)
+        Task.__init__(self, structure=structure, task_params=task_params, workdir=workdir, executable=executable)
 
     def run(self, nparal=1):
 

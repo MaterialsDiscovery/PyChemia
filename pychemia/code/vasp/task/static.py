@@ -43,8 +43,8 @@ class StaticCalculation(Task):
                 vj.input_variables.variables[i] = self.task_params['extra_incar'][i]
         vj.set_inputs()
         self.encut = vj.input_variables.variables['ENCUT']
+        pcm_log.debug('Executing VASP at %s with %d cores' % (self.executable, nparal))
         vj.run(mpi_num_procs=nparal)
-        pcm_log.debug('Starting VASP')
         while True:
             energy_str = ''
             filename = self.workdir + os.sep + 'vasp_stdout.log'
@@ -68,7 +68,7 @@ class StaticCalculation(Task):
                         scf_energies = [i[2] for i in vasp_stdout['data']]
                         energy_str += ' %7.3f' % scf_energies[-1]
                         pcm_log.debug(energy_str)
-                pcm_log.debug('Execution complete')
+                pcm_log.debug('VASP Execution finished')
                 break
             time.sleep(5)
         vj.get_outputs()

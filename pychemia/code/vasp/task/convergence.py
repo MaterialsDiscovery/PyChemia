@@ -92,12 +92,12 @@ class Convergence:
 
 
 class ConvergenceCutOffEnergy(Task, Convergence):
-    def __init__(self, structure, workdir='.', kpoints=None, binary='vasp', energy_tolerance=1E-3,
+    def __init__(self, structure, workdir='.', kpoints=None, executable='vasp', energy_tolerance=1E-3,
                  increment_factor=0.2, initial_encut=1.3):
 
         self.structure = structure
         self.workdir = workdir
-        self.binary = binary
+        self.executable = executable
         self.increment_factor = increment_factor
         self.initial_encut = initial_encut
         if kpoints is None:
@@ -108,12 +108,12 @@ class ConvergenceCutOffEnergy(Task, Convergence):
         Convergence.__init__(self, energy_tolerance)
         self.task_params = {'energy_tolerance': self.energy_tolerance, 'increment_factor': self.increment_factor,
                             'initial_encut': self.initial_encut}
-        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=binary)
+        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=executable)
 
     def run(self, nparal=4):
 
         self.started = True
-        vj = VaspJob(workdir=self.workdir, binary=self.binary)
+        vj = VaspJob(workdir=self.workdir, executable=self.executable)
         vj.initialize(structure=self.structure, kpoints=self.kpoints)
         energies = []
         if not self.is_converge:
@@ -214,11 +214,11 @@ class ConvergenceCutOffEnergy(Task, Convergence):
 
 
 class ConvergenceKPointGrid(Task, Convergence):
-    def __init__(self, structure, workdir='.', binary='vasp', energy_tolerance=1E-3, recover=False, encut=1.3):
+    def __init__(self, structure, workdir='.', executable='vasp', energy_tolerance=1E-3, recover=False, encut=1.3):
 
         self.structure = structure
         self.workdir = workdir
-        self.binary = binary
+        self.executable = executable
         self.initial_number = 12
         self.convergence_info = None
         self.encut = encut
@@ -226,7 +226,7 @@ class ConvergenceKPointGrid(Task, Convergence):
         if recover:
             self.recover()
         self.task_params = {'energy_tolerance': self.energy_tolerance, 'encut': self.encut}
-        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=binary)
+        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=executable)
 
     def recover(self):
         kpoints_file = self.workdir + os.sep + 'KPOINTS'
@@ -240,7 +240,7 @@ class ConvergenceKPointGrid(Task, Convergence):
     def run(self, nparal=4):
 
         self.started = True
-        vj = VaspJob(workdir=self.workdir, binary=self.binary)
+        vj = VaspJob(workdir=self.workdir, executable=self.executable)
         kp = KPoints()
         vj.initialize(structure=self.structure, kpoints=kp)
         grid = None

@@ -57,7 +57,7 @@ class FireBall(CodeRun):
             ret.option = dictionary['tds']
         return ret
 
-    def initialize(self, structure, workdir=None, kpoints=None, binary='fireball.x'):
+    def initialize(self, structure, workdir=None, kpoints=None, executable='fireball.x'):
         assert structure.is_perfect
         self.structure = structure
         if workdir is not None:
@@ -67,7 +67,7 @@ class FireBall(CodeRun):
         if not os.path.lexists(self.workdir):
             os.mkdir(self.workdir)
         self.kpoints = kpoints
-        self.binary = binary
+        self.executable = executable
 
     def set_inputs(self, rms=0.1):
         self.write_input(filename=self.workdir + os.sep + 'fireball.in')
@@ -87,7 +87,7 @@ class FireBall(CodeRun):
         cwd = os.getcwd()
         os.chdir(self.workdir)
         stdout = open('fireball.log', 'w')
-        sp = subprocess.Popen(self.binary, stdout=stdout)
+        sp = subprocess.Popen(self.executable, stdout=stdout)
         os.chdir(cwd)
         self.runner = sp
         return sp

@@ -1318,9 +1318,9 @@ def random_structure(method, composition, periodic=True, max_volume=1E10):
             if trial>10:
                 break
 
-        else:
-            print('Volume of Structure %f is larger than max_volume=%f' % (new_lattice.volume, max_volume))
-            new_structure = None
+        #else:
+        #    print('Volume of Structure %f is larger than max_volume=%f' % (new_lattice.volume, max_volume))
+        #    new_structure = None
     else:
         pos = np.random.rand(natom, 3)
 
