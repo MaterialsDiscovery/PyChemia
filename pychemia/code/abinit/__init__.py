@@ -15,5 +15,6 @@ from .output import AbinitOutput
 from .run import AbinitRun
 from .utils import psp_name
 from .parser import parser
+from .multibinit import Multibinit
 
 # __all__ = filter(lambda s: not s.startswith('_'), dir())
