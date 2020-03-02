@@ -9,6 +9,8 @@ from ..outcar import read_vasp_stdout
 from ..kpoints import read_kpoints
 from ..poscar import read_poscar
 from ...tasks import Task
+from ..xml_output import parse_vasprun
+
 
 __author__ = 'Guillermo Avendano-Franco'
 
@@ -92,14 +94,17 @@ class Convergence:
 
 
 class ConvergenceCutOffEnergy(Task, Convergence):
-    def __init__(self, structure, workdir='.', kpoints=None, executable='vasp', energy_tolerance=1E-3,
-                 increment_factor=0.2, initial_encut=1.3):
-
+    def __init__(self, structure, workdir='.', kpoints=None, binary='vasp', energy_tolerance=1E-3,
+                 increment_factor=0.2, initial_encut=1.3,pspdir='potpaw_PBE',psp_options={},extra_vars={}):
+        
         self.structure = structure
         self.workdir = workdir
-        self.executable = executable
+        self.binary = binary
         self.increment_factor = increment_factor
         self.initial_encut = initial_encut
+        self.pspdir = pspdir
+        self.psp_options = psp_options
+        self.extra_vars = extra_vars
         if kpoints is None:
             kp = KPoints.optimized_grid(self.structure.lattice, kp_density=1E4, force_odd=True)
             self.kpoints = kp
@@ -108,13 +113,14 @@ class ConvergenceCutOffEnergy(Task, Convergence):
         Convergence.__init__(self, energy_tolerance)
         self.task_params = {'energy_tolerance': self.energy_tolerance, 'increment_factor': self.increment_factor,
                             'initial_encut': self.initial_encut}
-        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=executable)
+        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=binary)
 
     def run(self, nparal=4):
 
         self.started = True
-        vj = VaspJob(workdir=self.workdir, executable=self.executable)
-        vj.initialize(structure=self.structure, kpoints=self.kpoints)
+        vj = VaspJob(workdir=self.workdir, binary=self.binary)
+        vj.initialize(structure=self.structure, kpoints=self.kpoints,pspdir=self.pspdir)
+        vj.potcar_setup = self.psp_options
         energies = []
         if not self.is_converge:
             x = self.initial_encut
@@ -126,10 +132,12 @@ class ConvergenceCutOffEnergy(Task, Convergence):
             vj.job_static()
             vj.input_variables.set_density_for_restart()
             vj.input_variables.set_encut(ENCUT=x, POTCAR=self.workdir + os.sep + 'POTCAR')
-            vj.input_variables.variables['NBANDS'] = nparal * ((30 + self.structure.valence_electrons()) / nparal + 1)
+            vj.input_variables.variables['NBANDS'] = int(nparal * ((30 + self.structure.valence_electrons()) / nparal + 1))
             vj.input_variables.set_ismear(self.kpoints)
             vj.input_variables.variables['SIGMA'] = 0.2
             vj.input_variables.variables['ISPIN'] = 2
+            for i in self.extra_vars:
+                vj.input_variables[i] = self.extra_vars[i]
             vj.set_inputs()
             encut = vj.input_variables.variables['ENCUT']
             print('Testing ENCUT = %7.3f' % encut)
@@ -153,7 +161,8 @@ class ConvergenceCutOffEnergy(Task, Convergence):
                 if vj.runner is not None and vj.runner.poll() is not None:
                     filename = self.workdir + os.sep + 'vasp_stdout.log'
                     if os.path.exists(filename):
-                        vasp_stdout = read_vasp_stdout(filename=filename)
+                        # vasp_stdout = read_vasp_stdout(filename=filename)
+                        vasprun = parse_vasprun('vasprun.xml')
                         if len(vasp_stdout['data']) > 2:
                             scf_energies = [i[2] for i in vasp_stdout['data']]
                             energy_str += ' %7.3f' % scf_energies[-1]
@@ -214,19 +223,22 @@ class ConvergenceCutOffEnergy(Task, Convergence):
 
 
 class ConvergenceKPointGrid(Task, Convergence):
-    def __init__(self, structure, workdir='.', executable='vasp', energy_tolerance=1E-3, recover=False, encut=1.3):
+    def __init__(self, structure, workdir='.', binary='vasp', energy_tolerance=1E-3, recover=False, encut=1.3, pspdir= 'potpaw_PBE',extra_vars={},psp_options=None):
 
         self.structure = structure
         self.workdir = workdir
-        self.executable = executable
+        self.binary = binary
         self.initial_number = 12
         self.convergence_info = None
         self.encut = encut
+        self.pspdir = pspdir
+        self.psp_options = psp_options
+        self.extra_vars = extra_vars
         Convergence.__init__(self, energy_tolerance)
         if recover:
             self.recover()
         self.task_params = {'energy_tolerance': self.energy_tolerance, 'encut': self.encut}
-        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=executable)
+        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=binary)
 
     def recover(self):
         kpoints_file = self.workdir + os.sep + 'KPOINTS'
@@ -240,9 +252,11 @@ class ConvergenceKPointGrid(Task, Convergence):
     def run(self, nparal=4):
 
         self.started = True
-        vj = VaspJob(workdir=self.workdir, executable=self.executable)
+
+        vj = VaspJob(workdir=self.workdir, binary=self.binary) 
+        vj.potcar_setup = self.psp_options
         kp = KPoints()
-        vj.initialize(structure=self.structure, kpoints=kp)
+        vj.initialize(structure=self.structure, kpoints=kp, pspdir=self.pspdir)
         grid = None
         energies = []
         if not self.is_converge:
@@ -266,6 +280,8 @@ class ConvergenceKPointGrid(Task, Convergence):
                 vj.input_variables.set_ismear(kp)
                 vj.input_variables.variables['SIGMA'] = 0.2
                 vj.input_variables.variables['ISPIN'] = 2
+                for i in self.extra_vars:
+                    vj.input_variables[i]=self.extra_vars[i]
                 vj.set_inputs()
                 vj.run(mpi_num_procs=nparal)
                 while True:
