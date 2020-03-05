@@ -23,21 +23,23 @@ __author__ = 'Guillermo Avendano-Franco'
 class IonRelaxation(Relaxator, Task):
     def __init__(self, structure, workdir='.', target_forces=1E-3, executable='vasp',
                  encut=1.3, kp_grid=None, kp_density=1E4, relax_cell=True,
-                 max_calls=10, extra_vars={}):
+                 max_calls=10,pspdir='potpaw_PBE',psp_options=None,extra_vars={}):
 
         Relaxator.__init__(self, target_forces)
         self.target_forces = target_forces
 
-        self.vaspjob = VaspJob(executable=executable, workdir=workdir)
+        self.vaspjob = VaspJob(binary=executable, workdir=workdir)
         self.relaxed = False
         if kp_grid is not None:
             self.kpoints = KPoints(kmode='gamma', grid=kp_grid)
         else:
             self.kpoints = KPoints.optimized_grid(structure.lattice, kp_density=kp_density)
-        self.vaspjob.initialize(structure=structure, kpoints=self.kpoints)
+        self.vaspjob.initialize(structure=structure, kpoints=self.kpoints,pspdir=pspdir)
+        self.vaspjob.potcar_setup = psp_options
         self.encut = encut
         self.relax_cell = relax_cell
         self.max_calls = max_calls
+        self.pspdir = pspdir
         self.extra_vars=extra_vars
 
         task_params = {'target_forces': self.target_forces, 'encut': self.encut, 'relax_cell': self.relax_cell,
@@ -71,12 +73,6 @@ class IonRelaxation(Relaxator, Task):
             pcm_log.debug('Avg Force: %9.3E Stress: %9.3E %9.3E' % (info['avg_force'],
                                                                     info['avg_stress_diag'],
                                                                     info['avg_stress_non_diag']))
-        elif max_force == 0.0:
-            vo = VaspOutput(self.workdir + os.sep + 'OUTCAR')
-            info = vo.relaxation_info()
-            print('Avg Force: %9.3E Stress: %9.3E %9.3E' % (info['avg_force'],
-                                                            info['avg_stress_diag'],
-                                                            info['avg_stress_non_diag']))
         else:
             print('Failure to get forces and stress')
             return False
@@ -126,13 +122,12 @@ class IonRelaxation(Relaxator, Task):
         #
 
         # How to change EDIFFG
-        print('max_force: %f\nmax_stress: %f' % (max_force, max_stress))
-        print('target_forces: %f' % self.target_forces)
         if max_force > self.target_forces or max_stress > self.target_forces:
             if self.relax_cell:
-                vj.input_variables['EDIFFG'] = -self.target_forces
+                vj.input_variables['EDIFFG'] = min(round_small(-0.01 * max(max_force, max_stress)),
+                                                       -self.target_forces)
             else:
-                vj.input_variables['EDIFFG'] = np.min(-0.01 * max_force, -self.target_forces)
+                vj.input_variables['EDIFFG'] = min(round_small(-0.01 * max_force), -self.target_forces)
 
         pcm_log.debug('Current Values: ISIF: %2d   IBRION: %2d   EDIFF: %7.1E \tEDIFFG: %7.1E' %
                       (vj.input_variables['ISIF'],
@@ -188,7 +183,6 @@ class IonRelaxation(Relaxator, Task):
         vj.set_inputs()
         print('Launching VASP using %d processes' % nparal)
         vj.run(mpi_num_procs=nparal, wait=waiting)
-        print('First run completed')
 
     def cleaner(self):
 
@@ -214,7 +208,6 @@ class IonRelaxation(Relaxator, Task):
                     read_vasp_stdout(filename=filename)
 
                 ncalls += 1
-                print('Vasp Analyser')
                 va = VaspAnalyser(self.workdir)
                 va.run()
 
@@ -235,7 +228,6 @@ class IonRelaxation(Relaxator, Task):
                         self.success = False
                         break
 
-                print('Update the geometry')
                 self.update()
 
                 vj.run(mpi_num_procs=nparal)
