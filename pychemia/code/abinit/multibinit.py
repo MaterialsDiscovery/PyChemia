@@ -2,6 +2,7 @@ import os
 from scipy.io import netcdf_file
 from subprocess import Popen, PIPE
 
+
 class Multibinit:
     """
     Create a Multibinit object from a given multibinit "files" file. From the files it interpret the location and read
@@ -12,10 +13,10 @@ class Multibinit:
     basedir = "."
     files = "multibinit.files"
     files_list = {'in': 'multibinit.in',
-                'out': 'multibinit.out',
-                'model': 'model.XML',
-                'anharmonic': 'model_anharmonic.XML',
-                'training': 'training_set_HIST.nc'}
+                  'out': 'multibinit.out',
+                  'model': 'model.XML',
+                  'anharmonic': 'model_anharmonic.XML',
+                  'training': 'training_set_HIST.nc'}
     input = {}
 
     def __init__(self, files='multibinit.files'):
@@ -26,13 +27,13 @@ class Multibinit:
         if os.path.exists(files):
             self.basedir = os.path.dirname(os.path.abspath(files))
             self.read_files()
-        if os.path.isfile(self.basedir+os.sep+self.files_list['in']):
+        if os.path.isfile(self.basedir + os.sep + self.files_list['in']):
             self.read_input()
 
     def read_files(self):
         if not os.path.isfile(self.basedir + os.sep + self.files):
             raise ValueError("Multibinit 'files' file could not be read.")
-        with open(self.basedir+os.sep+self.files) as rf:
+        with open(self.basedir + os.sep + self.files) as rf:
             data = rf.readlines()
             self.files_list['in'] = data[0].strip()
             self.files_list['out'] = data[1].strip()
@@ -64,7 +65,7 @@ class Multibinit:
                         try:
                             value = [float(x) for x in value_list]
                         except ValueError:
-                                value = value_list
+                            value = value_list
                 else:
                     try:
                         value = int(raw_value)
@@ -78,7 +79,7 @@ class Multibinit:
 
     def read_training(self):
         if self.files_list['training'] is not None:
-             f = netcdf_file(self.basedir + os.sep + self.files_list['training'])
+            f = netcdf_file(self.basedir + os.sep + self.files_list['training'])
 
     def write_input(self, filename):
         with open(filename, 'w') as wf:
@@ -102,22 +103,21 @@ class Multibinit:
                 if ikey in ['anharmonic', 'training'] and self.files_list[ikey] is None:
                     wf.write('no\n')
                 else:
-                    wf.write(self.files_list[ikey]+'\n')
+                    wf.write(self.files_list[ikey] + '\n')
 
     def run(self, executable='multibinit', nparal=4, output_file=None, show_output=False):
 
-        if nparal<2:
-            command = "%s < %s" % (executable, self.files) 
+        if nparal < 2:
+            command = "%s < %s" % (executable, self.files)
         else:
-            command = "mpirun -np %d %s < %s" % (nparal, executable, self.files) 
+            command = "mpirun -np %d %s < %s" % (nparal, executable, self.files)
 
         with Popen(command, shell=True, stdout=PIPE) as proc:
             ret = proc.stdout.read()
         if show_output:
             print(ret.decode())
         if output_file is not None:
-            wf=open(output_file, 'w')
+            wf = open(output_file, 'w')
             wf.write(ret.decode())
             wf.close()
         return ret.decode()
-

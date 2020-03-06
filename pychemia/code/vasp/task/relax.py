@@ -23,7 +23,7 @@ __author__ = 'Guillermo Avendano-Franco'
 class IonRelaxation(Relaxator, Task):
     def __init__(self, structure, workdir='.', target_forces=1E-3, executable='vasp',
                  encut=1.3, kp_grid=None, kp_density=1E4, relax_cell=True,
-                 max_calls=10,pspdir='potpaw_PBE',psp_options=None,extra_vars={}):
+                 max_calls=10,pspdir='potpaw_PBE', psp_options=None, extra_vars=None):
 
         Relaxator.__init__(self, target_forces)
         self.target_forces = target_forces
@@ -34,14 +34,16 @@ class IonRelaxation(Relaxator, Task):
             self.kpoints = KPoints(kmode='gamma', grid=kp_grid)
         else:
             self.kpoints = KPoints.optimized_grid(structure.lattice, kp_density=kp_density)
-        self.vaspjob.initialize(structure=structure, kpoints=self.kpoints,pspdir=pspdir)
+        self.vaspjob.initialize(structure=structure, kpoints=self.kpoints, pspdir=pspdir)
         self.vaspjob.potcar_setup = psp_options
         self.encut = encut
         self.relax_cell = relax_cell
         self.max_calls = max_calls
         self.pspdir = pspdir
-        self.extra_vars=extra_vars
-
+        if extra_vars is not None:
+            self.extra_vars = extra_vars
+        else:
+            self.extra_vars = {}
         task_params = {'target_forces': self.target_forces, 'encut': self.encut, 'relax_cell': self.relax_cell,
                        'max_calls': self.max_calls}
         Task.__init__(self, structure=structure, task_params=task_params, workdir=workdir, executable=executable)

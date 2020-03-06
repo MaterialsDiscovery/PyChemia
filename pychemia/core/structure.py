@@ -1223,7 +1223,7 @@ class Site:
         if occupancies is None:
             occupancies = 1.0
         if position is None:
-           position = 3*[0.0]
+            position = 3*[0.0]
 
         try:
             self.occupancies = [float(x) for x in occupancies]
@@ -1313,14 +1313,14 @@ def random_structure(method, composition, periodic=True, max_volume=1E10):
                     break
                 else:
                     print("Trial failed, distance %f is less than covalent radious %f" % (distance, covalent_dim))
-                    trial+=1
+                    trial += 1
 
-            if trial>10:
+            if trial > 10:
                 break
 
-        #else:
-        #    print('Volume of Structure %f is larger than max_volume=%f' % (new_lattice.volume, max_volume))
-        #    new_structure = None
+        # else:
+        #     print('Volume of Structure %f is larger than max_volume=%f' % (new_lattice.volume, max_volume))
+        #     new_structure = None
     else:
         pos = np.random.rand(natom, 3)
 
@@ -1337,7 +1337,7 @@ def random_structure(method, composition, periodic=True, max_volume=1E10):
         if current_volume < max_volume:
             new_structure = Structure(symbols=symbols, positions=pos, periodicity=False)
         else:
-            print('Volume of Structure %f is larger than max_volume=%f'%(current_volume, max_volume))
+            print('Volume of Structure %f is larger than max_volume=%f' % (current_volume, max_volume))
             new_structure = None
 
     return new_structure

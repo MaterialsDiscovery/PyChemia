@@ -95,7 +95,7 @@ class Convergence:
 
 class ConvergenceCutOffEnergy(Task, Convergence):
     def __init__(self, structure, workdir='.', kpoints=None, executable='vasp', energy_tolerance=1E-3,
-                 increment_factor=0.2, initial_encut=1.3, pspdir='potpaw_PBE', psp_options={}, extra_vars={}):
+                 increment_factor=0.2, initial_encut=1.3, pspdir='potpaw_PBE', psp_options=None, extra_vars=None):
         
         self.structure = structure
         self.workdir = workdir
@@ -103,8 +103,14 @@ class ConvergenceCutOffEnergy(Task, Convergence):
         self.increment_factor = increment_factor
         self.initial_encut = initial_encut
         self.pspdir = pspdir
-        self.psp_options = psp_options
-        self.extra_vars = extra_vars
+        if psp_options is not None:
+            self.psp_options = psp_options
+        else:
+            self.psp_options = {}
+        if extra_vars is not None:
+            self.extra_vars = extra_vars
+        else:
+            self.extra_vars = {}
         if kpoints is None:
             kp = KPoints.optimized_grid(self.structure.lattice, kp_density=1E4, force_odd=True)
             self.kpoints = kp
@@ -119,7 +125,7 @@ class ConvergenceCutOffEnergy(Task, Convergence):
 
         self.started = True
         vj = VaspJob(workdir=self.workdir, executable=self.executable)
-        vj.initialize(structure=self.structure, kpoints=self.kpoints,pspdir=self.pspdir)
+        vj.initialize(structure=self.structure, kpoints=self.kpoints, pspdir=self.pspdir)
         vj.potcar_setup = self.psp_options
         energies = []
         if not self.is_converge:
@@ -225,7 +231,7 @@ class ConvergenceCutOffEnergy(Task, Convergence):
 
 class ConvergenceKPointGrid(Task, Convergence):
     def __init__(self, structure, workdir='.', executable='vasp', energy_tolerance=1E-3, recover=False, encut=1.3,
-                 pspdir='potpaw_PBE', extra_vars={}, psp_options=None):
+                 pspdir='potpaw_PBE', extra_vars=None, psp_options=None):
 
         self.structure = structure
         self.workdir = workdir
@@ -235,7 +241,10 @@ class ConvergenceKPointGrid(Task, Convergence):
         self.encut = encut
         self.pspdir = pspdir
         self.psp_options = psp_options
-        self.extra_vars = extra_vars
+        if extra_vars is not None:
+            self.extra_vars = extra_vars
+        else:
+            self.extra_vars = {}
         Convergence.__init__(self, energy_tolerance)
         if recover:
             self.recover()
