@@ -1,4 +1,3 @@
-
 import os
 import re
 import time
@@ -108,10 +107,10 @@ class OrbitalDFTU(Population):
 
         if num_electrons_dftu is None:
             abiinput = AbinitInput(input_path)
-            dmatpawu = np.array(abiinput['dmatpawu']).reshape(-1, self.ndim, self.ndim)
+            dmatpawu = np.array(abiinput['dmatpawu']).reshape((-1, self.ndim, self.ndim))
             lpawu = abiinput['lpawu']
             maxl = max(lpawu)
-            dim = 2*maxl+1
+            dim = 2 * maxl + 1
             params = dmatpawu2params(dmatpawu, dim)
             self.num_electrons_dftu = np.apply_along_axis(sum, 1, params['occupations'])
         else:
@@ -281,7 +280,7 @@ class OrbitalDFTU(Population):
                                                                           'properties.nres2': nres2}})
 
     def collect(self, entry_id, workdir='.'):
-        idir = workdir+os.sep+str(entry_id)
+        idir = workdir + os.sep + str(entry_id)
         abinitout = get_final_abinit_out(idir)
 
         if self.get_entry(entry_id) is not None and not self.is_evaluated(entry_id):
@@ -355,10 +354,10 @@ class OrbitalDFTU(Population):
                 to_submit = False
                 if check:
                     to_submit = True
-                    if not os.path.isdir(basedir+os.sep+str(entry_id)):
+                    if not os.path.isdir(basedir + os.sep + str(entry_id)):
                         self.prepare_folder(entry_id, workdir=basedir, source_dir=basedir)
-                    elif os.path.isfile(basedir+os.sep+str(entry_id)+os.sep+'COMPLETE'):
-                        abinitout = get_final_abinit_out(basedir+os.sep+str(entry_id))
+                    elif os.path.isfile(basedir + os.sep + str(entry_id) + os.sep + 'COMPLETE'):
+                        abinitout = get_final_abinit_out(basedir + os.sep + str(entry_id))
                         if abinitout is not None:
                             abo = AbinitOutput(abinitout)
                             # check if finished
@@ -401,9 +400,9 @@ class OrbitalDFTU(Population):
             raise ValueError("Not such dir: %s" % path)
 
         # Reading the OUTPUT
-        abo = AbinitOutput(outputfile)        
+        abo = AbinitOutput(outputfile)
         dmatpawu = abo.get_dmatpawu()
-        odmatpawu = np.array(dmatpawu).reshape(-1, self.ndim, self.ndim)
+        odmatpawu = np.array(dmatpawu).reshape((-1, self.ndim, self.ndim))
         oparams = dmatpawu2params(odmatpawu, self.ndim)
 
         if not abo.is_finished:
@@ -455,8 +454,8 @@ class OrbitalDFTU(Population):
         newdata = dict(dmat)
         for i in range(self.num_indep_matrices):
             for j in range(self.ndim):
-                perturbation = dmat['euler_angles'][i][j] + 2*np.random.rand()*factor - factor
-                if np.pi/2.0 > perturbation > -np.pi/2.0:
+                perturbation = dmat['euler_angles'][i][j] + 2 * np.random.rand() * factor - factor
+                if np.pi / 2.0 > perturbation > -np.pi / 2.0:
                     newdata['euler_angles'][i][j] = perturbation
 
         if in_place:
@@ -489,32 +488,32 @@ class OrbitalDFTU(Population):
         euler_angles1 = dmat1['euler_angles']
         euler_angles2 = dmat2['euler_angles']
 
-        euler_angles_new = np.zeros((self.num_indep_matrices, int(self.ndim*(self.ndim-1)/2)))
+        euler_angles_new = np.zeros((self.num_indep_matrices, int(self.ndim * (self.ndim - 1) / 2)))
 
         for i in range(self.num_indep_matrices):
-            for j in range(int(self.ndim*(self.ndim-1)/2)):
+            for j in range(int(self.ndim * (self.ndim - 1) / 2)):
                 angle1 = euler_angles1[i][j]
                 angle2 = euler_angles2[i][j]
                 if angle1 < angle2:
-                    if angle2 - angle1 < angle1 - angle2 + 2*np.pi:
+                    if angle2 - angle1 < angle1 - angle2 + 2 * np.pi:
                         direction = 1  # Forward
                         angle = angle2 - angle1
                     else:
                         direction = -1  # Backward
-                        angle = angle1 - angle2 + 2*np.pi
+                        angle = angle1 - angle2 + 2 * np.pi
                 else:
-                    if angle1 - angle2 < angle2 - angle1 + 2*np.pi:
+                    if angle1 - angle2 < angle2 - angle1 + 2 * np.pi:
                         direction = -1  # Backward
                         angle = angle1 - angle2
                     else:
                         direction = 1
-                        angle = angle2 - angle1 + 2*np.pi
+                        angle = angle2 - angle1 + 2 * np.pi
 
-                euler_angles_new[i, j] = angle1 + direction*factor*angle
+                euler_angles_new[i, j] = angle1 + direction * factor * angle
                 if euler_angles_new[i, j] > np.pi:
-                    euler_angles_new[i, j] -= -2*np.pi
+                    euler_angles_new[i, j] -= -2 * np.pi
                 if euler_angles_new[i, j] < -np.pi:
-                    euler_angles_new[i, j] += -2*np.pi
+                    euler_angles_new[i, j] += -2 * np.pi
 
         newdata = dict(dmat1)
         newdata['euler_angles'] = gs(euler_angles_new)
@@ -540,7 +539,7 @@ class OrbitalDFTU(Population):
         assert 'ndim' in dmat
         assert 'num_matrices' in dmat
         status = {self.tag: active}
-        properties = {'etot':  None, 'initial_dmat': dmat, 'nres2': None, 'final_dmat': None}
+        properties = {'etot': None, 'initial_dmat': dmat, 'nres2': None, 'final_dmat': None}
 
         entry = {'structure': self.structure.to_dict, 'properties': properties, 'status': status}
         entry_id = self.insert_entry(entry)
@@ -553,7 +552,7 @@ class OrbitalDFTU(Population):
         if ids is None:
             ids = self.members
         if filename is None:
-            filename = self.name+'.pdf'
+            filename = self.name + '.pdf'
         else:
             if filename[-3:] not in ['pdf', 'png', 'jpg']:
                 raise ValueError("Filename should have extension such as pdf, png or jpg")
@@ -578,7 +577,7 @@ class OrbitalDFTU(Population):
 
         """
         # Individual workdir
-        iworkdir = workdir+os.sep+str(entry_id)
+        iworkdir = workdir + os.sep + str(entry_id)
 
         if not os.path.isdir(iworkdir):
             os.mkdir(iworkdir)
@@ -598,7 +597,7 @@ class OrbitalDFTU(Population):
 
         d_abiinput = AbinitInput(iworkdir + os.sep + 'abinit.in')
         d_dmatpawu = d_abiinput['dmatpawu']
-        assert(d_dmatpawu is not None)
+        assert (d_dmatpawu is not None)
         d_params = dmatpawu2params(d_dmatpawu, self.ndim)
         if not np.all(np.sum(d_params['occupations'], axis=1) == np.array(self.num_electrons_dftu)):
             print('ERROR: Inconsistent number of DFT+U electrons for correlated orbitals: %s' % entry_id)
@@ -617,7 +616,7 @@ class OrbitalDFTU(Population):
         if dmatpawu is None:
             return None
 
-        odmatpawu = np.array(dmatpawu).reshape(-1, self.ndim, self.ndim)
+        odmatpawu = np.array(dmatpawu).reshape((-1, self.ndim, self.ndim))
         oparams = dmatpawu2params(odmatpawu, self.ndim)
         data = abo.get_energetics()
         if data is None:
@@ -642,7 +641,7 @@ class OrbitalDFTU(Population):
 
     @staticmethod
     def submit(entry_id, workdir, pbs_settings):
-        
+
         if 'walltime' not in pbs_settings:
             raise ValueError('walltime is mandatory on pbs_settings')
         if 'ppn' not in pbs_settings:
@@ -671,13 +670,13 @@ class OrbitalDFTU(Population):
             join = None
         idir = str(entry_id)
         workdir = os.path.abspath(workdir)
-        path = workdir+os.sep + idir
+        path = workdir + os.sep + idir
         print('Creating a new job at: %s' % path)
         outputs = [x for x in os.listdir(path) if x[-4:] == '.out']
         for ifile in outputs:
-            os.remove(path+os.sep+ifile)
-        if os.path.lexists(workdir+os.sep+'batch.pbs'):
-            os.remove(workdir+os.sep+'batch.pbs')
+            os.remove(path + os.sep + ifile)
+        if os.path.lexists(workdir + os.sep + 'batch.pbs'):
+            os.remove(workdir + os.sep + 'batch.pbs')
 
         pbs = PBSRunner(workdir=path, template=template)
         pbs.set_pbs_params(nodes=1, ppn=ppn, walltime=walltime, message='ae', queue=queue, features=features,
@@ -817,39 +816,38 @@ def get_pattern(params, ndim):
 
 
 def get_num_matrices_per_atom(nsppol, nspden, nspinor):
-        if nsppol == 1 and nspinor == 1 and nspden == 1:
-            # Non-magnetic system (nsppol=1, nspinor=1, nspden=1):
-            # One (2lpawu+1)x(2lpawu+1) dmatpawu matrix is given for each atom on which +U is applied.
-            # It contains the "spin-up" occupations.
-            return 1
-        elif nsppol == 2 and nspinor == 1 and nspden == 2:
-            # Ferromagnetic spin-polarized (collinear) system (nsppol=2, nspinor=1, nspden=2):
-            # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
-            # They contain the "spin-up" and "spin-down" occupations.
-            return 2
-        elif nsppol == 1 and nspinor == 1 and nspden == 2:
-            # Anti-ferromagnetic spin-polarized(collinear) system(nsppol=1, nspinor=1, nspden=2):
-            # One(2lpawu + 1)x(2lpawu + 1) dmatpawu matrix is given for each atom on which +U is applied.
-            # It contains the "spin-up" occupations.
-            return 1
-        elif nsppol == 1 and nspinor == 2 and nspden == 4:
-            # Non-collinear magnetic system (nsppol=1, nspinor=2, nspden=4):
-            # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
-            # They contains the "spin-up" and "spin-down" occupations (defined as n_up=(n+|m|)/2 and n_dn=(n-|m|)/2),
-            #    where m is the integrated magnetization vector).
-            return 2
-        elif nsppol == 1 and nspinor == 2 and nspden == 1:
-            # Non-collinear magnetic system with zero magnetization (nsppol=1, nspinor=2, nspden=1):
-            # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
-            # They contain the "spin-up" and "spin-down" occupations;
-            return 2
+    if nsppol == 1 and nspinor == 1 and nspden == 1:
+        # Non-magnetic system (nsppol=1, nspinor=1, nspden=1):
+        # One (2lpawu+1)x(2lpawu+1) dmatpawu matrix is given for each atom on which +U is applied.
+        # It contains the "spin-up" occupations.
+        return 1
+    elif nsppol == 2 and nspinor == 1 and nspden == 2:
+        # Ferromagnetic spin-polarized (collinear) system (nsppol=2, nspinor=1, nspden=2):
+        # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
+        # They contain the "spin-up" and "spin-down" occupations.
+        return 2
+    elif nsppol == 1 and nspinor == 1 and nspden == 2:
+        # Anti-ferromagnetic spin-polarized(collinear) system(nsppol=1, nspinor=1, nspden=2):
+        # One(2lpawu + 1)x(2lpawu + 1) dmatpawu matrix is given for each atom on which +U is applied.
+        # It contains the "spin-up" occupations.
+        return 1
+    elif nsppol == 1 and nspinor == 2 and nspden == 4:
+        # Non-collinear magnetic system (nsppol=1, nspinor=2, nspden=4):
+        # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
+        # They contains the "spin-up" and "spin-down" occupations (defined as n_up=(n+|m|)/2 and n_dn=(n-|m|)/2),
+        #    where m is the integrated magnetization vector).
+        return 2
+    elif nsppol == 1 and nspinor == 2 and nspden == 1:
+        # Non-collinear magnetic system with zero magnetization (nsppol=1, nspinor=2, nspden=1):
+        # Two (2lpawu+1)x(2lpawu+1) dmatpawu matrices are given for each atom on which +U is applied.
+        # They contain the "spin-up" and "spin-down" occupations;
+        return 2
 
 
 def get_final_abinit_out(path):
-    
     if not os.path.isdir(path):
         raise ValueError("ERROR: Could not find folder: %s" % path)
-    
+
     outputfile = None
     abos = [x for x in os.listdir(path) if x[-3:] in ['txt', 'out']]
 
@@ -860,7 +858,7 @@ def get_final_abinit_out(path):
     mtime = 0
 
     for ifile in abos:
-        fpath = path+os.sep+ifile
+        fpath = path + os.sep + ifile
         if os.path.getmtime(fpath) > mtime:
             abo = AbinitOutput(fpath)
             if abo.is_loaded and abo.is_finished:

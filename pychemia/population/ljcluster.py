@@ -44,7 +44,7 @@ class LJCluster(Population):
 
         return self.new_entry(structure), None
 
-    def get_duplicates(self, ids):
+    def get_duplicates(self, ids, tolerance=None, fast=True):
         ret = {}
         selection = self.ids_sorted(ids)
         values = np.array([self.value(i) for i in selection])

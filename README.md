@@ -117,8 +117,8 @@ execute `setup.py` to build the Cython modules.
 ```bash
 cd PyChemia
 pip install Cython
-python setup.py build_ext --inplace
-python setup.py build
+python3 setup.py build_ext --inplace
+python3 setup.py build
 ```
 
 Finally, install the packages required for PyChemia to work

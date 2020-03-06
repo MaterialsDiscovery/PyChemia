@@ -17,13 +17,13 @@ class IonRelaxation(Relaxator, Task):
         self.tolmxf = tolmxf
         self.ecut = ecut
         self.waiting = waiting
-        self.abinitjob = AbinitJob()
+        self.abinitjob = AbinitJob(workdir=workdir, executable=executable)
         self.relaxed = False
         if kp_grid is not None:
             self.kpoints = KPoints(kmode='gamma', grid=kp_grid)
         else:
             self.kpoints = KPoints.optimized_grid(structure.lattice, kp_density=kp_density)
-        self.abinitjob.initialize(workdir=workdir, structure=structure, executable=executable)
+        self.abinitjob.initialize(structure=structure)
         self.relax_cell = relax_cell
         self.max_calls = max_calls
         task_params = {'tolmxf': self.target_forces, 'ecut': self.ecut, 'relax_cell': self.relax_cell,
@@ -37,7 +37,7 @@ class IonRelaxation(Relaxator, Task):
         self.abinitjob.set_ecut(self.ecut)
         self.abinitjob.set_psps()
         self.abinitjob.write_all()
-        self.abinitjob.run(omp_num_threads=nparal, mpi_num_procs=nparal)
+        self.abinitjob.run(num_threads=nparal, mpi_num_procs=nparal, nodefile=None, wait=True, verbose=False)
 
     def get_final_geometry(self):
         pass

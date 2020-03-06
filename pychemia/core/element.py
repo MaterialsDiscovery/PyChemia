@@ -145,8 +145,9 @@ Melting Point     : %f
 
         # We start with the total number of electron and get those associated to orbitals following the order
         capacities = {}
-        for l in range(4):
-            label = Element.orbital_label_from_number(l)
+        # l quantum number
+        for lqn in range(4):
+            label = Element.orbital_label_from_number(lqn)
             nele = Element.max_electrons_subshell(label)
             capacities[label] = nele
 
@@ -173,7 +174,7 @@ Melting Point     : %f
             elif inert_remain == 0:
                 if numele >= max_electrons[i]:
                     numele -= max_electrons[i]
-                    ret.append(i+str(max_electrons[i]))
+                    ret.append(i + str(max_electrons[i]))
                 elif numele == 0:
                     break
                 elif numele < max_electrons[i]:
@@ -188,12 +189,13 @@ Melting Point     : %f
             raise ValueError('Not such label for an orbital: %s' % label)
         return aqn[label]
 
+    # lqn = angular momemtum
     @staticmethod
-    def orbital_label_from_number(l):
+    def orbital_label_from_number(lqn):
         orbitals = ['s', 'p', 'd', 'f', 'g']
-        if l not in range(4):
-            raise ValueError('Not such azimuthal quantum number: %s' % l)
-        return orbitals[l]
+        if lqn not in range(4):
+            raise ValueError('Not such azimuthal quantum number: %s' % lqn)
+        return orbitals[lqn]
 
     @staticmethod
     def max_electrons_subshell(subshell):
@@ -204,7 +206,7 @@ Melting Point     : %f
             ll = subshell
         else:
             raise ValueError('Not a valid subshell: %s' % subshell)
-        return 2*(2*ll+1)
+        return 2 * (2 * ll + 1)
 
     @property
     def electronic_configuration(self):

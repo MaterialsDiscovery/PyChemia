@@ -94,12 +94,12 @@ class Convergence:
 
 
 class ConvergenceCutOffEnergy(Task, Convergence):
-    def __init__(self, structure, workdir='.', kpoints=None, binary='vasp', energy_tolerance=1E-3,
-                 increment_factor=0.2, initial_encut=1.3,pspdir='potpaw_PBE',psp_options={},extra_vars={}):
+    def __init__(self, structure, workdir='.', kpoints=None, executable='vasp', energy_tolerance=1E-3,
+                 increment_factor=0.2, initial_encut=1.3, pspdir='potpaw_PBE', psp_options={}, extra_vars={}):
         
         self.structure = structure
         self.workdir = workdir
-        self.binary = binary
+        self.executable = executable
         self.increment_factor = increment_factor
         self.initial_encut = initial_encut
         self.pspdir = pspdir
@@ -113,12 +113,12 @@ class ConvergenceCutOffEnergy(Task, Convergence):
         Convergence.__init__(self, energy_tolerance)
         self.task_params = {'energy_tolerance': self.energy_tolerance, 'increment_factor': self.increment_factor,
                             'initial_encut': self.initial_encut}
-        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=binary)
+        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=executable)
 
     def run(self, nparal=4):
 
         self.started = True
-        vj = VaspJob(workdir=self.workdir, binary=self.binary)
+        vj = VaspJob(workdir=self.workdir, executable=self.executable)
         vj.initialize(structure=self.structure, kpoints=self.kpoints,pspdir=self.pspdir)
         vj.potcar_setup = self.psp_options
         energies = []
@@ -132,7 +132,8 @@ class ConvergenceCutOffEnergy(Task, Convergence):
             vj.job_static()
             vj.input_variables.set_density_for_restart()
             vj.input_variables.set_encut(ENCUT=x, POTCAR=self.workdir + os.sep + 'POTCAR')
-            vj.input_variables.variables['NBANDS'] = int(nparal * ((30 + self.structure.valence_electrons()) / nparal + 1))
+            vj.input_variables.variables['NBANDS'] = int(nparal * ((30 +
+                                                                    self.structure.valence_electrons()) / nparal + 1))
             vj.input_variables.set_ismear(self.kpoints)
             vj.input_variables.variables['SIGMA'] = 0.2
             vj.input_variables.variables['ISPIN'] = 2
@@ -223,11 +224,12 @@ class ConvergenceCutOffEnergy(Task, Convergence):
 
 
 class ConvergenceKPointGrid(Task, Convergence):
-    def __init__(self, structure, workdir='.', binary='vasp', energy_tolerance=1E-3, recover=False, encut=1.3, pspdir= 'potpaw_PBE',extra_vars={},psp_options=None):
+    def __init__(self, structure, workdir='.', executable='vasp', energy_tolerance=1E-3, recover=False, encut=1.3,
+                 pspdir='potpaw_PBE', extra_vars={}, psp_options=None):
 
         self.structure = structure
         self.workdir = workdir
-        self.binary = binary
+        self.executable = executable
         self.initial_number = 12
         self.convergence_info = None
         self.encut = encut
@@ -238,7 +240,7 @@ class ConvergenceKPointGrid(Task, Convergence):
         if recover:
             self.recover()
         self.task_params = {'energy_tolerance': self.energy_tolerance, 'encut': self.encut}
-        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=binary)
+        Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=executable)
 
     def recover(self):
         kpoints_file = self.workdir + os.sep + 'KPOINTS'
@@ -253,7 +255,7 @@ class ConvergenceKPointGrid(Task, Convergence):
 
         self.started = True
 
-        vj = VaspJob(workdir=self.workdir, binary=self.binary) 
+        vj = VaspJob(workdir=self.workdir, executable=self.executable)
         vj.potcar_setup = self.psp_options
         kp = KPoints()
         vj.initialize(structure=self.structure, kpoints=kp, pspdir=self.pspdir)
@@ -281,7 +283,7 @@ class ConvergenceKPointGrid(Task, Convergence):
                 vj.input_variables.variables['SIGMA'] = 0.2
                 vj.input_variables.variables['ISPIN'] = 2
                 for i in self.extra_vars:
-                    vj.input_variables[i]=self.extra_vars[i]
+                    vj.input_variables[i] = self.extra_vars[i]
                 vj.set_inputs()
                 vj.run(mpi_num_procs=nparal)
                 while True:

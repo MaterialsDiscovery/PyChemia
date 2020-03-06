@@ -27,13 +27,13 @@ class IonRelaxation2(Relaxator, Task):
         Relaxator.__init__(self, target_forces)
         self.target_forces = target_forces
         self.waiting = waiting
-        self.vaspjob = VaspJob()
+        self.vaspjob = VaspJob(workdir=workdir, executable=executable)
         self.relaxed = False
         if kp_grid is not None:
             self.kpoints = KPoints(kmode='gamma', grid=kp_grid)
         else:
             self.kpoints = KPoints.optimized_grid(structure.lattice, kp_density=kp_density)
-        self.vaspjob.initialize(workdir=workdir, structure=structure, kpoints=self.kpoints, executable=executable)
+        self.vaspjob.initialize(structure=structure, kpoints=self.kpoints)
         self.encut = encut
         self.relax_cell = relax_cell
         task_params = {'target_forces': self.target_forces, 'encut': self.encut, 'relax_cell': self.relax_cell}
@@ -178,7 +178,7 @@ class IonRelaxation2(Relaxator, Task):
         vj.set_kpoints(self.kpoints)
         vj.set_inputs()
         print('Launching VASP using %d processes' % nparal)
-        vj.run(use_mpi=True, mpi_num_procs=nparal)
+        vj.run(num_threads=nparal, mpi_num_procs=nparal, nodefile=None, wait=True, verbose=False)
         if self.waiting:
             vj.runner.wait()
 
@@ -231,7 +231,7 @@ class IonRelaxation2(Relaxator, Task):
 
                 self.update()
 
-                vj.run(use_mpi=True, mpi_num_procs=nparal)
+                vj.run(num_threads=nparal, mpi_num_procs=nparal, nodefile=None, wait=True, verbose=False)
                 if self.waiting:
                     vj.runner.wait()
 

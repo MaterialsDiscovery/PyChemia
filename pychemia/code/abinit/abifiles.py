@@ -1,7 +1,9 @@
 import os as os
 import subprocess as _subprocess
 from .utils import netcdf2dict, psp_name
-#from .input import AbinitInput
+
+
+# from .input import AbinitInput
 
 
 class AbiFiles:
@@ -75,8 +77,8 @@ class AbiFiles:
             print("WARNING: ABINIT files does not exists: %s" % self.filename)
         if os.path.exists(self.files['in']):
             print("ABINIT input file exists: %s" % self.files['in'])
-#            abi = AbinitInput(self.files['in'])
-#            abi.check()
+        #            abi = AbinitInput(self.files['in'])
+        #            abi.check()
         else:
             print("WARNING: ABINIT input does not exists: %s" % self.files['in'])
         for ifile in self.files['psps']:

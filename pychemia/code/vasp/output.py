@@ -6,6 +6,7 @@ from pychemia import pcm_log
 from ..codes import CodeOutput
 from .xml_output import parse_vasprun
 
+
 class VaspOutput(CodeOutput):
 
     def __init__(self, filename='OUTCAR'):
@@ -34,15 +35,15 @@ class VaspOutput(CodeOutput):
         self.iteration_data = []
         self.outcar_parser()
         self.read()
-        
+
     def read(self):
         if self.filename[-3:] == 'xml':
-            ret=parse_vasprun(self.filename)
+            ret = parse_vasprun(self.filename)
         else:
             self.read_outputfile(self.filename)
             self.outcar_parser()
             ret = {'energies': self.energies, 'forces': self.forces, 'bands': self.bands, 'positions': self.positions,
-               'kpoints': self.kpoints, 'stress': self.stress}
+                   'kpoints': self.kpoints, 'stress': self.stress}
         self.output_values = ret
 
     def is_loaded(self):
@@ -57,7 +58,7 @@ class VaspOutput(CodeOutput):
         else:
             rf = open(self.filename)
         self.data = rf.read()
-        rf.close()        
+        rf.close()
 
     def reload(self):
         rf = open(self.filename)
@@ -114,13 +115,15 @@ class VaspOutput(CodeOutput):
 
         ### BAD idea this way
         ###re.findall(r'free\s*energy\s*TOTEN\s*=\s*([-.\d]+)\s*eV', data)
-        if energy == []:
-            energy=re.findall(r'FREE ENERGIE OF THE ION-ELECTRON SYSTEM\s*\(eV\)\s*[-]+\s*free\s*energy\s*TOTEN\s*=\s*([-.\d]+)\s*eV',self.data)
-            
-            counter=0
+        if not energy:
+            energy = re.findall(
+                r'FREE ENERGIE OF THE ION-ELECTRON SYSTEM\s*\(eV\)\s*[-]+\s*free\s*energy\s*TOTEN\s*=\s*([-.\d]+)\s*eV',
+                self.data)
+
+            counter = 0
             for ienergy in energy:
                 self.energies.append([counter, 1, float(ienergy)])
-                counter+=1
+                counter += 1
 
         level0 = 0
         level1 = 0
@@ -301,7 +304,7 @@ class VaspOutput(CodeOutput):
     def get_memory_used(self):
 
         ret = {}
-        datablock = re.findall(r"total amount of memory used by VASP on root node([\w\s\d.=:-]*)\n \n  ", self.data)
+        datablock = re.findall(r"total amount of memory used by VASP on root node([\w\s\d.=:-]*)\n \n {2}", self.data)
         if len(datablock) != 1:
             return None
         else:
@@ -333,4 +336,3 @@ class VaspOutput(CodeOutput):
     @property
     def is_finished(self):
         return len(self.get_general_timing()) > 0
-

@@ -27,8 +27,8 @@ class ElasticModuli(Task):
 
     def run(self, nparal=4):
 
-        vj = VaspJob()
-        vj.initialize(self.structure, self.workdir, self.kpoints, executable=self.executable)
+        vj = VaspJob(workdir=self.workdir, executable=self.executable)
+        vj.initialize(self.structure, self.kpoints)
         vj.clean()
         vj.job_static()
         vj.input_variables.set_density_for_restart()
@@ -37,7 +37,7 @@ class ElasticModuli(Task):
         vj.input_variables.variables['ISIF'] = 3
         vj.set_inputs()
         self.encut = vj.input_variables.variables['ENCUT']
-        vj.run(use_mpi=True, mpi_num_procs=nparal)
+        vj.run(mpi_num_procs=nparal)
         pcm_log.debug('Starting VASP')
         while True:
             energy_str = ''

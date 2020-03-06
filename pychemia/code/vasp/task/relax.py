@@ -28,7 +28,7 @@ class IonRelaxation(Relaxator, Task):
         Relaxator.__init__(self, target_forces)
         self.target_forces = target_forces
 
-        self.vaspjob = VaspJob(binary=executable, workdir=workdir)
+        self.vaspjob = VaspJob(executable=executable, workdir=workdir)
         self.relaxed = False
         if kp_grid is not None:
             self.kpoints = KPoints(kmode='gamma', grid=kp_grid)
