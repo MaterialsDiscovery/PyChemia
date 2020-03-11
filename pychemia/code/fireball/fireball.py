@@ -83,7 +83,7 @@ class FireBall(CodeRun):
     def get_outputs(self):
         pass
 
-    def run(self, use_mpi=False, omp_max_threads=0, mpi_num_procs=1):
+    def run(self, num_threads=None, mpi_num_procs=None, nodefile=None, wait=True, verbose=False):
         cwd = os.getcwd()
         os.chdir(self.workdir)
         stdout = open('fireball.log', 'w')

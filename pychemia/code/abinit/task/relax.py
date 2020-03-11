@@ -18,7 +18,7 @@ class IonRelaxation(Relaxator, Task):
         self.tolmxf = tolmxf
         self.ecut = ecut
         self.waiting = waiting
-        self.abinitjob = AbinitJob(executable=executable, workdir=workdir)
+        self.abinitjob = AbinitJob(workdir=workdir, executable=executable)
         self.relaxed = False
         self.tolmxf = tolmxf
         self.tolrff = tolrff

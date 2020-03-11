@@ -20,16 +20,18 @@ class VaspJob(CodeRun):
         self.input_variables = None
         self.potcar_setup = None
         self.potcar_pspfiles = None
-        self.potcar_pspdir = 'potpaw_PBE'
+        self.potcar_pspdir = None
         self.kpoints = None
         self.outcar = None
         self.poscar_setup = None
         self.stdout_file = None
         self.stdout_filename = 'vasp_stdout.log'
 
-    def initialize(self, structure, kpoints=None):
+    def initialize(self, structure, kpoints=None, pspdir='potpaw_PBE'):
         self.structure = structure
         self.set_kpoints(kpoints)
+
+        self.potcar_pspdir = pspdir
 
     def _check_workdir(self):
 

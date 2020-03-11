@@ -416,7 +416,7 @@ class AbinitInput(CodeInput):
     def clean(self):
         self.variables = {}
 
-    def has_variable(self, varname):
+    def has_variable(self, varname, section=None):
         return varname in self.variables
 
     def get_value(self, varname, idtset=None, return_iterable=False):

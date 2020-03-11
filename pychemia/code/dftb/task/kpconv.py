@@ -21,9 +21,9 @@ class KPointConvergence:
         self.results = []
         self.output_file = output_file
 
-        dftb = DFTBplus()
+        dftb = DFTBplus(workdir=self.workdir)
         kpoints = KPoints.optimized_grid(self.structure.lattice, kp_density=10000, force_odd=True)
-        dftb.initialize(workdir=self.workdir, structure=self.structure, kpoints=kpoints)
+        dftb.initialize(structure=self.structure, kpoints=kpoints)
         ans = dftb.set_slater_koster(search_paths=self.slater_path)
         if not ans:
             print('Slater-Koster files not complete')
@@ -31,9 +31,9 @@ class KPointConvergence:
     def run(self):
 
         n = 10
-        dftb = DFTBplus()
+        dftb = DFTBplus(workdir=self.workdir)
         kpoints = KPoints.optimized_grid(self.structure.lattice, kp_density=10000, force_odd=True)
-        dftb.initialize(workdir=self.workdir, structure=self.structure, kpoints=kpoints)
+        dftb.initialize(structure=self.structure, kpoints=kpoints)
         ans = dftb.set_slater_koster(search_paths=self.slater_path)
         if not ans:
             print('Slater-Koster files not complete')

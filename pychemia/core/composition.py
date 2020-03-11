@@ -356,7 +356,6 @@ class Composition(Mapping):
         """
         return len(self.species)
 
-
     @property
     def symbols(self):
         """List of species on the composition
@@ -496,7 +495,6 @@ class Composition(Mapping):
         """
         enc = self.species_encoded(256)
         return hex(enc)
-
 
     @property
     def values(self):

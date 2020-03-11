@@ -63,8 +63,8 @@ class Relaxation(Relaxator):
 
         irun = 0
         score = INITIAL_SCORE
-        dftb = DFTBplus()
-        dftb.initialize(workdir=self.workdir, structure=self.structure, kpoints=self.kpoints)
+        dftb = DFTBplus(workdir=self.workdir)
+        dftb.initialize(structure=self.structure, kpoints=self.kpoints)
         dftb.set_slater_koster(search_paths=self.slater_path)
         dftb.basic_input()
         dftb.driver['LatticeOpt'] = False

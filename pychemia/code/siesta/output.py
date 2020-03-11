@@ -20,7 +20,7 @@ class SiestaOutput(CodeOutput):
     def is_finished(self):
         if self.outputfile is None:
             return False
-        
+
         rf = open(self.outputfile)
         data = rf.read()
         rf.close()
@@ -37,7 +37,7 @@ class SiestaOutput(CodeOutput):
         rf.close()
 
         subdata = re.findall("siesta: Final energy \(eV\):[\s\d\w\W]*\n\n", self.data)
-        #print(subdata)
+        # print(subdata)
         if len(subdata) == 0:
             raise ValueError('No Final data could be retrieved')
         elif len(subdata) > 1:
@@ -106,7 +106,7 @@ class SiestaOutput(CodeOutput):
         if len(ret) == 1:
             ret = ret[0]
         return ret
-    
+
     def show_parsed_data(self):
         if self.output_values is None:
             raise ValueError('No data has been parsed')

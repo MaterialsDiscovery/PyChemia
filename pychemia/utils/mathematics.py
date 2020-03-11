@@ -6,6 +6,7 @@ from math import cos, sin, sqrt
 import numpy as np
 import pprint
 
+
 class FormatPrinter(pprint.PrettyPrinter):
 
     def __init__(self, formats):

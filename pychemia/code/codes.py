@@ -59,17 +59,19 @@ class CodeRun:
         If the code uses MPI the variable mpi_num_procs control the number of processes used.
 
         :param num_threads: Control the number of threads in multithreading applications. There are several environment
-                            variables used for that purpose. The default is None, meaning that not variable is set, if an integer is given
-                            only OMP_NUM_THREADS is set dynamically for the run if a dictionary of variables is provided with keys
-                            OMP_NUM_THREADS, OPENBLAS_NUM_THREADS, GOTO_NUM_THREADS and MKL_NUM_THREADS, the corresponding integers
-                            associated to those variables are used to set the number of corresponding threads.
+                            variables used for that purpose. The default is None, meaning that not variable is set,
+                            if an integer is given only OMP_NUM_THREADS is set dynamically for the run if a dictionary
+                            of variables is provided with keys OMP_NUM_THREADS, OPENBLAS_NUM_THREADS, GOTO_NUM_THREADS
+                            and MKL_NUM_THREADS, the corresponding integers associated to those variables are used to
+                            set the number of corresponding threads.
 
         :param mpi_num_procs: Number of MPI processes, if None and the code uses MPI, the default is to set the maximum
                               number of cores available on the system.
 
         :param nodefile: If a nodefile is provided, and the code uses MPI, the contents are used to select the number of
-                         of processes created. Setting nodefile does not override the use of mpi_num_procs but if mpi_num_procs is None
-                         it will assume the number of processes equal to the machines declared on nodefile.
+                         of processes created. Setting nodefile does not override the use of mpi_num_procs but if
+                         mpi_num_procs is None it will assume the number of processes equal to the machines
+                         declared on nodefile.
 
         :param wait: If True the process waits until the command is completed, otherwise a Popen instance is returned
 

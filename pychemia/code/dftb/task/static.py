@@ -26,8 +26,8 @@ class StaticCalculation:
 
     def run(self):
 
-        dftb = DFTBplus()
-        dftb.initialize(workdir=self.workdir, structure=self.structure, kpoints=self.kpoints)
+        dftb = DFTBplus(workdir=self.workdir)
+        dftb.initialize(structure=self.structure, kpoints=self.kpoints)
         dftb.set_slater_koster(search_paths=self.slater_path)
         dftb.kpoints = self.kpoints
 
