@@ -5,6 +5,7 @@ from ..abinit import AbinitJob
 from ...tasks import Task
 from ...relaxator import Relaxator
 from pychemia.crystal import KPoints
+from pychemia import pcm_log
 
 __author__ = 'Guillermo Avendano-Franco'
 
@@ -17,27 +18,30 @@ class IonRelaxation(Relaxator, Task):
         self.tolmxf = tolmxf
         self.ecut = ecut
         self.waiting = waiting
-        self.abinitjob = AbinitJob()
+        self.abinitjob = AbinitJob(executable=executable, workdir=workdir)
         self.relaxed = False
+        self.tolmxf = tolmxf
+        self.tolrff = tolrff
         if kp_grid is not None:
             self.kpoints = KPoints(kmode='gamma', grid=kp_grid)
         else:
             self.kpoints = KPoints.optimized_grid(structure.lattice, kp_density=kp_density)
-        self.abinitjob.initialize(workdir=workdir, structure=structure, executable=executable)
+        self.abinitjob.initialize(structure=structure)
         self.relax_cell = relax_cell
         self.max_calls = max_calls
         task_params = {'tolmxf': self.target_forces, 'ecut': self.ecut, 'relax_cell': self.relax_cell,
                        'max_calls': self.max_calls}
         Task.__init__(self, structure=structure, task_params=task_params, workdir=workdir, executable=executable)
 
-    def run(self, nparal=1):
-
+    def run(self, nparal=1, verbose=False):
+        
         self.abinitjob.set_kpoints(kpoints=self.kpoints)
-        self.abinitjob.job_ion_relax(tolmxf=1E-4, tolrff=1E-2)
+        self.abinitjob.job_ion_relax(tolmxf=self.tolmxf, tolrff=self.tolrff)
         self.abinitjob.set_ecut(self.ecut)
         self.abinitjob.set_psps()
         self.abinitjob.write_all()
-        self.abinitjob.run(omp_num_threads=nparal, mpi_num_procs=nparal)
+        pcm_log.debug("Starting abinit execution with nparal=%d" % nparal)
+        self.abinitjob.run(num_threads=nparal, mpi_num_procs=nparal, verbose=verbose)
 
     def get_final_geometry(self):
         pass

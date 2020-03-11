@@ -3,7 +3,8 @@ import os
 import subprocess
 import collections
 import psutil
-
+import shlex
+from pychemia import pcm_log
 
 class CodeRun:
     __metaclass__ = ABCMeta
@@ -76,11 +77,9 @@ class CodeRun:
 
         :return:
         """
-
         cwd = os.getcwd()
+        pcm_log.debug("Current location=%s, workdir=%s" % (cwd, self.workdir))
         os.chdir(self.workdir)
-        if verbose:
-            print("Working at: %s" % cwd)
 
         env_vars = ''
         if num_threads is not None:
@@ -91,6 +90,10 @@ class CodeRun:
                 if evar in num_threads and isinstance(num_threads[evar], int) and num_threads[evar] > 0:
                     env_vars += evar+'='+str(num_threads[evar])+' '
 
+                subprocess.check_output('export %s=%d' % (evar, num_threads), shell=True)
+                envvars=subprocess.check_output('echo $%s' % evar, shell=True)
+                print(envvars.decode())
+
         if self.stdin_filename is not None:
             self.stdin_file = open(self.stdin_filename, 'r')
         if self.stdout_filename is not None:
@@ -100,6 +103,7 @@ class CodeRun:
 
         # Checking availability of executable
         if not os.path.exists(self.executable):
+
             try:
                 which_bin = subprocess.check_output('which %s' % self.executable, shell=True)
             except subprocess.CalledProcessError:
@@ -110,37 +114,44 @@ class CodeRun:
         else:
             exec_path = self.executable
 
-        if verbose:
-            print("Executable: %s " % exec_path)
+        pcm_log.debug("Executable: %s " % exec_path)
 
         if self.use_mpi:
 
-            np = 1
+            np = 2
             if mpi_num_procs is None:
                 np = psutil.cpu_count(logical=False)
             elif isinstance(mpi_num_procs, int):
                 np = mpi_num_procs
             else:
-                print("WARNING: Declared variable mpi_num_procs is not integer, defaulting to 1 process")
+                print("WARNING: Declared variable mpi_num_procs is not integer, defaulting to 2 process")
 
-            command_line = '%s mpirun -n %d %s' % (env_vars, np, self.executable)
-            if verbose:
-                print("Running: %s" % command_line)
-            self.runner = subprocess.Popen(command_line, shell=True,
-                                  stdout=self.stdout_file, 
-                                  stderr=self.stderr_file, 
-                                  stdin=self.stdin_file)
+            command = 'mpirun -n %d %s' % (np, self.executable)
         else:
-            self.runner = subprocess.Popen("%s" % self.executable, shell=True,
-                                  stdout=self.stdout_file, 
-                                  stderr=self.stderr_file, 
-                                  stdin=self.stdin_file)
-        if wait:
-            self.runner.wait()
-            if verbose:
-                print("Program finished with returncode: %d" % self.runner.returncode)
+            command = "%s" % self.executable
+
+        pcm_log.debug("Running: %s" % command)
+        process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=self.stdin_file)
+        while True:
+            output = process.stdout.readline()
+            if output == b'' and process.poll() is not None:
+                break
+            if output != b'' and process.poll() is not None:
+                pcm_log.debug("process.poll() is %s" % process.poll())
+                pcm_log.debug(output)
+            if output and verbose:
+                print(output.decode(), end='')
+        rc = process.poll()
+        self.runner = process
         os.chdir(cwd)
-        return self.runner
+        return process
+
+#       if wait:
+#            self.runner.wait()
+#            if verbose:
+#                print("Program finished with returncode: %d" % self.runner.returncode)
+#        os.chdir(cwd)
+#        return self.runner
 
 
 class CodeInput(collections.abc.MutableMapping):

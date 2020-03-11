@@ -2,6 +2,7 @@ import os
 from .abifiles import AbiFiles
 from .input import AbinitInput
 from ..codes import CodeRun
+from pychemia import pcm_log
 
 
 class AbinitJob(CodeRun):
@@ -16,6 +17,7 @@ class AbinitJob(CodeRun):
         self.stdout_filename = 'abinit.log'
         self.stdin_filename = 'abinit.files'
         self.stderr_filename = 'abinit.err'
+        pcm_log.debug("Created AbinitJob with executable=%s and workdir=%s" % (executable, workdir))
 
     def finalize(self):
         self.stdout_file.close()
@@ -25,7 +27,8 @@ class AbinitJob(CodeRun):
 
     def initialize(self, structure=None, input_file='abinit.in', psp_kind='PBE', psp_exchange='ONC'):
         """
-        Initialize the mandatory variables for a AbinitJob
+        Initialize the mandatory variables for a AbinitJob.
+        The structure, input and pseudopotentials can change for the same AbinitJob.
 
         :param psp_kind: (str) Source of Pseudopotentials
         :param psp_exchange: (str) 'LDA' or 'GGA'
@@ -38,6 +41,7 @@ class AbinitJob(CodeRun):
         if not os.path.lexists(self.workdir):
             os.mkdir(self.workdir)
         if structure is not None:
+            pcm_log.debug("Initializing AbinitJob with structure=%s" % (structure.formula))
             assert structure.is_crystal
             assert structure.is_perfect
             self.structure = structure
@@ -49,7 +53,9 @@ class AbinitJob(CodeRun):
         self.exchange = psp_exchange
 
     def job_ion_relax(self, internal_opt=True, external_opt=True, ionmov=2, nstep=20, ntime=30,
-                      tolmxf=1E-7, tolrff=1E-3, dilatmx=1.05):
+                      tolmxf=1E-7, tolrff=1E-3, dilatmx=1.05, chkprim=0):
+
+        pcm_log.debug("Setting variables for relaxation tolmxf=%e tolrff=%e" % (tolmxf, tolrff))
 
         self.inp.clean()
         self.inp.from_structure(self.structure)
@@ -68,6 +74,7 @@ class AbinitJob(CodeRun):
         self.inp.set_value('tolmxf', tolmxf)
         self.inp.set_value('tolrff', tolrff)
         self.inp.set_value('dilatmx', dilatmx)
+        self.inp.set_value('chkprim', chkprim)
 
     def job_static(self):
         """
@@ -131,3 +138,4 @@ class AbinitJob(CodeRun):
     def write_all(self):
         self.write_abifiles()
         self.write_abiinput()
+
