@@ -172,7 +172,7 @@ class ConvergenceCutOffEnergy(Task, Convergence):
                     break
                 time.sleep(5)
             vj.get_outputs()
-            free_energy = vj.outcar.final_data['energy']['free_energy']
+            free_energy = vj.outcar.final_data['energy']['free_energy']/self.structure.natom
             print('encut= %7.3f  free_energy: %9.6f' % (encut, free_energy))
             self.convergence_info.append({'free_energy': free_energy, 'encut': encut, 'factor': x})
             energies.append(free_energy)
@@ -312,10 +312,10 @@ class ConvergenceKPointGrid(Task, Convergence):
                         break
                     time.sleep(5)
                 vj.get_outputs()
-                energy = vj.outcar.final_data['energy']['free_energy']
+                energy = vj.outcar.final_data['energy']['free_energy']/self.structure.natom
                 energies.append(energy)
                 print('kp_density= %10d kp_grid= %15s free_energy= %9.6f' % (density, grid, energy))
-                self.convergence_info.append({'free_energy': vj.outcar.final_data['energy']['free_energy'],
+                self.convergence_info.append({'free_energy': vj.outcar.final_data['energy']['free_energy']/self.structure.natom,
                                               'kp_grid': list(grid),
                                               'kp_density': density,
                                               'kp_n': n})
@@ -323,7 +323,7 @@ class ConvergenceKPointGrid(Task, Convergence):
                     self.success = True
                     break
             n += 2
-        self.output = {'convergence': self.convergence_info, 'best_kp_grid': list(grid)}
+        self.output = {'convergence': self.convergence_info, 'best_kp_grid': list(self.best_kpoints.grid)}
         self.finished = True
 
     def plot(self, filedir=None, file_format='pdf'):
