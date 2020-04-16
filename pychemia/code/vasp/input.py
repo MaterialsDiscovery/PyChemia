@@ -1,4 +1,3 @@
-
 import os
 import math
 from numbers import Number
@@ -270,7 +269,7 @@ class VaspInput(CodeInput):
         self.set_minimum(PREC='Normal', ISPIN=1, LREAL=False, ISMEAR=0, LORBIT=11)
         self.set_electron_scf(NELM=60, NELMIN=2, EDIFF=1E-4, IALGO=48)
         self.set_ion_relax(NSW=50, ISIF=2, IBRION=2, EDIFFG=-1E-2)
-        self.__dict__['NPAR'] = 2
+        # self.__dict__['NPAR'] = 2
 
     def set_mit_settings(self):
         self.set_minimum(PREC='Accurate', ISPIN=2, LREAL=False, ISMEAR=-5, LORBIT=11)
@@ -291,7 +290,7 @@ class VaspInput(CodeInput):
         self.__dict__['ISMEAR'] = ISMEAR
         self.__dict__['ISPIN'] = ISPIN
         self.__dict__['LORBIT'] = LORBIT
-        self.__dict__['NPAR'] = 2
+        # self.__dict__['NPAR'] = 2
         self.__dict__['LASPH'] = True
 
     def set_density_for_restart(self):
