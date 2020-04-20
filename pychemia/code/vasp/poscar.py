@@ -119,8 +119,10 @@ def write_poscar(structure, filepath='POSCAR', newformat=True, direct=True, comm
     # Added by Uthpala on Apr 20th, 2020.
     if heterostructure:
         species = [i[0] for i in groupby(structure.symbols)]
+        species_count = {i:species.count(i) for i in species}
     else:
         species = get_species_list(structure)
+    species_count = {i:species.count(i) for i in species}    
 
     ret = ''
     if comment is None:
@@ -138,8 +140,12 @@ def write_poscar(structure, filepath='POSCAR', newformat=True, direct=True, comm
             ret += ' ' + i
         ret += '\n'
     for i in species:
-        ret += ' ' + str(comp.composition[i])
+        if heterostructure:
+           ret += ' ' + str(int(comp.composition[i]/species_count[i])) 
+        else:
+            ret += ' ' + str(comp.composition[i])
     ret += '\n'
+
     if direct:
         ret += 'Direct\n'
         for i in range(structure.natom):
