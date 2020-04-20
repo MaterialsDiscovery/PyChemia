@@ -7,6 +7,7 @@ from re import findall
 from numpy import zeros, array, sum
 from pychemia import Structure
 from pychemia.utils.periodic import atomic_symbols
+from itertools import groupby
 
 """
 Routines to read and write POSCAR file
@@ -171,9 +172,16 @@ def get_species(path):
     return species
 
 
-def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None, pspfiles=None, basepsp=None):
+def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None, pspfiles=None, basepsp=None, heterostructure=False):
 
-    species = get_species_list(structure)
+    # If heterostructure is true it will keep the repeating order found
+    # in the POSCAR. 
+    # Added by Uthpala on Apr 20th, 2020.
+    if heterostructure:
+        species = [i[0] for i in groupby(structure.symbols)]
+    else:
+        species = get_species_list(structure)
+
     ret = ''
     if basepsp is not None:
         psppath = os.path.abspath(basepsp) + os.sep + pspdir
