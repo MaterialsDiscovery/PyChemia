@@ -101,7 +101,7 @@ def read_poscar(path='POSCAR'):
         return Structure(cell=newcell, symbols=symbols, reduced=pos, comment=comment)
 
 
-def write_poscar(structure, filepath='POSCAR', newformat=True, direct=True, comment=None):
+def write_poscar(structure, filepath='POSCAR', newformat=True, direct=True, comment=None, heterostructure=False):
     """
     Takes an structure from pychemia and save the file
     POSCAR for VASP.
@@ -113,7 +113,14 @@ def write_poscar(structure, filepath='POSCAR', newformat=True, direct=True, comm
     :param direct: (bool) If True, use reduced coordinates. If False, use cartesian coordinates (default: True)
     """
     comp = structure.get_composition()
-    species = get_species_list(structure)
+
+    # If heterostructure is true it will keep the repeating order found
+    # in the POSCAR. 
+    # Added by Uthpala on Apr 20th, 2020.
+    if heterostructure:
+        species = [i[0] for i in groupby(structure.symbols)]
+    else:
+        species = get_species_list(structure)
 
     ret = ''
     if comment is None:

@@ -47,7 +47,7 @@ class VaspJob(CodeRun):
         self._check_workdir()
         assert (isinstance(self.structure, Structure))
 
-        write_poscar(self.structure, filepath=self.workdir + os.sep + 'POSCAR')
+        write_poscar(self.structure, filepath=self.workdir + os.sep + 'POSCAR', heterostructure=self.heterostructure)
 
     def write_potcar(self):
 
