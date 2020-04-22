@@ -26,12 +26,14 @@ class VaspJob(CodeRun):
         self.poscar_setup = None
         self.stdout_file = None
         self.stdout_filename = 'vasp_stdout.log'
+        self.heterostructure = False
 
-    def initialize(self, structure, kpoints=None, pspdir='potpaw_PBE'):
+    def initialize(self, structure, kpoints=None, pspdir='potpaw_PBE', heterostructure=False):
         self.structure = structure
         self.set_kpoints(kpoints)
 
         self.potcar_pspdir = pspdir
+        self.heterostructure = heterostructure
 
     def _check_workdir(self):
 
@@ -45,7 +47,7 @@ class VaspJob(CodeRun):
         self._check_workdir()
         assert (isinstance(self.structure, Structure))
 
-        write_poscar(self.structure, filepath=self.workdir + os.sep + 'POSCAR')
+        write_poscar(self.structure, filepath=self.workdir + os.sep + 'POSCAR', heterostructure=self.heterostructure)
 
     def write_potcar(self):
 
@@ -53,7 +55,7 @@ class VaspJob(CodeRun):
         assert (isinstance(self.structure, Structure))
 
         pspfiles = write_potcar(self.structure, filepath=self.workdir + os.sep + 'POTCAR', pspdir=self.potcar_pspdir,
-                                options=self.potcar_setup, pspfiles=self.potcar_pspfiles)
+                                options=self.potcar_setup, pspfiles=self.potcar_pspfiles, heterostructure=self.heterostructure)
 
         self.potcar_pspfiles = pspfiles
 

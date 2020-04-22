@@ -95,7 +95,7 @@ class Convergence:
 
 class ConvergenceCutOffEnergy(Task, Convergence):
     def __init__(self, structure, workdir='.', kpoints=None, executable='vasp', energy_tolerance=1E-3,
-                 increment_factor=0.2, initial_encut=1.3, pspdir='potpaw_PBE', psp_options=None, extra_vars=None):
+                 increment_factor=0.2, initial_encut=1.3, pspdir='potpaw_PBE', psp_options=None, extra_vars=None, heterostructure=False):
         
         self.structure = structure
         self.workdir = workdir
@@ -116,6 +116,12 @@ class ConvergenceCutOffEnergy(Task, Convergence):
             self.kpoints = kp
         else:
             self.kpoints = kpoints
+
+        # If heterostructure is true it will keep the repeating order found
+        # in the POSCAR. 
+        # Added by Uthpala on Apr 20th, 2020.
+        self.heterostructure = heterostructure
+
         Convergence.__init__(self, energy_tolerance)
         self.task_params = {'energy_tolerance': self.energy_tolerance, 'increment_factor': self.increment_factor,
                             'initial_encut': self.initial_encut}
@@ -125,7 +131,7 @@ class ConvergenceCutOffEnergy(Task, Convergence):
 
         self.started = True
         vj = VaspJob(workdir=self.workdir, executable=self.executable)
-        vj.initialize(structure=self.structure, kpoints=self.kpoints, pspdir=self.pspdir)
+        vj.initialize(structure=self.structure, kpoints=self.kpoints, pspdir=self.pspdir, heterostructure=self.heterostructure)
         vj.potcar_setup = self.psp_options
         energies = []
         if not self.is_converge:
@@ -231,7 +237,7 @@ class ConvergenceCutOffEnergy(Task, Convergence):
 
 class ConvergenceKPointGrid(Task, Convergence):
     def __init__(self, structure, workdir='.', executable='vasp', energy_tolerance=1E-3, recover=False, encut=1.3,
-                 pspdir='potpaw_PBE', extra_vars=None, psp_options=None):
+                 pspdir='potpaw_PBE', extra_vars=None, psp_options=None, heterostructure=False):
 
         self.structure = structure
         self.workdir = workdir
@@ -245,6 +251,12 @@ class ConvergenceKPointGrid(Task, Convergence):
             self.extra_vars = extra_vars
         else:
             self.extra_vars = {}
+
+        # If heterostructure is true it will keep the repeating order found
+        # in the POSCAR. 
+        # Added by Uthpala on Apr 20th, 2020.
+        self.heterostructure = heterostructure
+
         Convergence.__init__(self, energy_tolerance)
         if recover:
             self.recover()
@@ -267,7 +279,7 @@ class ConvergenceKPointGrid(Task, Convergence):
         vj = VaspJob(workdir=self.workdir, executable=self.executable)
         vj.potcar_setup = self.psp_options
         kp = KPoints()
-        vj.initialize(structure=self.structure, kpoints=kp, pspdir=self.pspdir)
+        vj.initialize(structure=self.structure, kpoints=kp, pspdir=self.pspdir, heterostructure=self.heterostructure)
         grid = None
         energies = []
         if not self.is_converge:

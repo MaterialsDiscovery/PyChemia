@@ -7,6 +7,7 @@ from re import findall
 from numpy import zeros, array, sum
 from pychemia import Structure
 from pychemia.utils.periodic import atomic_symbols
+from itertools import groupby
 
 """
 Routines to read and write POSCAR file
@@ -100,7 +101,7 @@ def read_poscar(path='POSCAR'):
         return Structure(cell=newcell, symbols=symbols, reduced=pos, comment=comment)
 
 
-def write_poscar(structure, filepath='POSCAR', newformat=True, direct=True, comment=None):
+def write_poscar(structure, filepath='POSCAR', newformat=True, direct=True, comment=None, heterostructure=False):
     """
     Takes an structure from pychemia and save the file
     POSCAR for VASP.
@@ -112,7 +113,15 @@ def write_poscar(structure, filepath='POSCAR', newformat=True, direct=True, comm
     :param direct: (bool) If True, use reduced coordinates. If False, use cartesian coordinates (default: True)
     """
     comp = structure.get_composition()
-    species = get_species_list(structure)
+
+    # If heterostructure is true it will keep the repeating order found
+    # in the POSCAR. 
+    # Added by Uthpala on Apr 20th, 2020.
+    if heterostructure:
+        species = [i[0] for i in groupby(structure.symbols)]
+    else:
+        species = get_species_list(structure)
+    species_count = [len(list(group)) for key, group in groupby(structure.symbols)]   
 
     ret = ''
     if comment is None:
@@ -129,9 +138,13 @@ def write_poscar(structure, filepath='POSCAR', newformat=True, direct=True, comm
         for i in species:
             ret += ' ' + i
         ret += '\n'
-    for i in species:
-        ret += ' ' + str(comp.composition[i])
+    for icount, i in enumerate(species):
+        if heterostructure:
+           ret += ' ' + str(species_count[icount]) 
+        else:
+            ret += ' ' + str(comp.composition[i])
     ret += '\n'
+
     if direct:
         ret += 'Direct\n'
         for i in range(structure.natom):
@@ -171,9 +184,16 @@ def get_species(path):
     return species
 
 
-def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None, pspfiles=None, basepsp=None):
+def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None, pspfiles=None, basepsp=None, heterostructure=False):
 
-    species = get_species_list(structure)
+    # If heterostructure is true it will keep the repeating order found
+    # in the POSCAR. 
+    # Added by Uthpala on Apr 20th, 2020.
+    if heterostructure:
+        species = [i[0] for i in groupby(structure.symbols)]
+    else:
+        species = get_species_list(structure)
+
     ret = ''
     if basepsp is not None:
         psppath = os.path.abspath(basepsp) + os.sep + pspdir
