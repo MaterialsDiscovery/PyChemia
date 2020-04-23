@@ -792,7 +792,7 @@ def block(value=None):
     >>> block(['Au', 'Sb'])
     ['d', 'p']
     >>> block(['Na', 'O', 'Ag', 'La'])
-    ['s', 'p', 'd', 'f']
+    ['s', 'p', 'd', 'd']
     >>> block(range(1, 12))
     ['s', 'p', 's', 's', 'p', 'p', 'p', 'p', 'p', 'p', 's']
     """

@@ -1315,7 +1315,7 @@ def random_structure(method, composition, periodic=True, max_volume=1E10):
                     print("Trial failed, distance %f is less than covalent radious %f" % (distance, covalent_dim))
                     trial += 1
 
-            if trial > 10:
+            if trial > 100:
                 break
 
         # else:
