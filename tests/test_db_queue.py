@@ -32,7 +32,7 @@ def test_queue():
     files = [source + os.sep + 'KPOINTS']
     entry_id = pq.new_entry(structure=st, variables=vi, code='vasp', files=files)
 
-    nfiles = pq.db.fs.files.count()
+    nfiles = pq.db.fs.files.count_documents({})
     print('Number of files: ', nfiles)
 
     pychemia.code.vasp.write_from_queue(pq, entry_id, destination)
@@ -45,7 +45,7 @@ def test_queue():
     print('Adding the same entry again and testing that the number of files is unchanged')
     entry_id = pq.new_entry(structure=st, variables=vi, code='vasp', files=files)
 
-    assert nfiles == pq.db.fs.files.count()
+    assert nfiles == pq.db.fs.files.count_documents({})
     print('The number of files remains the same ', nfiles)
 
     shutil.rmtree(destination)

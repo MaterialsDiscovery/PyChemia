@@ -275,7 +275,7 @@ class OrbitalDFTU(Population):
             return False
 
     def set_final_results(self, entry_id, dmat, etot, nres2):
-        self.pcdb.db.pychemia_entries.update({'_id': entry_id}, {'$set': {'properties.final_dmat': dmat,
+        self.pcdb.db.pychemia_entries.update_one({'_id': entry_id}, {'$set': {'properties.final_dmat': dmat,
                                                                           'properties.etot': etot,
                                                                           'properties.nres2': nres2}})
 
