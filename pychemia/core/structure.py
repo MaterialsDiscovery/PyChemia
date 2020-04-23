@@ -1279,8 +1279,9 @@ def random_structure(method, composition, periodic=True, max_volume=1E10):
 
         assert (method in ['scaling', 'stretching'])
 
-	trial = 0
+	
         while True:
+            trial=0
     
             if method == 'scaling':
                 lattice = Lattice.random_cell(comp)
@@ -1316,7 +1317,7 @@ def random_structure(method, composition, periodic=True, max_volume=1E10):
                     trial += 1
 
             if trial > 100:
-		print("Leaving after 100 attemps")
+                print("Leaving after 100 attemps")
                 break
 
         # else:
