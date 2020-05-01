@@ -195,7 +195,7 @@ class VaspOutput(CodeOutput):
         self.iterations()
 
     def free_energy(self):
-        subdata = re.findall('FREE ENERGIE OF THE ION-ELECTRON SYSTEM [\w\d\s()\n-=>]*\n \n\n\n-', self.data)
+        subdata = re.findall('FREE ENERGIE OF THE ION-ELECTRON SYSTEM [\w\d\s()\n-=>]*\n\s*\n\n\n-', self.data)
         if len(subdata) == 1:
             data_split = subdata[0].split()
             try:

@@ -14,13 +14,16 @@ class DensityOfStates:
     orbital
     """
 
-    def __init__(self, table=None, title=None):
+    def __init__(self, table=None, title=None,labels=None):
         self._dos = None
         self._min_energy = None
         self._max_energy = None
         self._max_dos = None
         self.title = title
+        self.labels = labels
         self.ncols = 1
+
+        
 
         if table is not None:
             self._dos = np.array(table)
@@ -28,6 +31,9 @@ class DensityOfStates:
             self._min_energy = min(table[:, 0])
             self._max_energy = max(table[:, 0])
             self._max_dos = max(table[:, 1])
+            
+        if self.labels == None:
+            self.labels = np.arange(self.ncols)
 
     @staticmethod
     def read(filename, title=None):
@@ -102,8 +108,34 @@ class DensityOfStates:
             return self._dos[:, range(1, self.ncols + 1)]
         else:
             return self._dos[:, 1]
+        
+        
+    def save_txt(self,filename=None):
+        """
+        writes the density of states in a file using numpy savetxt. 
+        If filename not defined, the title of object is used as filename
+        
+        :param filename
+        """
+        if filename == None:
+            filename = self.title.replace(' ','')+'.txt'
+            
+        header = ('%12s'+'%12s'*self.ncols) % tuple(self.labels)
+        fmt = ('%12.3f '+'%12.4f'*self.ncols)
+        np.savetxt(fname=filename,fmt=fmt,X=self.dos,header=header)
+        
+        #-34.460  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
 
 
+    def to_dict(self):
+        """
+        returns the object as a python dictionary
+        
+        :return {'labels':labels,'energies':energies,title:values}
+        """
+        return {'labels':self.labels,'energies':self.energies,self.title:self.values}
+        
+        
 def plot_one_dos(dosobj, ax=None, horizontal=True, figwidth=16, figheight=12):
     """
     Plot a single density of states, if the values contains
@@ -143,9 +175,10 @@ def plot_one_dos(dosobj, ax=None, horizontal=True, figwidth=16, figheight=12):
             yy = dosobj.values[:, i]
 
             if horizontal:
-                ax.plot(xx, yy)
+                
+                ax.plot(xx, yy, label=dosobj.label[i+1])
             else:
-                ax.plot(yy, xx)
+                ax.plot(yy, xx, label=dosobj.label[i+1])
 
     else:
         yy = dosobj.values
