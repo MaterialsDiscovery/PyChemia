@@ -2,9 +2,9 @@
 Created on Mon Dec 02 2019 
 @author: Pedram Tavadze
 """
-import pychemia                     
+#import pychemia                     
 import xml.etree.ElementTree as ET    
-import numpy as np  # we ddon't need this as well
+from numpy import array 
 
 
 def text_to_bool(text):
@@ -18,8 +18,9 @@ def text_to_bool(text):
 
 def conv(ele, _type):
     """This function converts the xml text to the type specified in the attrib of xml tree """
-    if type == 'string':
-        return str(ele) 
+    
+    if _type == 'string':
+        return ele.strip()
     elif _type == 'int':
         return int(ele) 
     elif _type == 'logical': 
@@ -41,19 +42,21 @@ def get_params(xml_tree, dest):
     This function is recurcive #check spelling"""
     for ielement in xml_tree:
         if ielement.tag == 'separator':
-            dest[ielement.attrib['name']] = {} 
-            dest[ielement.attrib['name']] = get_params(ielement, dest[ielement.attrib['name']]) 
+            dest[ielement.attrib['name'].strip()] = {} 
+            dest[ielement.attrib['name'].strip()] = get_params(ielement, dest[ielement.attrib['name']]) 
         else : 
             if 'type' in ielement.attrib:
                 _type = ielement.attrib['type']
             else : 
                 _type = 'float' 
             if ielement.text is None:
-                dest[ielement.attrib['name']] = None 
+                dest[ielement.attrib['name'].strip()] = None 
+                
             elif len(ielement.text.split()) > 1:
-                dest[ielement.attrib['name']] = [conv(x, _type) for x in ielement.text.split()]
+                dest[ielement.attrib['name'].strip()] = [conv(x, _type) for x in ielement.text.split()]
             else : 
-                dest[ielement.attrib['name']] = conv(ielement.text, _type)
+                dest[ielement.attrib['name'].strip()] = conv(ielement.text, _type)
+
     return dest 
 
 
@@ -93,10 +96,12 @@ def get_set(xml_tree, ret):
         ret[xml_tree.attrib['comment']] = get_varray(xml_tree)         
         return ret 
     else:
-        for ielement in xml_tree: 
-            if ielement.tag == 'set': 
-                ret[ielement.attrib['comment']] = {} 
-                ret[ielement.attrib['comment']] = get_set(ielement, ret[ielement.attrib['comment']])
+        ret[xml_tree.attrib['comment']] = {}
+        for ielement in xml_tree:
+            
+            if ielement.tag == 'set' :   
+                ret[xml_tree.attrib['comment']][ielement.attrib['comment']] = {}
+                ret[xml_tree.attrib['comment']][ielement.attrib['comment']] = get_set(ielement, ret[xml_tree.attrib['comment']][ielement.attrib['comment']])
         return ret 
 
 
@@ -156,28 +161,39 @@ def parse_vasprun(vasprun):
             for ielement in ichild:
                 if ielement.items()[0][0] == 'param': 
                     kpoints_info['mode'] = ielement.items()[0][1] 
-                    for isub in ielement:
-                        if isub.attrib['name'] == 'divisions': 
-                            kpoints_info['kgrid'] = [int(x) for x in isub.text.split()] 
-                        elif isub.attrib['name'] == 'usershift': 
-                            kpoints_info['user_shift'] = [float(x) for x in isub.text.split()] 
-                        elif isub.attrib['name'] == 'genvec1': 
-                            kpoints_info['genvec1'] = [float(x) for x in isub.text.split()] 
-                        elif isub.attrib['name'] == 'genvec2': 
-                            kpoints_info['genvec2'] = [float(x) for x in isub.text.split()] 
-                        elif isub.attrib['name'] == 'genvec3': 
-                            kpoints_info['genvec3'] = [float(x) for x in isub.text.split()] 
-                        elif isub.attrib['name'] == 'shift': 
-                            kpoints_info['shift'] = [float(x) for x in isub.text.split()] 
+                    if kpoints_info['mode'] == 'listgenerated':
+                        kpoints_info['kpoint_vertices'] = []
+                        for isub in ielement:
+                            
+                            if isub.attrib == 'divisions':
+                                kpoints_info['ndivision'] = int(isub.text)
+                            else:
+                                if len(isub.text.split()) !=3:
+                                    continue
+                                kpoints_info['kpoint_vertices'].append([float(x) for x in isub.text.split()])
+                    else : 
+                        for isub in ielement:
+                            if isub.attrib['name'] == 'divisions': 
+                                kpoints_info['kgrid'] = [int(x) for x in isub.text.split()] 
+                            elif isub.attrib['name'] == 'usershift': 
+                                kpoints_info['user_shift'] = [float(x) for x in isub.text.split()] 
+                            elif isub.attrib['name'] == 'genvec1': 
+                                kpoints_info['genvec1'] = [float(x) for x in isub.text.split()] 
+                            elif isub.attrib['name'] == 'genvec2': 
+                                kpoints_info['genvec2'] = [float(x) for x in isub.text.split()] 
+                            elif isub.attrib['name'] == 'genvec3': 
+                                kpoints_info['genvec3'] = [float(x) for x in isub.text.split()] 
+                            elif isub.attrib['name'] == 'shift': 
+                                kpoints_info['shift'] = [float(x) for x in isub.text.split()] 
     
                 elif ielement.items()[0][1] == 'kpointlist': 
                     for ik in ielement:
                         kpoints_list.append([float(x) for x in ik.text.split()]) 
-                    kpoints_list = np.array(kpoints_list)
+                    kpoints_list = array(kpoints_list)
                 elif ielement.items()[0][1] == 'weights': 
                     for ik in ielement:
                         k_weights.append(float(ik.text))
-                    k_weights = np.array(k_weights)
+                    k_weights = array(k_weights)
                     
         ## Vasp Parameters 
         elif ichild.tag == 'parameters':
@@ -207,7 +223,7 @@ def parse_vasprun(vasprun):
                                     atom_info['atom_types'][iatom[1].text]['natom_per_specie'] = int(iatom[0].text) 
                                     atom_info['atom_types'][iatom[1].text]['mass'] = float(iatom[2].text) 
                                     atom_info['atom_types'][iatom[1].text]['valance'] = float(iatom[3].text) 
-                                    atom_info['atom_types'][iatom[1].text]['pseudopotential'] = iatom[4].text 
+                                    atom_info['atom_types'][iatom[1].text]['pseudopotential'] = iatom[4].text.strip()
 
         elif ichild.tag == 'structure':
             if ichild.attrib['name'] == 'initialpos': 
@@ -257,22 +273,11 @@ def parse_vasprun(vasprun):
                 else:
                     general[ielement.tag] = {}
                     general[ielement.tag] = get_general(ielement, general[ielement.tag])
+        # NEED TO ADD ORBITAL MAGNETIZATION 
 
     return {'calculation': calculation, 'structures': structures, 'forces': forces, 'run_info': run_info,
             'incar': incar, 'general': general, 'kpoints_info': kpoints_info, 'vasp_params': vasp_params,
             'kpoints': {'kpoints_list': kpoints_list, 'k_weights': k_weights}, 'atom_info': atom_info}
 
 
-if __name__ == '__main__':
-    vi = pychemia.code.vasp.VaspInput(variables=incar)   
-    kp_fromGen = pychemia.crystal.KPoints(kmode=kpoints_info['mode'].lower(),
-                                          shifts=kpoints_info['user_shift'],
-                                          grid=kpoints_info['kgrid'])
-    kp_fromList = pychemia.crystal.KPoints(kpoints_list=kpoints_list,
-                                           weights=k_weights) # Ask Guillermo why this does not give the correct answer
-    st_init = pychemia.core.Structure(symbols=atom_info['symbols'],
-                                      reduced=initial_pos['reduced'],
-                                      cell=initial_pos['cell'])
-    st_final = pychemia.core.Structure(symbols=atom_info['symbols'],
-                                       reduced=final_pos['reduced'],
-                                       cell=final_pos['cell'])
+
