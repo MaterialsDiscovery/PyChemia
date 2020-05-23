@@ -3,6 +3,7 @@ import json
 import subprocess
 from setuptools import setup, find_packages, Extension
 from distutils.command.sdist import sdist as _sdist
+import pathlib
 
 try:
     from Cython.Build import cythonize
@@ -44,7 +45,10 @@ def get_version_info():
     # write_version_py(), otherwise the import of scipy.version messes
     # up the build under Python 3.
 
-    rf = open('setup.json')
+    basepath=pathlib.Path(__file__).parent.absolute()
+    print(basepath)
+
+    rf = open(str(basepath)+os.sep+'setup.json')
     release_data = json.load(rf)
     rf.close()
 

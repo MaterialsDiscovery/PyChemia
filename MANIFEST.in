@@ -1,4 +1,4 @@
-include *.txt *.md
+include *.txt *.md *.json
 recursive-include docs _static/* _templates/* *.rst *.py make.bat Makefile
 recursive-include tests *
 recursive-include pychemia *.json
