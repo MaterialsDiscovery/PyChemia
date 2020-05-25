@@ -1,5 +1,5 @@
-import pyximport
-pyximport.install()
+# import pyximport
+# pyximport.install()
 
 import numpy as np
 import scipy.optimize
