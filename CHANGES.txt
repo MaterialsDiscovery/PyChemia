@@ -1,1 +1,2 @@
-v<version>, <date> -- Initial release.
+v0.20.6.1, 2020.06.01 -- Starting recording changes.
+
