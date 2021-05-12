@@ -37,6 +37,7 @@ class IonRelaxation(Relaxator, Task):
         extra_vars=None,
         heterostructure=False,
         make_potcar=True,
+        auto_ibrion=False,
     ):
 
         Relaxator.__init__(self, target_forces)
@@ -50,6 +51,9 @@ class IonRelaxation(Relaxator, Task):
         # setting make_potcar=False will not generate a new POTCAR.
         # Added by Uthpala on May 12th, 2021.
         self.make_potcar = make_potcar
+
+        # Turn on adaptive IBRION update.
+        self.auto_ibrion = auto_ibrion
 
         self.vaspjob = VaspJob(executable=executable, workdir=workdir)
         self.relaxed = False
@@ -157,18 +161,28 @@ class IonRelaxation(Relaxator, Task):
             vj.input_variables["ISIF"] = 2
 
         # How to change IBRION
-        # if info['avg_force'] < 0.1 and info['avg_stress_diag'] < 0.1 and info['avg_stress_non_diag'] < 0.1:
-        #    vj.input_variables['IBRION'] = 1
-        # elif info['avg_force'] < 1 and info['avg_stress_diag'] < 1 and info['avg_stress_non_diag'] < 1:
-        #    vj.input_variables['IBRION'] = 2
-        # else:
-        #    vj.input_variables['IBRION'] = 3
+        if self.auto_ibrion:
 
-        # if vj.input_variables['EDIFFG'] < - 2 * self.target_forces:
-        #     vj.input_variables['EDIFFG'] = round_small(vj.input_variables['EDIFFG'] / 2)
-        # else:
-        #     vj.input_variables['EDIFFG'] = - self.target_forces
-        #
+            if (
+                info["avg_force"] < 0.1
+                and info["avg_stress_diag"] < 0.1
+                and info["avg_stress_non_diag"] < 0.1
+            ):
+                vj.input_variables["IBRION"] = 1
+            elif (
+                info["avg_force"] < 1
+                and info["avg_stress_diag"] < 1
+                and info["avg_stress_non_diag"] < 1
+            ):
+                vj.input_variables["IBRION"] = 2
+            # else:
+            #    vj.input_variables['IBRION'] = 3
+
+            # if vj.input_variables['EDIFFG'] < - 2 * self.target_forces:
+            #     vj.input_variables['EDIFFG'] = round_small(vj.input_variables['EDIFFG'] / 2)
+            # else:
+            #     vj.input_variables['EDIFFG'] = - self.target_forces
+            #
 
         # How to change EDIFFG
         if max_force > self.target_forces or max_stress > self.target_forces:
