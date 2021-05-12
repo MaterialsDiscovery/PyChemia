@@ -253,7 +253,8 @@ class IonRelaxation(Relaxator, Task):
         inp.set_rough_relaxation()
         vj.set_input_variables(inp)
         vj.input_variables["LWAVE"] = False
-        vj.write_potcar()
+        if self.make_potcar:
+            vj.write_potcar()
         vj.input_variables.set_encut(
             ENCUT=self.encut, POTCAR=self.workdir + os.sep + "POTCAR"
         )
