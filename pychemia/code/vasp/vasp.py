@@ -27,13 +27,15 @@ class VaspJob(CodeRun):
         self.stdout_file = None
         self.stdout_filename = 'vasp_stdout.log'
         self.heterostructure = False
+        self.make_potcar = True
 
-    def initialize(self, structure, kpoints=None, pspdir='potpaw_PBE', heterostructure=False):
+    def initialize(self, structure, kpoints=None, pspdir='potpaw_PBE', heterostructure=False, make_potcar=True):
         self.structure = structure
         self.set_kpoints(kpoints)
 
         self.potcar_pspdir = pspdir
         self.heterostructure = heterostructure
+        self.make_potcar = make_potcar
 
     def _check_workdir(self):
 
@@ -89,7 +91,8 @@ class VaspJob(CodeRun):
         self.write_incar()
         self.write_kpoints()
         self.write_poscar()
-        self.write_potcar()
+        if self.make_potcar:
+            self.write_potcar()
         self.save_json(self.workdir + os.sep + 'vaspjob.json')
 
     @property
@@ -155,7 +158,8 @@ class VaspJob(CodeRun):
         inp = VaspInput()
         inp.set_minimum()
         self._check_workdir()
-        self.write_potcar()
+        if self.make_potcar:
+            self.write_potcar()
         inp.set_encut(ENCUT=1.3, POTCAR=self.workdir + os.sep + 'POTCAR')
         inp.set_electron_scf()
         self.set_input_variables(inp)

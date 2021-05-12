@@ -36,6 +36,7 @@ class IonRelaxation(Relaxator, Task):
         psp_options=None,
         extra_vars=None,
         heterostructure=False,
+        make_potcar=True,
     ):
 
         Relaxator.__init__(self, target_forces)
@@ -45,6 +46,10 @@ class IonRelaxation(Relaxator, Task):
         # in the POSCAR.
         # Added by Uthpala on Apr 20th, 2020.
         self.heterostructure = heterostructure
+
+        # setting make_potcar=False will not generate a new POTCAR.
+        # Added by Uthpala on May 12th, 2021.
+        self.make_potcar = make_potcar
 
         self.vaspjob = VaspJob(executable=executable, workdir=workdir)
         self.relaxed = False
@@ -59,6 +64,7 @@ class IonRelaxation(Relaxator, Task):
             kpoints=self.kpoints,
             pspdir=pspdir,
             heterostructure=self.heterostructure,
+            make_potcar=self.make_potcar,
         )
         self.vaspjob.potcar_setup = psp_options
         self.encut = encut
