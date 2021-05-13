@@ -38,6 +38,7 @@ class IonRelaxation(Relaxator, Task):
         heterostructure=False,
         make_potcar=True,
         auto_ibrion=False,
+        fire=False,
     ):
 
         Relaxator.__init__(self, target_forces)
@@ -54,6 +55,10 @@ class IonRelaxation(Relaxator, Task):
 
         # Turn on adaptive IBRION update.
         self.auto_ibrion = auto_ibrion
+
+        # Use FIRE algorithm for relaxation.
+        # Requires VTST Tools
+        self.fire = fire
 
         self.vaspjob = VaspJob(executable=executable, workdir=workdir)
         self.relaxed = False
@@ -163,26 +168,47 @@ class IonRelaxation(Relaxator, Task):
         # How to change IBRION
         if self.auto_ibrion:
 
-            if (
-                info["avg_force"] < 0.1
-                and info["avg_stress_diag"] < 0.1
-                and info["avg_stress_non_diag"] < 0.1
-            ):
-                vj.input_variables["IBRION"] = 1
-            elif (
-                info["avg_force"] < 1
-                and info["avg_stress_diag"] < 1
-                and info["avg_stress_non_diag"] < 1
-            ):
-                vj.input_variables["IBRION"] = 2
-            # else:
-            #    vj.input_variables['IBRION'] = 3
+            if not self.fire:
 
-            # if vj.input_variables['EDIFFG'] < - 2 * self.target_forces:
-            #     vj.input_variables['EDIFFG'] = round_small(vj.input_variables['EDIFFG'] / 2)
-            # else:
-            #     vj.input_variables['EDIFFG'] = - self.target_forces
-            #
+                # CG followed by QN
+                if (
+                    info["avg_force"] < 0.1
+                    and info["avg_stress_diag"] < 0.1
+                    and info["avg_stress_non_diag"] < 0.1
+                ):
+                    vj.input_variables["IBRION"] = 1
+                elif (
+                    info["avg_force"] < 1
+                    and info["avg_stress_diag"] < 1
+                    and info["avg_stress_non_diag"] < 1
+                ):
+                    vj.input_variables["IBRION"] = 2
+                # else:
+                #    vj.input_variables['IBRION'] = 3
+
+            else:
+                # CG followed by FIRE algorithm
+                if (
+                    info["avg_force"] < 0.1
+                    and info["avg_stress_diag"] < 0.1
+                    and info["avg_stress_non_diag"] < 0.1
+                ):
+                    vj.input_variables["IBRION"] = 3
+                    vj.input_variables["IOPT"] = 7
+                    vj.input_variables["POTIM"] = 0
+
+                elif (
+                    info["avg_force"] < 1
+                    and info["avg_stress_diag"] < 1
+                    and info["avg_stress_non_diag"] < 1
+                ):
+                    vj.input_variables["IBRION"] = 2
+
+        # if vj.input_variables['EDIFFG'] < - 2 * self.target_forces:
+        #     vj.input_variables['EDIFFG'] = round_small(vj.input_variables['EDIFFG'] / 2)
+        # else:
+        #     vj.input_variables['EDIFFG'] = - self.target_forces
+        #
 
         # How to change EDIFFG
         if max_force > self.target_forces or max_stress > self.target_forces:
