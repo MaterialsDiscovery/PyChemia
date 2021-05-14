@@ -166,15 +166,27 @@ class IonRelaxation(Relaxator, Task):
             vj.input_variables["ISIF"] = 2
 
         # How to change IBRION
+        # Originally commented out section
+
+        # if info['avg_force'] < 0.1 and info['avg_stress_diag'] < 0.1 and info['avg_stress_non_diag'] < 0.1:
+        #    vj.input_variables['IBRION'] = 1
+        # elif info['avg_force'] < 1 and info['avg_stress_diag'] < 1 and info['avg_stress_non_diag'] < 1:
+        #    vj.input_variables['IBRION'] = 2
+        # else:
+        #    vj.input_variables['IBRION'] = 3
+
         if self.auto_ibrion:
+
+            # Reduced tolerance for QN and FIRE by order of 100
+            # UKH May 13, 2021
 
             if not self.fire:
 
                 # CG followed by QN
                 if (
-                    info["avg_force"] < 0.1
-                    and info["avg_stress_diag"] < 0.1
-                    and info["avg_stress_non_diag"] < 0.1
+                    info["avg_force"] < 1.0e-03
+                    and info["avg_stress_diag"] < 1.0e-03
+                    and info["avg_stress_non_diag"] < 1.0e-03
                 ):
                     vj.input_variables["IBRION"] = 1
                 elif (
@@ -184,14 +196,14 @@ class IonRelaxation(Relaxator, Task):
                 ):
                     vj.input_variables["IBRION"] = 2
                 # else:
-                #    vj.input_variables['IBRION'] = 3
+                #     vj.input_variables["IBRION"] = 3
 
             else:
                 # CG followed by FIRE algorithm
                 if (
-                    info["avg_force"] < 0.1
-                    and info["avg_stress_diag"] < 0.1
-                    and info["avg_stress_non_diag"] < 0.1
+                    info["avg_force"] < 1.0e-03
+                    and info["avg_stress_diag"] < 1.0e-03
+                    and info["avg_stress_non_diag"] < 1.0e-03
                 ):
                     vj.input_variables["IBRION"] = 3
                     vj.input_variables["IOPT"] = 7
@@ -203,6 +215,8 @@ class IonRelaxation(Relaxator, Task):
                     and info["avg_stress_non_diag"] < 1
                 ):
                     vj.input_variables["IBRION"] = 2
+                # else:
+                #     vj.input_variables["IBRION"] = 3
 
         # if vj.input_variables['EDIFFG'] < - 2 * self.target_forces:
         #     vj.input_variables['EDIFFG'] = round_small(vj.input_variables['EDIFFG'] / 2)
