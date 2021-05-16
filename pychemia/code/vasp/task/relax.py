@@ -215,6 +215,8 @@ class IonRelaxation(Relaxator, Task):
                     and info["avg_stress_non_diag"] < 1
                 ):
                     vj.input_variables["IBRION"] = 2
+                    vj.input_variables["IOPT"] = 0
+                    vj.input_variables["POTIM"] = 0.5
                 # else:
                 #     vj.input_variables["IBRION"] = 3
 
