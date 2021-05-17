@@ -34,8 +34,7 @@ class PyChemiaQueue:
         if replicaset is not None:
             self._client = pymongo.MongoClient(uri, ssl=ssl, replicaset=replicaset)
         else:
-            self._client = pymongo.MongoClient(host=host, port=port, ssl=ssl,
-                                               ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE)
+            self._client = pymongo.MongoClient(host=host, port=port, ssl=ssl, tlsAllowInvalidCertificates=True)
         for i in ['version']:
             print('%20s : %s' % (i, self._client.server_info()[i]))
         self.db = self._client[name]

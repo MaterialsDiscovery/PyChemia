@@ -49,8 +49,7 @@ class PyChemiaDB:
                 self._client = pymongo.MongoClient(uri, ssl=ssl, replicaSet=replicaset,
                                                    serverSelectionTimeoutMS=maxSevSelDelay)
             elif pymongo.version_tuple[0] == 3:
-                self._client = pymongo.MongoClient(uri, ssl=ssl,
-                                                   ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE,
+                self._client = pymongo.MongoClient(uri, ssl=ssl, tlsAllowInvalidCertificates=True,
                                                    replicaSet=replicaset, serverSelectionTimeoutMS=maxSevSelDelay)
             else:
                 raise ValueError('Wrong version of pymongo')
@@ -364,8 +363,7 @@ def create_database(name, admin_name, admin_passwd, user_name, user_passwd,
 
     """
     maxSevSelDelay = 2
-    mc = pymongo.MongoClient(host=host, port=port, ssl=ssl, 
-                             ssl_cert_reqs=pymongo.ssl_support.ssl.CERT_NONE,
+    mc = pymongo.MongoClient(host=host, port=port, ssl=ssl, tlsAllowInvalidCertificates=True,
                              replicaset=replicaset, serverSelectionTimeoutMS=maxSevSelDelay)
     try:
         mc.admin.authenticate(admin_name, admin_passwd)
