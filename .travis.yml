@@ -36,8 +36,8 @@ before_install:
 
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION openblas numpy scipy nose coverage matplotlib cython
-  - pip install pymongo psutil
-  - pip install -e "git+https://github.com/atztogo/spglib.git#egg=spglib&subdirectory=python"
+  - pip install pymongo psutil coveralls spglib 
+  # - pip install -e "git+https://github.com/atztogo/spglib.git#egg=spglib&subdirectory=python"
   # - pip install -e "git+https://github.com/z4r/python-coveralls.git#egg=coveralls"
   - python3 setup.py build_ext --inplace
 
@@ -47,4 +47,4 @@ script:
 
 # Calculate coverage
 after_success:
-  # - coveralls
+  - coveralls

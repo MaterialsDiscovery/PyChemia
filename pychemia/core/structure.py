@@ -1300,6 +1300,27 @@ def random_structure(method, composition, periodic=True, max_volume=1E10):
 
                 new_lattice = lattice.stretch(symbols, rpos, tolerance=1.0, extra=0.1)
 
+                while True:
+                    changed_lattice=False
+                    for i in range(natom):
+                        for j in range(i + 1, natom):
+                            distance = new_lattice.minimal_distance(rpos[i], rpos[j])
+                            covalent_dim = sum(covalent_radius([symbols[i], symbols[j]]))
+                            if distance < covalent_dim:
+                                print("Distance of %s was smaller than covalent distance of %s" % (distance, covalent_dim))
+                                new_lattice = lattice.scale(symbols, rpos, tolerance=1.1)
+                                print("Lattice was changed, recomputing...")
+                                changed_lattice=True
+                            if changed_lattice:
+                                print("Lattice was changed, recomputing...")
+                                break
+                        if changed_lattice:
+                            print("Lattice was changed, recomputing...")
+                            break
+                    if not changed_lattice: 
+                        print("Lattice was not changed, accepting new value")
+                        break
+
             if new_lattice.volume < max_volume:
                 test = True
                 for i in range(natom):
