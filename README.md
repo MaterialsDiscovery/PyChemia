@@ -151,30 +151,30 @@ Mandatory
 ---------
 
 1.  Python >= 3.6
-    The library is tested on Travis for Python 3.6 and 3.7
+    The library is tested on Travis for Python 3.6 up to 3.9
     Support for Python 2.7 has been removed
 
     https://travis-ci.org/MaterialsDiscovery/PyChemia
 
-2.  [Numpy](http://www.numpy.org/ "Numpy") >= 1.17
+2.  [Numpy](http://www.numpy.org/ "Numpy") >= 1.19
     Fundamental library for numerical intensive computation in Python.
     Numpy arrays are essential for efficient array manipulation. 
 
-3.  [SciPy](http://scipy.org/ "SciPy") >= 1.3
+3.  [SciPy](http://scipy.org/ "SciPy") >= 1.5
     Used mostly for Linear Algebra, FFT and spatial routines.
 
 4.  [Spglib](http://spglib.sourceforge.net/) >= 1.9
     Used to determine symmetry groups for periodic structures
 
-5.  [Matplotlib](http://matplotlib.org/  "Matplotlib") >= 3.0
+5.  [Matplotlib](http://matplotlib.org/  "Matplotlib") >= 3.3
     Used to plot band structures, densities of states and other 2D plots
 
-6.  [PyMongo](http://api.mongodb.org/python/current/) >= 3.9
+6.  [PyMongo](http://api.mongodb.org/python/current/) >= 3.11
     Used for structural search PyChemia relies strongly in MongoDB and its python driver. 
-    For the MongoDB server, any version beyond 3.0 should be fine. 
-    We have tested pychemia on MongoDB 3.4
+    For the MongoDB server, any version beyond 3.11 should be fine. 
+    We have tested pychemia on MongoDB 4.0
 
-7.  [psutil](https://github.com/giampaolo/psutil) >= 5.6
+7.  [psutil](https://github.com/giampaolo/psutil) >= 5.8
     Cross-platform lib for process and system monitoring in Python
 
 

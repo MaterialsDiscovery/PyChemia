@@ -146,14 +146,14 @@ CLASSIFIERS = [
     "Topic :: Scientific/Engineering :: Chemistry",
     "Topic :: Scientific/Engineering :: Physics",
 ]
-INSTALL_REQUIRES = [
-    "numpy >= 1.17",
-    "scipy >= 1.3",
-    "spglib >= 1.9",
-    "pymongo >= 3.9",
-    "matplotlib >= 3.0",
-    "psutil >= 5.6",
-]
+
+INSTALL_REQUIRES = ['numpy >= 1.19',
+                    'scipy >= 1.5',
+                    'spglib >= 1.9',
+                    'pymongo >= 3.11',
+                    'matplotlib >= 3.3',
+                    'psutil >= 5.8']
+
 
 ###################################################################
 
@@ -212,8 +212,8 @@ setup(
     install_requires=INSTALL_REQUIRES,
     keywords=KEYWORDS,
     classifiers=CLASSIFIERS,
-    python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, <4",
-    package_data={"": ["setup.json"]},
+    python_requires='>=3.6, <4',
+    package_data={'': ['setup.json']},
     scripts=get_scripts(),
     cmdclass=cmdclass,
     ext_modules=ext_modules

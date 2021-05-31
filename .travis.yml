@@ -3,6 +3,8 @@ language: python
 python:
   - 3.6
   - 3.7
+  - 3.8
+  - 3.9
 notifications:
   email: false
 
@@ -34,9 +36,9 @@ before_install:
 
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION openblas numpy scipy nose coverage matplotlib cython
-  - pip install pymongo psutil
-  - pip install -e "git+https://github.com/atztogo/spglib.git#egg=spglib&subdirectory=python"
-  - pip install -e "git+https://github.com/z4r/python-coveralls.git#egg=coveralls"
+  - pip install pymongo psutil coveralls spglib 
+  # - pip install -e "git+https://github.com/atztogo/spglib.git#egg=spglib&subdirectory=python"
+  # - pip install -e "git+https://github.com/z4r/python-coveralls.git#egg=coveralls"
   - python3 setup.py build_ext --inplace
 
 # Run test

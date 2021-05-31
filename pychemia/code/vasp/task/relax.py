@@ -184,9 +184,9 @@ class IonRelaxation(Relaxator, Task):
 
                 # CG followed by QN
                 if (
-                    info["avg_force"] < 1.0e-03
-                    and info["avg_stress_diag"] < 1.0e-03
-                    and info["avg_stress_non_diag"] < 1.0e-03
+                    info["avg_force"] < 1.0e-02
+                    and info["avg_stress_diag"] < 1.0e-02
+                    and info["avg_stress_non_diag"] < 1.0e-02
                 ):
                     vj.input_variables["IBRION"] = 1
                 elif (
@@ -201,9 +201,9 @@ class IonRelaxation(Relaxator, Task):
             else:
                 # CG followed by FIRE algorithm
                 if (
-                    info["avg_force"] < 1.0e-03
-                    and info["avg_stress_diag"] < 1.0e-03
-                    and info["avg_stress_non_diag"] < 1.0e-03
+                    info["avg_force"] < 1.0e-02
+                    and info["avg_stress_diag"] < 1.0e-02
+                    and info["avg_stress_non_diag"] < 1.0e-02
                 ):
                     vj.input_variables["IBRION"] = 3
                     vj.input_variables["IOPT"] = 7
