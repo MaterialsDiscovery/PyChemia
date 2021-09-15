@@ -130,7 +130,13 @@ def info():
             print("\nOptional dependencies:")
         try:
             mm = __import__(modui)
-            print('%10s %10s   %s' % (modui, mm.__version__, mm.__path__[0]))
+            try:
+                print('%10s %10s   %s' % (modui, mm.__version__, 
+                                            mm.__path__[0]))
+            except AttributeError:
+                import pkg_resources
+                version=pkg_resources.get_distribution(modui).version
+                print('%10s %10s   %s' % (modui, version, mm.__path__[0]))
         except ImportError:
             print('%10s %10s Not Found' % (modui, ''))
 
