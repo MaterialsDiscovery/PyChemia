@@ -61,7 +61,7 @@ changes to `(pychemia_ve)...$`. Now, install pychemia
 with pip
 
 ```bash
-pip install pychemia
+python3 -m pip install pychemia
 ```
 
 Installing with pip from a cloned repo on a virtual environment
@@ -87,7 +87,7 @@ git clone https://github.com/MaterialsDiscovery/PyChemia.git
 Finally, install from the repo folder
 
 ```bash
-pip install PyChemia
+python3 -m pip install PyChemia
 ```
 
 Using PyChemia from repo folder on a virtual environment
@@ -116,7 +116,7 @@ execute `setup.py` to build the Cython modules.
 
 ```bash
 cd PyChemia
-pip install Cython
+python3 -m pip install Cython
 python3 setup.py build_ext --inplace
 python3 setup.py build
 ```
@@ -124,7 +124,7 @@ python3 setup.py build
 Finally, install the packages required for PyChemia to work
 
 ```bash
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 Set the variable $PYTHONPATH to point to PyChemia folder, in the case of bash it will be:
