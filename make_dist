@@ -7,7 +7,7 @@ make html
 cd ..
 
 python3 setup.py sdist
-python3 setup.py bdist_wheel
+python3 -m build --wheel
 
 #twine upload --verbose -r pypi dist/pychemia-$version-cp37-cp37m-linux_x86_64.whl 
 twine upload --verbose -r pypi dist/pychemia-$version.tar.gz

@@ -4,3 +4,5 @@ pymongo
 matplotlib
 spglib
 psutil
+netCDF4
+

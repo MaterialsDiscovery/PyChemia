@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from scipy.io.netcdf import netcdf_file
-
+from netCDF4 import Dataset
 
 def file2dict(filename):
 
@@ -61,3 +61,20 @@ def netcdf2dict(filename):
             ret[i] = ret[i][0]
 
     return ret
+
+
+def netcdf4_to_dict(filename):
+
+    rootgrp = Dataset(filename, "r", format="NETCDF4")  
+
+    ret={}
+    for var in rootgrp.variables:
+        rdict[var]=list(rootgrp[var][:])
+
+    for i in ret:
+        if len(ret[i]) == 1:
+            ret[i] = ret[i][0]
+    rootgrp.close()
+
+    return ret
+
