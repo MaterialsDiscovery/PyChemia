@@ -10,8 +10,8 @@ def read_vasp_stdout(filename):
     data = rf.read()
     rf.close()
 
-    flaws = re.findall('[0-9]*\.[0-9]*E[+-][0-9]*-[0-9]*\.[0-9]*E[+-][0-9]*', data)
-    flaws_splitted = re.findall('([0-9]*\.[0-9]*E[+-][0-9]*)(-[0-9]*\.[0-9]*E[+-][0-9]*)', data)
+    flaws = re.findall(r'[0-9]*\.[0-9]*E[+-][0-9]*-[0-9]*\.[0-9]*E[+-][0-9]*', data)
+    flaws_splitted = re.findall(r'([0-9]*\.[0-9]*E[+-][0-9]*)(-[0-9]*\.[0-9]*E[+-][0-9]*)', data)
     for i in range(len(flaws)):
         data = data.replace(flaws[i], flaws_splitted[i][0] + ' ' + flaws_splitted[i][1])
 

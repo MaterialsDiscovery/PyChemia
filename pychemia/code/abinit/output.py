@@ -118,11 +118,11 @@ class AbinitOutput(CodeOutput):
         :return: (dict) Integrated electronic densities around an atomic radius, up, down, sum and diff
         """
 
-        ref = re.findall("Integrated electronic and magnetization densities in atomic spheres:\s*"
-                         "---------------------------------------------------------------------\s*"
-                         "Note: Diff\(up-dn\) is a rough approximation of local magnetic moment\s*"
-                         "Atom\s*Radius\s*up_density\s*dn_density\s*Total\(up\+dn\)\s*Diff\(up-dn\)\s*"
-                         "([\s\d\w.-]*)\n -+\n", self.data)
+        ref = re.findall(r"Integrated electronic and magnetization densities in atomic spheres:\s*"
+                         r"---------------------------------------------------------------------\s*"
+                         r"Note: Diff\(up-dn\) is a rough approximation of local magnetic moment\s*"
+                         r"Atom\s*Radius\s*up_density\s*dn_density\s*Total\(up\+dn\)\s*Diff\(up-dn\)\s*"
+                         r"([\s\d\w.-]*)\n -+\n", self.data)
         # Return None if could not parse the magnetization block
         if len(ref) == 0:
             return None

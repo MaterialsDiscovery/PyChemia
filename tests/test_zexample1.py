@@ -15,7 +15,7 @@ import shutil
 import tempfile
 import subprocess
 import pychemia
-from pychemia.utils.netcdf import netcdf2dict
+from pychemia.utils.netcdf import netcdf2dict, netcdf4_to_dict
 import pychemia.code.abinit as pa
 
 path = 'tests/data'
@@ -98,9 +98,9 @@ def datamining(filep):
     """
     print('Extracting ecut and etotal')
     if os.path.isfile(filep + os.sep + 'abinit-o_OUT.nc'):
-        data = netcdf2dict(filep + os.sep + 'abinit-o_OUT.nc')
+        data = netcdf4_to_dict(filep + os.sep + 'abinit-o_OUT.nc')
     else:
-        data = netcdf2dict(path + os.sep + 'abinit_04' + os.sep + 'abinit-o_OUT.nc')
+        data = netcdf4_to_dict(path + os.sep + 'abinit_04' + os.sep + 'abinit-o_OUT.nc')
     print(data)
     print(data['ecut'], data['etotal'])
     return data['ecut'], data['etotal']

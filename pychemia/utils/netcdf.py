@@ -69,7 +69,7 @@ def netcdf4_to_dict(filename):
 
     ret={}
     for var in rootgrp.variables:
-        rdict[var]=list(rootgrp[var][:])
+        ret[var]=list(rootgrp[var][:])
 
     for i in ret:
         if len(ret[i]) == 1:
