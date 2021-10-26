@@ -156,37 +156,37 @@ python3 -m pip install pytest
 The output of the testsuite looks like this:
 
 ```bash
-============================================================= test session starts =============================================================
+=============================== test session starts ==============================================
 platform linux -- Python 3.9.7, pytest-6.2.5, py-1.10.0, pluggy-1.0.0
 rootdir: /gpfs20/scratch/gufranco/pychemia_ve/PyChemia
 collected 67 items
 
-tests/test_0.py .                                                                                                                       [  1%]
-tests/test_1_doctest_core.py ...                                                                                                        [  5%]
-tests/test_1_doctest_crystal.py ..                                                                                                      [  8%]
-tests/test_1_doctest_utils.py ....                                                                                                      [ 14%]
-tests/test_3_scripts.py ....                                                                                                            [ 20%]
-tests/test_analysis.py ...                                                                                                              [ 25%]
-tests/test_code_abinit.py .....                                                                                                         [ 32%]
-tests/test_code_fireball.py .                                                                                                           [ 34%]
-tests/test_code_vasp.py ......                                                                                                          [ 43%]
-tests/test_core.py ......                                                                                                               [ 52%]
-tests/test_crystal_kpoints.py .                                                                                                         [ 53%]
-tests/test_crystal_symmetry.py .                                                                                                        [ 55%]
-tests/test_db_queue.py .                                                                                                                [ 56%]
-tests/test_io.py ..                                                                                                                     [ 59%]
-tests/test_population.py .....                                                                                                          [ 67%]
-tests/test_population_orbitals.py .                                                                                                     [ 68%]
-tests/test_searcher_clusters.py ....                                                                                                    [ 74%]
-tests/test_searcher_functions.py ....                                                                                                   [ 80%]
-tests/test_searcher_noncollinear.py ...                                                                                                 [ 85%]
-tests/test_utils_metaheuristics.py .                                                                                                    [ 86%]
-tests/test_utils_periodic.py ......                                                                                                     [ 95%]
-tests/test_utils_serializer.py .                                                                                                        [ 97%]
-tests/test_zexample1.py .                                                                                                               [ 98%]
-tests/test_zexample2.py .                                                                                                               [100%]
+tests/test_0.py .                                                                           [  1%]
+tests/test_1_doctest_core.py ...                                                            [  5%]
+tests/test_1_doctest_crystal.py ..                                                          [  8%]
+tests/test_1_doctest_utils.py ....                                                          [ 14%]
+tests/test_3_scripts.py ....                                                                [ 20%]
+tests/test_analysis.py ...                                                                  [ 25%]
+tests/test_code_abinit.py .....                                                             [ 32%]
+tests/test_code_fireball.py .                                                               [ 34%]
+tests/test_code_vasp.py ......                                                              [ 43%]
+tests/test_core.py ......                                                                   [ 52%]
+tests/test_crystal_kpoints.py .                                                             [ 53%]
+tests/test_crystal_symmetry.py .                                                            [ 55%]
+tests/test_db_queue.py .                                                                    [ 56%]
+tests/test_io.py ..                                                                         [ 59%]
+tests/test_population.py .....                                                              [ 67%]
+tests/test_population_orbitals.py .                                                         [ 68%]
+tests/test_searcher_clusters.py ....                                                        [ 74%]
+tests/test_searcher_functions.py ....                                                       [ 80%]
+tests/test_searcher_noncollinear.py ...                                                     [ 85%]
+tests/test_utils_metaheuristics.py .                                                        [ 86%]
+tests/test_utils_periodic.py ......                                                         [ 95%]
+tests/test_utils_serializer.py .                                                            [ 97%]
+tests/test_zexample1.py .                                                                   [ 98%]
+tests/test_zexample2.py .                                                                   [100%]
 
-====================================================== 67 passed, 34 warnings in 30.46s =======================================================
+========================= 67 passed, 34 warnings in 30.46s =======================================
 
 ```
 
