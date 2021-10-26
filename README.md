@@ -41,11 +41,11 @@ developers who want to change the code and get those changes operative without
 an explicit instalation.
 
 
-Installing with pip from pypi.org on a virtual environment 
+Installing with pip from pypi.org on a virtual environment
 ----------------------------------------------------------
 
 This method installs PyChemia from the packages uploaded
-to PyPi every month. It will provides a version of 
+to PyPi every month. It will provides a version of
 PyChemia that is stable.
 
 First, create and activate the virtual environment.
@@ -56,8 +56,8 @@ python3 -m venv pychemia_ve
 source pychemia_ve/bin/activate
 ```
 
-When the virtual environment is activated, your prompt 
-changes to `(pychemia_ve)...$`. Now, install pychemia 
+When the virtual environment is activated, your prompt
+changes to `(pychemia_ve)...$`. Now, install pychemia
 with pip
 
 ```bash
@@ -94,13 +94,13 @@ python3 -m pip install PyChemia
 Using PyChemia from repo folder on a virtual environment
 --------------------------------------------------------
 
-This method is mostly used for development. 
+This method is mostly used for development.
 In this way PyChemia is not actually installed and changes to the code
 will take inmediate effect.
 
 First, create and activate the virtual environment.
 We are using the name `pychemia_ve`, but that is arbitrary.
- 
+
 ```bash
 python3 -m venv pychemia_ve
 cd pychemia_ve
@@ -113,8 +113,8 @@ Clone the repository
 git clone https://github.com/MaterialsDiscovery/PyChemia.git
 ```
 
-Go to repo folder, install Cython with pip and 
-execute `setup.py` to build the Cython modules.  
+Go to repo folder, install Cython with pip and
+execute `setup.py` to build the Cython modules.
 
 ```bash
 cd PyChemia
@@ -157,34 +157,34 @@ The output of the testsuite looks like this:
 
 ```bash
 ============================================================= test session starts =============================================================
-platform linux -- Python 3.9.7, pytest-6.2.5, py-1.10.0, pluggy-1.0.0                                                                          
-rootdir: /gpfs20/scratch/gufranco/pychemia_ve/PyChemia                                                                                         
+platform linux -- Python 3.9.7, pytest-6.2.5, py-1.10.0, pluggy-1.0.0
+rootdir: /gpfs20/scratch/gufranco/pychemia_ve/PyChemia
 collected 67 items
 
-tests/test_0.py .                                                                                                                       [  1%] 
-tests/test_1_doctest_core.py ...                                                                                                        [  5%] 
-tests/test_1_doctest_crystal.py ..                                                                                                      [  8%] 
-tests/test_1_doctest_utils.py ....                                                                                                      [ 14%] 
-tests/test_3_scripts.py ....                                                                                                            [ 20%] 
-tests/test_analysis.py ...                                                                                                              [ 25%] 
-tests/test_code_abinit.py .....                                                                                                         [ 32%] 
-tests/test_code_fireball.py .                                                                                                           [ 34%] 
-tests/test_code_vasp.py ......                                                                                                          [ 43%] 
-tests/test_core.py ......                                                                                                               [ 52%] 
-tests/test_crystal_kpoints.py .                                                                                                         [ 53%] 
-tests/test_crystal_symmetry.py .                                                                                                        [ 55%] 
+tests/test_0.py .                                                                                                                       [  1%]
+tests/test_1_doctest_core.py ...                                                                                                        [  5%]
+tests/test_1_doctest_crystal.py ..                                                                                                      [  8%]
+tests/test_1_doctest_utils.py ....                                                                                                      [ 14%]
+tests/test_3_scripts.py ....                                                                                                            [ 20%]
+tests/test_analysis.py ...                                                                                                              [ 25%]
+tests/test_code_abinit.py .....                                                                                                         [ 32%]
+tests/test_code_fireball.py .                                                                                                           [ 34%]
+tests/test_code_vasp.py ......                                                                                                          [ 43%]
+tests/test_core.py ......                                                                                                               [ 52%]
+tests/test_crystal_kpoints.py .                                                                                                         [ 53%]
+tests/test_crystal_symmetry.py .                                                                                                        [ 55%]
 tests/test_db_queue.py .                                                                                                                [ 56%]
-tests/test_io.py ..                                                                                                                     [ 59%] 
-tests/test_population.py .....                                                                                                          [ 67%] 
-tests/test_population_orbitals.py .                                                                                                     [ 68%] 
-tests/test_searcher_clusters.py ....                                                                                                    [ 74%] 
-tests/test_searcher_functions.py ....                                                                                                   [ 80%] 
-tests/test_searcher_noncollinear.py ...                                                                                                 [ 85%] 
-tests/test_utils_metaheuristics.py .                                                                                                    [ 86%] 
-tests/test_utils_periodic.py ......                                                                                                     [ 95%] 
-tests/test_utils_serializer.py .                                                                                                        [ 97%] 
-tests/test_zexample1.py .                                                                                                               [ 98%] 
-tests/test_zexample2.py .                                                                                                               [100%] 
+tests/test_io.py ..                                                                                                                     [ 59%]
+tests/test_population.py .....                                                                                                          [ 67%]
+tests/test_population_orbitals.py .                                                                                                     [ 68%]
+tests/test_searcher_clusters.py ....                                                                                                    [ 74%]
+tests/test_searcher_functions.py ....                                                                                                   [ 80%]
+tests/test_searcher_noncollinear.py ...                                                                                                 [ 85%]
+tests/test_utils_metaheuristics.py .                                                                                                    [ 86%]
+tests/test_utils_periodic.py ......                                                                                                     [ 95%]
+tests/test_utils_serializer.py .                                                                                                        [ 97%]
+tests/test_zexample1.py .                                                                                                               [ 98%]
+tests/test_zexample2.py .                                                                                                               [100%]
 
 ====================================================== 67 passed, 34 warnings in 30.46s =======================================================
 
@@ -194,10 +194,10 @@ tests/test_zexample2.py .                                                       
 PyChemia requirements
 =====================
 
-PyChemia relies on a number of other python packages to 
+PyChemia relies on a number of other python packages to
 operate. Some of them are mandatory and they must be installed.
 Other packages are optional and their absence will only constrain
-certain capabilities. 
+certain capabilities.
 
 Mandatory
 ---------
@@ -210,7 +210,7 @@ Mandatory
 
 2.  [Numpy](http://www.numpy.org/ "Numpy") >= 1.19
     Fundamental library for numerical intensive computation in Python.
-    Numpy arrays are essential for efficient array manipulation. 
+    Numpy arrays are essential for efficient array manipulation.
 
 3.  [SciPy](http://scipy.org/ "SciPy") >= 1.5
     Used mostly for Linear Algebra, FFT and spatial routines.
@@ -222,8 +222,8 @@ Mandatory
     Used to plot band structures, densities of states and other 2D plots
 
 6.  [PyMongo](http://api.mongodb.org/python/current/) >= 3.11
-    Used for structural search PyChemia relies strongly in MongoDB and its python driver. 
-    For the MongoDB server, any version beyond 3.11 should be fine. 
+    Used for structural search PyChemia relies strongly in MongoDB and its python driver.
+    For the MongoDB server, any version beyond 3.11 should be fine.
     We have tested pychemia on MongoDB 4.0
 
 7.  [psutil](https://github.com/giampaolo/psutil) >= 5.8
@@ -241,14 +241,14 @@ Optional
 
     nosetests -v
 
-2.  [pytest](https://docs.pytest.org/en/latest/) 
-    Another utility for testing. 
+2.  [pytest](https://docs.pytest.org/en/latest/)
+    Another utility for testing.
 
 3.  [Pandas](http://pandas.pydata.org/ "Pandas")
     Library for Data Analysis used by the datamining modules
 
 4.  [PyMC](http://pymc-devs.github.io/pymc/index.html)
-    PyMC is a python module that implements Bayesian statistical models 
+    PyMC is a python module that implements Bayesian statistical models
     and fitting algorithms
     Important for the datamining capabilities of PyChemia
 
@@ -286,11 +286,11 @@ Instructions for installation, using and programming scripts with PyChemia
 can be found on two repositories for documentation:
 
 * Read The Docs:
-   
+
    http://pychemia.readthedocs.io/en/latest
-      
+
 * Python Hosted:
-    
+
    http://pythonhosted.org/pychemia
 
 Documentation is hosted on [Read the Docs](https://readthedocs.org/projects/pychemia/) also available with Short URLs [readthedocs](http://pychemia.readthedocs.io) and [rtfd](http://pychemia.rtfd.io)

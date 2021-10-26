@@ -29,7 +29,7 @@ class AbinitOutput(CodeOutput):
 
     def get_energetics(self):
 
-        ret = re.findall('ETOT\s*([\d]+)\s*([.E\d\-+]+)\s*([.E\d\-+]+)\s*([.E\d\-+]+)\s*([.E\d\-+]+)',
+        ret = re.findall(r'ETOT\s*([\d]+)\s*([.E\d\-+]+)\s*([.E\d\-+]+)\s*([.E\d\-+]+)\s*([.E\d\-+]+)',
                          self.data)
         if not ret:
             raise RuntimeError("Could not extract energetic lines from: %s" % self.filename)
@@ -65,9 +65,9 @@ class AbinitOutput(CodeOutput):
         if len(occ_block) != 1:
             raise RuntimeError("ERROR: Occupation matrices should be in one block from the output")
 
-        occs = re.findall('Occupation matrix for spin[\s\d\w]*([\s\d\-.]*)', occ_block[0])
-        atoms = [int(x) for x in re.findall('For Atom([\s\w\d]*)', occ_block[0])]
-        spins = [int(x) for x in re.findall('Occupation matrix for spin([\s\w\d]*\n)', occ_block[0])]
+        occs = re.findall(r'Occupation matrix for spin[\s\d\w]*([\s\d\-.]*)', occ_block[0])
+        atoms = [int(x) for x in re.findall(r'For Atom([\s\w\d]*)', occ_block[0])]
+        spins = [int(x) for x in re.findall(r'Occupation matrix for spin([\s\w\d]*\n)', occ_block[0])]
 
         # print(occs)
         # print(atoms)
