@@ -2,7 +2,9 @@
 [![PyPI version](https://badge.fury.io/py/pychemia.svg)](https://badge.fury.io/py/pychemia)
 [![Coverage Status](https://coveralls.io/repos/github/MaterialsDiscovery/PyChemia/badge.svg?branch=master)](https://coveralls.io/github/MaterialsDiscovery/PyChemia?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/pychemia/badge/?version=latest)](http://pychemia.readthedocs.io/en/latest/?badge=latest)
+<!--
 [![HitCount](http://hits.dwyl.io/MaterialsDiscovery/PyChemia.svg)](http://hits.dwyl.io/MaterialsDiscovery/PyChemia)
+-->
 
 PyChemia, Python Framework for Materials Discovery and Design
 =============================================================
@@ -150,7 +152,7 @@ python3 -m pip install pytest
 Execute the testsuite:
 
 ```bash
-python3 -m pip install pytest
+pytest
 ```
 
 The output of the testsuite looks like this:
