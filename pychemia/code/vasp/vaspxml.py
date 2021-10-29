@@ -26,10 +26,11 @@ class VaspXML(CodeOutput):
         self.spins_dict = {'spin 1':'Spin-up','spin 2':'Spin-down'}
         # self.positions = None
         # self.stress = None
-        self.bands = None
         #self.array_sizes = {}
         self.data = self.read()
-
+        self.bands= self._get_bands()
+        self.bands_projected = self._get_bands_projected()
+        
 
     def read(self):
         return parse_vasprun(self.filename)
@@ -69,7 +70,85 @@ class VaspXML(CodeOutput):
             print("This calculation does not include partial density of states")
             return None,None
 
-    
+
+    def _get_bands(self):
+        spins = list(self.data["general"]["eigenvalues"]
+                     ["array"]["data"].keys())
+        kpoints_list = list(
+            self.data["general"]["eigenvalues"]["array"]["data"]["spin 1"].keys()
+        )
+        eigen_values = {}
+        nbands = len(
+            self.data["general"]["eigenvalues"]["array"]["data"][spins[0]][
+                kpoints_list[0]
+            ][kpoints_list[0]]
+        )
+        nkpoints = len(kpoints_list)
+        for ispin in spins:
+            eigen_values[ispin] = {}
+            eigen_values[ispin]["eigen_values"] = np.zeros(
+                shape=(nbands, nkpoints))
+            eigen_values[ispin]["occupancies"] = np.zeros(
+                shape=(nbands, nkpoints))
+            for ikpoint, kpt in enumerate(kpoints_list):
+                temp = np.array(
+                    self.data["general"]["eigenvalues"]["array"]["data"][ispin][kpt][
+                        kpt
+                    ]
+                )
+                eigen_values[ispin]["eigen_values"][:, ikpoint] = (
+                    temp[:, 0] - self.fermi
+                )
+                eigen_values[ispin]["occupancies"][:, ikpoint] = temp[:, 1]
+        return eigen_values    
+
+
+    def _get_bands_projected(self):
+        # projected[iatom][ikpoint][iband][iprincipal][iorbital][ispin]
+        labels = self.data["general"]["projected"]["array"]["info"]
+        spins = list(self.data["general"]["projected"]["array"]["data"].keys())
+        kpoints_list = list(
+            self.data["general"]["projected"]["array"]["data"][spins[0]].keys()
+        )
+        bands_list = list(
+            self.data["general"]["projected"]["array"]["data"][spins[0]][
+                kpoints_list[0]
+            ][kpoints_list[0]].keys()
+        )
+        bands_projected = {"labels": labels}
+
+        nspins = len(spins)
+        nkpoints = len(kpoints_list)
+        nbands = len(bands_list)
+        norbitals = len(labels)
+        natoms = self.initial_structure.natom
+        bands_projected["projection"] = np.zeros(
+            shape=(nspins, nkpoints, nbands, natoms, norbitals)
+        )
+        for ispin, spn in enumerate(spins):
+            for ikpoint, kpt in enumerate(kpoints_list):
+                for iband, bnd in enumerate(bands_list):
+                    bands_projected["projection"][
+                        ispin, ikpoint, iband, :, :
+                    ] = np.array(
+                        self.data["general"]["projected"]["array"]["data"][spn][kpt][
+                            kpt
+                        ][bnd][bnd]
+                    )
+        # # ispin, ikpoint, iband, iatom, iorbital
+        # bands_projected["projection"] = np.swapaxes(
+        #     bands_projected["projection"], 0, 3)
+        # # iatom, ikpoint, iband, ispin, iorbital
+        # bands_projected["projection"] = np.swapaxes(
+        #     bands_projected["projection"], 3, 4)
+        # # iatom, ikpoint, iband, iorbital, ispin
+        # bands_projected["projection"] = bands_projected["projection"].reshape(
+        #     natoms, nkpoints, nbands, norbitals, nspins
+        # )
+
+        return bands_projected
+
+
     @property
     def dos_to_dict(self):
         """
@@ -181,10 +260,7 @@ class VaspXML(CodeOutput):
         return DensityOfStates(table=ret,title=title,labels=labels)
         
     
-    def get_band_projection(self):
-        return 
 
-    
 
     @property 
     def kpoints(self):
@@ -385,3 +461,43 @@ class VaspXML(CodeOutput):
         """
         # if vasprun.xml is read the calculation is finished
         return True
+
+    @property
+    def valance_band_maximum(self):
+        ret = []
+        for ispin in self.bands:
+            eigenvalues = self.bands[ispin]['eigen_values']
+            occ = self.bands[ispin]['occupancies']
+            ret.append(eigenvalues[occ == 1].max())
+        return  ret
+
+    @property
+    def conduction_band_minimum(self):
+        ret = []
+        for ispin in self.bands:
+            eigenvalues = self.bands[ispin]['eigen_values']
+            occ = self.bands[ispin]['occupancies']
+            ret.append(eigenvalues[occ == 0].min())
+        return  ret
+
+    @property
+    def band_gap(self):
+        ret = {}
+        vbm = self.valance_band_maximum
+        cbm = self.conduction_band_minimum
+        for ispin, spin in enumerate(self.bands):
+            eigenvalues = self.bands[spin]['eigen_values']
+            iband_vbm, ikpoint_vbm = np.where(eigenvalues == vbm[ispin])
+            iband_cbm, ikpoint_cbm = np.where(eigenvalues == cbm[ispin])
+            kpoint_vbm = self.kpoints_list.kpoints_list[ikpoint_vbm[0]]
+            kpoint_cbm = self.kpoints_list.kpoints_list[ikpoint_cbm[0]]
+            gap = cbm[ispin]-vbm[ispin]
+            if iband_cbm[0] == iband_vbm[0] or gap < 1e-5:
+                gap = 0.00
+            ret[spin] = {'gap':gap,
+                         'direct':ikpoint_vbm[0] == ikpoint_cbm[0],
+                         'band':(iband_vbm[0], iband_cbm[0]),
+                         'kpoint':(kpoint_vbm, kpoint_cbm),
+                         'ikpoint':(ikpoint_vbm[0], ikpoint_cbm[0])}
+        return  ret
+        

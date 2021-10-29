@@ -18,4 +18,4 @@ from . import task
 from .input import VaspInput
 from .output import VaspOutput
 from .vaspxml import VaspXML
-from .xml_output import parse_vasprun
+# from .xml_output import parse_vasprun
