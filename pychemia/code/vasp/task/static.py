@@ -14,7 +14,7 @@ __author__ = 'Guillermo Avendano-Franco'
 
 class StaticCalculation(Task):
     def __init__(self, structure, workdir='.', executable='vasp', encut=1.3, kpoints=None, kp_density=1E4,
-                 extra_incar=None):
+                 extra_incar=None, pspdir='potpaw_PBE', psp_options=None):
 
         self.encut = encut
         if kpoints is None:
@@ -22,14 +22,16 @@ class StaticCalculation(Task):
             self.kpoints = kp
         else:
             self.kpoints = kpoints
-        self.task_params = {'encut': self.encut, 'kpoints': self.kpoints.to_dict, 'extra_incar': extra_incar}
+        self.pspdir = pspdir
+        self.psp_options = psp_options
+        self.task_params = {'encut': self.encut, 'kpoints': self.kpoints.to_dict, 'extra_incar': extra_incar }
         Task.__init__(self, structure=structure, task_params=self.task_params, workdir=workdir, executable=executable)
 
     def run(self, nparal=4):
-
         vj = VaspJob(workdir=self.workdir, executable=self.executable)
-        vj.initialize(self.structure, self.kpoints)
+        vj.initialize(self.structure, self.kpoints, pspdir=self.pspdir)
         vj.clean()
+        vj.potcar_setup = self.psp_options
         vj.job_static()
         vj.input_variables.set_density_for_restart()
         vj.input_variables.set_encut(ENCUT=self.encut, POTCAR=self.workdir + os.sep + 'POTCAR')
