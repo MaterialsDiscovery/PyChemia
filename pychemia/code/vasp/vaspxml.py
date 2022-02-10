@@ -27,6 +27,8 @@ class VaspXML(CodeOutput):
         # self.stress = None
         #self.array_sizes = {}
         self.data = self.read()
+        if self.has_diverged:
+            return 
         self.bands = self._get_bands()
         self.bands_projected = self._get_bands_projected()
 
@@ -490,6 +492,7 @@ class VaspXML(CodeOutput):
             eigenvalues = self.bands[ispin]['eigen_values']
             occ = np.round(self.bands[ispin]['occupancies'])
             ret.append(eigenvalues[occ == 1].max())
+        ret.append(max(ret[-1], ret[-2]))
         return ret
 
     @property
@@ -499,13 +502,22 @@ class VaspXML(CodeOutput):
             eigenvalues = self.bands[ispin]['eigen_values']
             occ = np.round(self.bands[ispin]['occupancies'])
             ret.append(eigenvalues[occ == 0].min())
+        ret.append(min(ret[-1], ret[-2]))
         return ret
+
+    @property
+    def has_diverged(self):
+        for key in self.final_data['energy']:
+            if self.final_data['energy'][key] is None:
+                return True
+        return False
 
     @property
     def band_gap(self):
         ret = {}
         vbm = self.valance_band_maximum
         cbm = self.conduction_band_minimum
+        
         for ispin, spin in enumerate(self.bands):
             eigenvalues = self.bands[spin]['eigen_values']
             iband_vbm, ikpoint_vbm = np.where(eigenvalues == vbm[ispin])
@@ -521,4 +533,5 @@ class VaspXML(CodeOutput):
                          'band': (int(iband_vbm[0]), int(iband_cbm[0])),
                          'kpoint': (kpoint_vbm, kpoint_cbm),
                          'ikpoint': (int(ikpoint_vbm[0]), int(ikpoint_cbm[0]))}
+        ret['total'] = {'gap': float(cbm[2] - vbm[2])}
         return ret

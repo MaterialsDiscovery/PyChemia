@@ -26,6 +26,8 @@ def conv(ele, _type):
     elif _type == 'logical': 
         return text_to_bool(ele)
     elif _type == 'float':
+        if "*" in ele:
+            return None
         return float(ele) 
 
 
@@ -33,7 +35,7 @@ def get_varray(xml_tree):
     """Returns an array for each varray tag in vaspxml """
     ret = [] 
     for ielement in xml_tree: 
-        ret.append([float(x) for x in ielement.text.split()]) 
+        ret.append([conv(x, 'float') for x in ielement.text.split()]) 
     return ret
 
 
@@ -83,10 +85,10 @@ def get_scstep(xml_tree):
     scstep = {'time': {}, 'energy': {}}
     for isub in xml_tree:
         if isub.tag=='time': 
-            scstep['time'][isub.attrib['name']] = [float(x) for x in isub.text.split()] 
+            scstep['time'][isub.attrib['name']] = [conv(x, 'float') for x in isub.text.split()] 
         elif isub.tag == 'energy': 
             for ienergy in isub:
-                scstep['energy'][ienergy.attrib['name']] = float(ienergy.text) 
+                scstep['energy'][ienergy.attrib['name']] = conv(ienergy.text, 'float') 
     return scstep
 
 
@@ -278,6 +280,3 @@ def parse_vasprun(vasprun):
     return {'calculation': calculation, 'structures': structures, 'forces': forces, 'run_info': run_info,
             'incar': incar, 'general': general, 'kpoints_info': kpoints_info, 'vasp_params': vasp_params,
             'kpoints': {'kpoints_list': kpoints_list, 'k_weights': k_weights}, 'atom_info': atom_info}
-
-
-
