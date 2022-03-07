@@ -492,7 +492,7 @@ class VaspXML(CodeOutput):
             eigenvalues = self.bands[ispin]['eigen_values']
             occ = np.round(self.bands[ispin]['occupancies'])
             ret.append(eigenvalues[occ == 1].max())
-        ret.append(max(ret[-1], ret[-2]))
+        ret.append(max(ret))
         return ret
 
     @property
@@ -502,7 +502,7 @@ class VaspXML(CodeOutput):
             eigenvalues = self.bands[ispin]['eigen_values']
             occ = np.round(self.bands[ispin]['occupancies'])
             ret.append(eigenvalues[occ == 0].min())
-        ret.append(min(ret[-1], ret[-2]))
+        ret.append(min(ret))
         return ret
 
     @property
@@ -533,5 +533,5 @@ class VaspXML(CodeOutput):
                          'band': (int(iband_vbm[0]), int(iband_cbm[0])),
                          'kpoint': (kpoint_vbm, kpoint_cbm),
                          'ikpoint': (int(ikpoint_vbm[0]), int(ikpoint_cbm[0]))}
-        ret['total'] = {'gap': float(cbm[2] - vbm[2])}
+        ret['total'] = {'gap': float(cbm[-1] - vbm[-1])}
         return ret

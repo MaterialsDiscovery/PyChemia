@@ -65,8 +65,17 @@ class VaspOutput(CodeOutput):
         self.data = rf.read()
         rf.close()
 
-    def outcar_parser(self):
+    def repair_data(self):
+        issues = re.findall('([0-9]+.[0-9]+)-([0-9]+.[0-9]+)', self.data)
+        while len(issues) != 0:
+            for iss in issues:
+                self.data = self.data.replace(f'-{iss}-', f'-{iss} -')
+            issues = re.findall('-([0-9]+.[0-9]+)-', self.data)
 
+
+    def outcar_parser(self):
+        self.repair_data()
+        
         for istr in ['NKPTS', 'NBANDS', 'NEDOS', 'NIONS', 'NGX', 'NGY', 'NGZ', 'NGXF', 'NGYF', 'NGZF', 'ISPIN']:
             redata = re.findall(istr + r'\s*=\s*(\d+)', self.data)
             if len(redata) > 0:
