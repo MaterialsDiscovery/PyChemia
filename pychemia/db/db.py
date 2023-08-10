@@ -48,7 +48,7 @@ class PyChemiaDB:
             if pymongo.version_tuple[0] == 2:
                 self._client = pymongo.MongoClient(uri, ssl=ssl, replicaSet=replicaset,
                                                    serverSelectionTimeoutMS=maxSevSelDelay)
-            elif pymongo.version_tuple[0] == 3:
+            elif pymongo.version_tuple[0] >= 3:
                 self._client = pymongo.MongoClient(uri, ssl=ssl, tlsAllowInvalidCertificates=True,
                                                    replicaSet=replicaset, serverSelectionTimeoutMS=maxSevSelDelay)
             else:
