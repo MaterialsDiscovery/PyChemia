@@ -197,8 +197,13 @@ def write_potcar(structure, filepath='POTCAR', pspdir='potpaw_PBE', options=None
     ret = ''
     if basepsp is not None:
         psppath = os.path.abspath(basepsp) + os.sep + pspdir
-    else:
+    elif os.path.exists(os.getenv('HOME') + '/.vasp/PP-VASP/' + pspdir):
         psppath = os.getenv('HOME') + '/.vasp/PP-VASP/' + pspdir
+    elif os.path.exists(pspdir):
+        psppath = pspdir
+    else:
+        raise ValueError("The path for VASP Pseudo-potentials does not exists: " + psppath) 
+
     if not os.path.exists(psppath):
         raise ValueError("The path for VASP Pseudo-potentials does not exists: " + psppath)
 

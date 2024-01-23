@@ -54,8 +54,11 @@ class VaspJob(CodeRun):
         self._check_workdir()
         assert (isinstance(self.structure, Structure))
 
-        pspfiles = write_potcar(self.structure, filepath=self.workdir + os.sep + 'POTCAR', pspdir=self.potcar_pspdir,
-                                options=self.potcar_setup, pspfiles=self.potcar_pspfiles, heterostructure=self.heterostructure)
+        pspfiles = write_potcar(self.structure, filepath=self.workdir + os.sep + 'POTCAR', 
+                            pspdir=self.potcar_pspdir,
+                            options=self.potcar_setup, 
+                            pspfiles=self.potcar_pspfiles, 
+                            heterostructure=self.heterostructure)
 
         self.potcar_pspfiles = pspfiles
 

@@ -48,13 +48,13 @@ if pychemia.HAS_VTK:
 
     # This allows the interactor to initalize itself. It has to be
     # called before an event loop.
-    iren.Initialize()
+    #iren.Initialize()
 
     # We'll zoom in a little by accessing the camera and invoking a "Zoom"
     # method on it.
-    ren.ResetCamera()
-    ren.GetActiveCamera().Zoom(1.5)
-    renWin.Render()
+    #ren.ResetCamera()
+    #ren.GetActiveCamera().Zoom(1.5)
+    #renWin.Render()
 
     # Start the event loop.
-    iren.Start()
+    #iren.Start()

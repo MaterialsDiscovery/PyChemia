@@ -23,4 +23,4 @@ def test_ascii():
     file = tempfile.NamedTemporaryFile()
     pychemia.io.ascii.save(st1, file.name)
     st2 = pychemia.io.ascii.load(file.name)
-    return st1, st2
+    assert st1.natom == st2.natom

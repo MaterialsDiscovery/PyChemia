@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from scipy.io.netcdf import netcdf_file
+from scipy.io import netcdf_file
 from netCDF4 import Dataset
 
 def file2dict(filename):

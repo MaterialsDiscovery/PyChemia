@@ -44,7 +44,6 @@ def test_xyz2abinit():
     inp = pychemia.code.abinit.AbinitInput(path + '/xyz/chlorophyll.xyz.in')
     assert (inp.get_value('natom') == 140)
     os.remove(path + '/xyz/chlorophyll.xyz.in')
-    return inp
 
 
 def test_plot_bonds():
