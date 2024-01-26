@@ -4,12 +4,14 @@ import subprocess
 import collections
 import psutil
 import shlex
+import time
 from pychemia import pcm_log
+from pychemia.runner import SLURM_Runner
 
 class CodeRun:
     __metaclass__ = ABCMeta
 
-    def __init__(self, executable, workdir='.', use_mpi=False):
+    def __init__(self, executable, workdir='.', use_mpi=False, slurm_params=None, command_line=None):
         """
         CodeRun is the superclass defining the operations for running codes either directly or asynchronously via a
         submission script on a cluster.
@@ -31,6 +33,8 @@ class CodeRun:
         self.workdir = workdir
         self.use_mpi = use_mpi
         self.runner = None
+        self.command_line = command_line
+        self.slurm_params = slurm_params
 
     @abstractmethod
     def set_inputs(self):
@@ -79,74 +83,95 @@ class CodeRun:
 
         :return:
         """
-        cwd = os.getcwd()
-        pcm_log.debug("Current location=%s, workdir=%s" % (cwd, self.workdir))
-        os.chdir(self.workdir)
+        if self.slurm_params is not None:
+            self.runner = SLURM_Runner(workdir=self.workdir,
+                                       slurm_params=self.slurm_params,
+                                       command_line=self.command_line)
+            self.runner.prepare_files()
+            self.runner.submit()
 
-        env_vars = ''
-        if num_threads is not None:
-            if isinstance(num_threads, int):
-                env_vars = 'OMP_NUM_THREADS='+str(num_threads)
-        elif isinstance(num_threads, dict):
-            for evar in ['OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'GOTO_NUM_THREADS', 'MKL_NUM_THREADS']:
-                if evar in num_threads and isinstance(num_threads[evar], int) and num_threads[evar] > 0:
-                    env_vars += evar+'='+str(num_threads[evar])+' '
+            if wait:
+                while True:
+                    ret = subprocess.check_output("squeue -j %s -o %t -h" % self.runner.jobid,
+                                                  stderr=subprocess.STDOUT, shell=True)
+                    if ret == 'PD':
+                        print("Job is pending execution...")
+                        time.sleep(30)
+                    elif ret == 'R':
+                        print("Job is running...")
+                        time.sleep(30)
+                    else:
+                        break
 
-                subprocess.check_output('export %s=%d' % (evar, num_threads), shell=True)
-                envvars=subprocess.check_output('echo $%s' % evar, shell=True)
-                print(envvars.decode())
-
-        if self.stdin_filename is not None:
-            self.stdin_file = open(self.stdin_filename, 'r')
-        if self.stdout_filename is not None:
-            self.stdout_file = open(self.stdout_filename, 'w')
-        if self.stderr_filename is not None:
-            self.stderr_file = open(self.stderr_filename, 'w')
-
-        # Checking availability of executable
-        if not os.path.exists(self.executable):
-
-            try:
-                which_bin = subprocess.check_output('which %s' % self.executable, shell=True)
-            except subprocess.CalledProcessError:
-                raise ValueError('ERROR: Executable %s could not be found as an absolute, relative or via the $PATH variable' %
-                      self.executable)
-                
-            exec_path = which_bin.decode('utf8').strip()
         else:
-            exec_path = self.executable
+            cwd = os.getcwd()
+            pcm_log.debug("Current location=%s, workdir=%s" % (cwd, self.workdir))
+            os.chdir(self.workdir)
 
-        pcm_log.debug("Executable: %s " % exec_path)
+            env_vars = ''
+            if num_threads is not None:
+                if isinstance(num_threads, int):
+                    env_vars = 'OMP_NUM_THREADS='+str(num_threads)
+            elif isinstance(num_threads, dict):
+                for evar in ['OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'GOTO_NUM_THREADS', 'MKL_NUM_THREADS']:
+                    if evar in num_threads and isinstance(num_threads[evar], int) and num_threads[evar] > 0:
+                        env_vars += evar+'='+str(num_threads[evar])+' '
 
-        if self.use_mpi:
+                    subprocess.check_output('export %s=%d' % (evar, num_threads), shell=True)
+                    envvars=subprocess.check_output('echo $%s' % evar, shell=True)
+                    print(envvars.decode())
 
-            np = 2
-            if mpi_num_procs is None:
-                np = psutil.cpu_count(logical=False)
-            elif isinstance(mpi_num_procs, int):
-                np = mpi_num_procs
+            if self.stdin_filename is not None:
+                self.stdin_file = open(self.stdin_filename, 'r')
+            if self.stdout_filename is not None:
+                self.stdout_file = open(self.stdout_filename, 'w')
+            if self.stderr_filename is not None:
+                self.stderr_file = open(self.stderr_filename, 'w')
+
+            # Checking availability of executable
+            if not os.path.exists(self.executable):
+
+                try:
+                    which_bin = subprocess.check_output('which %s' % self.executable, shell=True)
+                except subprocess.CalledProcessError:
+                    raise ValueError('ERROR: Executable %s could not be found as an absolute, relative or via the $PATH variable' %
+                          self.executable)
+
+                exec_path = which_bin.decode('utf8').strip()
             else:
-                print("WARNING: Declared variable mpi_num_procs is not integer, defaulting to 2 process")
+                exec_path = self.executable
 
-            command = 'mpirun -n %d %s' % (np, self.executable)
-        else:
-            command = "%s" % self.executable
+            pcm_log.debug("Executable: %s " % exec_path)
 
-        pcm_log.debug("Running: %s" % command)
-        process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=self.stdin_file)
-        while True:
-            output = process.stdout.readline()
-            if output == b'' and process.poll() is not None:
-                break
-            if output != b'' and process.poll() is not None:
-                pcm_log.debug("process.poll() is %s" % process.poll())
-                pcm_log.debug(output)
-            if output and verbose:
-                print(output.decode(), end='')
-        rc = process.poll()
-        self.runner = process
-        os.chdir(cwd)
-        return process
+            if self.use_mpi:
+
+                np = 2
+                if mpi_num_procs is None:
+                    np = psutil.cpu_count(logical=False)
+                elif isinstance(mpi_num_procs, int):
+                    np = mpi_num_procs
+                else:
+                    print("WARNING: Declared variable mpi_num_procs is not integer, defaulting to 2 process")
+
+                command = 'mpirun -n %d %s' % (np, self.executable)
+            else:
+                command = "%s" % self.executable
+
+            pcm_log.debug("Running: %s" % command)
+            process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=self.stdin_file)
+            while True:
+                output = process.stdout.readline()
+                if output == b'' and process.poll() is not None:
+                    break
+                if output != b'' and process.poll() is not None:
+                    pcm_log.debug("process.poll() is %s" % process.poll())
+                    pcm_log.debug(output)
+                if output and verbose:
+                    print(output.decode(), end='')
+            rc = process.poll()
+            self.runner = process
+            os.chdir(cwd)
+            return process
 
 #       if wait:
 #            self.runner.wait()

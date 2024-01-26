@@ -13,9 +13,13 @@ from pychemia.utils.computing import deep_unicode
 
 class VaspJob(CodeRun):
 
-    def __init__(self, executable='vasp', workdir='.'):
+    def __init__(self, executable='vasp_std', workdir='.', slurm_params=None, command_line=None):
 
-        CodeRun.__init__(self, executable=executable, workdir=workdir, use_mpi=True)
+        CodeRun.__init__(self, executable=executable,
+                         workdir=workdir,
+                         use_mpi=True,
+                         slurm_params=slurm_params,
+                         command_line=command_line)
         self.structure = None
         self.input_variables = None
         self.potcar_setup = None

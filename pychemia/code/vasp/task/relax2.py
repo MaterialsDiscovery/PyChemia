@@ -22,12 +22,15 @@ __author__ = 'Guillermo Avendano-Franco'
 
 class IonRelaxation2(Relaxator, Task):
     def __init__(self, structure, workdir='.', target_forces=1E-3, waiting=False, executable='vasp',
-                 encut=1.3, kp_grid=None, kp_density=1E4, relax_cell=True):
+                 encut=1.3, kp_grid=None, kp_density=1E4, relax_cell=True, slurm_params=None, command_line=None):
 
         Relaxator.__init__(self, target_forces)
         self.target_forces = target_forces
         self.waiting = waiting
-        self.vaspjob = VaspJob(workdir=workdir, executable=executable)
+        self.vaspjob = VaspJob(workdir=workdir,
+                               executable=executable,
+                               slurm_params=slurm_params,
+                               command_line=command_line)
         self.relaxed = False
         if kp_grid is not None:
             self.kpoints = KPoints(kmode='gamma', grid=kp_grid)
