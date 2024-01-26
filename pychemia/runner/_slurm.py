@@ -124,7 +124,7 @@ class SLURM_Runner:
                 print('         The output from qsub was:\n %s' % exc.output)
 
         os.chdir(cwd)
-        self.jobid = stdout.decode().strip()
+        self.jobid = stdout.decode().strip().split()[-1]
         return stdout.decode().strip()
 
     def get_stats(self, username):

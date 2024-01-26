@@ -200,6 +200,8 @@ class IonRelaxation2(Relaxator, Task):
         ncalls = 1
         self.first_run(nparal)
 
+        return 0
+
         while True:
             if vj.runner is not None and vj.runner.poll() is not None:
                 pcm_log.info('Execution completed. Return code %d' % vj.runner.returncode)

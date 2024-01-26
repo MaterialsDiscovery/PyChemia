@@ -88,12 +88,15 @@ class CodeRun:
                                        slurm_params=self.slurm_params,
                                        command_line=self.command_line)
             self.runner.prepare_files()
-            self.runner.submit()
+            print(self.runner.submit())
+            time.sleep(3)
 
             if wait:
                 while True:
-                    ret = subprocess.check_output("squeue -j %s -o %t -h" % self.runner.jobid,
+                    ret = subprocess.check_output("squeue -j {} -o %t -h".format(self.runner.jobid),
                                                   stderr=subprocess.STDOUT, shell=True)
+                    ret = ret.decode('UTF-8').strip()
+
                     if ret == 'PD':
                         print("Job is pending execution...")
                         time.sleep(30)
@@ -101,6 +104,7 @@ class CodeRun:
                         print("Job is running...")
                         time.sleep(30)
                     else:
+                        print(ret)
                         break
 
         else:
