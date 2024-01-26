@@ -621,7 +621,9 @@ class Structure(MutableSequence):
                     pcm_log.debug('Covalent distance: %7.4f  Minimal distance: %7.4f  Difference: %7.3e' %
                                   (covalent_distance, distance, covalent_distance - distance))
 
+        #print(best_structure.get_cell().triple_product())
         best_structure.canonical_form()
+        #print(best_structure.get_cell().triple_product())
         return best_structure
 
     @staticmethod
@@ -767,7 +769,9 @@ class Structure(MutableSequence):
             self.align_inertia_momenta()
         self.sort_sites()
         if self.is_periodic:
-            self.sort_axes()
+            # Sort axis could return negative triple product for the cell
+            # Some DFT codes like (VASP) refuses to work with negative defined cells
+            #self.sort_axes()
             self.align_with_axis()
             self.align_with_plane()
             self.atoms_in_box()

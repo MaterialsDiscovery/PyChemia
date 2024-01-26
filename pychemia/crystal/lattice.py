@@ -363,13 +363,20 @@ class Lattice:
         gamma = 60.0 + 60.0 * random.random()
 
         lattice = Lattice().from_parameters_to_cell(a, b, c, alpha, beta, gamma)
+        #print(lattice.triple_product())
 
         factor = (volume / lattice.volume) ** (1 / 3.0)
         lattice = Lattice().from_parameters_to_cell(factor * a, factor * b, factor * c, alpha, beta, gamma)
+        #print(lattice.triple_product())
         lattice.align_with_axis()
+        #print(lattice.triple_product())
         lattice.align_with_plane()
+        #print(lattice.triple_product())
 
         return lattice
+
+    def triple_product(self):
+        return np.dot(self.cell[0],np.cross(self.cell[1],self.cell[2]))
 
     def reciprocal(self):
         """
@@ -393,6 +400,7 @@ class Lattice:
             self._periodicity = list(periodicity)
         else:
             raise ValueError("Periodicity must be a boolean or list instead of: ", periodicity)
+
 
     @property
     def cell(self):
